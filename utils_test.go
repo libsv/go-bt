@@ -1,6 +1,7 @@
 package cryptolib
 
 import (
+	"math/big"
 	"testing"
 )
 
@@ -25,6 +26,16 @@ func TestReverseHexString(t *testing.T) {
 
 	if rhLong != expectedLong {
 		t.Errorf("Expected reversed string to be '%+v', got %+v", expectedLong, rhLong)
+	}
+}
+
+func TestExpandTargetFrom(t *testing.T) {
+	ret := ExpandTargetFrom(0x1d00ffff)
+
+	expected := new(big.Int)
+	expected.SetString("00000000ffff0000000000000000000000000000000000000000000000000000", 16)
+	if expected.Cmp(ret) != 0 {
+		t.Errorf("Expected result to be '00000000ffff0000000000000000000000000000000000000000000000000000', got '%064x", ret)
 	}
 }
 
