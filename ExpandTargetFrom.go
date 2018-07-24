@@ -1,9 +1,17 @@
 package cryptolib
 
-import "math/big"
+import (
+	"encoding/binary"
+	"encoding/hex"
+	"fmt"
+	"math/big"
+)
 
 // ExpandTargetFrom comment
-func ExpandTargetFrom(compact uint32) *big.Int {
+func ExpandTargetFrom(bits string) string {
+	binaryBits, _ := hex.DecodeString(bits)
+	compact := binary.BigEndian.Uint32(binaryBits)
+
 	// Extract the mantissa, sign bit, and exponent.
 	mantissa := compact & 0x007fffff
 	isNegative := compact&0x00800000 != 0
@@ -28,5 +36,5 @@ func ExpandTargetFrom(compact uint32) *big.Int {
 		bn = bn.Neg(bn)
 	}
 
-	return bn
+	return fmt.Sprintf("%064x", bn)
 }
