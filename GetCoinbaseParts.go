@@ -48,6 +48,10 @@ const (
 	opHASH160     = 0xa9 // Return RIPEMD160(SHA256(x)) hash of top item
 	opEQUALVERIFY = 0x88 // Same as OP_EQUAL, but run OP_VERIFY after to halt if not TRUE
 	opCHECKSIG    = 0xac // Pop a public key and signature and validate the signature for the transaction's hashed data, return TRUE if matching
+	opRETURN      = 0x6a
+	opPUSHDATA1   = 0x4c
+	opPUSHDATA2   = 0x4d
+	opPUSHDATA4   = 0x4e
 )
 
 // BuildCoinbase comment
@@ -64,9 +68,9 @@ func BuildCoinbase(c1 []byte, c2 []byte, extraNonce1 string, extraNonce2 string)
 }
 
 // GetCoinbaseParts comment
-func GetCoinbaseParts(height uint32, coinbaseValue uint64, defaultWitnessCommitment string, coinbaseText string, walletAddress string) (coinbase1 []byte, coinbase2 []byte, err error) {
+func GetCoinbaseParts(height uint32, coinbaseValue uint64, defaultWitnessCommitment string, coinbaseText string, walletAddress string, minerID ...string) (coinbase1 []byte, coinbase2 []byte, err error) {
 	coinbase1 = makeCoinbase1(height, coinbaseText)
-	ot, err := makeCoinbaseOutputTransactions(coinbaseValue, defaultWitnessCommitment, walletAddress)
+	ot, err := makeCoinbaseOutputTransactions(coinbaseValue, defaultWitnessCommitment, walletAddress, minerID...)
 	coinbase2 = makeCoinbase2(ot)
 
 	return
@@ -107,16 +111,14 @@ func AddressToScript(address string) (script []byte, err error) {
 	return ret, nil
 }
 
-func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitment string, wallet string) ([]byte, error) {
+func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitment string, wallet string, minerID ...string) ([]byte, error) {
+
 	lockingScript, err := AddressToScript(wallet)
 	if err != nil {
 		return nil, err
 	}
 
-	var buf = []byte{}
-
-	buf = append(buf, GetLittleEndianBytes(1, 4)...) // 4 bytes - version number
-	buf = append(buf, make([]byte, 4)...)            // 4 bytes of zeros
+	buf := make([]byte, 8)
 
 	binary.LittleEndian.PutUint64(buf[0:], coinbaseValue)
 
@@ -131,10 +133,42 @@ func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitme
 		wc, err := hex.DecodeString(defaultWitnessCommitment)
 		if err != nil {
 			log.Printf("Error decoding witness commitment: %+v", err)
+			return nil, err
 		}
 		wcl := VarInt(len(wc))
 		buf = append(buf, wcl...)
 		buf = append(buf, wc...)
+	}
+
+	if minerID != nil && len(minerID[0]) > 0 {
+		numberOfTransactions++
+
+		script := []byte{
+			opRETURN,
+		}
+
+		// Break the minerID[0] data into chunks of 570 bytes
+
+		for _, c := range chunk(minerID[0], 570) {
+			l := len(c)
+			if l <= 75 {
+				script = append(script, byte(l))
+			} else if l <= 255 {
+				script = append(script, opPUSHDATA1)
+				script = append(script, byte(l))
+			} else {
+				script = append(script, opPUSHDATA2) // 2 bytes for size - little endian
+				lenBytes := make([]byte, 2)
+				binary.LittleEndian.PutUint16(lenBytes, uint16(l))
+				script = append(script, lenBytes...)
+			}
+			script = append(script, c...)
+		}
+
+		byteArr := make([]byte, 8) // 8 bytes of 0 = 0 satoshis.
+		buf = append(buf, byteArr...)
+		buf = append(buf, VarInt(len(script))...)
+		buf = append(buf, script...)
 	}
 
 	buf = append(VarInt(numberOfTransactions), buf...)
@@ -179,4 +213,20 @@ func makeCoinbase2(ot []byte) []byte {
 	ot = append(ot, lt...)
 
 	return ot
+}
+
+func chunk(msg string, limit int) (chunks []string) {
+
+	chunkNumber := (len(msg) / limit) + 1
+
+	for i := 0; i < chunkNumber; i++ {
+		s := i * limit
+		e := (i + 1) * limit
+		if e > len(msg) {
+			e = len(msg)
+		}
+
+		chunks = append(chunks, msg[s:e])
+	}
+	return
 }
