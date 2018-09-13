@@ -3,13 +3,15 @@ package cryptolib
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"math/big"
 )
 
 // ExpandTargetFrom comment
-func ExpandTargetFrom(bits string) string {
-	binaryBits, _ := hex.DecodeString(bits)
+func ExpandTargetFrom(bits string) (string, error) {
+	binaryBits, err := hex.DecodeString(bits)
+	if err != nil {
+		return "", err
+	}
 	compact := binary.BigEndian.Uint32(binaryBits)
 
 	// Extract the mantissa, sign bit, and exponent.
@@ -35,6 +37,9 @@ func ExpandTargetFrom(bits string) string {
 	if isNegative {
 		bn = bn.Neg(bn)
 	}
+	dst := make([]byte, 32)
+	b := bn.Bytes()
 
-	return fmt.Sprintf("%064x", bn)
+	copy(dst[32-len(b):], b)
+	return hex.EncodeToString(dst), nil
 }

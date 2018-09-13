@@ -27,15 +27,6 @@ func TestReverseHexString(t *testing.T) {
 		t.Errorf("Expected reversed string to be '%+v', got %+v", expectedLong, rhLong)
 	}
 }
-
-func TestExpandTargetFrom(t *testing.T) {
-	ret := ExpandTargetFrom("1d00ffff")
-
-	if ret != "00000000ffff0000000000000000000000000000000000000000000000000000" {
-		t.Errorf("Expected result to be '00000000ffff0000000000000000000000000000000000000000000000000000', got '%s", ret)
-	}
-}
-
 func TestDifficultyFromBits(t *testing.T) {
 	// genisis block should be difficulty 1
 	testDifficulty("1d00ffff", float64(1), t)
