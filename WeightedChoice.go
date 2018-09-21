@@ -6,6 +6,7 @@ import (
 	"math/big"
 )
 
+//Choice is used by WeightedChoice
 type Choice struct {
 	Weight int
 	Item   interface{}
