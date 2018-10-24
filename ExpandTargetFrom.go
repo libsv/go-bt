@@ -8,9 +8,23 @@ import (
 
 // ExpandTargetFrom comment
 func ExpandTargetFrom(bits string) (string, error) {
-	binaryBits, err := hex.DecodeString(bits)
+	bn, err := ExpandTargetFromAsInt(bits)
 	if err != nil {
 		return "", err
+	}
+
+	dst := make([]byte, 32)
+	b := bn.Bytes()
+
+	copy(dst[32-len(b):], b)
+	return hex.EncodeToString(dst), nil
+}
+
+// ExpandTargetFromAsInt comment
+func ExpandTargetFromAsInt(bits string) (*big.Int, error) {
+	binaryBits, err := hex.DecodeString(bits)
+	if err != nil {
+		return nil, err
 	}
 	compact := binary.BigEndian.Uint32(binaryBits)
 
@@ -37,9 +51,6 @@ func ExpandTargetFrom(bits string) (string, error) {
 	if isNegative {
 		bn = bn.Neg(bn)
 	}
-	dst := make([]byte, 32)
-	b := bn.Bytes()
 
-	copy(dst[32-len(b):], b)
-	return hex.EncodeToString(dst), nil
+	return bn, nil
 }

@@ -22,7 +22,7 @@ func toCompactSize(bits uint32) *big.Int {
 }
 
 func targetToDifficulty(target *big.Int) (float64, error) {
-	a := float64(0xFFFF0000000000000000000000000000000000000000000000000000) // genisis difficulty
+	a := float64(0xFFFF0000000000000000000000000000000000000000000000000000) // genesis difficulty
 	b, err := strconv.ParseFloat(target.String(), 64)
 	if err != nil {
 		return 0.0, err
