@@ -23,27 +23,29 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 type Input struct {
 	previousTxHash     [32]byte
 	previousTxOutIndex uint32
-	txInScriptLength   uint64
-	txInScript         []byte
+	scriptLen          uint64
+	script             []byte
 	sequenceNumber     uint32
 }
 
 // NewInput returns a transaction input from the bytes provided
 func NewInput(bytes []byte) (*Input, int) {
-	ti := Input{}
+	i := Input{}
 
-	copy(ti.previousTxHash[:], cryptolib.ReverseBytes(bytes[0:32]))
+	copy(i.previousTxHash[:], cryptolib.ReverseBytes(bytes[0:32]))
 
-	ti.previousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
+	i.previousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
-	i, size := cryptolib.DecodeVarInt(bytes[36:])
-	ti.txInScriptLength = i
+	offset := 36
+	l, size := cryptolib.DecodeVarInt(bytes[offset:])
+	i.scriptLen = l
+	offset += size
 
-	ti.txInScript = bytes[36+size : 36+size+int(i)]
+	i.script = bytes[offset : offset+int(l)]
 
-	ti.sequenceNumber = binary.LittleEndian.Uint32(bytes[36+size+int(i):])
+	i.sequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 
-	return &ti, 36 + size + int(i) + 4
+	return &i, offset + int(l) + 4
 }
 
 func (i *Input) String() string {
@@ -52,5 +54,5 @@ prevOutIndex: %d
 scriptLen:    %d
 script:       %x
 sequence:     %x
-`, i.previousTxHash, i.previousTxOutIndex, i.txInScriptLength, i.txInScript, i.sequenceNumber)
+`, i.previousTxHash, i.previousTxOutIndex, i.scriptLen, i.script, i.sequenceNumber)
 }

@@ -38,7 +38,7 @@ type BitcoinTransaction struct {
 	Bytes   []byte
 	Witness bool
 	Inputs  []*Input
-	Outputs []*Input
+	Outputs []*Output
 }
 
 // New comment
@@ -79,6 +79,15 @@ func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
 		input, size := NewInput(bt.Bytes[offset:])
 		offset += size
 		bt.Inputs = append(bt.Inputs, input)
+	}
+
+	outputCount, size := cryptolib.DecodeVarInt(bt.Bytes[offset:])
+	offset += size
+
+	for i = 0; i < outputCount; i++ {
+		output, size := NewOutput(bt.Bytes[offset:])
+		offset += size
+		bt.Outputs = append(bt.Outputs, output)
 	}
 
 	return &bt, nil
