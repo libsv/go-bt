@@ -41,6 +41,11 @@ func NewOutput(bytes []byte) (*Output, int) {
 	return &o, offset + int(i)
 }
 
+// GetOutputScript comment
+func (o *Output) GetOutputScript() []byte {
+	return o.script
+}
+
 func (o *Output) String() string {
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d

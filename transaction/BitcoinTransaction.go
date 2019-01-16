@@ -135,3 +135,13 @@ func (bt *BitcoinTransaction) IsCoinbase() bool {
 
 	return false
 }
+
+// GetInputs comment
+func (bt *BitcoinTransaction) GetInputs() []*Input {
+	return bt.Inputs
+}
+
+// GetOutputs comment
+func (bt *BitcoinTransaction) GetOutputs() []*Output {
+	return bt.Outputs
+}

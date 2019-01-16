@@ -41,3 +41,36 @@ func TestIsCoinbase(t *testing.T) {
 		t.Errorf("Expecting false, got %t", cb2)
 	}
 }
+
+/*
+48
+30
+45
+02
+21
+00f4de422896e461da647b21d800a4ca9ace98dbd08c2dc9b8e049c93197c314f5
+02
+20
+68836c3dfa6650ebeff73b1e3caa8761cd107ed13d6cc713856ebde3f874dd41
+41
+
+21
+02aea77c449eeeef2746562e56ad053202755f9844276e3f0c684f9d59cdb9458d
+ac OP_CHECKSIG
+
+*/
+// func TestMyTransaction(t *testing.T) {
+// 	fromTx, err := NewFromString("02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0d510101092f45423132382e302fffffffff0100f2052a01000000232102aea77c449eeeef2746562e56ad053202755f9844276e3f0c684f9d59cdb9458dac00000000")
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+
+// 	toTx, err := NewFromString("02000000019bb2dea27bcff46bca60e46ba2fdce706a8eb9d22c9b05e54166b8f9ac57d6de0000000049483045022100f4de422896e461da647b21d800a4ca9ace98dbd08c2dc9b8e049c93197c314f5022068836c3dfa6650ebeff73b1e3caa8761cd107ed13d6cc713856ebde3f874dd4141feffffff0200ca9a3b000000001976a9143c134f3ccd097be40242efd6fb370fc62501afe788ac00196bee000000001976a914c3d737cb0d93ded96a35d240aa3f01b34edc4e5d88ac65000000")
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+
+// 	t.Errorf("%x\n%x\n", fromTx.GetOutputs()[0].GetOutputScript(), toTx.GetInputs()[0].GetInputScript())
+// }

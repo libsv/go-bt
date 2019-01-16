@@ -48,6 +48,11 @@ func NewInput(bytes []byte) (*Input, int) {
 	return &i, offset + int(l) + 4
 }
 
+// GetInputScript comment
+func (i *Input) GetInputScript() []byte {
+	return i.script
+}
+
 func (i *Input) String() string {
 	return fmt.Sprintf(`prevTxHash:   %x
 prevOutIndex: %d
