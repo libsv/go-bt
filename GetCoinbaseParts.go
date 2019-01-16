@@ -72,6 +72,10 @@ func BuildCoinbase(c1 []byte, c2 []byte, extraNonce1 string, extraNonce2 string)
 func GetCoinbaseParts(height uint32, coinbaseValue uint64, defaultWitnessCommitment string, coinbaseText string, walletAddress string, minerID ...string) (coinbase1 []byte, coinbase2 []byte, err error) {
 	coinbase1 = makeCoinbase1(height, coinbaseText)
 	ot, err := makeCoinbaseOutputTransactions(coinbaseValue, defaultWitnessCommitment, walletAddress, minerID...)
+	if err != nil {
+		return
+	}
+
 	coinbase2 = makeCoinbase2(ot)
 
 	return
