@@ -81,7 +81,7 @@ func TestZeroChoices(t *testing.T) {
 		t.Error(err)
 	}
 
-	if choice.Weight != 0 {
-		t.Errorf("Weight should be zero, got %d", choice.Weight)
+	if choice.Weight != 1 {
+		t.Errorf("Weight should be 1, got %d", choice.Weight)
 	}
 }
