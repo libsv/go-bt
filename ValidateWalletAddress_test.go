@@ -2,8 +2,8 @@ package cryptolib
 
 import "testing"
 
-func TestValidBCHAddress(t *testing.T) {
-	ok, err := ValidateWalletAddress("BCH", "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2")
+func TestValidBSVAddress(t *testing.T) {
+	ok, err := ValidateWalletAddress("BSV", "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2")
 
 	if err != nil {
 		t.Error(err)
@@ -15,7 +15,7 @@ func TestValidBCHAddress(t *testing.T) {
 }
 
 func TestWrongCoin(t *testing.T) {
-	ok, _ := ValidateWalletAddress("RCH", "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2")
+	ok, _ := ValidateWalletAddress("RSV", "bitcoincash:qr6m7j9njldwwzlg9v7v53unlr4jkmx6eylep8ekg2")
 
 	if ok {
 		t.Error("Should have returned false")

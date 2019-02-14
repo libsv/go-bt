@@ -60,7 +60,7 @@ func testDifficulty(bits string, expected float64, t *testing.T) {
 
 // func TestCreateJobError(t *testing.T) {
 // 	bt := BlockTemplate{}
-// 	_, err := bt.CreateJob("BCH", "mxo3ES3wLp8UcejGNTtPH1BCwn8F8JZi37", "coingeek", 4)
+// 	_, err := bt.CreateJob("BSV", "mxo3ES3wLp8UcejGNTtPH1BCwn8F8JZi37", "coingeek", 4)
 
 // 	if err == nil {
 // 		t.Errorf("Expected CreateJob to return an error")

@@ -15,9 +15,9 @@ var (
 
 func init() {
 	prefixes = make(map[string]string)
-	prefixes["BCH"] = "bitcoincash"
-	prefixes["TCH"] = "bchtest"
-	prefixes["RCH"] = "bchreg"
+	prefixes["BSV"] = "bitcoincash"
+	prefixes["TSV"] = "bchtest"
+	prefixes["RSV"] = "bchreg"
 }
 
 // CHARSET is the cashaddr character set for encoding.
@@ -38,8 +38,8 @@ type data []byte
 // ValidateWalletAddress will check that the address is valid for the specified
 // coin.
 func ValidateWalletAddress(coin string, address string) (bool, error) {
-	if coin == "BCH" || coin == "TCH" || coin == "RCH" {
-		return validateBCHWalletAddress(coin, address)
+	if coin == "BSV" || coin == "TSV" || coin == "RSV" {
+		return validateBSVWalletAddress(coin, address)
 	} else if coin == "BTC" || coin == "TTC" || coin == "RTC" {
 		return validA58([]byte(address))
 	} else {
@@ -48,8 +48,8 @@ func ValidateWalletAddress(coin string, address string) (bool, error) {
 
 }
 
-func validateBCHWalletAddress(coin string, address string) (bool, error) {
-	if coin == "BCH" || coin == "TCH" || coin == "RCH" {
+func validateBSVWalletAddress(coin string, address string) (bool, error) {
+	if coin == "BSV" || coin == "TSV" || coin == "RSV" {
 		// Check the prefix is valid
 		p := prefixes[coin] + ":"
 
