@@ -107,7 +107,9 @@ func AddressToScript(address string) (script []byte, err error) {
 	// the 0x00 prefix in P2PKH addresses, and these come out as a '3' and '1' after
 	// base58check encoding.
 	switch decoded[0] {
-	case 0x00:
+	case 0x00: // Pubkey hash (P2PKH address)
+		fallthrough
+	case 0x6f: // Testnet pubkey hash (P2PKH address)
 		pubkey := decoded[1 : len(decoded)-4]
 
 		ret := []byte{
@@ -121,7 +123,9 @@ func AddressToScript(address string) (script []byte, err error) {
 
 		return ret, nil
 
-	case 0x05:
+	case 0x05: // Script hash (P2SH address)
+		fallthrough
+	case 0xc4: // Testnet script hash (P2SH address)
 		redeemScriptHash := decoded[1 : len(decoded)-4]
 
 		ret := []byte{
