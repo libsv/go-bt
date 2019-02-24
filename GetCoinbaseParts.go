@@ -46,6 +46,7 @@ import (
 const (
 	opDUP         = 0x76 // Duplicate the top item in the stack
 	opHASH160     = 0xa9 // Return RIPEMD160(SHA256(x)) hash of top item
+	opEQUAL       = 0x87 //	Returns 1 if the inputs are exactly equal, 0 otherwise.
 	opEQUALVERIFY = 0x88 // Same as OP_EQUAL, but run OP_VERIFY after to halt if not TRUE
 	opCHECKSIG    = 0xac // Pop a public key and signature and validate the signature for the transaction's hashed data, return TRUE if matching
 	opRETURN      = 0x6a
@@ -71,6 +72,10 @@ func BuildCoinbase(c1 []byte, c2 []byte, extraNonce1 string, extraNonce2 string)
 func GetCoinbaseParts(height uint32, coinbaseValue uint64, defaultWitnessCommitment string, coinbaseText string, walletAddress string, minerID ...string) (coinbase1 []byte, coinbase2 []byte, err error) {
 	coinbase1 = makeCoinbase1(height, coinbaseText)
 	ot, err := makeCoinbaseOutputTransactions(coinbaseValue, defaultWitnessCommitment, walletAddress, minerID...)
+	if err != nil {
+		return
+	}
+
 	coinbase2 = makeCoinbase2(ot)
 
 	return
@@ -97,18 +102,44 @@ func AddressToScript(address string) (script []byte, err error) {
 		return nil, fmt.Errorf("invalid address length for '%s'", address)
 	}
 
-	pubkey := decoded[1 : len(decoded)-4]
+	// A P2SH address always begins with a '3', instead of a '1' as in P2PKH addresses.
+	// This is because P2SH addresses have a version byte prefix of 0x05, instead of
+	// the 0x00 prefix in P2PKH addresses, and these come out as a '3' and '1' after
+	// base58check encoding.
+	switch decoded[0] {
+	case 0x00: // Pubkey hash (P2PKH address)
+		fallthrough
+	case 0x6f: // Testnet pubkey hash (P2PKH address)
+		pubkey := decoded[1 : len(decoded)-4]
 
-	ret := []byte{
-		opDUP,
-		opHASH160,
-		0x14,
+		ret := []byte{
+			opDUP,
+			opHASH160,
+			0x14,
+		}
+		ret = append(ret, pubkey...)
+		ret = append(ret, opEQUALVERIFY)
+		ret = append(ret, opCHECKSIG)
+
+		return ret, nil
+
+	case 0x05: // Script hash (P2SH address)
+		fallthrough
+	case 0xc4: // Testnet script hash (P2SH address)
+		redeemScriptHash := decoded[1 : len(decoded)-4]
+
+		ret := []byte{
+			opHASH160,
+			0x14,
+		}
+		ret = append(ret, redeemScriptHash...)
+		ret = append(ret, opEQUAL)
+
+		return ret, nil
+
+	default:
+		return nil, fmt.Errorf("Address %s is not supported", address)
 	}
-	ret = append(ret, pubkey...)
-	ret = append(ret, opEQUALVERIFY)
-	ret = append(ret, opCHECKSIG)
-
-	return ret, nil
 }
 
 func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitment string, wallet string, minerID ...string) ([]byte, error) {
