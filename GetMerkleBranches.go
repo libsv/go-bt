@@ -2,6 +2,7 @@ package cryptolib
 
 import (
 	"encoding/hex"
+	"fmt"
 )
 
 func getHashes(txHashes []string) []string {
@@ -52,4 +53,38 @@ func GetMerkleBranches(template []string) []string {
 	walkBranch(hashes)
 
 	return branches
+}
+
+// MerkleRootFromBranches comment
+func MerkleRootFromBranches(txHash string, txIndex int, branches []string) (string, error) {
+	hash, err := hex.DecodeString(txHash)
+	if err != nil {
+		return "", err
+	}
+
+	hash = ReverseBytes(hash)
+
+	for _, b := range branches {
+		h, err := hex.DecodeString(b)
+		if err != nil {
+			return "", err
+		}
+
+		h = ReverseBytes(h)
+
+		if txIndex&1 > 0 {
+			hash = Sha256d(append(h, hash...))
+		} else {
+			hash = Sha256d(append(hash, h...))
+		}
+
+		txIndex >>= 1
+	}
+
+	if txIndex > 0 {
+		return "", fmt.Errorf("index %d out of range for proof of length %d", txIndex, len(branches))
+	}
+
+	return hex.EncodeToString(ReverseBytes(hash)), nil
+
 }
