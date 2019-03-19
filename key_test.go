@@ -1,9 +1,7 @@
 package cryptolib
 
 import (
-	"crypto/ecdsa"
 	"encoding/hex"
-	"math/big"
 	"testing"
 )
 
@@ -31,22 +29,49 @@ func TestPrivateKeyToWif2(t *testing.T) {
 	if wif != "5KehCbbxxMsPomgbYqJf2VXKtiD8UKVuaHStjaUyRsZ1X2KjmFZ" {
 		t.Errorf("PrivateKeyToWIF failed")
 	}
-
-	var priv *ecdsa.PrivateKey
-
-	k := new(big.Int)
-	k.SetString(seed, 16)
-
-	priv = new(ecdsa.PrivateKey)
-	curve := new(KoblitzCurve)
-	priv.PublicKey.Curve = curve
-	priv.D = k
-
-	priv.PublicKey.X, priv.PublicKey.Y = curve.ScalarBaseMult(k.Bytes())
-	t.Logf("%x", priv.Public())
-
-	// pubkeyBytes, _ := x509.MarshalPKIXPublicKey(&priv.PublicKey)
-
-	// t.Logf("%+v", len(priv.PublicKey.X)+len(priv.PublicKey.Y))
-	t.Fail()
 }
+
+// func TestValidateExternalMessage(t *testing.T) {
+// 	// privBytes := base58.Decode("L4PPagW8MXCuDRdNiuv8aWeftc1cpPfjMRiedqyzeerrCjh51eMR")
+
+// 	// priv, pub := btcec.PrivKeyFromBytes(btcec.S256(), privBytes)
+
+// 	// t.Logf("%v, %v", priv, pub)
+// 	message := "Hello world"
+// 	address := "1DnmCuL9xMnWBy9rUwWUyz1vi57LMM2AfJ"
+
+// 	sigBytes, err := base64.StdEncoding.DecodeString("IMuSQkuYbEZkrK5x4/7b4SffUsTArsammM7i6kpwn7LiUUWcsTio+QY0qWzQaZ2ujBsKvCVJiWyWkCYUQChuDGw=")
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+
+// 	addressDecoded, netID, err := base58.CheckDecode(address)
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+// 	if netID != 0 {
+// 		t.Errorf("NetID should be 0")
+// 		return
+// 	}
+
+// 	pubKey, ok, err := btcec.RecoverCompact(btcec.S256(), sigBytes, addressDecoded)
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+
+// 	t.Log(pubKey, ok)
+
+// 	signature, err := btcec.ParseDERSignature(sigBytes, btcec.S256())
+// 	if err != nil {
+// 		t.Error(err)
+// 		return
+// 	}
+
+// 	// messageHash := chainhash.DoubleHashB([]byte(message))
+// 	verified := signature.Verify([]byte(message), pubKey)
+// 	t.Logf("Signature Verified? %t", verified)
+
+// }
