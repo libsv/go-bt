@@ -35,10 +35,11 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 
 // A BitcoinTransaction wraps a bitcoin transaction
 type BitcoinTransaction struct {
-	Bytes   []byte
-	Witness bool
-	Inputs  []*Input
-	Outputs []*Output
+	Bytes    []byte
+	Witness  bool
+	Inputs   []*Input
+	Outputs  []*Output
+	Locktime []byte
 }
 
 // New comment
@@ -48,17 +49,17 @@ func New() *BitcoinTransaction {
 
 // NewFromString takes a hex string representation of a bitcoin transaction
 // and returns a BitcoinTransaction object
-func NewFromString(str string) (*BitcoinTransaction, error) {
+func NewFromString(str string, electrum bool) (*BitcoinTransaction, error) {
 	bytes, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFromBytes(bytes)
+	return NewFromBytes(bytes, electrum)
 }
 
 // NewFromBytes takes an array of bytes and constructs a BitcoinTransaction
-func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
+func NewFromBytes(bytes []byte, electrum bool) (*BitcoinTransaction, error) {
 	bt := BitcoinTransaction{
 		Bytes: bytes,
 	}
@@ -78,6 +79,9 @@ func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
 	for ; i < inputCount; i++ {
 		input, size := NewInput(bt.Bytes[offset:])
 		offset += size
+		if electrum {
+			offset += 8
+		}
 		bt.Inputs = append(bt.Inputs, input)
 	}
 
@@ -89,6 +93,8 @@ func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
 		offset += size
 		bt.Outputs = append(bt.Outputs, output)
 	}
+
+	bt.Locktime = bt.Bytes[offset:]
 
 	return &bt, nil
 }
@@ -144,4 +150,30 @@ func (bt *BitcoinTransaction) GetInputs() []*Input {
 // GetOutputs comment
 func (bt *BitcoinTransaction) GetOutputs() []*Output {
 	return bt.Outputs
+}
+
+// Hex comment
+func (bt *BitcoinTransaction) Hex() []byte {
+	hex := make([]byte, 0)
+
+	hex = append(hex, cryptolib.GetLittleEndianBytes(bt.Version(), 4)...)
+	if bt.Witness {
+		hex = append(hex, 0x00)
+		hex = append(hex, 0x01)
+	}
+
+	hex = append(hex, cryptolib.VarInt(len(bt.GetInputs()))...)
+
+	for _, in := range bt.GetInputs() {
+		hex = append(hex, in.Hex()...)
+	}
+
+	hex = append(hex, cryptolib.VarInt(len(bt.GetOutputs()))...)
+	for _, out := range bt.GetOutputs() {
+		hex = append(hex, out.Hex()...)
+	}
+
+	hex = append(hex, bt.Locktime...)
+
+	return hex
 }

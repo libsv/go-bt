@@ -61,3 +61,16 @@ script:       %x
 sequence:     %x
 `, i.previousTxHash, i.previousTxOutIndex, i.scriptLen, i.script, i.sequenceNumber)
 }
+
+// Hex comment
+func (i *Input) Hex() []byte {
+	hex := make([]byte, 0)
+
+	hex = append(hex, cryptolib.ReverseBytes(i.previousTxHash[:])...)
+	hex = append(hex, cryptolib.GetLittleEndianBytes(i.previousTxOutIndex, 4)...)
+	hex = append(hex, cryptolib.VarInt(int(i.scriptLen))...)
+	hex = append(hex, i.script...)
+	hex = append(hex, cryptolib.GetLittleEndianBytes(i.sequenceNumber, 4)...)
+
+	return hex
+}

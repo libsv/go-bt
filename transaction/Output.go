@@ -52,3 +52,17 @@ scriptLen: %d
 script:    %x
 `, o.value, o.scriptLen, o.script)
 }
+
+// Hex comment
+func (o *Output) Hex() []byte {
+
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, o.value)
+
+	hex := make([]byte, 0)
+	hex = append(hex, b...)
+	hex = append(hex, cryptolib.VarInt(int(o.scriptLen))...)
+	hex = append(hex, o.script...)
+
+	return hex
+}
