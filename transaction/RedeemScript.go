@@ -43,6 +43,46 @@ func NewRedeemScript(signaturesRequired int) (*RedeemScript, error) {
 	return rs, nil
 }
 
+// NewRedeemScriptFromElectrum comment
+func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
+	parts, err := cryptolib.DecodeParts(script)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(parts) == 0 {
+		return nil, errors.New("There should be 5 parts in this redeemScript")
+	}
+
+	signaturesRequired := int(parts[0][0]) - opBASE
+	if signaturesRequired < 2 {
+		return nil, errors.New("Must have 2 or more required signatures for multisig")
+	}
+
+	if signaturesRequired > 15 {
+		return nil, errors.New("More than 15 signatures is not supported")
+	}
+
+	signatureCount := int(parts[len(parts)-2][0]) - opBASE
+
+	if parts[len(parts)-1][0] != opCHECKMULTISIG {
+		return nil, errors.New("Script must end with OP_CHECKMULTISIG")
+	}
+
+	pubkeys := parts[1 : len(parts)-2]
+
+	if len(pubkeys) != signatureCount {
+		return nil, errors.New("Number of public keys must equal the required")
+	}
+
+	rs := &RedeemScript{
+		SignaturesRequired: signaturesRequired,
+		PublicKeys:         pubkeys,
+	}
+
+	return rs, nil
+}
+
 func hash160(data []byte) []byte {
 	sha := sha256.New()
 	ripe := ripemd160.New()
