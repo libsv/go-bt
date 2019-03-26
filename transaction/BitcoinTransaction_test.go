@@ -2,7 +2,11 @@ package transaction
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
+
+	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 func TestGetVersion(t *testing.T) {
@@ -27,6 +31,53 @@ func TestElectumTX(t *testing.T) {
 	t.Logf("%s\n%s\n%v\n", h, hex.EncodeToString(tx.Hex()), err)
 
 }
+func TestElectumUnsignedTX(t *testing.T) {
+	const h = "01000000012284573666f6a0ac538c0559db6a2f378e05808d8e07530ad98123304fd4d8a200000000b40001ff01ff4cad524c53ff0488b21e000000000000000000362f7a9030543db8751401c387d6a71e870f1895b3a62569d455e8ee5f5f5e5f03036624c6df96984db6b4e625b6707c017eb0e0d137cd13a0c989bfa77a4473fd000000004c53ff0488b21e0000000000000000008b20425398995f3c866ea6ce5c1828a516b007379cf97b136bffbdc86f75df14036454bad23b019eae34f10aff8b8d6d8deb18cb31354e5a169ee09d8a4560e8250000000052aefefffffffe7097000000000003a0860100000000001976a914a84a278b361de016ca93cfa91624db1f926e1b9d88aca0860100000000001976a914a84a278b361de016ca93cfa91624db1f926e1b9d88acf06194000000000017a914289225b74059ef9b1024b9f04a294d32e5cf97b187f1c60800"
+
+	tx, err := NewFromString(h, true)
+
+	t.Logf("%s\n%s\n%v\n", h, hex.EncodeToString(tx.Hex()), err)
+
+}
+func TestElectumSignedTX(t *testing.T) {
+	const h = "01000000012284573666f6a0ac538c0559db6a2f378e05808d8e07530ad98123304fd4d8a200000000fa00473044022041682b268531cf6209577deae34b92fdc83d9ef6e3abc190d4952e927761efd502201696256fba4dd6b05e44ed3871abbd1bc11356aea5ddc36816ca779f68cca6fa4101ff4cad524c53ff0488b21e000000000000000000362f7a9030543db8751401c387d6a71e870f1895b3a62569d455e8ee5f5f5e5f03036624c6df96984db6b4e625b6707c017eb0e0d137cd13a0c989bfa77a4473fd000000004c53ff0488b21e0000000000000000008b20425398995f3c866ea6ce5c1828a516b007379cf97b136bffbdc86f75df14036454bad23b019eae34f10aff8b8d6d8deb18cb31354e5a169ee09d8a4560e8250000000052aefefffffffe7097000000000003a0860100000000001976a914a84a278b361de016ca93cfa91624db1f926e1b9d88aca0860100000000001976a914a84a278b361de016ca93cfa91624db1f926e1b9d88acf06194000000000017a914289225b74059ef9b1024b9f04a294d32e5cf97b187f1c60800"
+
+	tx, err := NewFromString(h, true)
+
+	t.Logf("%s\n%s\n%v\n", h, hex.EncodeToString(tx.Hex()), err)
+
+}
+
+func TestSignRedeemScript(t *testing.T) {
+	var redeemScript, _ = hex.DecodeString("524c53ff0488b21e000000000000000000362f7a9030543db8751401c387d6a71e870f1895b3a62569d455e8ee5f5f5e5f03036624c6df96984db6b4e625b6707c017eb0e0d137cd13a0c989bfa77a4473fd000000004c53ff0488b21e0000000000000000008b20425398995f3c866ea6ce5c1828a516b007379cf97b136bffbdc86f75df14036454bad23b019eae34f10aff8b8d6d8deb18cb31354e5a169ee09d8a4560e8250000000052ae")
+	const expected = "3044022041682b268531cf6209577deae34b92fdc83d9ef6e3abc190d4952e927761efd502201696256fba4dd6b05e44ed3871abbd1bc11356aea5ddc36816ca779f68cca6fa"
+
+	const xprv = "xprv9s21ZrQH143K2beTKhLXFRWWFwH8jkwUssjk3SVTiApgmge7kNC3jhVc4NgHW8PhW2y7BCDErqnKpKuyQMjqSePPJooPJowAz5BVLThsv6c"
+	const privHex = "5f86e4023a4e94f00463f81b70ff951f83f896a0a3e6ed89cf163c152f954f8b"
+
+	pkBytes, err := hex.DecodeString(privHex)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+
+	// Sign a message using the private key.
+	messageHash := chainhash.DoubleHashB(redeemScript)
+	signature, err := privKey.Sign(messageHash)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Serialize and display the signature.
+	fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
+
+	// Verify the signature for the message using the public key.
+	verified := signature.Verify(messageHash, pubKey)
+	fmt.Printf("Signature Verified? %v\n", verified)
+}
+
 func TestIsCoinbase(t *testing.T) {
 	const coinbase = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4303bfea07322f53696d6f6e204f726469736820616e642053747561727420467265656d616e206d61646520746869732068617070656e2f9a46434790f7dbdea3430000ffffffff018a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
 	bt1, err := NewFromString(coinbase, false)
