@@ -97,13 +97,13 @@ func (rs *RedeemScript) getRedeemScript() []byte {
 	var b []byte
 
 	b = append(b, byte(opBASE+rs.SignaturesRequired))
-
+	rs.PublicKeys = cryptolib.SortByteArrays(rs.PublicKeys)
 	for _, pk := range rs.PublicKeys {
 		b = append(b, byte(len(pk)))
 		b = append(b, pk...)
 	}
 
-	b = append(b, byte(len(rs.PublicKeys)))
+	b = append(b, byte(opBASE+len(rs.PublicKeys)))
 
 	b = append(b, opCHECKMULTISIG)
 
