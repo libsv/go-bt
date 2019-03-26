@@ -85,3 +85,48 @@ func DecodeVarInt(b []byte) (result uint64, size int) {
 
 	return
 }
+
+// DecodeParts returns an array of strings...
+func DecodeParts(s string) ([][]byte, error) {
+	h, err := hex.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+
+	var r [][]byte
+	for len(h) > 0 {
+		// Handle OP codes
+		switch h[0] {
+		case opPUSHDATA1:
+			len := h[1]
+			part := h[2 : 2+len]
+			r = append(r, part)
+			h = h[2+len:]
+
+		case opPUSHDATA2:
+			len := binary.LittleEndian.Uint16(h[1:])
+			part := h[3 : 3+len]
+			r = append(r, part)
+			h = h[3+len:]
+
+		case opPUSHDATA4:
+			len := binary.LittleEndian.Uint32(h[1:])
+			part := h[5 : 5+len]
+			r = append(r, part)
+			h = h[5+len:]
+
+		default:
+			if h[0] >= 0x01 && h[0] <= 0x4e {
+				len := h[0]
+				part := h[1 : len+1]
+				r = append(r, part)
+				h = h[1+len:]
+			} else {
+				r = append(r, []byte{h[0]})
+				h = h[1:]
+			}
+		}
+	}
+
+	return r, nil
+}
