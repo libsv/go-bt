@@ -86,44 +86,48 @@ func DecodeVarInt(b []byte) (result uint64, size int) {
 	return
 }
 
-// DecodeParts returns an array of strings...
-func DecodeParts(s string) ([][]byte, error) {
-	h, err := hex.DecodeString(s)
+// DecodeStringParts calls DecodeParts
+func DecodeStringParts(s string) ([][]byte, error) {
+	b, err := hex.DecodeString(s)
 	if err != nil {
 		return nil, err
 	}
+	return DecodeParts(b)
+}
 
+// DecodeParts returns an array of strings...
+func DecodeParts(b []byte) ([][]byte, error) {
 	var r [][]byte
-	for len(h) > 0 {
+	for len(b) > 0 {
 		// Handle OP codes
-		switch h[0] {
+		switch b[0] {
 		case opPUSHDATA1:
-			len := h[1]
-			part := h[2 : 2+len]
+			len := b[1]
+			part := b[2 : 2+len]
 			r = append(r, part)
-			h = h[2+len:]
+			b = b[2+len:]
 
 		case opPUSHDATA2:
-			len := binary.LittleEndian.Uint16(h[1:])
-			part := h[3 : 3+len]
+			len := binary.LittleEndian.Uint16(b[1:])
+			part := b[3 : 3+len]
 			r = append(r, part)
-			h = h[3+len:]
+			b = b[3+len:]
 
 		case opPUSHDATA4:
-			len := binary.LittleEndian.Uint32(h[1:])
-			part := h[5 : 5+len]
+			len := binary.LittleEndian.Uint32(b[1:])
+			part := b[5 : 5+len]
 			r = append(r, part)
-			h = h[5+len:]
+			b = b[5+len:]
 
 		default:
-			if h[0] >= 0x01 && h[0] <= 0x4e {
-				len := h[0]
-				part := h[1 : len+1]
+			if b[0] >= 0x01 && b[0] <= 0x4e {
+				len := b[0]
+				part := b[1 : len+1]
 				r = append(r, part)
-				h = h[1+len:]
+				b = b[1+len:]
 			} else {
-				r = append(r, []byte{h[0]})
-				h = h[1:]
+				r = append(r, []byte{b[0]})
+				b = b[1:]
 			}
 		}
 	}
