@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"crypto/sha256"
+	"encoding/binary"
 	"errors"
 	"log"
 
@@ -45,7 +46,7 @@ func NewRedeemScript(signaturesRequired int) (*RedeemScript, error) {
 
 // NewRedeemScriptFromElectrum comment
 func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
-	parts, err := cryptolib.DecodeParts(script)
+	parts, err := cryptolib.DecodeStringParts(script)
 	if err != nil {
 		return nil, err
 	}
@@ -69,18 +70,68 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		return nil, errors.New("Script must end with OP_CHECKMULTISIG")
 	}
 
-	pubkeys := parts[1 : len(parts)-2]
+	rs := &RedeemScript{
+		SignaturesRequired: signaturesRequired,
+	}
 
-	if len(pubkeys) != signatureCount {
+	for _, pubkey := range parts[1 : len(parts)-2] {
+		if pubkey[0] != 0xff {
+			return nil, errors.New("All Electrum pubkeys should start with 0xff")
+		}
+
+		pubkey = pubkey[1:]
+		xpub := base58Encode(pubkey[0:78])
+
+		derivationPath := pubkey[78:]
+		var s []uint16
+		for len(derivationPath) > 0 {
+			n := binary.LittleEndian.Uint16(derivationPath[0:2])
+			s = append(s, n)
+			derivationPath = derivationPath[2:]
+		}
+
+		if len(s) != 2 {
+			return nil, errors.New("Derivation path should have exactly 2 items")
+		}
+
+		// rs.AddPublicKey("", s)
+		publicKey, err := cryptolib.NewPublicKey(xpub)
+		if err != nil {
+			return nil, err
+		}
+
+		p, err := publicKey.Child(uint32(s[0]))
+		if err != nil {
+			return nil, err
+		}
+		p, err = p.Child(uint32(s[1]))
+		if err != nil {
+			return nil, err
+		}
+
+		rs.PublicKeys = append(rs.PublicKeys, p.PublicKey)
+	}
+
+	if len(rs.PublicKeys) != signatureCount {
 		return nil, errors.New("Number of public keys must equal the required")
 	}
 
-	rs := &RedeemScript{
-		SignaturesRequired: signaturesRequired,
-		PublicKeys:         pubkeys,
-	}
-
 	return rs, nil
+}
+
+func base58Encode(input []byte) string {
+	b := make([]byte, 0, len(input)+4)
+	b = append(b, input[:]...)
+	cksum := checksum(b)
+	b = append(b, cksum[:]...)
+	return base58.Encode(b)
+}
+
+func checksum(input []byte) (cksum [4]byte) {
+	h := sha256.Sum256(input)
+	h2 := sha256.Sum256(h[:])
+	copy(cksum[:], h2[:4])
+	return
 }
 
 func hash160(data []byte) []byte {
@@ -92,19 +143,23 @@ func hash160(data []byte) []byte {
 }
 
 // AddPublicKey comment
-func (rs *RedeemScript) AddPublicKey(pkey string) error {
+func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error {
+
+	if len(derivationPath) != 2 {
+		return errors.New("We only support derivation paths with exactly 2 levels")
+	}
 
 	pk, err := cryptolib.NewPublicKey(pkey)
 	if err != nil {
 		return err
 	}
 
-	result, err := pk.Child(0)
+	result, err := pk.Child(derivationPath[0])
 	if err != nil {
 		return err
 	}
 
-	result2, err := result.Child(0)
+	result2, err := result.Child(derivationPath[1])
 	if err != nil {
 		return err
 	}
@@ -113,12 +168,6 @@ func (rs *RedeemScript) AddPublicKey(pkey string) error {
 
 	rs.PublicKeys = append(rs.PublicKeys, result2.PublicKey)
 
-	// b, _, err := base58.CheckDecode(pkey)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// rs.PublicKeys = append(rs.PublicKeys, b)
 	return nil
 }
 
