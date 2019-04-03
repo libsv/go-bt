@@ -43,13 +43,51 @@ type PublicKey struct {
 	ChildIndex           []byte `json:"childIndex"`        //: 0,
 	ChainCode            []byte `json:"-"`                 //   '41fc504936a63056da1a0f9dd44cad3651b64a17b53e523e18a8d228a489c16a',
 	ChainCodeStr         string `json:"chainCode"`
-	PublicKey            []byte `json:"-"`         //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
-	PublicKeyStr         string `json:"publicKey"` //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
-	Checksum             []byte `json:"-"`         //: 43286247,
-	XPubKey              string `json:"xpubkey"`   // 'xpub661My
+	PrivateKey           []byte `json:"-"`          //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
+	PrivateKeyStr        string `json:"privateKey"` //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
+	PublicKey            []byte `json:"-"`          //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
+	PublicKeyStr         string `json:"publicKey"`  //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
+	Checksum             []byte `json:"-"`          //: 43286247,
+	XPrvKey              string `json:"xprvkey"`    // 'xprv661My
+	XPubKey              string `json:"xpubkey"`    // 'xpub661My
 }
 
 var curve = btcec.S256()
+
+// NewPrivateKey comment
+func NewPrivateKey(xprv string) (*PublicKey, error) {
+	decoded, err := DecodeString(xprv)
+	if err != nil {
+		return nil, err
+	}
+
+	privateKey := decoded[46:78]
+
+	// The fingerprint is the 1st 4 bytes of the ripemd160 of the sha256 of the public key.
+	// hasher := ripemd160.New()
+	// sha := sha256.Sum256(publicKey)
+	// hasher.Write(sha[:])
+	// hashBytes := hasher.Sum(nil)
+	// fingerPrint := hashBytes[0:4]
+
+	return &PublicKey{
+		Network: "livenet",
+
+		Version: decoded[0:4],
+		Depth:   byteToUint16(decoded[4:5]),
+		// FingerPrint:          fingerPrint,
+		// FingerPrintStr:       hex.EncodeToString(fingerPrint),
+		ParentFingerPrint:    decoded[5:9],
+		ParentFingerPrintStr: hex.EncodeToString(decoded[5:9]),
+		ChildIndex:           decoded[9:13],
+		ChainCode:            decoded[13:45],
+		ChainCodeStr:         hex.EncodeToString(decoded[13:45]),
+		PrivateKey:           privateKey,
+		PrivateKeyStr:        hex.EncodeToString(privateKey),
+		Checksum:             decoded[78:82],
+		XPrvKey:              xprv,
+	}, nil
+}
 
 // NewPublicKey comment
 func NewPublicKey(xpub string) (*PublicKey, error) {

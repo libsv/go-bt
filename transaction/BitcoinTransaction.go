@@ -1,11 +1,14 @@
 package transaction
 
 import (
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"log"
 
 	"bitbucket.org/simon_ordish/cryptolib"
+	"github.com/btcsuite/btcd/btcec"
 )
 
 /*
@@ -154,6 +157,15 @@ func (bt *BitcoinTransaction) GetOutputs() []*Output {
 
 // Hex comment
 func (bt *BitcoinTransaction) Hex() []byte {
+	return bt.hex(0, nil)
+}
+
+// HexWithClearedInputs comment
+func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byte) []byte {
+	return bt.hex(index, scriptPubKey)
+}
+
+func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 	hex := make([]byte, 0)
 
 	hex = append(hex, cryptolib.GetLittleEndianBytes(bt.Version(), 4)...)
@@ -163,9 +175,14 @@ func (bt *BitcoinTransaction) Hex() []byte {
 	}
 
 	hex = append(hex, cryptolib.VarInt(len(bt.GetInputs()))...)
-
-	for _, in := range bt.GetInputs() {
-		hex = append(hex, in.Hex()...)
+	for i, in := range bt.GetInputs() {
+		script := in.Hex(scriptPubKey != nil)
+		if i == index && scriptPubKey != nil {
+			hex = append(hex, cryptolib.VarInt(len(scriptPubKey))...)
+			hex = append(hex, scriptPubKey...)
+		} else {
+			hex = append(hex, script...)
+		}
 	}
 
 	hex = append(hex, cryptolib.VarInt(len(bt.GetOutputs()))...)
@@ -176,4 +193,67 @@ func (bt *BitcoinTransaction) Hex() []byte {
 	hex = append(hex, bt.Locktime...)
 
 	return hex
+}
+
+// Sign comment
+func (bt *BitcoinTransaction) Sign(privateKey *cryptolib.PublicKey) { // PublicKey is actually a badly named PrivateKey
+
+	// Go through each input and calculate a signature and then add it
+
+	scriptPubKey, _ := hex.DecodeString("a9140e95261082d65c384a6106f114474bc0784ba67e87")
+
+	for i := range bt.GetInputs() {
+		hex := bt.HexWithClearedInputs(i, scriptPubKey)
+		hex = append(hex, cryptolib.GetLittleEndianBytes(0x01, 4)...)
+		log.Printf("hex: %x\n", hex)
+
+		hash := sha256.Sum256(hex)
+
+		log.Printf("hash: %x\n", hash)
+		privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), privateKey.PrivateKey)
+
+		signature, err := privKey.Sign(hash[:])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// Serialize and display the signature.
+		fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
+
+	}
+	// hex := bt.HexWithClearedInputs()
+	// parts, _ := cryptolib.DecodeParts(i.script)
+	// if parts[0][0] == opZERO {
+	// 	redeemScript, err := NewRedeemScriptFromElectrum(hex.EncodeToString(parts[len(parts)-1]))
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 	}
+
+	// 	signatures := parts[1 : len(parts)-1]
+
+	// 	for i, signature := range signatures {
+	// 		if signature[0] == 0xff {
+	// 			// xprivKey, err := cryptolib.NewPrivateKey("xprv9s21ZrQH143K2beTKhLXFRWWFwH8jkwUssjk3SVTiApgmge7kNC3jhVc4NgHW8PhW2y7BCDErqnKpKuyQMjqSePPJooPJowAz5BVLThsv6c")
+	// 			xprivKey, err := cryptolib.NewPrivateKey("xprv9s21ZrQH143K3ShHqGb2ago1pjts78QvhAtYUbe1kPraUtjkxaftf28Pc6LdHKBAzi2jAH3EhQWgibbJxMFDW1yS8ZrPy172LEvwddxV55D")
+	// 			if err != nil {
+	// 				log.Println(err)
+	// 			}
+
+	// 			privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), xprivKey.PrivateKey)
+
+	// 			signature, err := privKey.Sign(redeemScript.getRedeemScriptHash())
+	// 			if err != nil {
+	// 				log.Println(err)
+	// 			}
+	// 			signatures[i] = signature.Serialize()
+	// 			fmt.Printf("NEW SIG %d: %x\n", i, signature.Serialize())
+	// 		} else {
+	// 			fmt.Printf("OLD SIG %d: %x\n", i, signature)
+	// 		}
+	// 	}
+
+	// 	fmt.Printf("%v", parts)
+	// }
+
 }

@@ -63,13 +63,17 @@ sequence:     %x
 }
 
 // Hex comment
-func (i *Input) Hex() []byte {
+func (i *Input) Hex(clear bool) []byte {
 	hex := make([]byte, 0)
 
 	hex = append(hex, cryptolib.ReverseBytes(i.previousTxHash[:])...)
 	hex = append(hex, cryptolib.GetLittleEndianBytes(i.previousTxOutIndex, 4)...)
-	hex = append(hex, cryptolib.VarInt(int(i.scriptLen))...)
-	hex = append(hex, i.script...)
+	if clear {
+		hex = append(hex, 0x00)
+	} else {
+		hex = append(hex, cryptolib.VarInt(int(i.scriptLen))...)
+		hex = append(hex, i.script...)
+	}
 	hex = append(hex, cryptolib.GetLittleEndianBytes(i.sequenceNumber, 4)...)
 
 	return hex

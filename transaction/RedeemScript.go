@@ -135,10 +135,9 @@ func checksum(input []byte) (cksum [4]byte) {
 }
 
 func hash160(data []byte) []byte {
-	sha := sha256.New()
 	ripe := ripemd160.New()
-	sha.Write(data)
-	ripe.Write(sha.Sum(nil))
+	h := sha256.Sum256(data)
+	ripe.Write(h[:])
 	return ripe.Sum(nil)
 }
 
