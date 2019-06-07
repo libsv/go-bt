@@ -54,7 +54,7 @@ func validateBSVWalletAddress(coin string, address string) (bool, error) {
 		p := prefixes[coin] + ":"
 
 		if !strings.HasPrefix(address, p) {
-			return false, errors.New("Bad prefix")
+			return validA58([]byte(address))
 		}
 
 		// Check each character is valid
