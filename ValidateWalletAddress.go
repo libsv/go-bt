@@ -265,8 +265,8 @@ func validA58(a58 []byte) (ok bool, err error) {
 	if err := a.set58(a58); err != nil {
 		return false, err
 	}
-	if a[0] != 0 {
-		return false, errors.New("not version 0")
+	if a[0] != 0 && a[0] != 5 {
+		return false, errors.New("not version 0 or 5")
 	}
 	return a.embeddedChecksum() == a.computeChecksum(), nil
 }
