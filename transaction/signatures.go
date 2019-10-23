@@ -192,3 +192,135 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 // 	ret := cryptolib.Sha256d(buf)
 // 	return ReverseBytes(ret)
 // }
+
+/*
+def SignatureHashForkId(script, txTo, inIdx, hashtype, amount):
+
+    hashPrevouts = 0
+    hashSequence = 0
+    hashOutputs = 0
+
+    if not (hashtype & SIGHASH_ANYONECANPAY):
+        serialize_prevouts = bytes()
+        for i in txTo.vin:
+            serialize_prevouts += i.prevout.serialize()
+        hashPrevouts = uint256_from_str(hash256(serialize_prevouts))
+
+    if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+        serialize_sequence = bytes()
+        for i in txTo.vin:
+            serialize_sequence += struct.pack("<I", i.nSequence)
+        hashSequence = uint256_from_str(hash256(serialize_sequence))
+
+    if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+        serialize_outputs = bytes()
+        for o in txTo.vout:
+            serialize_outputs += o.serialize()
+        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+    elif ((hashtype & 0x1f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
+        serialize_outputs = txTo.vout[inIdx].serialize()
+        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+
+    ss = bytes()
+    ss += struct.pack("<i", txTo.nVersion)
+    ss += ser_uint256(hashPrevouts)
+    ss += ser_uint256(hashSequence)
+    ss += txTo.vin[inIdx].prevout.serialize()
+    ss += ser_string(script)
+    ss += struct.pack("<q", amount)
+    ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
+    ss += ser_uint256(hashOutputs)
+    ss += struct.pack("<i", txTo.nLockTime)
+    ss += struct.pack("<I", hashtype)
+
+    return hash256(ss)
+
+*/
+
+/*
+uint256 GetPrevoutHash(const CTransaction &txTo) {
+    CHashWriter ss(SER_GETHASH, 0);
+    for (size_t n = 0; n < txTo.vin.size(); n++) {
+        ss << txTo.vin[n].prevout;
+    }
+    return ss.GetHash();
+}
+
+uint256 GetSequenceHash(const CTransaction &txTo) {
+    CHashWriter ss(SER_GETHASH, 0);
+    for (size_t n = 0; n < txTo.vin.size(); n++) {
+        ss << txTo.vin[n].nSequence;
+    }
+    return ss.GetHash();
+}
+
+uint256 GetOutputsHash(const CTransaction &txTo) {
+    CHashWriter ss(SER_GETHASH, 0);
+    for (size_t n = 0; n < txTo.vout.size(); n++) {
+        ss << txTo.vout[n];
+    }
+    return ss.GetHash();
+}
+
+} // namespace
+
+PrecomputedTransactionData::PrecomputedTransactionData(
+    const CTransaction &txTo) {
+    hashPrevouts = GetPrevoutHash(txTo);
+    hashSequence = GetSequenceHash(txTo);
+    hashOutputs = GetOutputsHash(txTo);
+}
+
+uint256 SignatureHash(const CScript &scriptCode, const CTransaction &txTo,
+                      unsigned int nIn, SigHashType sigHashType,
+                      const Amount amount,
+                      const PrecomputedTransactionData *cache, uint32_t flags) {
+    if (sigHashType.hasForkId() && (flags & SCRIPT_ENABLE_SIGHASH_FORKID)) {
+        uint256 hashPrevouts;
+        uint256 hashSequence;
+        uint256 hashOutputs;
+
+        if (!sigHashType.hasAnyoneCanPay()) {
+            hashPrevouts = cache ? cache->hashPrevouts : GetPrevoutHash(txTo);
+        }
+
+        if (!sigHashType.hasAnyoneCanPay() &&
+            (sigHashType.getBaseType() != BaseSigHashType::SINGLE) &&
+            (sigHashType.getBaseType() != BaseSigHashType::NONE)) {
+            hashSequence = cache ? cache->hashSequence : GetSequenceHash(txTo);
+        }
+
+        if ((sigHashType.getBaseType() != BaseSigHashType::SINGLE) &&
+            (sigHashType.getBaseType() != BaseSigHashType::NONE)) {
+            hashOutputs = cache ? cache->hashOutputs : GetOutputsHash(txTo);
+        } else if ((sigHashType.getBaseType() == BaseSigHashType::SINGLE) &&
+                   (nIn < txTo.vout.size())) {
+            CHashWriter ss(SER_GETHASH, 0);
+            ss << txTo.vout[nIn];
+            hashOutputs = ss.GetHash();
+        }
+
+        CHashWriter ss(SER_GETHASH, 0);
+        // Version
+        ss << txTo.nVersion;
+        // Input prevouts/nSequence (none/all, depending on flags)
+        ss << hashPrevouts;
+        ss << hashSequence;
+        // The input being signed (replacing the scriptSig with scriptCode +
+        // amount). The prevout may already be contained in hashPrevout, and the
+        // nSequence may already be contain in hashSequence.
+        ss << txTo.vin[nIn].prevout;
+        ss << scriptCode;
+        ss << amount.GetSatoshis();
+        ss << txTo.vin[nIn].nSequence;
+        // Outputs (none/one/all, depending on flags)
+        ss << hashOutputs;
+        // Locktime
+        ss << txTo.nLockTime;
+        // Sighash type
+        ss << sigHashType;
+
+        return ss.GetHash();
+    }
+
+*/
