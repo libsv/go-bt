@@ -5,13 +5,12 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch",
-      "type": "go",
+      "type": "node",
       "request": "launch",
-      "mode": "auto",
-      "program": "${fileDirname}",
-      "env": {},
-      "args": []
+      "name": "BSV test",
+      "program": "${workspaceFolder}/transaction/test.js",
+      "console": "internalConsole",
+      "outputCapture": "std"
     }
   ]
 }

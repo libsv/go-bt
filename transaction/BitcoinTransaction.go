@@ -1,13 +1,15 @@
 package transaction
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"log"
 
-	"bitbucket.org/simon_ordish/cryptolib"
+	"cryptolib"
+
 	"github.com/btcsuite/btcd/btcec"
 )
 
@@ -36,9 +38,19 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
                  timestamp when transaction is final
 */
 
+// Signature constants
+const (
+	SighashAll          = 0x00000001
+	SighashNone         = 0x00000002
+	SighashSingle       = 0x00000003
+	SighashForkID       = 0x00000040
+	SighashAnyoneCanPay = 0x00000080
+)
+
 // A BitcoinTransaction wraps a bitcoin transaction
 type BitcoinTransaction struct {
 	Bytes    []byte
+	Version  uint32
 	Witness  bool
 	Inputs   []*Input
 	Outputs  []*Output
@@ -52,22 +64,25 @@ func New() *BitcoinTransaction {
 
 // NewFromString takes a hex string representation of a bitcoin transaction
 // and returns a BitcoinTransaction object
-func NewFromString(str string, electrum bool) (*BitcoinTransaction, error) {
+func NewFromString(str string) (*BitcoinTransaction, error) {
 	bytes, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFromBytes(bytes, electrum)
+	return NewFromBytes(bytes)
 }
 
 // NewFromBytes takes an array of bytes and constructs a BitcoinTransaction
-func NewFromBytes(bytes []byte, electrum bool) (*BitcoinTransaction, error) {
+func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
 	bt := BitcoinTransaction{
 		Bytes: bytes,
 	}
 
-	var offset = 4 // Skip 4 version bytes
+	var offset = 0
+
+	bt.Version = binary.LittleEndian.Uint32(bytes[offset:4])
+	offset += 4
 
 	// There is an optional Flag of 2 bytes after the version. It is always "0001".
 	if bytes[4] == 0x00 && bytes[5] == 0x01 {
@@ -82,9 +97,7 @@ func NewFromBytes(bytes []byte, electrum bool) (*BitcoinTransaction, error) {
 	for ; i < inputCount; i++ {
 		input, size := NewInput(bt.Bytes[offset:])
 		offset += size
-		if electrum {
-			offset += 8
-		}
+
 		bt.Inputs = append(bt.Inputs, input)
 	}
 
@@ -102,17 +115,6 @@ func NewFromBytes(bytes []byte, electrum bool) (*BitcoinTransaction, error) {
 	return &bt, nil
 }
 
-// Version returns the 4 byte version as a uint32 (litte endian)
-func (bt *BitcoinTransaction) Version() uint32 {
-	bytes := bt.Bytes[0:4]
-	return binary.LittleEndian.Uint32(bytes)
-}
-
-// VersionHex returns the version of the transaction
-func (bt *BitcoinTransaction) VersionHex() string {
-	return hex.EncodeToString(bt.Bytes[0:4])
-}
-
 // HasWitnessData returns true if the optional Witness flag == 0001
 func (bt *BitcoinTransaction) HasWitnessData() bool {
 	return bt.Witness
@@ -121,6 +123,11 @@ func (bt *BitcoinTransaction) HasWitnessData() bool {
 // InputCount returns the number of transaction inputs
 func (bt *BitcoinTransaction) InputCount() int {
 	return len(bt.Inputs)
+}
+
+// OutputCount returns the number of transaction inputs
+func (bt *BitcoinTransaction) OutputCount() int {
+	return len(bt.Outputs)
 }
 
 // IsCoinbase determines if this transaction is a coinbase by
@@ -168,13 +175,15 @@ func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byt
 func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 	hex := make([]byte, 0)
 
-	hex = append(hex, cryptolib.GetLittleEndianBytes(bt.Version(), 4)...)
+	hex = append(hex, cryptolib.GetLittleEndianBytes(bt.Version, 4)...)
+
 	if bt.Witness {
 		hex = append(hex, 0x00)
 		hex = append(hex, 0x01)
 	}
 
 	hex = append(hex, cryptolib.VarInt(len(bt.GetInputs()))...)
+
 	for i, in := range bt.GetInputs() {
 		script := in.Hex(scriptPubKey != nil)
 		if i == index && scriptPubKey != nil {
@@ -196,30 +205,37 @@ func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 }
 
 // Sign comment
-func (bt *BitcoinTransaction) Sign(privateKey *cryptolib.PublicKey) { // PublicKey is actually a badly named PrivateKey
+func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType int) {
+	if sigType == 0 {
+		sigType = SighashAll | SighashForkID
+	}
 
+	hashData := hash160(privateKey.PubKey().SerializeCompressed())
+	fmt.Printf("hashdata: %x", hashData)
 	// Go through each input and calculate a signature and then add it
 
 	scriptPubKey, _ := hex.DecodeString("a9140e95261082d65c384a6106f114474bc0784ba67e87")
 
-	for i := range bt.GetInputs() {
-		hex := bt.HexWithClearedInputs(i, scriptPubKey)
-		hex = append(hex, cryptolib.GetLittleEndianBytes(0x01, 4)...)
-		log.Printf("hex: %x\n", hex)
+	for i, in := range bt.GetInputs() {
+		if bytes.Compare(in.script[3:23], hashData) == 0 {
+			hex := bt.HexWithClearedInputs(i, scriptPubKey)
+			hex = append(hex, cryptolib.GetLittleEndianBytes(0x01, 4)...)
+			log.Printf("hex: %x\n", hex)
 
-		hash := sha256.Sum256(hex)
+			hash := sha256.Sum256(hex)
 
-		log.Printf("hash: %x\n", hash)
-		privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), privateKey.PrivateKey)
+			log.Printf("hash: %x\n", hash)
 
-		signature, err := privKey.Sign(hash[:])
-		if err != nil {
-			fmt.Println(err)
-			return
+			signature, err := privateKey.Sign(hash[:])
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			// Serialize and display the signature.
+			fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
+
 		}
-
-		// Serialize and display the signature.
-		fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
 
 	}
 	// hex := bt.HexWithClearedInputs()

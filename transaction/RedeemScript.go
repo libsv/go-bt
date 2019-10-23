@@ -12,14 +12,6 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
-const (
-	opZERO          = 0x00
-	opBASE          = 0x50
-	opHASH160       = 0xa9
-	opCHECKMULTISIG = 0xae
-	opEQUAL         = 0x87
-)
-
 // RedeemScript type
 type RedeemScript struct {
 	SignaturesRequired int

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"bitbucket.org/simon_ordish/cryptolib"
+	"github.com/btcsuite/btcd/btcec"
 )
 
 /*
@@ -24,7 +25,7 @@ type Input struct {
 	previousTxHash     [32]byte
 	previousTxOutIndex uint32
 	scriptLen          uint64
-	script             []byte
+	script             Script
 	sequenceNumber     uint32
 }
 
@@ -77,4 +78,8 @@ func (i *Input) Hex(clear bool) []byte {
 	hex = append(hex, cryptolib.GetLittleEndianBytes(i.sequenceNumber, 4)...)
 
 	return hex
+}
+
+func (i *Input) getSignatures(transaction *BitcoinTransaction, privKey *btcec.PrivateKey, index int, sigtype int, hashData []byte) {
+
 }
