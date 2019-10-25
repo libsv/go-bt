@@ -5,7 +5,6 @@ import (
 	"cryptolib"
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"log"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -69,8 +68,6 @@ func getSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 
 		for _, privateKey := range privateKeys {
 			sig := getSignatureForInput(input, transaction, privateKey, uint32(idx), sigtype)
-			fmt.Printf("SIG: %x\n", sig[0].Signature)
-
 			sigs = append(sigs, sig...)
 		}
 	}
@@ -82,11 +79,9 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 	sigs := make([]*Signature, 0)
 
 	hashData := hash160(privateKey.PubKey().SerializeCompressed())
-	fmt.Printf("%x\n", hashData)
 
 	if bytes.Compare(hashData, input.script.getPublicKeyHash()) == 0 {
 		sighash := sighashForForkID(transaction, sigtype, index, *input.script, input.previousTxAmount)
-		fmt.Printf("SIGHASH: %x\n", sighash)
 
 		s, err := privateKey.Sign(cryptolib.ReverseBytes(sighash))
 		if err != nil {
@@ -162,14 +157,12 @@ func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, input
 
 	if sighashType&SighashAnyoneCanPay == 0 {
 		hashPrevouts = getPrevoutHash(transaction)
-		fmt.Printf("%x\n", hashPrevouts)
 	}
 
 	if sighashType&SighashAnyoneCanPay == 0 &&
 		(sighashType&31) != SighashSingle &&
 		(sighashType&31) != SighashNone {
 		hashSequence = getSequenceHash(transaction)
-		fmt.Printf("%x\n", hashSequence)
 	}
 
 	if (sighashType&31) != SighashSingle && (sighashType&31) != SighashNone {
@@ -177,7 +170,6 @@ func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, input
 	} else if (sighashType&31) == SighashSingle && inputNumber < uint32(len(transaction.Outputs)) {
 		hashOutputs = getOutputsHash(transaction, int32(inputNumber))
 	}
-	fmt.Printf("%x\n", hashOutputs)
 
 	buf := make([]byte, 0)
 
