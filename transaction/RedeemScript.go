@@ -6,7 +6,7 @@ import (
 	"errors"
 	"log"
 
-	"bitbucket.org/simon_ordish/cryptolib"
+	"cryptolib"
 	"github.com/btcsuite/btcutil/base58"
 
 	"golang.org/x/crypto/ripemd160"

@@ -1,13 +1,20 @@
 package transaction
 
 import (
+	"bytes"
+	"cryptolib"
+	"encoding/binary"
+	"encoding/hex"
+	"fmt"
+	"log"
+
 	"github.com/btcsuite/btcd/btcec"
 )
 
 // Signature struct
 type Signature struct {
 	PublicKey    *btcec.PublicKey
-	PreviousTXID string
+	PreviousTXID [32]byte
 	OutputIndex  uint32
 	InputIndex   uint32
 	Signature    []byte
@@ -54,9 +61,17 @@ func getInputType(in *Input) {
 func getSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.PrivateKey, sigtype uint32) []*Signature {
 	sigs := make([]*Signature, 0)
 
-	for _, privateKey := range privateKeys {
-		for idx, input := range transaction.Inputs {
-			sigs = append(sigs, getSignatureForInput(input, transaction, privateKey, uint32(idx), sigtype)...)
+	for idx, input := range transaction.Inputs {
+		// Get the value of the previous input
+		s, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
+		input.script = NewScript(s)
+		input.previousTxAmount = 4998000000
+
+		for _, privateKey := range privateKeys {
+			sig := getSignatureForInput(input, transaction, privateKey, uint32(idx), sigtype)
+			fmt.Printf("SIG: %x\n", sig[0].Signature)
+
+			sigs = append(sigs, sig...)
 		}
 	}
 
@@ -66,129 +81,148 @@ func getSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 func getSignatureForInput(input *Input, transaction *BitcoinTransaction, privateKey *btcec.PrivateKey, index uint32, sigtype uint32) []*Signature {
 	sigs := make([]*Signature, 0)
 
-	// hashData := hash160(privateKey.PubKey().SerializeCompressed())
+	hashData := hash160(privateKey.PubKey().SerializeCompressed())
+	fmt.Printf("%x\n", hashData)
 
-	// if bytes.Compare(hashData, transaction.GetInputs()[index].GetInputScript()) == 0 {
-	// 	sigs = append(sigs, &Signature{
-	// 		PublicKey:    privateKey.PubKey(),
-	// 		PreviousTXID: input.previousTxHash,
-	// 		OutputIndex:  input.previousTxOutIndex,
-	// 		InputIndex:   idx,
-	// 		Signature:    sighashForForkId(transaction, sigtype, index, this.output.script, this.output.satoshis),
-	// 		SigType:      sigtype,
-	// 	})
-	// }
+	if bytes.Compare(hashData, input.script.getPublicKeyHash()) == 0 {
+		sighash := sighashForForkID(transaction, sigtype, index, *input.script, input.previousTxAmount)
+		fmt.Printf("SIGHASH: %x\n", sighash)
+
+		s, err := privateKey.Sign(cryptolib.ReverseBytes(sighash))
+		if err != nil {
+			log.Printf("ERROR [%v]", err)
+		}
+
+		signature := s.Serialize()
+		signature = append(signature, byte(sigtype))
+
+		if err != nil {
+			log.Printf("ERROR [%v]", err)
+		} else {
+			sigs = append(sigs, &Signature{
+				PublicKey:    privateKey.PubKey(),
+				PreviousTXID: input.previousTxHash,
+				OutputIndex:  input.previousTxOutIndex,
+				InputIndex:   index,
+				Signature:    signature,
+				SigType:      sigtype,
+			})
+		}
+	}
 
 	return sigs
 }
 
-// func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, subscript string, satoshis uint64) {
-// 	input = transaction.inputs[inputNumber]
+func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, subscript Script, satoshis uint64) []byte {
 
-// 	getPrevoutHash := func(tx *BitcoinTransaction) []byte {
-// 		buf := make([]byte, 0)
+	input := transaction.Inputs[inputNumber]
 
-// 		for _, in := range tx.Inputs {
-// 			buf = append(buf, reverseBytes(in.PreviousTXID)...)
-// 			oi := make([]byte, 4)
-// 			binary.LittleEndian.PutUint32(oi, in.OutputIndex)
-// 			buf = append(buf, oi...)
-// 		}
+	getPrevoutHash := func(tx *BitcoinTransaction) []byte {
+		buf := make([]byte, 0)
 
-// 		return cryptolib.Sha256d(buf)
-// 	}
+		for _, in := range tx.Inputs {
+			buf = append(buf, cryptolib.ReverseBytes(in.previousTxHash[:])...)
+			oi := make([]byte, 4)
+			binary.LittleEndian.PutUint32(oi, in.previousTxOutIndex)
+			buf = append(buf, oi...)
+		}
 
-// 	getSequenceHash := func(tx *BitcoinTransaction) []byte {
-// 		buf := make([]byte, 0)
+		return cryptolib.Sha256d(buf)
+	}
 
-// 		for _, in := range tx.Inputs {
-// 			oi := make([]byte, 4)
-// 			binary.LittleEndian.PutUint32(oi, in.sequenceNumber)
-// 			buf = append(buf, oi...)
-// 		}
+	getSequenceHash := func(tx *BitcoinTransaction) []byte {
+		buf := make([]byte, 0)
 
-// 		return cryptolib.Sha256d(buf)
-// 	}
+		for _, in := range tx.Inputs {
+			oi := make([]byte, 4)
+			binary.LittleEndian.PutUint32(oi, in.sequenceNumber)
+			buf = append(buf, oi...)
+		}
 
-// 	getOutputsHash := func(tx *BitcoinTransaction, n int) {
-// 		buf := make([]byte, 0)
+		return cryptolib.Sha256d(buf)
+	}
 
-// 		if n == -1 {
-// 			for _, out := range tx.Outputs {
-// 				buf = append(buf, out...)
-// 			}
-// 		} else {
-// 			buf = append(buf, tx.Outputs[n]...)
-// 		}
+	getOutputsHash := func(tx *BitcoinTransaction, n int32) []byte {
+		buf := make([]byte, 0)
 
-// 		return cryptolib.Sha256d(buf)
-// 	}
+		if n == -1 {
+			for _, out := range tx.Outputs {
+				buf = append(buf, out.getBytesForSigHash()...)
+			}
+		} else {
+			buf = append(buf, tx.Outputs[n].getBytesForSigHash()...)
+		}
 
-// 	hashPrevouts := make([]byte, 32)
-// 	hashSequence := make([]byte, 32)
-// 	hashOutputs := make([]byte, 32)
+		return cryptolib.Sha256d(buf)
+	}
 
-// 	if !(sighashType & Signature.SIGHASH_ANYONECANPAY) {
-// 		hashPrevouts = getPrevoutHash(transaction)
-// 	}
+	hashPrevouts := make([]byte, 32)
+	hashSequence := make([]byte, 32)
+	hashOutputs := make([]byte, 32)
 
-// 	if !(sighashType & Signature.SIGHASH_ANYONECANPAY) &&
-// 		(sighashType&31) != Signature.SIGHASH_SINGLE &&
-// 		(sighashType&31) != Signature.SIGHASH_NONE {
-// 		hashSequence = getSequenceHash(transaction)
-// 	}
+	if sighashType&SighashAnyoneCanPay == 0 {
+		hashPrevouts = getPrevoutHash(transaction)
+		fmt.Printf("%x\n", hashPrevouts)
+	}
 
-// 	if (sighashType&31) != Signature.SIGHASH_SINGLE && (sighashType&31) != Signature.SIGHASH_NONE {
-// 		hashOutputs = getOutputsHash(transaction, -1)
-// 	} else if (sighashType&31) == Signature.SIGHASH_SINGLE && inputNumber < transaction.outputs.length {
-// 		hashOutputs = getOutputsHash(transaction, inputNumber)
-// 	}
+	if sighashType&SighashAnyoneCanPay == 0 &&
+		(sighashType&31) != SighashSingle &&
+		(sighashType&31) != SighashNone {
+		hashSequence = getSequenceHash(transaction)
+		fmt.Printf("%x\n", hashSequence)
+	}
 
-// 	buf := make([]byte, 0)
+	if (sighashType&31) != SighashSingle && (sighashType&31) != SighashNone {
+		hashOutputs = getOutputsHash(transaction, -1)
+	} else if (sighashType&31) == SighashSingle && inputNumber < uint32(len(transaction.Outputs)) {
+		hashOutputs = getOutputsHash(transaction, int32(inputNumber))
+	}
+	fmt.Printf("%x\n", hashOutputs)
 
-// 	// Version
-// 	v := make([]byte, 4)
-// 	binary.LittleEndian.PutUint32(v, tx.Version)
-// 	buf = append(buf, v...)
+	buf := make([]byte, 0)
 
-// 	// Input prevouts/nSequence (none/all, depending on flags)
-// 	buf = append(buf, hashPrevouts...)
-// 	buf = append(buf, hashSequence...)
+	// Version
+	v := make([]byte, 4)
+	binary.LittleEndian.PutUint32(v, transaction.Version)
+	buf = append(buf, v...)
 
-// 	//  outpoint (32-byte hash + 4-byte little endian)
-// 	buf = append(buf, reverseBytes(in.PreviousTXID)...)
-// 	oi := make([]byte, 4)
-// 	binary.LittleEndian.PutUint32(oi, in.OutputIndex)
-// 	buf = append(buf, oi...)
+	// Input prevouts/nSequence (none/all, depending on flags)
+	buf = append(buf, hashPrevouts...)
+	buf = append(buf, hashSequence...)
 
-// 	// scriptCode of the input (serialized as scripts inside CTxOuts)
-// 	buf = append(buf, Varint(len(subscript))...)
-// 	buf = append(buf, subscript...)
+	//  outpoint (32-byte hash + 4-byte little endian)
+	buf = append(buf, cryptolib.ReverseBytes(input.previousTxHash[:])...)
+	oi := make([]byte, 4)
+	binary.LittleEndian.PutUint32(oi, input.previousTxOutIndex)
+	buf = append(buf, oi...)
 
-// 	// value of the output spent by this input (8-byte little endian)
-// 	sat := make([]byte, 8)
-// 	binary.LittleEndian.PutUint64(sat, satoshis)
-// 	buf = append(buf, sat...)
+	// scriptCode of the input (serialized as scripts inside CTxOuts)
+	buf = append(buf, cryptolib.VarInt(uint64(len(subscript)))...)
+	buf = append(buf, subscript...)
 
-// 	// nSequence of the input (4-byte little endian)
-// 	seq := make([]byte, 4)
-// 	binary.LittleEndian.PutUint32(seq, in.sequenceNumber)
-// 	buf = append(buf, seq...)
+	// value of the output spent by this input (8-byte little endian)
+	sat := make([]byte, 8)
+	binary.LittleEndian.PutUint64(sat, satoshis)
+	buf = append(buf, sat...)
 
-// 	// Outputs (none/one/all, depending on flags)
-// 	buf = append(buf, hashOutputs...)
+	// nSequence of the input (4-byte little endian)
+	seq := make([]byte, 4)
+	binary.LittleEndian.PutUint32(seq, input.sequenceNumber)
+	buf = append(buf, seq...)
 
-// 	// Locktime
-// 	lt := make([]byte, 4)
-// 	binary.LittleEndian.PutUint32(lt, tx.LockTime)
-// 	buf = append(buf, lt...)
+	// Outputs (none/one/all, depending on flags)
+	buf = append(buf, hashOutputs...)
 
-// 	// sighashType
-// 	//writer.writeUInt32LE(sighashType >>> 0)
-// 	st := make([]byte, 4)
-// 	binary.LittleEndian.PutUint32(st, sighashType>>0)
-// 	buf = append(buf, st...)
+	// Locktime
+	lt := make([]byte, 4)
+	binary.LittleEndian.PutUint32(lt, transaction.Locktime)
+	buf = append(buf, lt...)
 
-// 	ret := cryptolib.Sha256d(buf)
-// 	return ReverseBytes(ret)
-// }
+	// sighashType
+	//writer.writeUInt32LE(sighashType >>> 0)
+	st := make([]byte, 4)
+	binary.LittleEndian.PutUint32(st, sighashType>>0)
+	buf = append(buf, st...)
+	ret := cryptolib.Sha256d(buf)
+	return cryptolib.ReverseBytes(ret)
+}

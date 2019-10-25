@@ -14,5 +14,7 @@ const privKey = bsv.PrivateKey.fromWIF('cPjqbeH84Qq9VmWrURUEJNo7DaKnrPP428utXzZR
 
 tx.sign(privKey)
 
-console.log(tx)
+console.log(tx.toObject())
 console.log(tx.isFullySigned())
+
+// ee27ec55cbdcfa87d01ba83244593aef2a50dabc2dc4eb7f2bd2a5d04a76d0f9

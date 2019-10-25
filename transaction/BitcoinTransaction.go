@@ -1,16 +1,11 @@
 package transaction
 
 import (
-	"bytes"
-	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	"cryptolib"
-
-	"github.com/btcsuite/btcd/btcec"
 )
 
 /*
@@ -54,7 +49,7 @@ type BitcoinTransaction struct {
 	Witness  bool
 	Inputs   []*Input
 	Outputs  []*Output
-	Locktime []byte
+	Locktime uint32
 }
 
 // New comment
@@ -110,7 +105,7 @@ func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
 		bt.Outputs = append(bt.Outputs, output)
 	}
 
-	bt.Locktime = bt.Bytes[offset:]
+	bt.Locktime = binary.LittleEndian.Uint32(bytes[offset:])
 
 	return &bt, nil
 }
@@ -182,94 +177,96 @@ func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 		hex = append(hex, 0x01)
 	}
 
-	hex = append(hex, cryptolib.VarInt(len(bt.GetInputs()))...)
+	hex = append(hex, cryptolib.VarInt(uint64(len(bt.GetInputs())))...)
 
 	for i, in := range bt.GetInputs() {
 		script := in.Hex(scriptPubKey != nil)
 		if i == index && scriptPubKey != nil {
-			hex = append(hex, cryptolib.VarInt(len(scriptPubKey))...)
+			hex = append(hex, cryptolib.VarInt(uint64(len(scriptPubKey)))...)
 			hex = append(hex, scriptPubKey...)
 		} else {
 			hex = append(hex, script...)
 		}
 	}
 
-	hex = append(hex, cryptolib.VarInt(len(bt.GetOutputs()))...)
+	hex = append(hex, cryptolib.VarInt(uint64(len(bt.GetOutputs())))...)
 	for _, out := range bt.GetOutputs() {
 		hex = append(hex, out.Hex()...)
 	}
 
-	hex = append(hex, bt.Locktime...)
+	lt := make([]byte, 4)
+	binary.LittleEndian.PutUint32(lt, bt.Locktime)
+	hex = append(hex, lt...)
 
 	return hex
 }
 
 // Sign comment
-func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType int) {
-	if sigType == 0 {
-		sigType = SighashAll | SighashForkID
-	}
+// func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType int) {
+// 	if sigType == 0 {
+// 		sigType = SighashAll | SighashForkID
+// 	}
 
-	hashData := hash160(privateKey.PubKey().SerializeCompressed())
-	fmt.Printf("hashdata: %x", hashData)
-	// Go through each input and calculate a signature and then add it
+// 	hashData := hash160(privateKey.PubKey().SerializeCompressed())
+// 	fmt.Printf("hashdata: %x", hashData)
+// 	// Go through each input and calculate a signature and then add it
 
-	scriptPubKey, _ := hex.DecodeString("a9140e95261082d65c384a6106f114474bc0784ba67e87")
+// 	scriptPubKey, _ := hex.DecodeString("a9140e95261082d65c384a6106f114474bc0784ba67e87")
 
-	for i, in := range bt.GetInputs() {
-		if bytes.Compare(in.script[3:23], hashData) == 0 {
-			hex := bt.HexWithClearedInputs(i, scriptPubKey)
-			hex = append(hex, cryptolib.GetLittleEndianBytes(0x01, 4)...)
-			log.Printf("hex: %x\n", hex)
+// 	for i, in := range bt.GetInputs() {
+// 		if bytes.Compare(in.script[3:23], hashData) == 0 {
+// 			hex := bt.HexWithClearedInputs(i, scriptPubKey)
+// 			hex = append(hex, cryptolib.GetLittleEndianBytes(0x01, 4)...)
+// 			log.Printf("hex: %x\n", hex)
 
-			hash := sha256.Sum256(hex)
+// 			hash := sha256.Sum256(hex)
 
-			log.Printf("hash: %x\n", hash)
+// 			log.Printf("hash: %x\n", hash)
 
-			signature, err := privateKey.Sign(hash[:])
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
+// 			signature, err := privateKey.Sign(hash[:])
+// 			if err != nil {
+// 				fmt.Println(err)
+// 				return
+// 			}
 
-			// Serialize and display the signature.
-			fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
+// 			// Serialize and display the signature.
+// 			fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
 
-		}
+// 		}
 
-	}
-	// hex := bt.HexWithClearedInputs()
-	// parts, _ := cryptolib.DecodeParts(i.script)
-	// if parts[0][0] == opZERO {
-	// 	redeemScript, err := NewRedeemScriptFromElectrum(hex.EncodeToString(parts[len(parts)-1]))
-	// 	if err != nil {
-	// 		log.Println(err)
-	// 	}
+// 	}
+// 	// hex := bt.HexWithClearedInputs()
+// 	// parts, _ := cryptolib.DecodeParts(i.script)
+// 	// if parts[0][0] == opZERO {
+// 	// 	redeemScript, err := NewRedeemScriptFromElectrum(hex.EncodeToString(parts[len(parts)-1]))
+// 	// 	if err != nil {
+// 	// 		log.Println(err)
+// 	// 	}
 
-	// 	signatures := parts[1 : len(parts)-1]
+// 	// 	signatures := parts[1 : len(parts)-1]
 
-	// 	for i, signature := range signatures {
-	// 		if signature[0] == 0xff {
-	// 			// xprivKey, err := cryptolib.NewPrivateKey("xprv9s21ZrQH143K2beTKhLXFRWWFwH8jkwUssjk3SVTiApgmge7kNC3jhVc4NgHW8PhW2y7BCDErqnKpKuyQMjqSePPJooPJowAz5BVLThsv6c")
-	// 			xprivKey, err := cryptolib.NewPrivateKey("xprv9s21ZrQH143K3ShHqGb2ago1pjts78QvhAtYUbe1kPraUtjkxaftf28Pc6LdHKBAzi2jAH3EhQWgibbJxMFDW1yS8ZrPy172LEvwddxV55D")
-	// 			if err != nil {
-	// 				log.Println(err)
-	// 			}
+// 	// 	for i, signature := range signatures {
+// 	// 		if signature[0] == 0xff {
+// 	// 			// xprivKey, err := cryptolib.NewPrivateKey("xprv9s21ZrQH143K2beTKhLXFRWWFwH8jkwUssjk3SVTiApgmge7kNC3jhVc4NgHW8PhW2y7BCDErqnKpKuyQMjqSePPJooPJowAz5BVLThsv6c")
+// 	// 			xprivKey, err := cryptolib.NewPrivateKey("xprv9s21ZrQH143K3ShHqGb2ago1pjts78QvhAtYUbe1kPraUtjkxaftf28Pc6LdHKBAzi2jAH3EhQWgibbJxMFDW1yS8ZrPy172LEvwddxV55D")
+// 	// 			if err != nil {
+// 	// 				log.Println(err)
+// 	// 			}
 
-	// 			privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), xprivKey.PrivateKey)
+// 	// 			privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), xprivKey.PrivateKey)
 
-	// 			signature, err := privKey.Sign(redeemScript.getRedeemScriptHash())
-	// 			if err != nil {
-	// 				log.Println(err)
-	// 			}
-	// 			signatures[i] = signature.Serialize()
-	// 			fmt.Printf("NEW SIG %d: %x\n", i, signature.Serialize())
-	// 		} else {
-	// 			fmt.Printf("OLD SIG %d: %x\n", i, signature)
-	// 		}
-	// 	}
+// 	// 			signature, err := privKey.Sign(redeemScript.getRedeemScriptHash())
+// 	// 			if err != nil {
+// 	// 				log.Println(err)
+// 	// 			}
+// 	// 			signatures[i] = signature.Serialize()
+// 	// 			fmt.Printf("NEW SIG %d: %x\n", i, signature.Serialize())
+// 	// 		} else {
+// 	// 			fmt.Printf("OLD SIG %d: %x\n", i, signature)
+// 	// 		}
+// 	// 	}
 
-	// 	fmt.Printf("%v", parts)
-	// }
+// 	// 	fmt.Printf("%v", parts)
+// 	// }
 
-}
+// }
