@@ -41,25 +41,24 @@ func GetLittleEndianBytes(v uint32, l uint32) []byte {
 }
 
 // VarInt See http://learnmeabitcoin.com/glossary/varint
-func VarInt(i int) []byte {
-	uvl := uint64(i)
+func VarInt(i uint64) []byte {
 	b := make([]byte, 9)
-	if uvl < 0xfd {
-		b[0] = byte(uvl)
+	if i < 0xfd {
+		b[0] = byte(i)
 		return b[:1]
 	}
-	if uvl < 0x10000 {
+	if i < 0x10000 {
 		b[0] = 0xfd
-		binary.LittleEndian.PutUint16(b[1:3], uint16(uvl))
+		binary.LittleEndian.PutUint16(b[1:3], uint16(i))
 		return b[:3]
 	}
-	if uvl < 0x100000000 {
+	if i < 0x100000000 {
 		b[0] = 0xfe
-		binary.LittleEndian.PutUint32(b[1:5], uint32(uvl))
+		binary.LittleEndian.PutUint32(b[1:5], uint32(i))
 		return b[:5]
 	}
 	b[0] = 0xff
-	binary.LittleEndian.PutUint64(b[1:9], uvl)
+	binary.LittleEndian.PutUint64(b[1:9], i)
 	return b
 }
 
