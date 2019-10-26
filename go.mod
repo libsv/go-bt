@@ -1,4 +1,4 @@
-module cryptolib
+module bitbucket.org/simon_ordish/cryptolib
 
 go 1.13
 
