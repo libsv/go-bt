@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"cryptolib"
+	"bitbucket.org/simon_ordish/cryptolib"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"

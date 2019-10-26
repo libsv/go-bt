@@ -2,10 +2,11 @@ package transaction
 
 import (
 	"bytes"
-	"cryptolib"
 	"encoding/binary"
 	"encoding/hex"
 	"log"
+
+	"bitbucket.org/simon_ordish/cryptolib"
 
 	"github.com/btcsuite/btcd/btcec"
 )
@@ -78,7 +79,7 @@ func getSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 func getSignatureForInput(input *Input, transaction *BitcoinTransaction, privateKey *btcec.PrivateKey, index uint32, sigtype uint32) []*Signature {
 	sigs := make([]*Signature, 0)
 
-	hashData := hash160(privateKey.PubKey().SerializeCompressed())
+	hashData := cryptolib.Hash160(privateKey.PubKey().SerializeCompressed())
 
 	if bytes.Compare(hashData, input.script.getPublicKeyHash()) == 0 {
 		sighash := sighashForForkID(transaction, sigtype, index, *input.script, input.previousTxAmount)

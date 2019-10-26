@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"cryptolib"
+	"bitbucket.org/simon_ordish/cryptolib"
 
 	"github.com/btcsuite/btcd/btcec"
 )

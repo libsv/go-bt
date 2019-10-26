@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"cryptolib"
+	"bitbucket.org/simon_ordish/cryptolib"
 )
 
 /*

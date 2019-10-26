@@ -1,6 +1,6 @@
 package transaction
 
-import "cryptolib"
+import "bitbucket.org/simon_ordish/cryptolib"
 
 // Script type
 type Script []byte

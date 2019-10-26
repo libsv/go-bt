@@ -1,9 +1,10 @@
 package transaction
 
 import (
-	"cryptolib"
 	"encoding/hex"
 	"testing"
+
+	"bitbucket.org/simon_ordish/cryptolib"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
