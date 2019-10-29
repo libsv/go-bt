@@ -7,9 +7,8 @@ import (
 	"log"
 
 	"bitbucket.org/simon_ordish/cryptolib"
-	"github.com/btcsuite/btcutil/base58"
 
-	"golang.org/x/crypto/ripemd160"
+	"github.com/btcsuite/btcutil/base58"
 )
 
 // RedeemScript type
@@ -126,13 +125,6 @@ func checksum(input []byte) (cksum [4]byte) {
 	return
 }
 
-func hash160(data []byte) []byte {
-	ripe := ripemd160.New()
-	h := sha256.Sum256(data)
-	ripe.Write(h[:])
-	return ripe.Sum(nil)
-}
-
 // AddPublicKey comment
 func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error {
 
@@ -164,7 +156,7 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 
 func (rs *RedeemScript) getAddress() string {
 	script := rs.getRedeemScript()
-	hash := hash160(script)
+	hash := cryptolib.Hash160(script)
 	// hash = append([]byte{0x05}, hash...)
 	return base58.CheckEncode(hash, 0x05)
 }
@@ -191,7 +183,7 @@ func (rs *RedeemScript) getRedeemScript() []byte {
 }
 
 func (rs *RedeemScript) getRedeemScriptHash() []byte {
-	return hash160(rs.getRedeemScript())
+	return cryptolib.Hash160(rs.getRedeemScript())
 }
 
 func (rs *RedeemScript) getScriptPubKey() []byte {

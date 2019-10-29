@@ -17,7 +17,7 @@ func TestNewPublicKey(t *testing.T) {
 
 	// t.Log(p.String())
 
-	expected = `{"network":"livenet","depth":0,"fingerPrint":"aa29b7c4","parentFingerPrint":"00000000","childIndex":"AAAAAA==","chainCode":"41fc504936a63056da1a0f9dd44cad3651b64a17b53e523e18a8d228a489c16a","publicKey":"0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125","xpubkey":"xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4"}`
+	expected = `{"network":"livenet","depth":0,"fingerPrint":"aa29b7c4","parentFingerPrint":"00000000","childIndex":"AAAAAA==","chainCode":"41fc504936a63056da1a0f9dd44cad3651b64a17b53e523e18a8d228a489c16a","privateKey":"","publicKey":"0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125","xprvkey":"","xpubkey":"xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4"}`
 	if p.String() != expected {
 		t.Errorf("Expected %q, got %q", expected, p.String())
 	}

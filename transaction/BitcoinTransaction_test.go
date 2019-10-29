@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"testing"
 
-	"cryptolib"
+	"bitbucket.org/simon_ordish/cryptolib"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcutil"
 )
 
 func TestRegTestCoinbase(t *testing.T) {
@@ -39,7 +38,7 @@ func TestRegtestUnsigned(t *testing.T) {
 
 	scriptSig := []byte{}
 
-	bt.GetInputs()[0].script = scriptSig
+	bt.GetInputs()[0].script = NewScript(scriptSig)
 
 	t.Logf("%x", bt.Hex())
 
@@ -47,25 +46,25 @@ func TestRegtestUnsigned(t *testing.T) {
 
 	// xtxoTXID := "19847d3ba050f84a8bde75f3411ecb07ff80ca6aeb2ad79291d35836da6f8ec7"
 	// utxoAddress := "mi1Mh7ENBnum1CnDAESXfCwikA2shwtdNN"
-	utxoPrivateKey := "cPjqbeH84Qq9VmWrURUEJNo7DaKnrPP428utXzZRcbBdXPx7kGe5"
+	// utxoPrivateKey := "cPjqbeH84Qq9VmWrURUEJNo7DaKnrPP428utXzZRcbBdXPx7kGe5"
 	// utxoPublicKey := "0288e78dc896da65d8a96f8f7a16b2ae87378597b317931bfc1ccd89c88703c467"
 
 	// pubKeyHash := "1b4f6e032a4da3b75fa685475ccfce51b2ad707e"
 
-	wif, err := btcutil.DecodeWIF(utxoPrivateKey)
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	// wif, err := btcutil.DecodeWIF(utxoPrivateKey)
+	// if err != nil {
+	// 	t.Error(err)
+	// 	return
+	// }
 	// t.Logf("%x", wif.PrivKey.Serialize())
 
 	// Get the publicKey from the private
-	privKey, publicKey := btcec.PrivKeyFromBytes(btcec.S256(), wif.PrivKey.Serialize())
-	t.Logf("%x", publicKey.SerializeCompressed())
+	// privKey, publicKey := btcec.PrivKeyFromBytes(btcec.S256(), wif.PrivKey.Serialize())
+	// t.Logf("%x", publicKey.SerializeCompressed())
 
-	t.Log(bt.HexWithClearedInputs(0, nil))
+	// t.Log(bt.HexWithClearedInputs(0, nil))
 
-	bt.Sign(privKey, 0) // 03ececf2d12a7f614aef4c82ecf13c303bd9975d
+	// bt.Sign(privKey, 0) // 03ececf2d12a7f614aef4c82ecf13c303bd9975d
 }
 
 func TestGetVersion(t *testing.T) {

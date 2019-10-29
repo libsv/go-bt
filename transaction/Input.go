@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"bitbucket.org/simon_ordish/cryptolib"
+
 	"github.com/btcsuite/btcd/btcec"
 )
 
@@ -24,8 +25,8 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 type Input struct {
 	previousTxHash     [32]byte
 	previousTxOutIndex uint32
-	scriptLen          uint64
-	script             Script
+	previousTxAmount   uint64
+	script             *Script
 	sequenceNumber     uint32
 }
 
@@ -39,19 +40,13 @@ func NewInput(bytes []byte) (*Input, int) {
 
 	offset := 36
 	l, size := cryptolib.DecodeVarInt(bytes[offset:])
-	i.scriptLen = l
 	offset += size
 
-	i.script = bytes[offset : offset+int(l)]
+	i.script = NewScript(bytes[offset : offset+int(l)])
 
 	i.sequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 
 	return &i, offset + int(l) + 4
-}
-
-// GetInputScript comment
-func (i *Input) GetInputScript() []byte {
-	return i.script
 }
 
 func (i *Input) String() string {
@@ -60,7 +55,7 @@ prevOutIndex: %d
 scriptLen:    %d
 script:       %x
 sequence:     %x
-`, i.previousTxHash, i.previousTxOutIndex, i.scriptLen, i.script, i.sequenceNumber)
+`, i.previousTxHash, i.previousTxOutIndex, len(*i.script), i.script, i.sequenceNumber)
 }
 
 // Hex comment
@@ -72,8 +67,8 @@ func (i *Input) Hex(clear bool) []byte {
 	if clear {
 		hex = append(hex, 0x00)
 	} else {
-		hex = append(hex, cryptolib.VarInt(int(i.scriptLen))...)
-		hex = append(hex, i.script...)
+		hex = append(hex, cryptolib.VarInt(uint64(len(*i.script)))...)
+		hex = append(hex, *i.script...)
 	}
 	hex = append(hex, cryptolib.GetLittleEndianBytes(i.sequenceNumber, 4)...)
 

@@ -61,8 +61,21 @@ func (o *Output) Hex() []byte {
 
 	hex := make([]byte, 0)
 	hex = append(hex, b...)
-	hex = append(hex, cryptolib.VarInt(int(o.scriptLen))...)
+	hex = append(hex, cryptolib.VarInt(o.scriptLen)...)
 	hex = append(hex, o.script...)
 
 	return hex
+}
+
+func (o *Output) getBytesForSigHash() []byte {
+	buf := make([]byte, 0)
+
+	satoshis := make([]byte, 8)
+	binary.LittleEndian.PutUint64(satoshis, o.value)
+	buf = append(buf, satoshis...)
+
+	buf = append(buf, cryptolib.VarInt(o.scriptLen)...)
+	buf = append(buf, o.script...)
+
+	return buf
 }

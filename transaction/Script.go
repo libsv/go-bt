@@ -1,6 +1,6 @@
 package transaction
 
-import "cryptolib"
+import "bitbucket.org/simon_ordish/cryptolib"
 
 // Script type
 type Script []byte
@@ -82,4 +82,17 @@ func (s *Script) IsMultisigOut() bool {
 
 func isSmallIntOp(opcode byte) bool {
 	return opcode == opZERO || (opcode >= opONE && opcode <= opSIXTEEN)
+}
+
+func (s *Script) getPublicKeyHash() []byte {
+	parts, err := cryptolib.DecodeParts(*s)
+	if err != nil {
+		return nil
+	}
+
+	if len(parts) < 3 {
+		return nil
+	}
+
+	return parts[2]
 }
