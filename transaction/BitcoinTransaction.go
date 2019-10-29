@@ -144,15 +144,15 @@ func (bt *BitcoinTransaction) IsCoinbase() bool {
 		return false
 	}
 
-	fmt.Println(bt.Inputs[0].previousTxOutIndex)
-	fmt.Println(bt.Inputs[0].sequenceNumber)
-	for _, v := range bt.Inputs[0].previousTxHash {
+	fmt.Println(bt.Inputs[0].PreviousTxOutIndex)
+	fmt.Println(bt.Inputs[0].SequenceNumber)
+	for _, v := range bt.Inputs[0].PreviousTxHash {
 		if v != 0x00 {
 			return false
 		}
 	}
 
-	if bt.Inputs[0].previousTxOutIndex == 0xFFFFFFFF || bt.Inputs[0].sequenceNumber == 0xFFFFFFFF {
+	if bt.Inputs[0].PreviousTxOutIndex == 0xFFFFFFFF || bt.Inputs[0].SequenceNumber == 0xFFFFFFFF {
 		return true
 	}
 

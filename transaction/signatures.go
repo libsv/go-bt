@@ -64,7 +64,7 @@ func getSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 	for idx, input := range transaction.Inputs {
 		// Get the value of the previous input
 		s, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
-		input.script = NewScript(s)
+		input.Script = NewScript(s)
 		input.previousTxAmount = 4998000000
 
 		for _, privateKey := range privateKeys {
@@ -81,8 +81,8 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 
 	hashData := cryptolib.Hash160(privateKey.PubKey().SerializeCompressed())
 
-	if bytes.Compare(hashData, input.script.getPublicKeyHash()) == 0 {
-		sighash := sighashForForkID(transaction, sigtype, index, *input.script, input.previousTxAmount)
+	if bytes.Compare(hashData, input.Script.getPublicKeyHash()) == 0 {
+		sighash := sighashForForkID(transaction, sigtype, index, *input.Script, input.previousTxAmount)
 
 		s, err := privateKey.Sign(cryptolib.ReverseBytes(sighash))
 		if err != nil {
@@ -97,8 +97,8 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 		} else {
 			sigs = append(sigs, &Signature{
 				PublicKey:    privateKey.PubKey(),
-				PreviousTXID: input.previousTxHash,
-				OutputIndex:  input.previousTxOutIndex,
+				PreviousTXID: input.PreviousTxHash,
+				OutputIndex:  input.PreviousTxOutIndex,
 				InputIndex:   index,
 				Signature:    signature,
 				SigType:      sigtype,
@@ -117,9 +117,9 @@ func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, input
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
-			buf = append(buf, cryptolib.ReverseBytes(in.previousTxHash[:])...)
+			buf = append(buf, cryptolib.ReverseBytes(in.PreviousTxHash[:])...)
 			oi := make([]byte, 4)
-			binary.LittleEndian.PutUint32(oi, in.previousTxOutIndex)
+			binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 			buf = append(buf, oi...)
 		}
 
@@ -131,7 +131,7 @@ func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, input
 
 		for _, in := range tx.Inputs {
 			oi := make([]byte, 4)
-			binary.LittleEndian.PutUint32(oi, in.sequenceNumber)
+			binary.LittleEndian.PutUint32(oi, in.SequenceNumber)
 			buf = append(buf, oi...)
 		}
 
@@ -184,9 +184,9 @@ func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, input
 	buf = append(buf, hashSequence...)
 
 	//  outpoint (32-byte hash + 4-byte little endian)
-	buf = append(buf, cryptolib.ReverseBytes(input.previousTxHash[:])...)
+	buf = append(buf, cryptolib.ReverseBytes(input.PreviousTxHash[:])...)
 	oi := make([]byte, 4)
-	binary.LittleEndian.PutUint32(oi, input.previousTxOutIndex)
+	binary.LittleEndian.PutUint32(oi, input.PreviousTxOutIndex)
 	buf = append(buf, oi...)
 
 	// scriptCode of the input (serialized as scripts inside CTxOuts)
@@ -200,7 +200,7 @@ func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, input
 
 	// nSequence of the input (4-byte little endian)
 	seq := make([]byte, 4)
-	binary.LittleEndian.PutUint32(seq, input.sequenceNumber)
+	binary.LittleEndian.PutUint32(seq, input.SequenceNumber)
 	buf = append(buf, seq...)
 
 	// Outputs (none/one/all, depending on flags)

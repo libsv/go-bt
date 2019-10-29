@@ -23,28 +23,28 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 
 // Input is a representation of a transaction input
 type Input struct {
-	previousTxHash     [32]byte
-	previousTxOutIndex uint32
+	PreviousTxHash     [32]byte
+	PreviousTxOutIndex uint32
 	previousTxAmount   uint64
-	script             *Script
-	sequenceNumber     uint32
+	Script             *Script
+	SequenceNumber     uint32
 }
 
 // NewInput returns a transaction input from the bytes provided
 func NewInput(bytes []byte) (*Input, int) {
 	i := Input{}
 
-	copy(i.previousTxHash[:], cryptolib.ReverseBytes(bytes[0:32]))
+	copy(i.PreviousTxHash[:], cryptolib.ReverseBytes(bytes[0:32]))
 
-	i.previousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
+	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
 	offset := 36
 	l, size := cryptolib.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	i.script = NewScript(bytes[offset : offset+int(l)])
+	i.Script = NewScript(bytes[offset : offset+int(l)])
 
-	i.sequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
+	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 
 	return &i, offset + int(l) + 4
 }
@@ -55,22 +55,22 @@ prevOutIndex: %d
 scriptLen:    %d
 script:       %x
 sequence:     %x
-`, i.previousTxHash, i.previousTxOutIndex, len(*i.script), i.script, i.sequenceNumber)
+`, i.PreviousTxHash, i.PreviousTxOutIndex, len(*i.Script), i.Script, i.SequenceNumber)
 }
 
 // Hex comment
 func (i *Input) Hex(clear bool) []byte {
 	hex := make([]byte, 0)
 
-	hex = append(hex, cryptolib.ReverseBytes(i.previousTxHash[:])...)
-	hex = append(hex, cryptolib.GetLittleEndianBytes(i.previousTxOutIndex, 4)...)
+	hex = append(hex, cryptolib.ReverseBytes(i.PreviousTxHash[:])...)
+	hex = append(hex, cryptolib.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		hex = append(hex, 0x00)
 	} else {
-		hex = append(hex, cryptolib.VarInt(uint64(len(*i.script)))...)
-		hex = append(hex, *i.script...)
+		hex = append(hex, cryptolib.VarInt(uint64(len(*i.Script)))...)
+		hex = append(hex, *i.Script...)
 	}
-	hex = append(hex, cryptolib.GetLittleEndianBytes(i.sequenceNumber, 4)...)
+	hex = append(hex, cryptolib.GetLittleEndianBytes(i.SequenceNumber, 4)...)
 
 	return hex
 }

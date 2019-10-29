@@ -17,16 +17,16 @@ func TestNew(t *testing.T) {
 		t.Errorf("Expected 148, got %d", s)
 	}
 
-	if i.previousTxOutIndex != 1 {
-		t.Errorf("Expected 1, got %d", i.previousTxOutIndex)
+	if i.PreviousTxOutIndex != 1 {
+		t.Errorf("Expected 1, got %d", i.PreviousTxOutIndex)
 	}
 
-	if len(*i.script) != 107 {
-		t.Errorf("Expected 107, got %d", len(*i.script))
+	if len(*i.Script) != 107 {
+		t.Errorf("Expected 107, got %d", len(*i.Script))
 	}
 
-	if i.sequenceNumber != 0xFFFFFFFF {
-		t.Errorf("Expected 0xFFFFFFFF, got %x", i.sequenceNumber)
+	if i.SequenceNumber != 0xFFFFFFFF {
+		t.Errorf("Expected 0xFFFFFFFF, got %x", i.SequenceNumber)
 	}
 }
 
