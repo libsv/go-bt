@@ -59,7 +59,9 @@ type BitcoinTransaction struct {
 
 // New comment
 func New() *BitcoinTransaction {
-	return &BitcoinTransaction{}
+	return &BitcoinTransaction{
+		Version: 1,
+	}
 }
 
 // NewFromString takes a hex string representation of a bitcoin transaction
@@ -120,6 +122,11 @@ func (bt *BitcoinTransaction) HasWitnessData() bool {
 	return bt.Witness
 }
 
+// AddInput comment
+func (bt *BitcoinTransaction) AddInput(input *Input) {
+	bt.Inputs = append(bt.Inputs, input)
+}
+
 // InputCount returns the number of transaction inputs
 func (bt *BitcoinTransaction) InputCount() int {
 	return len(bt.Inputs)
@@ -128,6 +135,11 @@ func (bt *BitcoinTransaction) InputCount() int {
 // OutputCount returns the number of transaction inputs
 func (bt *BitcoinTransaction) OutputCount() int {
 	return len(bt.Outputs)
+}
+
+// AddOutput comment
+func (bt *BitcoinTransaction) AddOutput(output *Output) {
+	bt.Outputs = append(bt.Outputs, output)
 }
 
 // IsCoinbase determines if this transaction is a coinbase by
