@@ -9,7 +9,7 @@ const input = "4c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f0
 
 func TestNew(t *testing.T) {
 	bytes, _ := hex.DecodeString(input)
-	i, s := NewInput(bytes)
+	i, s := NewInputFromBytes(bytes)
 
 	// t.Errorf("\n%s\n", i)
 

@@ -92,7 +92,7 @@ func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
 
 	var i uint64
 	for ; i < inputCount; i++ {
-		input, size := NewInput(bt.Bytes[offset:])
+		input, size := NewInputFromBytes(bt.Bytes[offset:])
 		offset += size
 
 		bt.Inputs = append(bt.Inputs, input)
