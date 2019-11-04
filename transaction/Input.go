@@ -30,8 +30,19 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
-// NewInput returns a transaction input from the bytes provided
-func NewInput(bytes []byte) (*Input, int) {
+// NewInput comment
+func NewInput() *Input {
+	b := make([]byte, 0)
+	s := NewScript(b)
+
+	return &Input{
+		Script:         s,
+		SequenceNumber: 0xFFFFFFFF,
+	}
+}
+
+// NewInputFromBytes returns a transaction input from the bytes provided
+func NewInputFromBytes(bytes []byte) (*Input, int) {
 	i := Input{}
 
 	copy(i.PreviousTxHash[:], cryptolib.ReverseBytes(bytes[0:32]))
