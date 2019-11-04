@@ -3,6 +3,7 @@ package cryptolib
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"strconv"
 )
@@ -83,6 +84,44 @@ func DecodeVarInt(b []byte) (result uint64, size int) {
 	}
 
 	return
+}
+
+// EncodeParts takes a slice of slices and returns a single slice with the appropriate OP_PUSH commands embedded
+func EncodeParts(parts [][]byte) ([]byte, error) {
+	b := make([]byte, 0)
+
+	for i, part := range parts {
+		l := len(part)
+
+		if l <= 75 {
+			b = append(b, byte(len(part)))
+			b = append(b, part...)
+
+		} else if l <= 0xFF {
+			b = append(b, 0x4c) // OP_PUSHDATA1
+			b = append(b, byte(len(part)))
+			b = append(b, part...)
+
+		} else if l <= 0xFFFF {
+			b = append(b, 0x4d) // OP_PUSHDATA2
+			lenBuf := make([]byte, 2)
+			binary.LittleEndian.PutUint16(lenBuf, uint16(len(part)))
+			b = append(b, lenBuf...)
+			b = append(b, part...)
+
+		} else if l <= 0xFFFFFFFF {
+			b = append(b, 0x4e) // OP_PUSHDATA4
+			lenBuf := make([]byte, 4)
+			binary.LittleEndian.PutUint32(lenBuf, uint32(len(part)))
+			b = append(b, lenBuf...)
+			b = append(b, part...)
+
+		} else {
+			return nil, fmt.Errorf("Part %d is too big", i)
+		}
+	}
+
+	return b, nil
 }
 
 // DecodeStringParts calls DecodeParts

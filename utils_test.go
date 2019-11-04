@@ -1,6 +1,7 @@
 package cryptolib
 
 import (
+	"encoding/hex"
 	"testing"
 )
 
@@ -78,6 +79,31 @@ func TestDecodePartsSimple(t *testing.T) {
 		t.Errorf("Expected 3 parts, got %d", len(parts))
 	}
 	// t.Logf("%+v", parts)
+}
+
+func TestDecodePartsSimpleAndEncode(t *testing.T) {
+	s := "05000102030401FF02ABCD"
+	parts, err := DecodeStringParts(s)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(parts) != 3 {
+		t.Errorf("Expected 3 parts, got %d", len(parts))
+	}
+
+	p, err := EncodeParts(parts)
+	if err != nil {
+		t.Error(err)
+	}
+
+	h := hex.EncodeToString(p)
+
+	expected := "05000102030401ff02abcd"
+	if h != expected {
+		t.Errorf("Expected %q, got %q", expected, h)
+	}
+	// t.Logf("%x", p)
 }
 
 func TestDecodePartsEmpty(t *testing.T) {
