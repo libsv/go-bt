@@ -64,7 +64,7 @@ func getSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 	for idx, input := range transaction.Inputs {
 		// Get the value of the previous input
 		s, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
-		input.Script = NewScript(s)
+		input.Script = NewScriptFromBytes(s)
 		input.previousTxAmount = 4998000000
 
 		for _, privateKey := range privateKeys {

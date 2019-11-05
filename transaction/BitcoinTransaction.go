@@ -102,7 +102,7 @@ func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
 	offset += size
 
 	for i = 0; i < outputCount; i++ {
-		output, size := NewOutput(bt.Bytes[offset:])
+		output, size := NewOutputFromBytes(bt.Bytes[offset:])
 		offset += size
 		bt.Outputs = append(bt.Outputs, output)
 	}

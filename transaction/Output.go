@@ -24,8 +24,15 @@ type Output struct {
 	Script []byte
 }
 
-// NewOutput returns a transaction Output from the bytes provided
-func NewOutput(bytes []byte) (*Output, int) {
+// NewOutput comment
+func NewOutput() *Output {
+	return &Output{
+		Script: make([]byte, 0),
+	}
+}
+
+// NewOutputFromBytes returns a transaction Output from the bytes provided
+func NewOutputFromBytes(bytes []byte) (*Output, int) {
 	o := Output{}
 
 	o.Value = binary.LittleEndian.Uint64(bytes[0:8])

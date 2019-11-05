@@ -33,7 +33,7 @@ type Input struct {
 // NewInput comment
 func NewInput() *Input {
 	b := make([]byte, 0)
-	s := NewScript(b)
+	s := NewScriptFromBytes(b)
 
 	return &Input{
 		Script:         s,
@@ -53,7 +53,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int) {
 	l, size := cryptolib.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	i.Script = NewScript(bytes[offset : offset+int(l)])
+	i.Script = NewScriptFromBytes(bytes[offset : offset+int(l)])
 
 	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 

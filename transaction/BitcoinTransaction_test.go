@@ -38,7 +38,7 @@ func TestRegtestUnsigned(t *testing.T) {
 
 	scriptSig := []byte{}
 
-	bt.GetInputs()[0].Script = NewScript(scriptSig)
+	bt.GetInputs()[0].Script = NewScriptFromBytes(scriptSig)
 
 	t.Logf("%x", bt.Hex())
 

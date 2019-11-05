@@ -5,8 +5,14 @@ import "bitbucket.org/simon_ordish/cryptolib"
 // Script type
 type Script []byte
 
-// NewScript wraps a byte slice with the Script type
-func NewScript(b []byte) *Script {
+// NewScript comment
+func NewScript() *Script {
+	s := Script(make([]byte, 0))
+	return &s
+}
+
+// NewScriptFromBytes wraps a byte slice with the Script type
+func NewScriptFromBytes(b []byte) *Script {
 	s := Script(b)
 	return &s
 }

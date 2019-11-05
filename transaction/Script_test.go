@@ -7,7 +7,7 @@ import (
 
 func TestIsPublicKeyHashOut(t *testing.T) {
 	b, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
-	scriptPub := NewScript(b)
+	scriptPub := NewScriptFromBytes(b)
 
 	ret := scriptPub.IsPublicKeyHashOut()
 
@@ -16,7 +16,7 @@ func TestIsPublicKeyHashOut(t *testing.T) {
 
 func TestIsPublicKeyOut(t *testing.T) {
 	b, _ := hex.DecodeString("2102f0d97c290e79bf2a8660c406aa56b6f189ff79f2245cc5aff82808b58131b4d5ac")
-	scriptPub := NewScript(b)
+	scriptPub := NewScriptFromBytes(b)
 
 	ret := scriptPub.IsPublicKeyOut()
 
@@ -25,7 +25,7 @@ func TestIsPublicKeyOut(t *testing.T) {
 
 func TestIsScriptHashOut(t *testing.T) {
 	b, _ := hex.DecodeString("a9149de5aeaff9c48431ba4dd6e8af73d51f38e451cb87")
-	scriptPub := NewScript(b)
+	scriptPub := NewScriptFromBytes(b)
 
 	ret := scriptPub.IsScriptHashOut()
 
@@ -34,7 +34,7 @@ func TestIsScriptHashOut(t *testing.T) {
 
 func TestIsMultisigOut(t *testing.T) {
 	b, _ := hex.DecodeString("5201110122013353ae")
-	scriptPub := NewScript(b)
+	scriptPub := NewScriptFromBytes(b)
 
 	ret := scriptPub.IsMultisigOut()
 

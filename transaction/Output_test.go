@@ -9,7 +9,7 @@ const output = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa
 
 func TestNewOutput(t *testing.T) {
 	bytes, _ := hex.DecodeString(output)
-	o, s := NewOutput(bytes)
+	o, s := NewOutputFromBytes(bytes)
 
 	// t.Errorf("\n%s\n", o)
 	if s != 34 {
