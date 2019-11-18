@@ -90,7 +90,8 @@ func isSmallIntOp(opcode byte) bool {
 	return opcode == opZERO || (opcode >= opONE && opcode <= opSIXTEEN)
 }
 
-func (s *Script) getPublicKeyHash() []byte {
+// GetPublicKeyHash function
+func (s *Script) GetPublicKeyHash() []byte {
 	parts, err := cryptolib.DecodeParts(*s)
 	if err != nil {
 		return nil

@@ -81,7 +81,7 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 
 	hashData := cryptolib.Hash160(privateKey.PubKey().SerializeCompressed())
 
-	if bytes.Compare(hashData, input.Script.getPublicKeyHash()) == 0 {
+	if bytes.Compare(hashData, input.Script.GetPublicKeyHash()) == 0 {
 		sighash := sighashForForkID(transaction, sigtype, index, *input.Script, input.PreviousTxSatoshis)
 
 		s, err := privateKey.Sign(cryptolib.ReverseBytes(sighash))
