@@ -58,7 +58,8 @@ func getInputType(in *Input) {
 	// P2PK
 }
 
-func getSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.PrivateKey, sigtype uint32) []*Signature {
+// GetSignatures function
+func GetSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.PrivateKey, sigtype uint32) []*Signature {
 	sigs := make([]*Signature, 0)
 
 	for idx, input := range transaction.Inputs {
