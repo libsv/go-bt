@@ -25,7 +25,7 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 type Input struct {
 	PreviousTxHash     [32]byte
 	PreviousTxOutIndex uint32
-	previousTxAmount   uint64
+	PreviousTxAmount   uint64
 	Script             *Script
 	SequenceNumber     uint32
 }
