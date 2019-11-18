@@ -3,7 +3,7 @@ package transaction
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
+	"fmt"
 	"log"
 
 	"bitbucket.org/simon_ordish/cryptolib"
@@ -59,14 +59,13 @@ func getInputType(in *Input) {
 }
 
 // GetSignatures function
-func GetSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.PrivateKey, sigtype uint32) []*Signature {
+func GetSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.PrivateKey, sigtype uint32) ([]*Signature, error) {
 	sigs := make([]*Signature, 0)
 
 	for idx, input := range transaction.Inputs {
-		// Get the value of the previous input
-		s, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
-		input.Script = NewScriptFromBytes(s)
-		input.PreviousTxAmount = 4998000000
+		if input.PreviousTxSatoshis == 0 {
+			return nil, fmt.Errorf("You must provide the amount of previous tx")
+		}
 
 		for _, privateKey := range privateKeys {
 			sig := getSignatureForInput(input, transaction, privateKey, uint32(idx), sigtype)
@@ -74,7 +73,7 @@ func GetSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 		}
 	}
 
-	return sigs
+	return sigs, nil
 }
 
 func getSignatureForInput(input *Input, transaction *BitcoinTransaction, privateKey *btcec.PrivateKey, index uint32, sigtype uint32) []*Signature {
@@ -83,7 +82,7 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 	hashData := cryptolib.Hash160(privateKey.PubKey().SerializeCompressed())
 
 	if bytes.Compare(hashData, input.Script.getPublicKeyHash()) == 0 {
-		sighash := sighashForForkID(transaction, sigtype, index, *input.Script, input.PreviousTxAmount)
+		sighash := sighashForForkID(transaction, sigtype, index, *input.Script, input.PreviousTxSatoshis)
 
 		s, err := privateKey.Sign(cryptolib.ReverseBytes(sighash))
 		if err != nil {
