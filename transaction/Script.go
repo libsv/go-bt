@@ -1,8 +1,11 @@
 package transaction
 
-import "bitbucket.org/simon_ordish/cryptolib"
+import (
+	"encoding/hex"
+	"fmt"
 
-import "fmt"
+	"bitbucket.org/simon_ordish/cryptolib"
+)
 
 // Script type
 type Script []byte
@@ -11,6 +14,12 @@ type Script []byte
 func NewScript() *Script {
 	s := Script(make([]byte, 0))
 	return &s
+}
+
+// NewScriptFromString function
+func NewScriptFromString(s string) *Script {
+	b, _ := hex.DecodeString(s)
+	return NewScriptFromBytes(b)
 }
 
 // NewScriptFromBytes wraps a byte slice with the Script type
