@@ -35,7 +35,7 @@ func TestSigHash(t *testing.T) {
 
 	var sigtype uint32 = SighashAll | SighashForkID
 
-	sigs := getSignatures(bt, privKeys, sigtype)
+	sigs := GetSignatures(bt, privKeys, sigtype)
 	for _, sig := range sigs {
 		pubkey := wif.PrivKey.PubKey().SerializeCompressed()
 		buf := make([]byte, 0)
