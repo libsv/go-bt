@@ -2,6 +2,8 @@ package transaction
 
 import "bitbucket.org/simon_ordish/cryptolib"
 
+import "fmt"
+
 // Script type
 type Script []byte
 
@@ -91,15 +93,16 @@ func isSmallIntOp(opcode byte) bool {
 }
 
 // GetPublicKeyHash function
-func (s *Script) GetPublicKeyHash() []byte {
-	parts, err := cryptolib.DecodeParts(*s)
+func (s *Script) GetPublicKeyHash() ([]byte, error) {
+
+	if (*s)[0] != 0x76 || (*s)[1] != 0xa9 {
+		return nil, fmt.Errorf("Not a P2PKH")
+	}
+
+	parts, err := cryptolib.DecodeParts((*s)[2:])
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	if len(parts) < 3 {
-		return nil
-	}
-
-	return parts[2]
+	return parts[0], nil
 }

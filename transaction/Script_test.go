@@ -40,3 +40,20 @@ func TestIsMultisigOut(t *testing.T) {
 
 	t.Log(ret)
 }
+
+func TestGetPublicKeyHash(t *testing.T) {
+	b, _ := hex.DecodeString("76a91404d03f746652cfcb6cb55119ab473a045137d26588ac")
+	s := NewScriptFromBytes(b)
+
+	pkh, err := s.GetPublicKeyHash()
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := "04d03f746652cfcb6cb55119ab473a045137d265"
+
+	if hex.EncodeToString(pkh) != expected {
+		t.Fail()
+	}
+	// t.Logf("%x\n", pkh)
+}

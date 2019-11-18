@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"log"
 
 	"bitbucket.org/simon_ordish/cryptolib"
 
@@ -68,7 +67,11 @@ func GetSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 		}
 
 		for _, privateKey := range privateKeys {
-			sig := getSignatureForInput(input, transaction, privateKey, uint32(idx), sigtype)
+			sig, err := getSignatureForInput(input, transaction, privateKey, uint32(idx), sigtype)
+			if err != nil {
+				return nil, err
+			}
+
 			sigs = append(sigs, sig...)
 		}
 	}
@@ -76,37 +79,42 @@ func GetSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 	return sigs, nil
 }
 
-func getSignatureForInput(input *Input, transaction *BitcoinTransaction, privateKey *btcec.PrivateKey, index uint32, sigtype uint32) []*Signature {
+func getSignatureForInput(input *Input, transaction *BitcoinTransaction, privateKey *btcec.PrivateKey, index uint32, sigtype uint32) ([]*Signature, error) {
 	sigs := make([]*Signature, 0)
 
 	hashData := cryptolib.Hash160(privateKey.PubKey().SerializeCompressed())
 
-	if bytes.Compare(hashData, input.Script.GetPublicKeyHash()) == 0 {
+	pkh, err := input.Script.GetPublicKeyHash()
+	if err != nil {
+		return nil, err
+	}
+
+	if bytes.Compare(hashData, pkh) == 0 {
 		sighash := sighashForForkID(transaction, sigtype, index, *input.Script, input.PreviousTxSatoshis)
 
 		s, err := privateKey.Sign(cryptolib.ReverseBytes(sighash))
 		if err != nil {
-			log.Printf("ERROR [%v]", err)
+			return nil, err
 		}
 
 		signature := s.Serialize()
 		signature = append(signature, byte(sigtype))
 
 		if err != nil {
-			log.Printf("ERROR [%v]", err)
-		} else {
-			sigs = append(sigs, &Signature{
-				PublicKey:    privateKey.PubKey(),
-				PreviousTXID: input.PreviousTxHash,
-				OutputIndex:  input.PreviousTxOutIndex,
-				InputIndex:   index,
-				Signature:    signature,
-				SigType:      sigtype,
-			})
+			return nil, err
 		}
+
+		sigs = append(sigs, &Signature{
+			PublicKey:    privateKey.PubKey(),
+			PreviousTXID: input.PreviousTxHash,
+			OutputIndex:  input.PreviousTxOutIndex,
+			InputIndex:   index,
+			Signature:    signature,
+			SigType:      sigtype,
+		})
 	}
 
-	return sigs
+	return sigs, nil
 }
 
 func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, subscript Script, satoshis uint64) []byte {
