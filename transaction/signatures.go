@@ -63,7 +63,11 @@ func GetSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 
 	for idx, input := range transaction.Inputs {
 		if input.PreviousTxSatoshis == 0 {
-			return nil, fmt.Errorf("You must provide the amount of previous tx")
+			return nil, fmt.Errorf("Inputs need to have a PreviousTxSatoshis set to be signable")
+		}
+
+		if input.Script == nil {
+			return nil, fmt.Errorf("Inputs need to have a Script to be signable")
 		}
 
 		for _, privateKey := range privateKeys {

@@ -73,3 +73,12 @@ func TestGetPublicKeyHashAsString(t *testing.T) {
 	}
 	// t.Logf("%x\n", pkh)
 }
+
+func TestGetPublicKeyHashEmptyScript(t *testing.T) {
+	s := NewScript()
+
+	_, err := s.GetPublicKeyHash()
+	if err == nil {
+		t.Error("Expected 'Script is empty'")
+	}
+}

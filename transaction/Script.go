@@ -103,6 +103,9 @@ func isSmallIntOp(opcode byte) bool {
 
 // GetPublicKeyHash function
 func (s *Script) GetPublicKeyHash() ([]byte, error) {
+	if s == nil || len(*s) == 0 {
+		return nil, fmt.Errorf("Script is empty")
+	}
 
 	if (*s)[0] != 0x76 || (*s)[1] != 0xa9 {
 		return nil, fmt.Errorf("Not a P2PKH")
