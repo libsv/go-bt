@@ -17,6 +17,9 @@ func TestSigHash(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
+	bt.Inputs[0].Script = NewScriptFromString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
+	bt.Inputs[0].PreviousTxSatoshis = 4998000000
 	// const utxo = bsv.Transaction.UnspentOutput({
 	// 	txid: '63daf8b0961867e8f2fad1c04a4ceed2618a33aa73bae1c9c8540e9484ed7d03',
 	// 	vout: 0,
