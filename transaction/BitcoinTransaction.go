@@ -1,11 +1,11 @@
 package transaction
 
 import (
+	"bitbucket.org/simon_ordish/cryptolib"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-
-	"bitbucket.org/simon_ordish/cryptolib"
+	"github.com/btcsuite/btcd/btcec"
 )
 
 /*
@@ -213,6 +213,27 @@ func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 	return hex
 }
 
+func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) *BitcoinTransaction {
+	fmt.Println("====HEX", hex.EncodeToString(bt.Hex()))
+	privKeys := make([]*btcec.PrivateKey, 0)
+	privKeys = append(privKeys, privateKey)
+
+	if sigType ==0 {
+		sigType = SighashAll | SighashForkID
+	}
+
+	sigs, _ := GetSignatures(bt, privKeys, sigType)
+	for _, sig := range sigs {
+		pubkey := privateKey.PubKey().SerializeCompressed()
+		buf := make([]byte, 0)
+		buf = append(buf, cryptolib.VarInt(uint64(len(sig.Signature)))...)
+		buf = append(buf, sig.Signature...)
+		buf = append(buf, cryptolib.VarInt(uint64(len(pubkey)))...)
+		buf = append(buf, pubkey...)
+		bt.GetInputs()[0].Script = NewScriptFromBytes(buf)
+	}
+	return bt
+}
 // Sign comment
 // func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType int) {
 // 	if sigType == 0 {

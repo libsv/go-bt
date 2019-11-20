@@ -3,6 +3,7 @@ package transaction
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/btcsuite/btcutil"
 	"testing"
 
 	"bitbucket.org/simon_ordish/cryptolib"
@@ -143,6 +144,32 @@ func TestIsCoinbase(t *testing.T) {
 	cb2 := bt2.IsCoinbase()
 	if cb2 == true {
 		t.Errorf("Expecting false, got %t", cb2)
+	}
+}
+
+func TestSignTx(t *testing.T) {
+	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
+	tx, err := NewFromString(unsignedTx)
+
+	//Add the UTXO amount and script.
+	tx.Inputs[0].PreviousTxSatoshis = 100000000
+	tx.Inputs[0].Script = NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+
+	// Our private key.
+	wif, err := btcutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	tx.Sign(wif.PrivKey, 0)
+	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
+
+	if hex.EncodeToString(tx.Hex()) != expectedSignedTx {
+		t.Errorf("Expecting %s\n, got %s\n", expectedSignedTx, hex.EncodeToString(tx.Hex()))
+	}
+
+	if unsignedTx == expectedSignedTx {
+		t.Errorf("Expected and signed TX strings in code identical")
 	}
 }
 
