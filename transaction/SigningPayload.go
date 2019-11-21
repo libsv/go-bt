@@ -2,7 +2,7 @@ package transaction
 
 // SigningItem struct
 type SigningItem struct {
-	Address   string  `json:"address"`
+	PublicKeyHash   string  `json:"publicKeyHash"`
 	SigHash   string  `json:"sigHash"`
 	PublicKey *string `json:"publicKey"`
 	Signature *string `json:"signature"`
@@ -19,9 +19,9 @@ func NewSigningPayload() SigningPayload {
 }
 
 // AddItem function
-func (sp *SigningPayload) AddItem(address string, sigHash string) {
+func (sp *SigningPayload) AddItem(publicKeyHash string, sigHash string) {
 	si := &SigningItem{
-		Address: address,
+		PublicKeyHash: publicKeyHash,
 		SigHash: sigHash,
 	}
 
