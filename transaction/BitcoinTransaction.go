@@ -179,6 +179,29 @@ func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byt
 	return bt.hex(index, scriptPubKey)
 }
 
+// In order for the signing service to be able to sign our transaction inputs, we need to assemble a payload including all items to be signed.
+// Adapted from transaction.signatures.sighashForForkID()
+func (bt *BitcoinTransaction) GetSighashes(sigType uint32, publicKeyhash string) (SigningPayload, error) {
+	signingPayload := NewSigningPayload()
+	for idx, input := range bt.Inputs {
+		if input.PreviousTxSatoshis == 0 {
+			return nil, fmt.Errorf("Inputs need to have a PreviousTxSatoshis set to be signable")
+		}
+
+		if input.Script == nil {
+			return nil, fmt.Errorf("Inputs need to have a Script to be signable")
+		}
+
+		if sigType == 0 {
+			sigType = SighashAll | SighashForkID
+		}
+
+		sighash := sighashForForkID(bt, sigType, uint32(idx), *input.Script, input.PreviousTxSatoshis)
+		signingPayload.AddItem(publicKeyhash, hex.EncodeToString(sighash))
+	}
+	return signingPayload, nil
+}
+
 func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 	hex := make([]byte, 0)
 
@@ -213,6 +236,7 @@ func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 	return hex
 }
 
+// Sign comment
 func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) *BitcoinTransaction {
 	fmt.Println("====HEX", hex.EncodeToString(bt.Hex()))
 	privKeys := make([]*btcec.PrivateKey, 0)
