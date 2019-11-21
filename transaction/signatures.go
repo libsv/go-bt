@@ -96,18 +96,10 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 	if bytes.Compare(hashData, pkh) == 0 {
 		sighash := sighashForForkID(transaction, sigtype, index, *input.Script, input.PreviousTxSatoshis)
 
-		s, err := privateKey.Sign(cryptolib.ReverseBytes(sighash))
+		signature, _ := getSignatureForSighash(sighash, privateKey, sigtype)
 		if err != nil {
 			return nil, err
 		}
-
-		signature := s.Serialize()
-		signature = append(signature, byte(sigtype))
-
-		if err != nil {
-			return nil, err
-		}
-
 		sigs = append(sigs, &Signature{
 			PublicKey:    privateKey.PubKey(),
 			PreviousTXID: input.PreviousTxHash,
@@ -117,8 +109,18 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 			SigType:      sigtype,
 		})
 	}
-
 	return sigs, nil
+}
+
+func getSignatureForSighash(sighash []byte, privateKey *btcec.PrivateKey, sigtype uint32) ([]byte, error) {
+	s, err := privateKey.Sign(cryptolib.ReverseBytes(sighash))
+	if err != nil {
+		return nil, err
+	}
+
+	signature := s.Serialize()
+	signature = append(signature, byte(sigtype))
+	return signature, nil
 }
 
 func sighashForForkID(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, subscript Script, satoshis uint64) []byte {
