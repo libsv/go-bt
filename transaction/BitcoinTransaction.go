@@ -1,10 +1,11 @@
 package transaction
 
 import (
-	"bitbucket.org/simon_ordish/cryptolib"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+
+	"bitbucket.org/simon_ordish/cryptolib"
 	"github.com/btcsuite/btcd/btcec"
 )
 
@@ -181,7 +182,7 @@ func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byt
 
 // In order for the signing service to be able to sign our transaction inputs, we need to assemble a payload including all items to be signed.
 // Adapted from transaction.signatures.sighashForForkID()
-func (bt *BitcoinTransaction) GetSighashes(sigType uint32, publicKeyhash string) (SigningPayload, error) {
+func (bt *BitcoinTransaction) GetSighashes(sigType uint32) (SigningPayload, error) {
 	signingPayload := NewSigningPayload()
 	for idx, input := range bt.Inputs {
 		if input.PreviousTxSatoshis == 0 {
@@ -197,7 +198,11 @@ func (bt *BitcoinTransaction) GetSighashes(sigType uint32, publicKeyhash string)
 		}
 
 		sighash := sighashForForkID(bt, sigType, uint32(idx), *input.Script, input.PreviousTxSatoshis)
-		signingPayload.AddItem(publicKeyhash, hex.EncodeToString(sighash))
+		pkh, err := input.Script.GetPublicKeyHash()
+		if err != nil {
+			return nil, err
+		}
+		signingPayload.AddItem(hex.EncodeToString(pkh), hex.EncodeToString(sighash))
 	}
 	return signingPayload, nil
 }
@@ -238,11 +243,10 @@ func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 
 // Sign comment
 func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) *BitcoinTransaction {
-	fmt.Println("====HEX", hex.EncodeToString(bt.Hex()))
 	privKeys := make([]*btcec.PrivateKey, 0)
 	privKeys = append(privKeys, privateKey)
 
-	if sigType ==0 {
+	if sigType == 0 {
 		sigType = SighashAll | SighashForkID
 	}
 
@@ -258,6 +262,7 @@ func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32)
 	}
 	return bt
 }
+
 // Sign comment
 // func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType int) {
 // 	if sigType == 0 {

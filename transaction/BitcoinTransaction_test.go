@@ -3,14 +3,13 @@ package transaction
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/btcsuite/btcutil"
 	"reflect"
 	"testing"
 
 	"bitbucket.org/simon_ordish/cryptolib"
-
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil"
 )
 
 func TestRegTestCoinbase(t *testing.T) {
@@ -200,6 +199,32 @@ func TestGetSighash(t *testing.T) {
 	}
 }
 
+func TestGetSighash2(t *testing.T) {
+	unsignedTx := "01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b0000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000"
+	tx, err := NewFromString(unsignedTx)
+
+	//Add the UTXO amount and script.
+	previousTxSatoshis := uint64(2000000000)
+	script := NewScriptFromString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
+	expectedSigHash := "8ea09cb667b276a886b79d8d6b7d073cc88e64f1640dc9bfd400f9301d4aaa98"
+	actualSigHash := hex.EncodeToString(sighashForForkID(
+		tx,
+		(SighashAll | SighashForkID),
+		uint32(0),
+		*script,
+		previousTxSatoshis,
+	))
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if expectedSigHash != actualSigHash {
+		t.Errorf("Error expected %s got %s", expectedSigHash, actualSigHash)
+	}
+
+}
+
 func TestSignTx2(t *testing.T) {
 	unsignedTx := "01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b0000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000"
 	tx, err := NewFromString(unsignedTx)
@@ -225,24 +250,32 @@ func TestSignTx2(t *testing.T) {
 	if unsignedTx == expectedSignedTx {
 		t.Errorf("Expected and signed TX strings in code identical")
 	}
+	// REGTEST
+	// 304402202dfea75654976f53ae0c35bbeae5c73ee608e37fe3cdc8d4483adc17cc633d3d0220141474deb26bf5cb510e6fe9dafe7ddbd28eb211edf532948020532b7902b137
+
+	// Internal - getSignatureForInput()
+	// 304402202dfea75654976f53ae0c35bbeae5c73ee608e37fe3cdc8d4483adc17cc633d3d0220141474deb26bf5cb510e6fe9dafe7ddbd28eb211edf532948020532b7902b13741
 }
 
 func TestGetSigningPayload(t *testing.T) {
 	unsignedTx := "01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b0000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000"
 	tx, err := NewFromString(unsignedTx)
 	// Previous txid 5b1a7dabe570741c2da71111d396e0be19778d8782c9f28b98d7c72d1b9b417e
-
 	wif, err := btcutil.DecodeWIF("cUcywgJz7ei37ePGGPPktQuRkmeqycoQVq439v5rH15kAUyaV7x4") // Address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
 	t.Log("pubkey")
-	publicKeyhash := hex.EncodeToString(wif.PrivKey.PubKey().SerializeCompressed())
-	//address := cryptolib.AddressFromPublicKeyHash(wif.PrivKey.PubKey(), false) //mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
+
+	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
 
 	//Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 2000000000
 	tx.Inputs[0].Script = NewScriptFromString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
+	// fmt.Printf("%x\n", tx.Hex())
+	// tx with input 01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88acffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000
+
+	// PKH from input 8fe80c75c9560e8b56ed64ea3c26e18d2c52211b
 
 	sigType := uint32(SighashAll | SighashForkID)
-	sigHashes, err := tx.GetSighashes(sigType, publicKeyhash)
+	sigHashes, err := tx.GetSighashes(sigType)
 
 	if len(sigHashes) != 1 {
 		t.Errorf("Error expected payload to be 1 item long, got %d", len(sigHashes))
