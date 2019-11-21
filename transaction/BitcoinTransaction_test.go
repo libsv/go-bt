@@ -196,7 +196,7 @@ func TestGetSighash(t *testing.T) {
 		return
 	}
 	if expectedSigHash != actualSigHash {
-		t.Errorf("Error expected %s got %s",expectedSigHash, actualSigHash)
+		t.Errorf("Error expected %s got %s", expectedSigHash, actualSigHash)
 	}
 }
 
@@ -270,7 +270,6 @@ func TestGetSigningPayload(t *testing.T) {
 		return
 	}
 }
-
 
 /*
 48
