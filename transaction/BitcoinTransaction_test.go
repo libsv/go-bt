@@ -262,17 +262,12 @@ func TestGetSigningPayload(t *testing.T) {
 	tx, err := NewFromString(unsignedTx)
 	// Previous txid 5b1a7dabe570741c2da71111d396e0be19778d8782c9f28b98d7c72d1b9b417e
 	wif, err := btcutil.DecodeWIF("cUcywgJz7ei37ePGGPPktQuRkmeqycoQVq439v5rH15kAUyaV7x4") // Address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
-	t.Log("pubkey")
-
-	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
 
 	//Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 2000000000
 	tx.Inputs[0].Script = NewScriptFromString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
 	// fmt.Printf("%x\n", tx.Hex())
 	// tx with input 01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88acffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000
-
-	// PKH from input 8fe80c75c9560e8b56ed64ea3c26e18d2c52211b
 
 	sigType := uint32(SighashAll | SighashForkID)
 	sigHashes, err := tx.GetSighashes(sigType)
@@ -283,6 +278,7 @@ func TestGetSigningPayload(t *testing.T) {
 
 	expectedPayload := NewSigningPayload()
 	// Add the expected payload for the single input.
+	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b" // This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
 	expectedPayload.AddItem(publicKeyhash, "8ea09cb667b276a886b79d8d6b7d073cc88e64f1640dc9bfd400f9301d4aaa98")
 
 	if !reflect.DeepEqual(sigHashes[0], expectedPayload[0]) {
