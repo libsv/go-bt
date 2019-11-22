@@ -41,6 +41,7 @@ const (
 	SighashSingle       = 0x00000003
 	SighashForkID       = 0x00000040
 	SighashAnyoneCanPay = 0x00000080
+	SighashAllForkID    = (0x00000001 | 0x00000040)
 )
 
 // A BitcoinTransaction wraps a bitcoin transaction
@@ -180,9 +181,8 @@ func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byt
 	return bt.hex(index, scriptPubKey)
 }
 
-// In order for the signing service to be able to sign our transaction inputs, we need to assemble a payload including all items to be signed.
-// Adapted from transaction.signatures.sighashForForkID()
-func (bt *BitcoinTransaction) GetSighashes(sigType uint32) (SigningPayload, error) {
+// GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
+func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (SigningPayload, error) {
 	signingPayload := NewSigningPayload()
 	for idx, input := range bt.Inputs {
 		if input.PreviousTxSatoshis == 0 {
@@ -194,7 +194,7 @@ func (bt *BitcoinTransaction) GetSighashes(sigType uint32) (SigningPayload, erro
 		}
 
 		if sigType == 0 {
-			sigType = SighashAll | SighashForkID
+			sigType = SighashAllForkID
 		}
 
 		sighash := sighashForForkID(bt, sigType, uint32(idx), *input.Script, input.PreviousTxSatoshis)
@@ -247,7 +247,7 @@ func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32)
 	privKeys = append(privKeys, privateKey)
 
 	if sigType == 0 {
-		sigType = SighashAll | SighashForkID
+		sigType = SighashAllForkID
 	}
 
 	sigs, _ := GetSignatures(bt, privKeys, sigType)
