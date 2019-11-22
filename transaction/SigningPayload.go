@@ -12,10 +12,10 @@ type SigningItem struct {
 type SigningPayload []*SigningItem
 
 // NewSigningPayload comment
-func NewSigningPayload() SigningPayload {
+func NewSigningPayload() *SigningPayload {
 	sp := make([]*SigningItem, 0)
 	p := SigningPayload(sp)
-	return p
+	return &p
 }
 
 // AddItem function
