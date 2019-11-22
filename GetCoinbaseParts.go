@@ -43,18 +43,6 @@ import (
 	"log"
 )
 
-const (
-	opDUP         = 0x76 // Duplicate the top item in the stack
-	opHASH160     = 0xa9 // Return RIPEMD160(SHA256(x)) hash of top item
-	opEQUAL       = 0x87 //	Returns 1 if the inputs are exactly equal, 0 otherwise.
-	opEQUALVERIFY = 0x88 // Same as OP_EQUAL, but run OP_VERIFY after to halt if not TRUE
-	opCHECKSIG    = 0xac // Pop a public key and signature and validate the signature for the transaction's hashed data, return TRUE if matching
-	opRETURN      = 0x6a
-	opPUSHDATA1   = 0x4c
-	opPUSHDATA2   = 0x4d
-	opPUSHDATA4   = 0x4e
-)
-
 // BuildCoinbase comment
 func BuildCoinbase(c1 []byte, c2 []byte, extraNonce1 string, extraNonce2 string) []byte {
 	e1, _ := hex.DecodeString(extraNonce1)
@@ -114,13 +102,13 @@ func AddressToScript(address string) (script []byte, err error) {
 		pubkey := decoded[1 : len(decoded)-4]
 
 		ret := []byte{
-			opDUP,
-			opHASH160,
+			OpDUP,
+			OpHASH160,
 			0x14,
 		}
 		ret = append(ret, pubkey...)
-		ret = append(ret, opEQUALVERIFY)
-		ret = append(ret, opCHECKSIG)
+		ret = append(ret, OpEQUALVERIFY)
+		ret = append(ret, OpCHECKSIG)
 
 		return ret, nil
 
@@ -130,11 +118,11 @@ func AddressToScript(address string) (script []byte, err error) {
 		redeemScriptHash := decoded[1 : len(decoded)-4]
 
 		ret := []byte{
-			opHASH160,
+			OpHASH160,
 			0x14,
 		}
 		ret = append(ret, redeemScriptHash...)
-		ret = append(ret, opEQUAL)
+		ret = append(ret, OpEQUAL)
 
 		return ret, nil
 

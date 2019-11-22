@@ -32,11 +32,11 @@ func NewScriptFromBytes(b []byte) *Script {
 func (s *Script) IsPublicKeyHashOut() bool {
 	b := []byte(*s)
 	return len(b) == 25 &&
-		b[0] == opDUP &&
-		b[1] == opHASH160 &&
+		b[0] == cryptolib.OpDUP &&
+		b[1] == cryptolib.OpHASH160 &&
 		b[2] == 0x14 &&
-		b[23] == opEQUALVERIFY &&
-		b[24] == opCHECKSIG
+		b[23] == cryptolib.OpEQUALVERIFY &&
+		b[24] == cryptolib.OpCHECKSIG
 }
 
 // IsPublicKeyOut returns true if this is a public key output script
@@ -48,7 +48,7 @@ func (s *Script) IsPublicKeyOut() bool {
 
 	if len(parts) == 2 &&
 		len(parts[0]) > 0 &&
-		parts[1][0] == opCHECKSIG {
+		parts[1][0] == cryptolib.OpCHECKSIG {
 
 		pubkey := parts[0]
 		version := pubkey[0]
@@ -67,9 +67,9 @@ func (s *Script) IsScriptHashOut() bool {
 	b := []byte(*s)
 
 	return len(b) == 23 &&
-		b[0] == opHASH160 &&
+		b[0] == cryptolib.OpHASH160 &&
 		b[1] == 0x14 &&
-		b[22] == opEQUAL
+		b[22] == cryptolib.OpEQUAL
 }
 
 // IsMultisigOut returns true if this is a multisig output script
@@ -94,11 +94,11 @@ func (s *Script) IsMultisigOut() bool {
 	}
 
 	return isSmallIntOp(parts[len(parts)-2][0]) &&
-		parts[len(parts)-1][0] == opCHECKMULTISIG
+		parts[len(parts)-1][0] == cryptolib.OpCHECKMULTISIG
 }
 
 func isSmallIntOp(opcode byte) bool {
-	return opcode == opZERO || (opcode >= opONE && opcode <= opSIXTEEN)
+	return opcode == cryptolib.OpZERO || (opcode >= cryptolib.OpONE && opcode <= cryptolib.OpSIXTEEN)
 }
 
 // GetPublicKeyHash function

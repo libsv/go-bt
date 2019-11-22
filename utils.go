@@ -139,19 +139,19 @@ func DecodeParts(b []byte) ([][]byte, error) {
 	for len(b) > 0 {
 		// Handle OP codes
 		switch b[0] {
-		case opPUSHDATA1:
+		case OpPUSHDATA1:
 			len := b[1]
 			part := b[2 : 2+len]
 			r = append(r, part)
 			b = b[2+len:]
 
-		case opPUSHDATA2:
+		case OpPUSHDATA2:
 			len := binary.LittleEndian.Uint16(b[1:])
 			part := b[3 : 3+len]
 			r = append(r, part)
 			b = b[3+len:]
 
-		case opPUSHDATA4:
+		case OpPUSHDATA4:
 			len := binary.LittleEndian.Uint32(b[1:])
 			part := b[5 : 5+len]
 			r = append(r, part)
