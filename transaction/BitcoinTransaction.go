@@ -204,7 +204,7 @@ func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload
 		}
 		signingPayload.AddItem(hex.EncodeToString(pkh), hex.EncodeToString(sighash))
 	}
-	return &signingPayload, nil
+	return signingPayload, nil
 }
 
 func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {

@@ -16,7 +16,7 @@ func Test(t *testing.T) {
 	}
 
 	t.Logf("%s\n", string(j))
-	for _, p := range payload {
+	for _, p := range *payload {
 		t.Logf("%+v\n", p)
 	}
 }
