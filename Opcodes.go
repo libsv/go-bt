@@ -15,4 +15,6 @@ const (
 	OpPUSHDATA1     = 0x4c
 	OpPUSHDATA2     = 0x4d
 	OpPUSHDATA4     = 0x4e
+	OpFALSE         = 0x00
+	OpDROP          = 0x75
 )
