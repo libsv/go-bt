@@ -272,8 +272,8 @@ func TestGetSigningPayload(t *testing.T) {
 	sigType := uint32(SighashAll | SighashForkID)
 	sigHashes, err := tx.GetSighashPayload(sigType)
 
-	if len(sigHashes) != 1 {
-		t.Errorf("Error expected payload to be 1 item long, got %d", len(sigHashes))
+	if len(*sigHashes) != 1 {
+		t.Errorf("Error expected payload to be 1 item long, got %d", len(*sigHashes))
 	}
 
 	expectedPayload := NewSigningPayload()
@@ -281,8 +281,8 @@ func TestGetSigningPayload(t *testing.T) {
 	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b" // This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
 	expectedPayload.AddItem(publicKeyhash, "8ea09cb667b276a886b79d8d6b7d073cc88e64f1640dc9bfd400f9301d4aaa98")
 
-	if !reflect.DeepEqual(sigHashes[0], expectedPayload[0]) {
-		t.Errorf("Error expected payload does not match actual, \n      got %+v\n, \nexpected, %+v\n", sigHashes[0], expectedPayload[0])
+	if !reflect.DeepEqual((*sigHashes)[0], expectedPayload[0]) {
+		t.Errorf("Error expected payload does not match actual, \n      got %+v\n, \nexpected, %+v\n", (*sigHashes)[0], expectedPayload[0])
 	}
 
 	signature, err := getSignatureForInput(tx.Inputs[0], tx, wif.PrivKey, 0, sigType)
