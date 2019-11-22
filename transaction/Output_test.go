@@ -29,3 +29,17 @@ func TestNewOutput(t *testing.T) {
 		t.Errorf("Expected 76a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac, got %x", script)
 	}
 }
+
+func TestNewOutputForPublicKeyHash(t *testing.T) {
+	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b" // This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
+	value := uint64(5000)
+	output, err := NewOutputForPublicKeyHash(publicKeyhash, value)
+	if err != nil {
+		t.Error("Error")
+		t.Log(err)
+	}
+	expected := "76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac"
+	if hex.EncodeToString(output.Script) != expected {
+		t.Errorf("Error script not correct\nExpected: %s\n     Got: %s\n", hex.EncodeToString(output.Script), expected)
+	}
+}

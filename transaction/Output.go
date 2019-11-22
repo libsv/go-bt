@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 
 	"bitbucket.org/simon_ordish/cryptolib"
@@ -29,6 +30,27 @@ func NewOutput() *Output {
 	return &Output{
 		Script: make([]byte, 0),
 	}
+}
+
+// NewOutputForPublicKeyHash makes an output to a PKH with a value.
+func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, error) {
+	o := Output{}
+	o.Value = satoshis
+
+	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
+	if err != nil {
+		return nil, err
+	}
+
+	script := make([]byte, 0, len(publicKeyHash)+8)
+	script = append(script, cryptolib.OpDUP)
+	script = append(script, cryptolib.OpHASH160)
+	script = append(script, cryptolib.VarInt(uint64(len(publicKeyHash)/2))...)
+	script = append(script, publicKeyHashBytes...)
+	script = append(script, cryptolib.OpEQUALVERIFY)
+	script = append(script, cryptolib.OpCHECKSIG)
+	o.Script = script
+	return &o, nil
 }
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
