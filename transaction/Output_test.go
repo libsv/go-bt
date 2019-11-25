@@ -36,10 +36,25 @@ func TestNewOutputForPublicKeyHash(t *testing.T) {
 	output, err := NewOutputForPublicKeyHash(publicKeyhash, value)
 	if err != nil {
 		t.Error("Error")
-		t.Log(err)
 	}
 	expected := "76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac"
 	if hex.EncodeToString(output.Script) != expected {
 		t.Errorf("Error script not correct\nExpected: %s\n     Got: %s\n", hex.EncodeToString(output.Script), expected)
+	}
+}
+
+func TestNewOutputOpReturn(t *testing.T) {
+	data := "This is some test data"
+	dataBytes := []byte(data)
+	output, err := NewOutputOpReturn(hex.EncodeToString(dataBytes))
+	if err != nil {
+		t.Error(err)
+	}
+	dataHexStr := hex.EncodeToString(dataBytes)
+	script := hex.EncodeToString(output.Script)
+	expectedScript := "006a16" + dataHexStr
+
+	if script != expectedScript {
+		t.Errorf("Error op return hex expected %s, got %s", expectedScript, script)
 	}
 }

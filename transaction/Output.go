@@ -68,6 +68,22 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 	return &o, offset + int(i)
 }
 
+// NewOutputOpReturn comment
+func NewOutputOpReturn(data string) (*Output, error) {
+	dataBytes, err := hex.DecodeString(data)
+	if err != nil {
+		return nil, err
+	}
+	script := make([]byte, 0)
+	script = append(script, cryptolib.OpFALSE)
+	script = append(script, cryptolib.OpRETURN)
+	script = append(script, cryptolib.VarInt(uint64(len(data)/2))...)
+	script = append(script, dataBytes...)
+	o := Output{}
+	o.Script = script
+	return &o, nil
+}
+
 // GetOutputScript comment
 func (o *Output) GetOutputScript() []byte {
 	return o.Script
