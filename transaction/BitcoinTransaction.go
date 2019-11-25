@@ -189,16 +189,16 @@ func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload
 			return nil, fmt.Errorf("Error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
 		}
 
-		if input.Script == nil {
-			return nil, fmt.Errorf("Error getting sighashes - Inputs need to have a Script to be signable")
+		if input.PreviousTxScript == nil {
+			return nil, fmt.Errorf("Error getting sighashes - Inputs need to have a PreviousScript to be signable")
 		}
 
 		if sigType == 0 {
 			sigType = SighashAllForkID
 		}
 
-		sighash := sighashForForkID(bt, sigType, uint32(idx), *input.Script, input.PreviousTxSatoshis)
-		pkh, err := input.Script.GetPublicKeyHash()
+		sighash := sighashForForkID(bt, sigType, uint32(idx), *input.PreviousTxScript, input.PreviousTxSatoshis)
+		pkh, err := input.PreviousTxScript.GetPublicKeyHash()
 		if err != nil {
 			return nil, err
 		}
@@ -258,7 +258,7 @@ func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32)
 		buf = append(buf, sig.Signature...)
 		buf = append(buf, cryptolib.VarInt(uint64(len(pubkey)))...)
 		buf = append(buf, pubkey...)
-		bt.GetInputs()[0].Script = NewScriptFromBytes(buf)
+		bt.GetInputs()[0].SigScript = NewScriptFromBytes(buf)
 	}
 	return bt
 }

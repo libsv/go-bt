@@ -66,8 +66,8 @@ func GetSignatures(transaction *BitcoinTransaction, privateKeys []*btcec.Private
 			return nil, fmt.Errorf("Inputs need to have a PreviousTxSatoshis set to be signable")
 		}
 
-		if input.Script == nil {
-			return nil, fmt.Errorf("Inputs need to have a Script to be signable")
+		if input.PreviousTxScript == nil {
+			return nil, fmt.Errorf("Inputs need to have a PreviousScript to be signable")
 		}
 
 		for _, privateKey := range privateKeys {
@@ -88,13 +88,13 @@ func getSignatureForInput(input *Input, transaction *BitcoinTransaction, private
 
 	hashData := cryptolib.Hash160(privateKey.PubKey().SerializeCompressed())
 
-	pkh, err := input.Script.GetPublicKeyHash()
+	pkh, err := input.PreviousTxScript.GetPublicKeyHash()
 	if err != nil {
 		return nil, err
 	}
 
 	if bytes.Compare(hashData, pkh) == 0 {
-		sighash := sighashForForkID(transaction, sigtype, index, *input.Script, input.PreviousTxSatoshis)
+		sighash := sighashForForkID(transaction, sigtype, index, *input.PreviousTxScript, input.PreviousTxSatoshis)
 
 		signature, _ := getSignatureForSighash(sighash, privateKey, sigtype)
 		if err != nil {
