@@ -16,10 +16,10 @@ func TestAddressToPubKeyHash(t *testing.T) {
 	}
 
 	if publicKeyhash != expectedPublicKeyhashTestnet {
-		t.Errorf("PKH from testnet address incorrect,\ngot: %s\nexpected: %s", publicKeyhash, expectedPublicKeyhashTestnet)
+		t.Errorf("PKH from testnet address %s incorrect,\ngot: %s\nexpected: %s", addressTestnet, publicKeyhash, expectedPublicKeyhashTestnet)
 	}
 
 	if publicKeyhash != expectedPublicKeyhashLivenet {
-		t.Errorf("PKH from testnet address incorrect,\ngot: %s\nexpected: %s", publicKeyhash, expectedPublicKeyhashTestnet)
+		t.Errorf("PKH from Live address %s incorrect,\ngot: %s\nexpected: %s", addressLive, publicKeyhash, expectedPublicKeyhashTestnet)
 	}
 }
