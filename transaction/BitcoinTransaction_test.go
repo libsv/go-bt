@@ -271,6 +271,9 @@ func TestGetSigningPayload(t *testing.T) {
 
 	sigType := uint32(SighashAll | SighashForkID)
 	sigHashes, err := tx.GetSighashPayload(sigType)
+	if err != nil {
+		t.Error(err)
+	}
 
 	if len(*sigHashes) != 1 {
 		t.Errorf("Error expected payload to be 1 item long, got %d", len(*sigHashes))
