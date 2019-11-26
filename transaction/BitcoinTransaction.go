@@ -222,28 +222,6 @@ func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 	return hex
 }
 
-// Sign comment
-func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) *BitcoinTransaction {
-	privKeys := make([]*btcec.PrivateKey, 0)
-	privKeys = append(privKeys, privateKey)
-
-	if sigType == 0 {
-		sigType = SighashAllForkID
-	}
-
-	sigs, _ := GetSignatures(bt, privKeys, sigType)
-	for _, sig := range sigs {
-		pubkey := privateKey.PubKey().SerializeCompressed()
-		buf := make([]byte, 0)
-		buf = append(buf, cryptolib.VarInt(uint64(len(sig.Signature)))...)
-		buf = append(buf, sig.Signature...)
-		buf = append(buf, cryptolib.VarInt(uint64(len(pubkey)))...)
-		buf = append(buf, pubkey...)
-		bt.GetInputs()[0].SigScript = NewScriptFromBytes(buf)
-	}
-	return bt
-}
-
 // ApplySignatures To sign our transaction, we go to the signing service and get a payload containing sigatures.
 // We can then apply those signatures to our transaction inputs to sign the tx.
 // The signing payload from the signing service should contain a signing item for each of the tx inputs.
@@ -297,4 +275,41 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 		}
 	}
 	return bt, nil
+}
+
+// Sign the transaction
+// Normally we'd expect the signing service to do this, but we include this for testing purposes, sing the
+func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) (*BitcoinTransaction, error) {
+	if sigType == 0 {
+		sigType = SighashAllForkID
+	}
+
+	payload, err := bt.GetSighashPayload(sigType)
+	signedPayload, err := submitToLocalSigningService(payload, privateKey)
+	if err != nil {
+		return nil, err
+	}
+	bt, err = bt.ApplySignatures(signedPayload, sigType)
+	if err != nil {
+		return nil, err
+	}
+	return bt, nil
+}
+
+// submitToLocalSigningService local service for testing, which can sign payloads like the signing service.
+func submitToLocalSigningService(payload *SigningPayload, privateKey *btcec.PrivateKey) (*SigningPayload, error) {
+	for _, signingItem := range *payload {
+		h, err := hex.DecodeString(signingItem.SigHash)
+		if err != nil {
+			return nil, err
+		}
+		sig, err := privateKey.Sign(cryptolib.ReverseBytes(h))
+		if err != nil {
+			return nil, err
+		}
+		pubkey := privateKey.PubKey().SerializeCompressed()
+		signingItem.PublicKey = hex.EncodeToString(pubkey)
+		signingItem.Signature = hex.EncodeToString(sig.Serialize())
+	}
+	return payload, nil
 }
