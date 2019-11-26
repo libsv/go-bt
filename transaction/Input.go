@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	"bitbucket.org/simon_ordish/cryptolib"
-
-	"github.com/btcsuite/btcd/btcec"
 )
 
 /*
@@ -26,7 +24,8 @@ type Input struct {
 	PreviousTxHash     [32]byte
 	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
-	Script             *Script
+	PreviousTxScript   *Script
+	SigScript          *Script
 	SequenceNumber     uint32
 }
 
@@ -36,7 +35,7 @@ func NewInput() *Input {
 	s := NewScriptFromBytes(b)
 
 	return &Input{
-		Script:         s,
+		SigScript:      s,
 		SequenceNumber: 0xFFFFFFFF,
 	}
 }
@@ -53,7 +52,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int) {
 	l, size := cryptolib.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	i.Script = NewScriptFromBytes(bytes[offset : offset+int(l)])
+	i.SigScript = NewScriptFromBytes(bytes[offset : offset+int(l)])
 
 	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 
@@ -66,7 +65,7 @@ prevOutIndex: %d
 scriptLen:    %d
 script:       %x
 sequence:     %x
-`, i.PreviousTxHash, i.PreviousTxOutIndex, len(*i.Script), i.Script, i.SequenceNumber)
+`, i.PreviousTxHash, i.PreviousTxOutIndex, len(*i.SigScript), i.SigScript, i.SequenceNumber)
 }
 
 // Hex comment
@@ -78,14 +77,10 @@ func (i *Input) Hex(clear bool) []byte {
 	if clear {
 		hex = append(hex, 0x00)
 	} else {
-		hex = append(hex, cryptolib.VarInt(uint64(len(*i.Script)))...)
-		hex = append(hex, *i.Script...)
+		hex = append(hex, cryptolib.VarInt(uint64(len(*i.SigScript)))...)
+		hex = append(hex, *i.SigScript...)
 	}
 	hex = append(hex, cryptolib.GetLittleEndianBytes(i.SequenceNumber, 4)...)
 
 	return hex
-}
-
-func (i *Input) getSignatures(transaction *BitcoinTransaction, privKey *btcec.PrivateKey, index int, sigtype int, hashData []byte) {
-
 }

@@ -187,16 +187,17 @@ func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload
 			return nil, errors.New("Error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
 		}
 
-		if input.Script == nil {
-			return nil, errors.New("Error getting sighashes - Inputs need to have a Script to be signable")
+		if input.PreviousTxScript == nil {
+			return nil, errors.New("Error getting sighashes - Inputs need to have a PreviousScript to be signable")
+
 		}
 
 		if sigType == 0 {
 			sigType = SighashAllForkID
 		}
 
-		sighash := sighashForForkID(bt, sigType, uint32(idx), *input.Script, input.PreviousTxSatoshis)
-		pkh, err := input.Script.GetPublicKeyHash()
+		sighash := sighashForForkID(bt, sigType, uint32(idx), *input.PreviousTxScript, input.PreviousTxSatoshis)
+		pkh, err := input.PreviousTxScript.GetPublicKeyHash()
 		if err != nil {
 			return nil, err
 		}
@@ -256,7 +257,7 @@ func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32)
 		buf = append(buf, sig.Signature...)
 		buf = append(buf, cryptolib.VarInt(uint64(len(pubkey)))...)
 		buf = append(buf, pubkey...)
-		bt.GetInputs()[0].Script = NewScriptFromBytes(buf)
+		bt.GetInputs()[0].SigScript = NewScriptFromBytes(buf)
 	}
 	return bt
 }
@@ -283,8 +284,8 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			// If our tx input has a script, check it against our payload pubkeyhash for safety.
 			// Note that this is not a complete check as we will probably have the same sighash multiple times in our payload but different sigs.
 			// So the order is critical - payload items have a one to one mapping to inputs.
-			if bt.Inputs[index].Script != nil {
-				txPubKeyHash, err := bt.Inputs[index].Script.GetPublicKeyHash()
+			if bt.Inputs[index].PreviousTxScript != nil {
+				txPubKeyHash, err := bt.Inputs[index].PreviousTxScript.GetPublicKeyHash()
 				if err != nil {
 					return nil, err
 				}
@@ -306,7 +307,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			buf = append(buf, (SighashAll | SighashForkID))
 			buf = append(buf, cryptolib.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].Script = NewScriptFromBytes(buf)
+			bt.Inputs[index].SigScript = NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 		if sigsApplied == 0 {
