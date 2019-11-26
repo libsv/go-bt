@@ -303,35 +303,43 @@ func TestGetSigningPayload(t *testing.T) {
 	}
 }
 
-/*
-48
-30
-45
-02
-21
-00f4de422896e461da647b21d800a4ca9ace98dbd08c2dc9b8e049c93197c314f5
-02
-20
-68836c3dfa6650ebeff73b1e3caa8761cd107ed13d6cc713856ebde3f874dd41
-41
+func TestApplySignatures(t *testing.T) {
 
-21
-02aea77c449eeeef2746562e56ad053202755f9844276e3f0c684f9d59cdb9458d
-ac OP_CHECKSIG
+	unsignedTx := "010000000236916d2d420bbd4ff8cd94a2b49d89daeeaeeedbf640cd2c9aa0c619bd806209000000001976a914bcd0bdbf5fcde5ed957396752d4bd2e01d36870288acffffffff3fdb6bf215bad39941525500337e9e7924f99da5a841c5dc7c1eab8036162fe2000000001976a914bcd0bdbf5fcde5ed957396752d4bd2e01d36870288acffffffff0380d1f008000000001976a91490d7b4c4df77b035616e53e2f3701ab562d6f87f88ac80f0fa02000000001976a91490e5bc4b4b5391b60c3fa9b568f916fa83819fce88ac000000000000000020006a1d536f6d652064617461203132333435363738383930206162636465666700000000"
+	tx, err := NewFromString(unsignedTx)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
-*/
-// func TestMyTransaction(t *testing.T) {
-// 	fromTx, err := NewFromString("02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0d510101092f45423132382e302fffffffff0100f2052a01000000232102aea77c449eeeef2746562e56ad053202755f9844276e3f0c684f9d59cdb9458dac00000000")
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
+	signingPayload := SigningPayload{}
 
-// 	toTx, err := NewFromString("02000000019bb2dea27bcff46bca60e46ba2fdce706a8eb9d22c9b05e54166b8f9ac57d6de0000000049483045022100f4de422896e461da647b21d800a4ca9ace98dbd08c2dc9b8e049c93197c314f5022068836c3dfa6650ebeff73b1e3caa8761cd107ed13d6cc713856ebde3f874dd4141feffffff0200ca9a3b000000001976a9143c134f3ccd097be40242efd6fb370fc62501afe788ac00196bee000000001976a914c3d737cb0d93ded96a35d240aa3f01b34edc4e5d88ac65000000")
-// 	if err != nil {
-// 		t.Error(err)
-// 		return
-// 	}
+	// Append a valid response received from the signing service for this Tx.
+	signingItem := SigningItem{
+		PublicKeyHash: "bcd0bdbf5fcde5ed957396752d4bd2e01d368702",
+		SigHash:       "80448cea404b51f82d409cbd1fbca66bf43fe1cd45d7660953e39ce3c5d8208d",
+		PublicKey:     "02ba6bc6906e4937bcde60dbbabdd994dbd0c23e86d834a856091efe677be378b1",
+		Signature:     "3045022100a0a005f339978dd6945e44d524d576189f8f7546f41c4899beaa796facb0c4c40220719de9a73796d604b9ee32d7496234c488705fa73f0bd2ffeadcca57580f4cb3",
+	}
+	signingPayload = append(signingPayload, &signingItem)
 
-// 	t.Errorf("%x\n%x\n", fromTx.GetOutputs()[0].GetOutputScript(), toTx.GetInputs()[0].GetInputScript())
-// }
+	signingItem2 := SigningItem{
+		PublicKeyHash: "bcd0bdbf5fcde5ed957396752d4bd2e01d368702",
+		SigHash:       "c62573ac749d9b202cd7b2e0d36a0f688a680810a70ee840f6de7bab4d615095",
+		PublicKey:     "02ba6bc6906e4937bcde60dbbabdd994dbd0c23e86d834a856091efe677be378b1",
+		Signature:     "30440220399173272f0f56c06b4eb1ccce970603e305988788ab1468e0948ae340fc5380022067684423502f75c5b6e88ad302cc2a1cf739c824efbd5e83fa9e02d4b2975f64",
+	}
+	signingPayload = append(signingPayload, &signingItem2)
+
+	tx, err = tx.ApplySignatures(&signingPayload, 0)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	signedTxFromRegtest := "010000000236916d2d420bbd4ff8cd94a2b49d89daeeaeeedbf640cd2c9aa0c619bd806209000000006b483045022100a0a005f339978dd6945e44d524d576189f8f7546f41c4899beaa796facb0c4c40220719de9a73796d604b9ee32d7496234c488705fa73f0bd2ffeadcca57580f4cb3412102ba6bc6906e4937bcde60dbbabdd994dbd0c23e86d834a856091efe677be378b1ffffffff3fdb6bf215bad39941525500337e9e7924f99da5a841c5dc7c1eab8036162fe2000000006a4730440220399173272f0f56c06b4eb1ccce970603e305988788ab1468e0948ae340fc5380022067684423502f75c5b6e88ad302cc2a1cf739c824efbd5e83fa9e02d4b2975f64412102ba6bc6906e4937bcde60dbbabdd994dbd0c23e86d834a856091efe677be378b1ffffffff0380d1f008000000001976a91490d7b4c4df77b035616e53e2f3701ab562d6f87f88ac80f0fa02000000001976a91490e5bc4b4b5391b60c3fa9b568f916fa83819fce88ac000000000000000020006a1d536f6d652064617461203132333435363738383930206162636465666700000000"
+
+	if hex.EncodeToString(tx.Hex()) != signedTxFromRegtest {
+		t.Errorf("Error - tx with sigs applied does not match expcted signed tx from regtest.\nGot %s\nexpected %s\n", hex.EncodeToString(tx.Hex()), signedTxFromRegtest)
+	}
+}
