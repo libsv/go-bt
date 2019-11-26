@@ -39,7 +39,7 @@ func NewSigningPayloadFromTx(bt *BitcoinTransaction) (*SigningPayload, error) {
 
 		}
 
-		sighash := getSighash(bt, SighashAllForkID, uint32(idx), *input.PreviousTxScript, input.PreviousTxSatoshis)
+		sighash := getSighashForInput(bt, SighashAllForkID, uint32(idx))
 		pkh, err := input.PreviousTxScript.GetPublicKeyHash()
 		if err != nil {
 			return nil, err
@@ -59,7 +59,7 @@ func (sp *SigningPayload) AddItem(publicKeyHash string, sigHash string) {
 	*sp = append(*sp, si)
 }
 
-func getSighash(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, subscript Script, satoshis uint64) string {
+func getSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32) string {
 
 	input := transaction.Inputs[inputNumber]
 
@@ -107,18 +107,22 @@ func getSighash(transaction *BitcoinTransaction, sighashType uint32, inputNumber
 	hashOutputs := make([]byte, 32)
 
 	if sighashType&SighashAnyoneCanPay == 0 {
+		// This will be executed in the usual BSV case (where sighashType = SighashAllForkID)
 		hashPrevouts = getPrevoutHash(transaction)
 	}
 
 	if sighashType&SighashAnyoneCanPay == 0 &&
 		(sighashType&31) != SighashSingle &&
 		(sighashType&31) != SighashNone {
+		// This will be executed in the usual BSV case (where sighashType = SighashAllForkID)
 		hashSequence = getSequenceHash(transaction)
 	}
 
 	if (sighashType&31) != SighashSingle && (sighashType&31) != SighashNone {
+		// This will be executed in the usual BSV case (where sighashType = SighashAllForkID)
 		hashOutputs = getOutputsHash(transaction, -1)
 	} else if (sighashType&31) == SighashSingle && inputNumber < uint32(len(transaction.Outputs)) {
+		// This will *not* be executed in the usual BSV case (where sighashType = SighashAllForkID)
 		hashOutputs = getOutputsHash(transaction, int32(inputNumber))
 	}
 
@@ -140,12 +144,12 @@ func getSighash(transaction *BitcoinTransaction, sighashType uint32, inputNumber
 	buf = append(buf, oi...)
 
 	// scriptCode of the input (serialized as scripts inside CTxOuts)
-	buf = append(buf, cryptolib.VarInt(uint64(len(subscript)))...)
-	buf = append(buf, subscript...)
+	buf = append(buf, cryptolib.VarInt(uint64(len(*input.PreviousTxScript)))...)
+	buf = append(buf, *input.PreviousTxScript...)
 
 	// value of the output spent by this input (8-byte little endian)
 	sat := make([]byte, 8)
-	binary.LittleEndian.PutUint64(sat, satoshis)
+	binary.LittleEndian.PutUint64(sat, input.PreviousTxSatoshis)
 	buf = append(buf, sat...)
 
 	// nSequence of the input (4-byte little endian)
