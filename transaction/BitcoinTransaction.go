@@ -181,27 +181,9 @@ func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byt
 
 // GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
 func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) {
-	signingPayload := NewSigningPayload()
-	for idx, input := range bt.Inputs {
-		if input.PreviousTxSatoshis == 0 {
-			return nil, errors.New("Error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
-		}
-
-		if input.PreviousTxScript == nil {
-			return nil, errors.New("Error getting sighashes - Inputs need to have a PreviousScript to be signable")
-
-		}
-
-		if sigType == 0 {
-			sigType = SighashAllForkID
-		}
-
-		sighash := sighashForForkID(bt, sigType, uint32(idx), *input.PreviousTxScript, input.PreviousTxSatoshis)
-		pkh, err := input.PreviousTxScript.GetPublicKeyHash()
-		if err != nil {
-			return nil, err
-		}
-		signingPayload.AddItem(hex.EncodeToString(pkh), hex.EncodeToString(sighash))
+	signingPayload, err := NewSigningPayloadFromTx(bt)
+	if err != nil {
+		return nil, err
 	}
 	return signingPayload, nil
 }
