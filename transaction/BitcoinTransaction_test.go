@@ -104,63 +104,10 @@ func TestIsCoinbase(t *testing.T) {
 	}
 }
 
-func TestSignTx(t *testing.T) {
-	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
-	tx, err := NewFromString(unsignedTx)
-
-	//Add the UTXO amount and script.
-	tx.Inputs[0].PreviousTxSatoshis = 100000000
-	tx.Inputs[0].PreviousTxScript = NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
-
-	// Our private key.
-	wif, err := btcutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	tx.Sign(wif.PrivKey, 0)
-	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
-
-	if hex.EncodeToString(tx.Hex()) != expectedSignedTx {
-		t.Errorf("Expecting %s\n, got %s\n", expectedSignedTx, hex.EncodeToString(tx.Hex()))
-	}
-
-	if unsignedTx == expectedSignedTx {
-		t.Errorf("Expected and signed TX strings in code identical")
-	}
-}
-
-func TestGetSighash(t *testing.T) {
-	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
-	tx, err := NewFromString(unsignedTx)
-
-	//Add the UTXO amount and script.
-	previousTxSatoshis := uint64(100000000)
-	script := NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
-
-	expectedSigHash := "b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe"
-	actualSigHash := hex.EncodeToString(sighashForForkID(
-		tx,
-		(SighashAll | SighashForkID),
-		uint32(0),
-		*script,
-		previousTxSatoshis,
-	))
-
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if expectedSigHash != actualSigHash {
-		t.Errorf("Error expected %s got %s", expectedSigHash, actualSigHash)
-	}
-}
-
-func TestGetSigningPayload(t *testing.T) {
+func TestGetSighashPayload(t *testing.T) {
 	unsignedTx := "01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b0000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000"
 	tx, err := NewFromString(unsignedTx)
 	// Previous txid 5b1a7dabe570741c2da71111d396e0be19778d8782c9f28b98d7c72d1b9b417e
-	wif, err := btcutil.DecodeWIF("cUcywgJz7ei37ePGGPPktQuRkmeqycoQVq439v5rH15kAUyaV7x4") // Address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
 
 	//Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 2000000000
@@ -183,17 +130,8 @@ func TestGetSigningPayload(t *testing.T) {
 	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b" // This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
 	expectedPayload.AddItem(publicKeyhash, "8ea09cb667b276a886b79d8d6b7d073cc88e64f1640dc9bfd400f9301d4aaa98")
 
-	if !reflect.DeepEqual((*sigHashes)[0], (*expectedPayload)[0]) {
+	if !reflect.DeepEqual(*sigHashes, *expectedPayload) {
 		t.Errorf("Error expected payload does not match actual, \n      got %+v\n, \nexpected, %+v\n", (*sigHashes)[0], (*expectedPayload)[0])
-	}
-
-	signature, err := getSignatureForInput(tx.Inputs[0], tx, wif.PrivKey, 0, sigType)
-	signatureHex := hex.EncodeToString(signature[0].Signature)
-	t.Log(signature)
-	expectedSignature := "304402202dfea75654976f53ae0c35bbeae5c73ee608e37fe3cdc8d4483adc17cc633d3d0220141474deb26bf5cb510e6fe9dafe7ddbd28eb211edf532948020532b7902b13741"
-
-	if expectedSignature != signatureHex {
-		t.Errorf("Sigs do not match\nExpected %s\nGot      %s\n", expectedSignature, signatureHex)
 	}
 
 	if err != nil {
@@ -240,5 +178,32 @@ func TestApplySignatures(t *testing.T) {
 
 	if hex.EncodeToString(tx.Hex()) != signedTxFromRegtest {
 		t.Errorf("Error - tx with sigs applied does not match expcted signed tx from regtest.\nGot %s\nexpected %s\n", hex.EncodeToString(tx.Hex()), signedTxFromRegtest)
+	}
+}
+
+// We don't expect to use the local tx.sign() function as the signing service does it, but we include it for completeness using the same methods.
+func TestSignTx(t *testing.T) {
+	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
+	tx, err := NewFromString(unsignedTx)
+
+	//Add the UTXO amount and script.
+	tx.Inputs[0].PreviousTxSatoshis = 100000000
+	tx.Inputs[0].PreviousTxScript = NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+
+	// Our private key.
+	wif, err := btcutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	tx.Sign(wif.PrivKey, 0)
+	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
+
+	if hex.EncodeToString(tx.Hex()) != expectedSignedTx {
+		t.Errorf("Expecting %s\n, got %s\n", expectedSignedTx, hex.EncodeToString(tx.Hex()))
+	}
+
+	if unsignedTx == expectedSignedTx {
+		t.Errorf("Expected and signed TX strings in code identical")
 	}
 }

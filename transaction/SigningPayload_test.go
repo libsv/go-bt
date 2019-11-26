@@ -66,3 +66,29 @@ func TestSigningPayloadFromTx(t *testing.T) {
 		t.Errorf("Error payload created is not as expected.  GOT%+v \nEXPECTED%v+", payload, signingPayload)
 	}
 }
+
+func TestGetSighash(t *testing.T) {
+	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
+	tx, err := NewFromString(unsignedTx)
+
+	//Add the UTXO amount and script.
+	previousTxSatoshis := uint64(100000000)
+	script := NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+
+	expectedSigHash := "b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe"
+	actualSigHash := getSighash(
+		tx,
+		(SighashAll | SighashForkID),
+		uint32(0),
+		*script,
+		previousTxSatoshis,
+	)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if expectedSigHash != actualSigHash {
+		t.Errorf("Error expected %s got %s", expectedSigHash, actualSigHash)
+	}
+}
