@@ -1,5 +1,6 @@
 package cryptolib
 
+// Bitcoin Script constants
 const (
 	OpZERO          = 0x00
 	OpONE           = 0x51
