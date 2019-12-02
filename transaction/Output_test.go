@@ -49,6 +49,7 @@ func TestNewOutputOpReturn(t *testing.T) {
 	output, err := NewOutputOpReturn(hex.EncodeToString(dataBytes))
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	dataHexStr := hex.EncodeToString(dataBytes)
 	script := hex.EncodeToString(output.Script)
