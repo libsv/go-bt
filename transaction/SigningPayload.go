@@ -31,14 +31,13 @@ func NewSigningPayloadFromTx(bt *BitcoinTransaction) (*SigningPayload, error) {
 	p := NewSigningPayload()
 	for idx, input := range bt.Inputs {
 		if input.PreviousTxSatoshis == 0 {
-			return nil, errors.New("Error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
+			return nil, errors.New("Signing service error - error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
 		}
 
 		if input.PreviousTxScript == nil {
-			return nil, errors.New("Error getting sighashes - Inputs need to have a PreviousScript to be signable")
+			return nil, errors.New("Signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
 
 		}
-
 		sighash := getSighashForInput(bt, SighashAllForkID, uint32(idx))
 		pkh, err := input.PreviousTxScript.GetPublicKeyHash()
 		if err != nil {

@@ -270,9 +270,9 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			bt.Inputs[index].SigScript = NewScriptFromBytes(buf)
 			sigsApplied++
 		}
-		if sigsApplied == 0 {
-			return nil, errors.New("Error found no signatures in this payload to apply to this tx")
-		}
+	}
+	if sigsApplied == 0 {
+		return nil, errors.New("Error - tx builder found no signatures in signing service payload to apply to this tx")
 	}
 	return bt, nil
 }
