@@ -272,7 +272,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 		}
 	}
 	if sigsApplied == 0 {
-		return nil, errors.New("Error - tx builder found no signatures in signing service payload to apply to this tx")
+		return nil, errors.New("Error - cryptolib found no signatures in signingPayload to apply to this tx")
 	}
 	return bt, nil
 }
