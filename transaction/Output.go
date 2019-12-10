@@ -69,16 +69,12 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 }
 
 // NewOutputOpReturn comment
-func NewOutputOpReturn(data string) (*Output, error) {
-	dataBytes, err := hex.DecodeString(data)
-	if err != nil {
-		return nil, err
-	}
+func NewOutputOpReturn(data []byte) (*Output, error) {
 	script := make([]byte, 0)
 	script = append(script, cryptolib.OpFALSE)
 	script = append(script, cryptolib.OpRETURN)
-	script = append(script, cryptolib.VarInt(uint64(len(data)/2))...)
-	script = append(script, dataBytes...)
+	script = append(script, cryptolib.VarInt(uint64(len(data)))...)
+	script = append(script, data...)
 	o := Output{}
 	o.Script = script
 	return &o, nil

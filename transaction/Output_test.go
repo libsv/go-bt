@@ -46,7 +46,7 @@ func TestNewOutputForPublicKeyHash(t *testing.T) {
 func TestNewOutputOpReturn(t *testing.T) {
 	data := "This is some test data"
 	dataBytes := []byte(data)
-	output, err := NewOutputOpReturn(hex.EncodeToString(dataBytes))
+	output, err := NewOutputOpReturn(dataBytes)
 	if err != nil {
 		t.Error(err)
 		return
