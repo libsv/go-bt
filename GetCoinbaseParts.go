@@ -79,6 +79,20 @@ func makeCoinbaseInputTransaction(coinbaseData []byte) []byte {
 	return buf
 }
 
+// PublicKeyToP2PKHScript comment
+func PublicKeyToP2PKHScript(pubkey []byte) (script []byte, err error) {
+	ret := []byte{
+		OpDUP,
+		OpHASH160,
+		0x14,
+	}
+	ret = append(ret, pubkey...)
+	ret = append(ret, OpEQUALVERIFY)
+	ret = append(ret, OpCHECKSIG)
+
+	return ret, nil
+}
+
 // AddressToScript comment
 func AddressToScript(address string) (script []byte, err error) {
 	decoded, err := DecodeString(address)
