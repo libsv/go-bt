@@ -41,7 +41,6 @@ func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, 
 	if err != nil {
 		return nil, err
 	}
-
 	script := make([]byte, 0, len(publicKeyHash)+8)
 	script = append(script, cryptolib.OpDUP)
 	script = append(script, cryptolib.OpHASH160)
@@ -70,11 +69,18 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 
 // NewOutputOpReturn comment
 func NewOutputOpReturn(data []byte) (*Output, error) {
+	var bytes [][]byte
+	bytes = append(bytes, data)
+	b, err := cryptolib.EncodeParts(bytes)
+	if err != nil {
+		return nil, err
+	}
 	script := make([]byte, 0)
 	script = append(script, cryptolib.OpFALSE)
 	script = append(script, cryptolib.OpRETURN)
-	script = append(script, cryptolib.VarInt(uint64(len(data)))...)
-	script = append(script, data...)
+	// script = append(script, cryptolib.VarInt(uint64(len(data)))...)
+	script = append(script, b...)
+	// script = append(script, data...)
 	o := Output{}
 	o.Script = script
 	return &o, nil
