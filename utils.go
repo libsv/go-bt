@@ -91,7 +91,7 @@ func EncodeParts(parts [][]byte) ([]byte, error) {
 	b := make([]byte, 0)
 
 	for i, part := range parts {
-		l := len(part)
+		l := int64(len(part))
 
 		if l <= 75 {
 			b = append(b, byte(len(part)))
