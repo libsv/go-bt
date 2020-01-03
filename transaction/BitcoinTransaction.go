@@ -69,14 +69,18 @@ func NewFromString(str string) (*BitcoinTransaction, error) {
 		return nil, err
 	}
 
-	return NewFromBytes(bytes)
+	return NewFromBytes(bytes), nil
 }
 
 // NewFromBytes takes an array of bytes and constructs a BitcoinTransaction
-func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
-	bt := BitcoinTransaction{
-		Bytes: bytes,
-	}
+func NewFromBytes(bytes []byte) *BitcoinTransaction {
+	bt, _ := NewFromBytesWithUsed(bytes)
+	return bt
+}
+
+// NewFromBytesWithUsed function
+func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
+	bt := BitcoinTransaction{}
 
 	var offset = 0
 
@@ -89,29 +93,32 @@ func NewFromBytes(bytes []byte) (*BitcoinTransaction, error) {
 		offset += 2
 	}
 
-	inputCount, size := cryptolib.DecodeVarInt(bt.Bytes[offset:])
+	inputCount, size := cryptolib.DecodeVarInt(bytes[offset:])
 	offset += size
 
 	var i uint64
 	for ; i < inputCount; i++ {
-		input, size := NewInputFromBytes(bt.Bytes[offset:])
+		input, size := NewInputFromBytes(bytes[offset:])
 		offset += size
 
 		bt.Inputs = append(bt.Inputs, input)
 	}
 
-	outputCount, size := cryptolib.DecodeVarInt(bt.Bytes[offset:])
+	outputCount, size := cryptolib.DecodeVarInt(bytes[offset:])
 	offset += size
 
 	for i = 0; i < outputCount; i++ {
-		output, size := NewOutputFromBytes(bt.Bytes[offset:])
+		output, size := NewOutputFromBytes(bytes[offset:])
 		offset += size
 		bt.Outputs = append(bt.Outputs, output)
 	}
 
 	bt.Locktime = binary.LittleEndian.Uint32(bytes[offset:])
+	offset += 4
 
-	return &bt, nil
+	bt.Bytes = bytes[0:offset]
+
+	return &bt, offset
 }
 
 // HasWitnessData returns true if the optional Witness flag == 0001
@@ -167,6 +174,11 @@ func (bt *BitcoinTransaction) GetInputs() []*Input {
 // GetOutputs comment
 func (bt *BitcoinTransaction) GetOutputs() []*Output {
 	return bt.Outputs
+}
+
+// GetTxID comment
+func (bt *BitcoinTransaction) GetTxID() string {
+	return hex.EncodeToString(cryptolib.ReverseBytes(cryptolib.Sha256d(bt.Hex())))
 }
 
 // Hex comment
