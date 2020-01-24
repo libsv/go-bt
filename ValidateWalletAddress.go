@@ -54,7 +54,7 @@ func validateBSVWalletAddress(coin string, address string) (bool, error) {
 		p := prefixes[coin] + ":"
 
 		if !strings.HasPrefix(address, p) {
-			return validA58([]byte(address))
+			return validBSVA58([]byte(address))
 		}
 
 		// Check each character is valid
@@ -267,6 +267,17 @@ func validA58(a58 []byte) (ok bool, err error) {
 	}
 	if a[0] != 0 && a[0] != 5 {
 		return false, errors.New("not version 0 or 5")
+	}
+	return a.embeddedChecksum() == a.computeChecksum(), nil
+}
+
+func validBSVA58(a58 []byte) (ok bool, err error) {
+	var a a25
+	if err := a.set58(a58); err != nil {
+		return false, err
+	}
+	if a[0] != 0 {
+		return false, errors.New("not version 0")
 	}
 	return a.embeddedChecksum() == a.computeChecksum(), nil
 }
