@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -15,9 +16,9 @@ var (
 
 func init() {
 	prefixes = make(map[string]string)
-	prefixes["BSV"] = "bitcoincash"
-	prefixes["TSV"] = "bchtest"
-	prefixes["RSV"] = "bchreg"
+	prefixes["BCH"] = "bitcoincash"
+	prefixes["TCH"] = "bchtest"
+	prefixes["RCH"] = "bchreg"
 }
 
 // CHARSET is the cashaddr character set for encoding.
@@ -40,109 +41,127 @@ type data []byte
 func ValidateWalletAddress(coin string, address string) (bool, error) {
 	if coin == "BSV" || coin == "TSV" || coin == "RSV" {
 		return validateBSVWalletAddress(coin, address)
+	} else if coin == "BCH" || coin == "TCH" || coin == "RCH" {
+		return validateBCHWalletAddress(coin, address)
 	} else if coin == "BTC" || coin == "TTC" || coin == "RTC" {
-		return validA58([]byte(address))
+		return validA58(coin, []byte(address))
 	} else {
 		return false, errors.New("Invalid coin")
 	}
 
 }
 
-func validateBSVWalletAddress(coin string, address string) (bool, error) {
-	if coin == "BSV" || coin == "TSV" || coin == "RSV" {
-		// Check the prefix is valid
-		p := prefixes[coin] + ":"
+func validateBCHWalletAddress(coin string, address string) (bool, error) {
+	// Check the prefix is valid
+	p := prefixes[coin] + ":"
 
-		if !strings.HasPrefix(address, p) {
-			return validBSVA58([]byte(address))
+	if !strings.HasPrefix(address, p) {
+		return validA58(coin, []byte(address))
+	}
+
+	// Check each character is valid
+	for _, c := range address[len(p):] {
+		if !strings.Contains(CHARSET, string(c)) {
+			return false, errors.New("Non valid character")
+		}
+	}
+
+	// Check the checksum
+	lower := false
+	upper := false
+	prefixSize := 0
+
+	for i := 0; i < len(address); i++ {
+		c := byte(address[i])
+		if c >= 'a' && c <= 'z' {
+			lower = true
+			continue
 		}
 
-		// Check each character is valid
-		for _, c := range address[len(p):] {
-			if !strings.Contains(CHARSET, string(c)) {
-				return false, errors.New("Non valid character")
-			}
+		if c >= 'A' && c <= 'Z' {
+			upper = true
+			continue
 		}
 
-		// Check the checksum
-		lower := false
-		upper := false
-		prefixSize := 0
-
-		for i := 0; i < len(address); i++ {
-			c := byte(address[i])
-			if c >= 'a' && c <= 'z' {
-				lower = true
-				continue
-			}
-
-			if c >= 'A' && c <= 'Z' {
-				upper = true
-				continue
-			}
-
-			if c >= '0' && c <= '9' {
-				// We cannot have numbers in the prefix.
-				if prefixSize == 0 {
-					return false, errors.New("Addresses cannot have numbers in the prefix")
-				}
-
-				continue
+		if c >= '0' && c <= '9' {
+			// We cannot have numbers in the prefix.
+			if prefixSize == 0 {
+				return false, errors.New("Addresses cannot have numbers in the prefix")
 			}
 
-			if c == ':' {
-				// The separator must not be the first character, and there must not
-				// be 2 separators.
-				if i == 0 || prefixSize != 0 {
-					return false, errors.New("The separator must not be the first character")
-				}
+			continue
+		}
 
-				prefixSize = i
-				continue
+		if c == ':' {
+			// The separator must not be the first character, and there must not
+			// be 2 separators.
+			if i == 0 || prefixSize != 0 {
+				return false, errors.New("The separator must not be the first character")
 			}
 
-			// We have an unexpected character.
-			return false, errors.New("Unexpected character")
+			prefixSize = i
+			continue
 		}
 
-		// We must have a prefix and a data part and we can't have both uppercase
-		// and lowercase.
-		if prefixSize == 0 {
-			return false, errors.New("Address must have a prefix")
+		// We have an unexpected character.
+		return false, errors.New("Unexpected character")
+	}
+
+	// We must have a prefix and a data part and we can't have both uppercase
+	// and lowercase.
+	if prefixSize == 0 {
+		return false, errors.New("Address must have a prefix")
+	}
+
+	if upper && lower {
+		return false, errors.New("Addresses cannot use both upper and lower case characters")
+	}
+
+	// Get the prefix.
+	var prefix string
+	for i := 0; i < prefixSize; i++ {
+		prefix += string(lowerCase(address[i]))
+	}
+
+	// Decode values.
+	valuesSize := len(address) - 1 - prefixSize
+	values := make(data, valuesSize)
+	for i := 0; i < valuesSize; i++ {
+		c := byte(address[i+prefixSize+1])
+		// We have an invalid char in there.
+		if c > 127 || charsetRev[c] == -1 {
+			return false, errors.New("Invalid character")
 		}
 
-		if upper && lower {
-			return false, errors.New("Addresses cannot use both upper and lower case characters")
-		}
+		values[i] = byte(charsetRev[c])
+	}
 
-		// Get the prefix.
-		var prefix string
-		for i := 0; i < prefixSize; i++ {
-			prefix += string(lowerCase(address[i]))
-		}
-
-		// Decode values.
-		valuesSize := len(address) - 1 - prefixSize
-		values := make(data, valuesSize)
-		for i := 0; i < valuesSize; i++ {
-			c := byte(address[i+prefixSize+1])
-			// We have an invalid char in there.
-			if c > 127 || charsetRev[c] == -1 {
-				return false, errors.New("Invalid character")
-			}
-
-			values[i] = byte(charsetRev[c])
-		}
-
-		// Verify the checksum.
-		if !verifyChecksum(prefix, values) {
-			return false, errors.New("checksum mismatch")
-		}
-	} else {
-		return false, errors.New("Invalid coin")
+	// Verify the checksum.
+	if !verifyChecksum(prefix, values) {
+		return false, errors.New("checksum mismatch")
 	}
 
 	return true, nil
+}
+
+func validateBSVWalletAddress(coin string, address string) (bool, error) {
+	if strings.HasPrefix(address, "bitcoin-script:") {
+		_, _, network, _, err := DecodeBIP276(address)
+
+		if err != nil {
+			return false, fmt.Errorf("bitcoin-script invalid [%+v]", err)
+		}
+
+		if network == 1 && coin[0] != 'B' {
+			return false, fmt.Errorf("bitcoin-script is for mainnet but coin is %s", coin)
+		} else if network == 2 && coin[0] == 'B' {
+			return false, fmt.Errorf("bitcoin-script is not for mainnet but coin is %s", coin)
+		}
+
+		return true, nil
+	}
+
+	return validBSVA58(coin, []byte(address))
 }
 
 func polyMod(v []byte) uint64 {
@@ -260,24 +279,54 @@ func (a *a25) set58(s []byte) error {
 // and the checksum validates.  Return value ok will be true for valid
 // addresses.  If ok is false, the address is invalid and the error value
 // may indicate why.
-func validA58(a58 []byte) (ok bool, err error) {
+func validA58(coin string, a58 []byte) (bool, error) {
 	var a a25
 	if err := a.set58(a58); err != nil {
 		return false, err
 	}
-	if a[0] != 0 && a[0] != 5 {
-		return false, errors.New("not version 0 or 5")
+	if a[0] != 0 && a[0] != 5 && a[0] != 0x6f && a[0] != 0xc4 {
+		return false, errors.New("not version 0 or 5, 6f or c4")
 	}
-	return a.embeddedChecksum() == a.computeChecksum(), nil
+
+	checksumOK := a.embeddedChecksum() == a.computeChecksum()
+
+	if !checksumOK {
+		return false, errors.New("checksum failed")
+	}
+
+	if (a[0] == 0 || a[0] == 5) && coin[0] != 'B' {
+		return false, fmt.Errorf("address is for mainnet but coin is %s", coin)
+	}
+
+	if (a[0] == 0x6f || a[0] == 0xc4) && coin[0] == 'B' {
+		return false, fmt.Errorf("address is not for mainnet but coin is %s", coin)
+	}
+
+	return true, nil
 }
 
-func validBSVA58(a58 []byte) (ok bool, err error) {
+func validBSVA58(coin string, a58 []byte) (bool, error) {
 	var a a25
 	if err := a.set58(a58); err != nil {
 		return false, err
 	}
-	if a[0] != 0 {
-		return false, errors.New("not version 0")
+	if a[0] != 0 && a[0] != 0x6f {
+		return false, errors.New("not version 0 or 6f")
 	}
-	return a.embeddedChecksum() == a.computeChecksum(), nil
+
+	checksumOK := a.embeddedChecksum() == a.computeChecksum()
+
+	if !checksumOK {
+		return false, errors.New("checksum failed")
+	}
+
+	if a[0] == 0 && coin[0] != 'B' {
+		return false, fmt.Errorf("address is for mainnet but coin is %s", coin)
+	}
+
+	if a[0] == 0x6f && coin[0] == 'B' {
+		return false, fmt.Errorf("address is not for mainnet but coin is %s", coin)
+	}
+
+	return true, nil
 }
