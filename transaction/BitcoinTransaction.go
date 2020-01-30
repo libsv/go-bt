@@ -193,7 +193,7 @@ func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byt
 
 // GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
 func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) {
-	signingPayload, err := NewSigningPayloadFromTx(bt)
+	signingPayload, err := NewSigningPayloadFromTx(bt, sigType)
 	if err != nil {
 		return nil, err
 	}
@@ -234,18 +234,17 @@ func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 	return hex
 }
 
-// ApplySignatures To sign our transaction, we go to the signing service and get a payload containing sigatures.
-// We can then apply those signatures to our transaction inputs to sign the tx.
+// ApplySignatures applies the signatures passed in through SigningPayload parameter to the transaction inputs
 // The signing payload from the signing service should contain a signing item for each of the tx inputs.
 // If the TX input does not belong to us, its signature will be blank unless its owner has already signed it.
 // If the signing payload contains a signature for a given input, we apply that to the tx regardless of whether we own it or not.
-func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, sigType uint32) (*BitcoinTransaction, error) {
+func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, sigType uint32) error {
 	if sigType == 0 {
 		sigType = SighashAllForkID
 	}
 
 	if len(*signingPayload) != len(bt.GetInputs()) {
-		return nil, errors.New("Error - signing payload number of signing items does not equal signing payload number of items")
+		return errors.New("Error - signing payload number of items does not equal number of inputs")
 	}
 
 	sigsApplied := 0
@@ -259,17 +258,17 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			if bt.Inputs[index].PreviousTxScript != nil {
 				txPubKeyHash, err := bt.Inputs[index].PreviousTxScript.GetPublicKeyHash()
 				if err != nil {
-					return nil, err
+					return err
 				}
 				if hex.EncodeToString(txPubKeyHash) != signingItem.PublicKeyHash {
-					return nil, errors.New("Error public key hash from signing payload does not match tx")
+					return errors.New("Error public key hash from signing payload does not match tx")
 				}
 			}
 
 			sigBytes, err := hex.DecodeString(signingItem.Signature)
 			pubKeyBytes, err := hex.DecodeString(signingItem.PublicKey)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			const sigTypeLength = 1 // Include sighash all fork id hash type when we count length of signature.
@@ -284,32 +283,35 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 		}
 	}
 	if sigsApplied == 0 {
-		return nil, errors.New("Error - cryptolib found no signatures in signingPayload to apply to this tx")
+		return errors.New("Error - cryptolib found no signatures in signingPayload to apply to this tx")
 	}
-	return bt, nil
+	return nil
 }
 
 // Sign the transaction
-// Normally we'd expect the signing service to do this, but we include this for testing purposes, sing the
-func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) (*BitcoinTransaction, error) {
+// Normally we'd expect the signing service to do this, but we include this for testing purposes
+func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) error {
 	if sigType == 0 {
 		sigType = SighashAllForkID
 	}
 
 	payload, err := bt.GetSighashPayload(sigType)
-	signedPayload, err := submitToLocalSigningService(payload, privateKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	bt, err = bt.ApplySignatures(signedPayload, sigType)
+	signedPayload, err := submitToDummySigningService(payload, privateKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return bt, nil
+	err = bt.ApplySignatures(signedPayload, sigType)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-// submitToLocalSigningService local service for testing, which can sign payloads like the signing service.
-func submitToLocalSigningService(payload *SigningPayload, privateKey *btcec.PrivateKey) (*SigningPayload, error) {
+// submitToDummySigningService local service for testing, which can sign payloads like the signing service.
+func submitToDummySigningService(payload *SigningPayload, privateKey *btcec.PrivateKey) (*SigningPayload, error) {
 	for _, signingItem := range *payload {
 		h, err := hex.DecodeString(signingItem.SigHash)
 		if err != nil {
@@ -324,4 +326,65 @@ func submitToLocalSigningService(payload *SigningPayload, privateKey *btcec.Priv
 		signingItem.Signature = hex.EncodeToString(sig.Serialize())
 	}
 	return payload, nil
+}
+
+// ApplySignaturesWithoutP2PKHCheck applies signatures without checking if the input previous script equals
+// to a P2PKH script matching the private key (see func SignWithoutP2PKHCheck below)
+func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *SigningPayload, sigType uint32) error {
+	if sigType == 0 {
+		sigType = SighashAllForkID
+	}
+
+	if len(*signingPayload) != len(bt.GetInputs()) {
+		return errors.New("Error - signing payload number of items does not equal number of inputs")
+	}
+
+	sigsApplied := 0
+
+	for index, signingItem := range *signingPayload {
+		// Only use the items which have a pub key and signature in the payload
+		if signingItem.Signature != "" && signingItem.PublicKey != "" {
+			sigBytes, err := hex.DecodeString(signingItem.Signature)
+			pubKeyBytes, err := hex.DecodeString(signingItem.PublicKey)
+			if err != nil {
+				return err
+			}
+
+			const sigTypeLength = 1 // Include sighash all fork id hash type when we count length of signature.
+			buf := make([]byte, 0)
+			buf = append(buf, cryptolib.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
+			buf = append(buf, sigBytes...)
+			buf = append(buf, (SighashAll | SighashForkID))
+			buf = append(buf, cryptolib.VarInt(uint64(len(signingItem.PublicKey)/2))...)
+			buf = append(buf, pubKeyBytes...)
+			bt.Inputs[index].SigScript = NewScriptFromBytes(buf)
+			sigsApplied++
+		}
+	}
+	if sigsApplied == 0 {
+		return errors.New("Error - cryptolib found no signatures in signingPayload to apply to this tx")
+	}
+	return nil
+}
+
+// SignWithoutP2PKHCheck signs the transaction without checking if the input previous script equals
+// to a P2PKH script matching the private key
+func (bt *BitcoinTransaction) SignWithoutP2PKHCheck(privateKey *btcec.PrivateKey, sigType uint32) error {
+	if sigType == 0 {
+		sigType = SighashAllForkID
+	}
+
+	payload, err := bt.GetSighashPayload(sigType)
+	if err != nil {
+		return err
+	}
+	signedPayload, err := submitToDummySigningService(payload, privateKey)
+	if err != nil {
+		return err
+	}
+	err = bt.ApplySignaturesWithoutP2PKHCheck(signedPayload, sigType)
+	if err != nil {
+		return err
+	}
+	return nil
 }

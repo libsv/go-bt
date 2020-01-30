@@ -28,6 +28,20 @@ func NewScriptFromBytes(b []byte) *Script {
 	return &s
 }
 
+// ToString returns hex string of script
+func (s *Script) ToString() string {
+	return hex.EncodeToString(*s)
+}
+
+// AppendPushDataToScript take data bytes and appends the length (see VarInt) and the data to the script
+func (s *Script) AppendPushDataToScript(d []byte) {
+	buf := make([]byte, 0)
+	buf = append(buf, cryptolib.VarInt(uint64(len(d)))...)
+	buf = append(buf, d...)
+
+	*s = append(*s, buf...)
+}
+
 // IsPublicKeyHashOut returns true if this is a pay to pubkey hash output script
 func (s *Script) IsPublicKeyHashOut() bool {
 	b := []byte(*s)
