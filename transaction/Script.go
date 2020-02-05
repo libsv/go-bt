@@ -42,6 +42,11 @@ func (s *Script) AppendPushDataToScript(d []byte) {
 	*s = append(*s, buf...)
 }
 
+// AppendOpCode appends an opcode type to the script
+func (s *Script) AppendOpCode(o uint8) {
+	*s = append(*s, o)
+}
+
 // IsPublicKeyHashOut returns true if this is a pay to pubkey hash output script
 func (s *Script) IsPublicKeyHashOut() bool {
 	b := []byte(*s)
