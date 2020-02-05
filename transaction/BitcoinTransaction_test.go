@@ -72,11 +72,11 @@ func TestSignRedeemScript(t *testing.T) {
 	}
 
 	// Serialize and display the signature.
-	fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
+	t.Logf("Serialized Signature: %x\n", signature.Serialize())
 
 	// Verify the signature for the message using the public key.
 	verified := signature.Verify(messageHash, pubKey)
-	fmt.Printf("Signature Verified? %v\n", verified)
+	t.Logf("Signature Verified? %v\n", verified)
 }
 
 func TestIsCoinbase(t *testing.T) {
@@ -245,8 +245,8 @@ func TestSignTxForced(t *testing.T) {
 		return
 	}
 
-	secretBytes := []byte("secret1")
-	tx.GetInputs()[0].SigScript.AppendPushDataToScript(secretBytes)
+	secret := []string{"secret1"}
+	tx.GetInputs()[0].SigScript.AppendPushDataStringsToScript(secret)
 
 	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 
@@ -300,7 +300,7 @@ func TestValidSignature(t *testing.T) {
 		return
 	}
 	valid := sig.Verify(cryptolib.ReverseBytes(h), publicKey)
-	fmt.Printf("%v\n", valid)
+	t.Logf("%v\n", valid)
 
 }
 
@@ -345,7 +345,7 @@ func TestValidSignature2(t *testing.T) {
 		return
 	}
 	valid := sig.Verify(cryptolib.ReverseBytes(h), publicKey)
-	fmt.Printf("%v\n", valid)
+	t.Logf("%v\n", valid)
 
 }
 
@@ -370,9 +370,6 @@ func TestBareMultiSigValidation(t *testing.T) {
 	sig0HashType, _ := binary.Uvarint([]byte(*sigScript)[73:74])
 	sig1Bytes := []byte(*sigScript)[75:145]
 	sig1HashType, _ := binary.Uvarint([]byte(*sigScript)[145:146])
-
-	fmt.Printf("%x\n", sig0Bytes)
-	fmt.Printf("%x\n", sig1Bytes)
 
 	pk0, _ := hex.DecodeString("023ff15e2676e03b2c0af30fc17b7fb354bbfa9f549812da945194d3407dc0969b")
 	pk1, _ := hex.DecodeString("039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a3")
@@ -421,7 +418,7 @@ func TestBareMultiSigValidation(t *testing.T) {
 		}
 		for j, pk := range publicKeys {
 			valid := sig.Verify(cryptolib.ReverseBytes(h), pk)
-			fmt.Printf("signature %d against pulbic key %d => %v\n", i, j, valid)
+			t.Logf("signature %d against pulbic key %d => %v\n", i, j, valid)
 		}
 
 	}
@@ -449,9 +446,6 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 	sig0HashType, _ := binary.Uvarint([]byte(*sigScript)[73:74])
 	sig1Bytes := []byte(*sigScript)[75:145]
 	sig1HashType, _ := binary.Uvarint([]byte(*sigScript)[145:146])
-
-	fmt.Printf("%x\n", sig0Bytes)
-	fmt.Printf("%x\n", sig1Bytes)
 
 	pk0, _ := hex.DecodeString("021db57ae3de17143cb6c314fb206b56956e8ed45e2f1cbad3947411228b8d17f1")
 	pk1, _ := hex.DecodeString("0308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee4194")
@@ -500,7 +494,7 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 		}
 		for j, pk := range publicKeys {
 			valid := sig.Verify(cryptolib.ReverseBytes(h), pk)
-			fmt.Printf("signature %d against pulbic key %d => %v\n", i, j, valid)
+			t.Logf("signature %d against pulbic key %d => %v\n", i, j, valid)
 		}
 
 	}

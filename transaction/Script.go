@@ -33,13 +33,27 @@ func (s *Script) ToString() string {
 	return hex.EncodeToString(*s)
 }
 
-// AppendPushDataToScript take data bytes and appends the length (see VarInt) and the data to the script
-func (s *Script) AppendPushDataToScript(d []byte) {
-	buf := make([]byte, 0)
-	buf = append(buf, cryptolib.VarInt(uint64(len(d)))...)
-	buf = append(buf, d...)
+// AppendPushDataToScript takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataToScript(d [][]byte) error {
+	p, err := cryptolib.EncodeParts(d)
+	if err != nil {
+		return err
+	}
 
-	*s = append(*s, buf...)
+	*s = append(*s, p...)
+	return nil
+}
+
+// AppendPushDataStringsToScript takes an array of strings and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataStringsToScript(strs []string) error {
+	dataBytes := make([][]byte, 0)
+	for _, str := range strs {
+		strBytes := []byte(str)
+		dataBytes = append(dataBytes, strBytes)
+	}
+
+	err := s.AppendPushDataToScript(dataBytes)
+	return err
 }
 
 // AppendOpCode appends an opcode type to the script
