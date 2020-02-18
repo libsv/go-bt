@@ -43,7 +43,8 @@ import (
 	"log"
 )
 
-// BuildCoinbase comment
+// BuildCoinbase recombines the different parts of the coinbase transaction.
+// See https://arxiv.org/pdf/1703.06545.pdf section 2.2 for more info.
 func BuildCoinbase(c1 []byte, c2 []byte, extraNonce1 string, extraNonce2 string) []byte {
 	e1, _ := hex.DecodeString(extraNonce1)
 	e2, _ := hex.DecodeString(extraNonce2)
@@ -56,7 +57,8 @@ func BuildCoinbase(c1 []byte, c2 []byte, extraNonce1 string, extraNonce2 string)
 	return a
 }
 
-// GetCoinbaseParts comment
+// GetCoinbaseParts returns the two split coinbase parts from coinbase metadata.
+// See https://arxiv.org/pdf/1703.06545.pdf section 2.2 for more info.
 func GetCoinbaseParts(height uint32, coinbaseValue uint64, defaultWitnessCommitment string, coinbaseText string, walletAddress string, minerIDBytes []byte) (coinbase1 []byte, coinbase2 []byte, err error) {
 	coinbase1 = makeCoinbase1(height, coinbaseText)
 
@@ -173,7 +175,6 @@ func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitme
 	return buf, nil
 }
 
-// MakeCoinbase1 comment
 func makeCoinbase1(height uint32, coinbaseText string) []byte {
 	spaceForExtraNonce := 12
 

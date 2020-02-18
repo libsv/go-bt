@@ -32,7 +32,8 @@ func init() {
 	regDiff = math.Pow(2, 256) / regDiff
 }
 
-// DifficultyToHashrate comment
+// DifficultyToHashrate takes a specific coin ticker, it's difficulty, and target
+// and compuptes the estimated hashrate on that specific coin (or chain).
 func DifficultyToHashrate(coin string, diff uint64, targetSeconds float64) float64 {
 	genesis := genesisDiff
 	if coin[0] == 'R' {
