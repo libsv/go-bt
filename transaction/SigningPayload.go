@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/simon_ordish/cryptolib"
 )
 
-// SigningItem struct
+// SigningItem contains the metadata neeeded to sign a transaction.
 type SigningItem struct {
 	PublicKeyHash string `json:"publicKeyHash"`
 	SigHash       string `json:"sigHash"`
@@ -19,14 +19,14 @@ type SigningItem struct {
 // SigningPayload type
 type SigningPayload []*SigningItem
 
-// NewSigningPayload comment
+// NewSigningPayload creates a new SigningPayload.
 func NewSigningPayload() *SigningPayload {
 	sp := make([]*SigningItem, 0)
 	p := SigningPayload(sp)
 	return &p
 }
 
-// NewSigningPayloadFromTx create a signinbg payload for a transaction.
+// NewSigningPayloadFromTx creates a new SigningPayload from a BitcoinTransaction and a SIGHASH type.
 func NewSigningPayloadFromTx(bt *BitcoinTransaction, sigType uint32) (*SigningPayload, error) {
 	p := NewSigningPayload()
 	for idx, input := range bt.Inputs {
@@ -46,7 +46,7 @@ func NewSigningPayloadFromTx(bt *BitcoinTransaction, sigType uint32) (*SigningPa
 	return p, nil
 }
 
-// AddItem function
+// AddItem appends a new SigningItem to the SigningPayload array.
 func (sp *SigningPayload) AddItem(publicKeyHash string, sigHash string) {
 	si := &SigningItem{
 		PublicKeyHash: publicKeyHash,

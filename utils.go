@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-// DifficultyFromBits comment
+// DifficultyFromBits returns the mining difficulty from the nBits field in the block header.
 func DifficultyFromBits(bits string) (float64, error) {
 	b, _ := hex.DecodeString(bits)
 	ib := binary.BigEndian.Uint32(b)
@@ -31,7 +31,7 @@ func targetToDifficulty(target *big.Int) (float64, error) {
 	return a / b, nil
 }
 
-// GetLittleEndianBytes comment
+// GetLittleEndianBytes returns a byte array in little endian from an unsigned integer of 32 bytes.
 func GetLittleEndianBytes(v uint32, l uint32) []byte {
 	// TODO: is v hex encoded?
 	buf := make([]byte, l)
@@ -41,7 +41,8 @@ func GetLittleEndianBytes(v uint32, l uint32) []byte {
 	return buf
 }
 
-// VarInt See http://learnmeabitcoin.com/glossary/varint
+// VarInt takes an unsiged integer and  returns a byte array in VarInt format.
+// See http://learnmeabitcoin.com/glossary/varint
 func VarInt(i uint64) []byte {
 	b := make([]byte, 9)
 	if i < 0xfd {
@@ -63,7 +64,9 @@ func VarInt(i uint64) []byte {
 	return b
 }
 
-// DecodeVarInt comment
+// DecodeVarInt takes a byte array in VarInt format and returns the
+// decoded unsiged integer value and it's size in bytes.
+// See http://learnmeabitcoin.com/glossary/varint
 func DecodeVarInt(b []byte) (result uint64, size int) {
 	switch b[0] {
 	case 0xff:
@@ -86,7 +89,7 @@ func DecodeVarInt(b []byte) (result uint64, size int) {
 	return
 }
 
-// EncodeParts takes a slice of slices and returns a single slice with the appropriate OP_PUSH commands embedded
+// EncodeParts takes a slice of slices and returns a single slice with the appropriate OP_PUSH commands embedded.
 func EncodeParts(parts [][]byte) ([]byte, error) {
 	b := make([]byte, 0)
 
@@ -124,7 +127,7 @@ func EncodeParts(parts [][]byte) ([]byte, error) {
 	return b, nil
 }
 
-// DecodeStringParts calls DecodeParts
+// DecodeStringParts calls DecodeParts.
 func DecodeStringParts(s string) ([][]byte, error) {
 	b, err := hex.DecodeString(s)
 	if err != nil {

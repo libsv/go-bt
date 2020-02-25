@@ -15,7 +15,7 @@ func getHashes(txHashes []string) []string {
 	return hashes
 }
 
-// GetMerkleBranches comment
+// GetMerkleBranches comment TODO:
 func GetMerkleBranches(template []string) []string {
 	hashes := getHashes(template)
 
@@ -55,7 +55,7 @@ func GetMerkleBranches(template []string) []string {
 	return branches
 }
 
-// MerkleRootFromBranches comment
+// MerkleRootFromBranches comment TODO:
 func MerkleRootFromBranches(txHash string, txIndex int, branches []string) (string, error) {
 	hash, err := hex.DecodeString(txHash)
 	if err != nil {

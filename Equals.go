@@ -1,6 +1,6 @@
 package cryptolib
 
-// Equals comment
+// Equals checks if two byte arrays are equal.
 func Equals(b1 []byte, b2 []byte) bool {
 	if len(b1) != len(b2) {
 		return false
