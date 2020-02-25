@@ -77,8 +77,12 @@ func (i *Input) Hex(clear bool) []byte {
 	if clear {
 		hex = append(hex, 0x00)
 	} else {
-		hex = append(hex, cryptolib.VarInt(uint64(len(*i.SigScript)))...)
-		hex = append(hex, *i.SigScript...)
+		if i.SigScript == nil {
+			hex = append(hex, cryptolib.VarInt(0)...)
+		} else {
+			hex = append(hex, cryptolib.VarInt(uint64(len(*i.SigScript)))...)
+			hex = append(hex, *i.SigScript...)
+		}
 	}
 	hex = append(hex, cryptolib.GetLittleEndianBytes(i.SequenceNumber, 4)...)
 

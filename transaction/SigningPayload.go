@@ -38,9 +38,10 @@ func NewSigningPayloadFromTx(bt *BitcoinTransaction, sigType uint32) (*SigningPa
 			return nil, errors.New("Signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
 
 		}
-		sighash := getSighashForInput(bt, sigType, uint32(idx))
+
+		sighash := GetSighashForInput(bt, sigType, uint32(idx))
 		pkh, _ := input.PreviousTxScript.GetPublicKeyHash() // if not P2PKH, pkh will just be nil
-		p.AddItem(hex.EncodeToString(pkh), sighash) // and the SigningItem will have PublicKeyHash = ""
+		p.AddItem(hex.EncodeToString(pkh), sighash)         // and the SigningItem will have PublicKeyHash = ""
 	}
 	return p, nil
 }
@@ -55,7 +56,8 @@ func (sp *SigningPayload) AddItem(publicKeyHash string, sigHash string) {
 	*sp = append(*sp, si)
 }
 
-func getSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32) string {
+// GetSighashForInput function
+func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32) string {
 
 	input := transaction.Inputs[inputNumber]
 

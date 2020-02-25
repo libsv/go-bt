@@ -131,6 +131,25 @@ func (bt *BitcoinTransaction) AddInput(input *Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
 
+// AddUTXO function
+func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, script string, satoshis uint64) error {
+	i := &Input{
+		PreviousTxOutIndex: vout,
+		PreviousTxScript:   NewScriptFromString(script),
+		PreviousTxSatoshis: satoshis,
+	}
+
+	h, err := hex.DecodeString(txID)
+	if err != nil {
+		return err
+	}
+	copy(i.PreviousTxHash[:], h)
+
+	bt.AddInput(i)
+
+	return nil
+}
+
 // InputCount returns the number of transaction inputs
 func (bt *BitcoinTransaction) InputCount() int {
 	return len(bt.Inputs)
@@ -144,6 +163,20 @@ func (bt *BitcoinTransaction) OutputCount() int {
 // AddOutput comment
 func (bt *BitcoinTransaction) AddOutput(output *Output) {
 	bt.Outputs = append(bt.Outputs, output)
+}
+
+// PayTo function
+func (bt *BitcoinTransaction) PayTo(address string, amount uint64) error {
+	script, err := cryptolib.AddressToScript(address)
+	if err != nil {
+		return err
+	}
+
+	bt.AddOutput(&Output{
+		Value:  amount,
+		Script: script,
+	})
+	return nil
 }
 
 // IsCoinbase determines if this transaction is a coinbase by
