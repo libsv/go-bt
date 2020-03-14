@@ -81,6 +81,11 @@ func NewFromBytes(bytes []byte) *BitcoinTransaction {
 // NewFromBytesWithUsed takes an array of bytes and constructs a BitcoinTransaction
 // and returns the offset (length of tx).
 func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
+	if len(bytes) < 10 {
+		// Even an empty transaction has 10 bytes.
+		return nil, 0
+	}
+
 	bt := BitcoinTransaction{}
 
 	var offset = 0
