@@ -11,14 +11,14 @@ import (
 	"github.com/btcsuite/btcutil/base58"
 )
 
-// RedeemScript type
+// RedeemScript contains the metadata used when creating an unlocking script (SigScript) for a multisig output.
 type RedeemScript struct {
 	SignaturesRequired int
 	PublicKeys         [][]byte
 	Signatures         [][]byte
 }
 
-// NewRedeemScript comment
+// NewRedeemScript creates a new RedeemScript with minimum signature threshold needed.
 func NewRedeemScript(signaturesRequired int) (*RedeemScript, error) {
 	if signaturesRequired < 2 {
 		return nil, errors.New("Must have 2 or more required signatures for multisig")
@@ -35,7 +35,7 @@ func NewRedeemScript(signaturesRequired int) (*RedeemScript, error) {
 	return rs, nil
 }
 
-// NewRedeemScriptFromElectrum comment
+// NewRedeemScriptFromElectrum  TODO:
 func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 	parts, err := cryptolib.DecodeStringParts(script)
 	if err != nil {
@@ -125,7 +125,7 @@ func checksum(input []byte) (cksum [4]byte) {
 	return
 }
 
-// AddPublicKey comment
+// AddPublicKey appends a public key to the RedeemScript.
 func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error {
 
 	if len(derivationPath) != 2 {

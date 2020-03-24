@@ -29,7 +29,7 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
-// NewInput comment
+// NewInput creates a new Input object with a finalised sequence number.
 func NewInput() *Input {
 	b := make([]byte, 0)
 	s := NewScriptFromBytes(b)
@@ -40,7 +40,7 @@ func NewInput() *Input {
 	}
 }
 
-// NewInputFromBytes returns a transaction input from the bytes provided
+// NewInputFromBytes returns a transaction input from the bytes provided.
 func NewInputFromBytes(bytes []byte) (*Input, int) {
 	i := Input{}
 
@@ -68,7 +68,7 @@ sequence:     %x
 `, i.PreviousTxHash, i.PreviousTxOutIndex, len(*i.SigScript), i.SigScript, i.SequenceNumber)
 }
 
-// Hex comment
+// Hex encodes the Input into a hex byte array.
 func (i *Input) Hex(clear bool) []byte {
 	hex := make([]byte, 0)
 
@@ -77,8 +77,12 @@ func (i *Input) Hex(clear bool) []byte {
 	if clear {
 		hex = append(hex, 0x00)
 	} else {
-		hex = append(hex, cryptolib.VarInt(uint64(len(*i.SigScript)))...)
-		hex = append(hex, *i.SigScript...)
+		if i.SigScript == nil {
+			hex = append(hex, cryptolib.VarInt(0)...)
+		} else {
+			hex = append(hex, cryptolib.VarInt(uint64(len(*i.SigScript)))...)
+			hex = append(hex, *i.SigScript...)
+		}
 	}
 	hex = append(hex, cryptolib.GetLittleEndianBytes(i.SequenceNumber, 4)...)
 

@@ -76,7 +76,7 @@ func TestGetSighashForInput(t *testing.T) {
 	tx.Inputs[0].PreviousTxScript = NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
 	expectedSigHash := "b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe"
-	actualSigHash := getSighashForInput(tx, (SighashAll | SighashForkID), uint32(0))
+	actualSigHash := GetSighashForInput(tx, (SighashAll | SighashForkID), uint32(0))
 	if err != nil {
 		t.Error(err)
 		return

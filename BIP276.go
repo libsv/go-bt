@@ -23,7 +23,8 @@ func sha256d(b []byte) []byte {
 	return second[:]
 }
 
-// EncodeBIP276 comment
+// EncodeBIP276 is used to encode specific (non-standard) scripts in BIP276 format.
+// See https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki
 func EncodeBIP276(prefix string, network int, version int, data []byte) string {
 	if version == 0 || version > 255 || network == 0 || network > 255 {
 		return "ERROR"
@@ -41,7 +42,8 @@ func createBIP276(prefix string, network int, version int, data []byte) (string,
 	return payload, checksum
 }
 
-// DecodeBIP276 comment
+// DecodeBIP276 is used to decode BIP276 formatted data into specific (non-standard) scripts.
+// See https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki
 func DecodeBIP276(text string) (prefix string, version int, network int, data []byte, err error) {
 	validBIP276 := regexp.MustCompile(`^(.+?):(\d{2})(\d{2})([0-9A-Fa-f]+)([0-9A-Fa-f]{8})$`)
 

@@ -31,7 +31,7 @@ func init() {
 	TestPrivate, _ = hex.DecodeString("04358394")
 }
 
-// PublicKey comment
+// A PublicKey contains metadata associated with an ECDSA public key.
 type PublicKey struct {
 	Version              []byte `json:"-"`
 	Network              string `json:"network"`
@@ -54,7 +54,7 @@ type PublicKey struct {
 
 var curve = btcec.S256()
 
-// NewPrivateKey comment
+// NewPrivateKey comment TODO: public key or private key?
 func NewPrivateKey(xprv string) (*PublicKey, error) {
 	decoded, err := DecodeString(xprv)
 	if err != nil {
@@ -89,7 +89,8 @@ func NewPrivateKey(xprv string) (*PublicKey, error) {
 	}, nil
 }
 
-// NewPublicKey comment
+// NewPublicKey takes an xpub string and returns a PublicKey pointer.
+// See BIP32 https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 func NewPublicKey(xpub string) (*PublicKey, error) {
 	decoded, err := DecodeString(xpub)
 	if err != nil {
@@ -140,7 +141,8 @@ func (pk *PublicKey) String() string {
 	return string(b)
 }
 
-// Child comment
+// Child dervies a child public key for a specific index.
+// See BIP32 https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 func (pk *PublicKey) Child(i uint32) (*PublicKey, error) {
 	mac := hmac.New(sha512.New, pk.ChainCode)
 	if i >= uint32(0x80000000) {
@@ -251,7 +253,8 @@ func addPubKeys(k1, k2 []byte) []byte {
 	return compress(curve.Add(x1, y1, x2, y2))
 }
 
-// GetXPub comment
+// GetXPub returns an xpub string from a PublicKey.
+// See BIP32 https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 func (pk *PublicKey) GetXPub() string {
 	depth := uint16ToByte(uint16(pk.Depth % 256))
 

@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/simon_ordish/cryptolib"
 )
 
-// SigningItem struct
+// SigningItem contains the metadata neeeded to sign a transaction.
 type SigningItem struct {
 	PublicKeyHash string `json:"publicKeyHash"`
 	SigHash       string `json:"sigHash"`
@@ -19,14 +19,14 @@ type SigningItem struct {
 // SigningPayload type
 type SigningPayload []*SigningItem
 
-// NewSigningPayload comment
+// NewSigningPayload creates a new SigningPayload.
 func NewSigningPayload() *SigningPayload {
 	sp := make([]*SigningItem, 0)
 	p := SigningPayload(sp)
 	return &p
 }
 
-// NewSigningPayloadFromTx create a signinbg payload for a transaction.
+// NewSigningPayloadFromTx creates a new SigningPayload from a BitcoinTransaction and a SIGHASH type.
 func NewSigningPayloadFromTx(bt *BitcoinTransaction, sigType uint32) (*SigningPayload, error) {
 	p := NewSigningPayload()
 	for idx, input := range bt.Inputs {
@@ -38,14 +38,15 @@ func NewSigningPayloadFromTx(bt *BitcoinTransaction, sigType uint32) (*SigningPa
 			return nil, errors.New("Signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
 
 		}
-		sighash := getSighashForInput(bt, sigType, uint32(idx))
+
+		sighash := GetSighashForInput(bt, sigType, uint32(idx))
 		pkh, _ := input.PreviousTxScript.GetPublicKeyHash() // if not P2PKH, pkh will just be nil
-		p.AddItem(hex.EncodeToString(pkh), sighash) // and the SigningItem will have PublicKeyHash = ""
+		p.AddItem(hex.EncodeToString(pkh), sighash)         // and the SigningItem will have PublicKeyHash = ""
 	}
 	return p, nil
 }
 
-// AddItem function
+// AddItem appends a new SigningItem to the SigningPayload array.
 func (sp *SigningPayload) AddItem(publicKeyHash string, sigHash string) {
 	si := &SigningItem{
 		PublicKeyHash: publicKeyHash,
@@ -55,7 +56,8 @@ func (sp *SigningPayload) AddItem(publicKeyHash string, sigHash string) {
 	*sp = append(*sp, si)
 }
 
-func getSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32) string {
+// GetSighashForInput function
+func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32) string {
 
 	input := transaction.Inputs[inputNumber]
 

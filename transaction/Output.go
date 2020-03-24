@@ -25,7 +25,7 @@ type Output struct {
 	Script []byte
 }
 
-// NewOutput comment
+// NewOutput creates a new Output object.
 func NewOutput() *Output {
 	return &Output{
 		Script: make([]byte, 0),
@@ -67,7 +67,8 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 	return &o, offset + int(i)
 }
 
-// NewOutputOpReturn comment
+// NewOutputOpReturn creates a new Output with OP_FALSE OP_RETURN and then the data
+// passed in encoded as hex.
 func NewOutputOpReturn(data []byte) (*Output, error) {
 
 	b, err := cryptolib.EncodeParts([][]byte{data})
@@ -84,7 +85,8 @@ func NewOutputOpReturn(data []byte) (*Output, error) {
 	return &o, nil
 }
 
-// NewOutputOpReturnPush comment
+// NewOutputOpReturnPush creates a new Output with OP_FALSE OP_RETURN and then
+// uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
 func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
 
 	b, err := cryptolib.EncodeParts(data)
@@ -102,7 +104,7 @@ func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
 	return &o, nil
 }
 
-// GetOutputScript comment
+// GetOutputScript returns the script of the output
 func (o *Output) GetOutputScript() []byte {
 	return o.Script
 }
@@ -114,7 +116,7 @@ script:    %x
 `, o.Value, len(o.Script), o.Script)
 }
 
-// Hex comment
+// Hex encodes the Output into a hex byte array.
 func (o *Output) Hex() []byte {
 
 	b := make([]byte, 8)

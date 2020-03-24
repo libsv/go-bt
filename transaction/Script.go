@@ -10,25 +10,25 @@ import (
 // Script type
 type Script []byte
 
-// NewScript comment
+// NewScript creates a new Script.
 func NewScript() *Script {
 	s := Script(make([]byte, 0))
 	return &s
 }
 
-// NewScriptFromString function
+// NewScriptFromString creates a new script from a hex encoded string.
 func NewScriptFromString(s string) *Script {
 	b, _ := hex.DecodeString(s)
 	return NewScriptFromBytes(b)
 }
 
-// NewScriptFromBytes wraps a byte slice with the Script type
+// NewScriptFromBytes wraps a byte slice with the Script type.
 func NewScriptFromBytes(b []byte) *Script {
 	s := Script(b)
 	return &s
 }
 
-// ToString returns hex string of script
+// ToString returns hex string of script.
 func (s *Script) ToString() string {
 	return hex.EncodeToString(*s)
 }
@@ -61,7 +61,7 @@ func (s *Script) AppendOpCode(o uint8) {
 	*s = append(*s, o)
 }
 
-// IsPublicKeyHashOut returns true if this is a pay to pubkey hash output script
+// IsPublicKeyHashOut returns true if this is a pay to pubkey hash output script.
 func (s *Script) IsPublicKeyHashOut() bool {
 	b := []byte(*s)
 	return len(b) == 25 &&
@@ -72,7 +72,7 @@ func (s *Script) IsPublicKeyHashOut() bool {
 		b[24] == cryptolib.OpCHECKSIG
 }
 
-// IsPublicKeyOut returns true if this is a public key output script
+// IsPublicKeyOut returns true if this is a public key output script.
 func (s *Script) IsPublicKeyOut() bool {
 	parts, err := cryptolib.DecodeParts(*s)
 	if err != nil {
@@ -95,7 +95,7 @@ func (s *Script) IsPublicKeyOut() bool {
 	return false
 }
 
-// IsScriptHashOut returns true if this is a p2sh output script
+// IsScriptHashOut returns true if this is a p2sh output script.
 func (s *Script) IsScriptHashOut() bool {
 	b := []byte(*s)
 
@@ -105,7 +105,7 @@ func (s *Script) IsScriptHashOut() bool {
 		b[22] == cryptolib.OpEQUAL
 }
 
-// IsMultisigOut returns true if this is a multisig output script
+// IsMultisigOut returns true if this is a multisig output script.
 func (s *Script) IsMultisigOut() bool {
 	parts, err := cryptolib.DecodeParts(*s)
 	if err != nil {
@@ -134,7 +134,7 @@ func isSmallIntOp(opcode byte) bool {
 	return opcode == cryptolib.OpZERO || (opcode >= cryptolib.OpONE && opcode <= cryptolib.OpSIXTEEN)
 }
 
-// GetPublicKeyHash function
+// GetPublicKeyHash returns a public key hash byte array if the script is a P2PKH script
 func (s *Script) GetPublicKeyHash() ([]byte, error) {
 	if s == nil || len(*s) == 0 {
 		return nil, fmt.Errorf("Script is empty")

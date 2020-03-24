@@ -2,7 +2,8 @@ package cryptolib
 
 import "encoding/hex"
 
-// BuildMerkleRootFromCoinbase comment
+// BuildMerkleRootFromCoinbase builds the merkle root of the block from the coinbase transaction hash (txid)
+// and the merkle branches needed to work up the merkle tree and returns the merkle root byte array.
 func BuildMerkleRootFromCoinbase(coinbaseHash []byte, merkleBranches []string) []byte {
 	acc := coinbaseHash
 

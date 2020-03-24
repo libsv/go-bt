@@ -54,7 +54,7 @@ type BitcoinTransaction struct {
 	Locktime uint32
 }
 
-// New comment
+// New creates a new (version 1) BitcoinTransaction.
 func New() *BitcoinTransaction {
 	return &BitcoinTransaction{
 		Version: 1,
@@ -62,7 +62,7 @@ func New() *BitcoinTransaction {
 }
 
 // NewFromString takes a hex string representation of a bitcoin transaction
-// and returns a BitcoinTransaction object
+// and returns a BitcoinTransaction object.
 func NewFromString(str string) (*BitcoinTransaction, error) {
 	bytes, err := hex.DecodeString(str)
 	if err != nil {
@@ -72,14 +72,20 @@ func NewFromString(str string) (*BitcoinTransaction, error) {
 	return NewFromBytes(bytes), nil
 }
 
-// NewFromBytes takes an array of bytes and constructs a BitcoinTransaction
+// NewFromBytes takes an array of bytes and constructs a BitcoinTransaction.
 func NewFromBytes(bytes []byte) *BitcoinTransaction {
 	bt, _ := NewFromBytesWithUsed(bytes)
 	return bt
 }
 
-// NewFromBytesWithUsed function
+// NewFromBytesWithUsed takes an array of bytes and constructs a BitcoinTransaction
+// and returns the offset (length of tx).
 func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
+	if len(bytes) < 10 {
+		// Even an empty transaction has 10 bytes.
+		return nil, 0
+	}
+
 	bt := BitcoinTransaction{}
 
 	var offset = 0
@@ -126,28 +132,61 @@ func (bt *BitcoinTransaction) HasWitnessData() bool {
 	return bt.Witness
 }
 
-// AddInput comment
+// AddInput adds a new input to the transaction.
 func (bt *BitcoinTransaction) AddInput(input *Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
 
-// InputCount returns the number of transaction inputs
+// AddUTXO function
+func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, script string, satoshis uint64) error {
+	i := &Input{
+		PreviousTxOutIndex: vout,
+		PreviousTxScript:   NewScriptFromString(script),
+		PreviousTxSatoshis: satoshis,
+	}
+
+	h, err := hex.DecodeString(txID)
+	if err != nil {
+		return err
+	}
+	copy(i.PreviousTxHash[:], h)
+
+	bt.AddInput(i)
+
+	return nil
+}
+
+// InputCount returns the number of transaction inputs.
 func (bt *BitcoinTransaction) InputCount() int {
 	return len(bt.Inputs)
 }
 
-// OutputCount returns the number of transaction inputs
+// OutputCount returns the number of transaction inputs.
 func (bt *BitcoinTransaction) OutputCount() int {
 	return len(bt.Outputs)
 }
 
-// AddOutput comment
+// AddOutput adds a new output to the transaction.
 func (bt *BitcoinTransaction) AddOutput(output *Output) {
 	bt.Outputs = append(bt.Outputs, output)
 }
 
+// PayTo function
+func (bt *BitcoinTransaction) PayTo(address string, amount uint64) error {
+	script, err := cryptolib.AddressToScript(address)
+	if err != nil {
+		return err
+	}
+
+	bt.AddOutput(&Output{
+		Value:  amount,
+		Script: script,
+	})
+	return nil
+}
+
 // IsCoinbase determines if this transaction is a coinbase by
-// seeing if any of the inputs have no inputs
+// seeing if any of the inputs have no inputs.
 func (bt *BitcoinTransaction) IsCoinbase() bool {
 	if len(bt.Inputs) != 1 {
 		return false
@@ -166,27 +205,30 @@ func (bt *BitcoinTransaction) IsCoinbase() bool {
 	return false
 }
 
-// GetInputs comment
+// GetInputs returns an array of all inputs in the transaction.
 func (bt *BitcoinTransaction) GetInputs() []*Input {
 	return bt.Inputs
 }
 
-// GetOutputs comment
+// GetOutputs returns an array of all outputs in the transaction.
 func (bt *BitcoinTransaction) GetOutputs() []*Output {
 	return bt.Outputs
 }
 
-// GetTxID comment
+// GetTxID returns the transaction ID of the transaction
+// (which is also the transaction hash).
 func (bt *BitcoinTransaction) GetTxID() string {
 	return hex.EncodeToString(cryptolib.ReverseBytes(cryptolib.Sha256d(bt.Hex())))
 }
 
-// Hex comment
+// Hex encodes the transaction into a hex byte array.
+// See https://chainquery.com/bitcoin-cli/decoderawtransaction
 func (bt *BitcoinTransaction) Hex() []byte {
 	return bt.hex(0, nil)
 }
 
-// HexWithClearedInputs comment
+// HexWithClearedInputs encodes the transaction into a hex byte array but clears its inputs first.
+// This is used when signing transactions.
 func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byte) []byte {
 	return bt.hex(index, scriptPubKey)
 }
