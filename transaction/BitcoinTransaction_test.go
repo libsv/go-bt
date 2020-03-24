@@ -245,8 +245,8 @@ func TestSignTxForced(t *testing.T) {
 		return
 	}
 
-	secret := []string{"secret1"}
-	tx.GetInputs()[0].SigScript.AppendPushDataStringsToScript(secret)
+	secret := "secret1"
+	tx.GetInputs()[0].SigScript.AppendPushDataStringToScript(secret)
 
 	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 

@@ -52,6 +52,32 @@ func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, 
 	return &o, nil
 }
 
+// NewOutputForHashPuzzle makes an output to a hash puzzle + PKH with a value.
+func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64) (*Output, error) {
+	o := Output{}
+	o.Value = satoshis
+
+	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
+	if err != nil {
+		return nil, err
+	}
+	s := NewScript()
+
+	s.AppendOpCode(cryptolib.OpHASH160)
+	secretBytesHash := cryptolib.Hash160([]byte(secret))
+	s.AppendPushDataToScript(secretBytesHash)
+	s.AppendOpCode(cryptolib.OpEQUALVERIFY)
+
+	s.AppendOpCode(cryptolib.OpDUP)
+	s.AppendOpCode(cryptolib.OpHASH160)
+	s.AppendPushDataToScript(publicKeyHashBytes)
+	s.AppendOpCode(cryptolib.OpEQUALVERIFY)
+	s.AppendOpCode(cryptolib.OpCHECKSIG)
+
+	o.Script = *s
+	return &o, nil
+}
+
 // NewOutputFromBytes returns a transaction Output from the bytes provided
 func NewOutputFromBytes(bytes []byte) (*Output, int) {
 	o := Output{}

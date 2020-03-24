@@ -33,8 +33,25 @@ func (s *Script) ToString() string {
 	return hex.EncodeToString(*s)
 }
 
-// AppendPushDataToScript takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
-func (s *Script) AppendPushDataToScript(d [][]byte) error {
+// AppendPushDataToScript takes data bytes and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataToScript(d []byte) error {
+	p, err := cryptolib.EncodeParts([][]byte{d})
+	if err != nil {
+		return err
+	}
+
+	*s = append(*s, p...)
+	return nil
+}
+
+// AppendPushDataStringToScript takes a string and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataStringToScript(str string) error {
+	err := s.AppendPushDataToScript([]byte(str))
+	return err
+}
+
+// AppendPushDataArrayToScript takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataArrayToScript(d [][]byte) error {
 	p, err := cryptolib.EncodeParts(d)
 	if err != nil {
 		return err
@@ -52,7 +69,7 @@ func (s *Script) AppendPushDataStringsToScript(strs []string) error {
 		dataBytes = append(dataBytes, strBytes)
 	}
 
-	err := s.AppendPushDataToScript(dataBytes)
+	err := s.AppendPushDataArrayToScript(dataBytes)
 	return err
 }
 
