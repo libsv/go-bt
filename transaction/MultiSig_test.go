@@ -3,11 +3,20 @@ package transaction
 import (
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
+
+// To disable log output during tests (see https://golangcode.com/disable-log-output-during-tests/)
+func TestMain(m *testing.M) {
+	log.SetOutput(ioutil.Discard)
+	os.Exit(m.Run())
+}
 
 func TestMultiSig(t *testing.T) {
 
@@ -41,10 +50,10 @@ func TestMultiSig(t *testing.T) {
 	}
 
 	// Serialize and display the signature.
-	fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
+	t.Logf("Serialized Signature: %x\n", signature.Serialize())
 
 	// Verify the signature for the message using the public key.
 	verified := signature.Verify(messageHash, pubKey)
-	fmt.Printf("Signature Verified? %v\n", verified)
+	t.Logf("Signature Verified? %v\n", verified)
 
 }

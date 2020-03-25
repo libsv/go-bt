@@ -161,7 +161,7 @@ func validateBSVWalletAddress(coin string, address string) (bool, error) {
 		return true, nil
 	}
 
-	return validA58(coin, []byte(address))
+	return validBSVA58(coin, []byte(address))
 }
 
 func polyMod(v []byte) uint64 {
