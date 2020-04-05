@@ -4,9 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"github.com/jadwahab/libsv/crypto"
+	"github.com/jadwahab/libsv/utils"
 	"log"
-
-	"github.com/jadwahab/libsv"
 
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -37,7 +37,7 @@ func NewRedeemScript(signaturesRequired int) (*RedeemScript, error) {
 
 // NewRedeemScriptFromElectrum  TODO:
 func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
-	parts, err := libsv.DecodeStringParts(script)
+	parts, err := utils.DecodeStringParts(script)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		return nil, errors.New("There should be 5 parts in this redeemScript")
 	}
 
-	signaturesRequired := int(parts[0][0]) - libsv.OpBASE
+	signaturesRequired := int(parts[0][0]) - utils.OpBASE
 	if signaturesRequired < 2 {
 		return nil, errors.New("Must have 2 or more required signatures for multisig")
 	}
@@ -55,9 +55,9 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		return nil, errors.New("More than 15 signatures is not supported")
 	}
 
-	signatureCount := int(parts[len(parts)-2][0]) - libsv.OpBASE
+	signatureCount := int(parts[len(parts)-2][0]) - utils.OpBASE
 
-	if parts[len(parts)-1][0] != libsv.OpCHECKMULTISIG {
+	if parts[len(parts)-1][0] != utils.OpCHECKMULTISIG {
 		return nil, errors.New("Script must end with OP_CHECKMULTISIG")
 	}
 
@@ -86,7 +86,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		}
 
 		// rs.AddPublicKey("", s)
-		publicKey, err := libsv.NewPublicKey(xpub)
+		publicKey, err := crypto.NewPublicKey(xpub)
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +132,7 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 		return errors.New("We only support derivation paths with exactly 2 levels")
 	}
 
-	pk, err := libsv.NewPublicKey(pkey)
+	pk, err := crypto.NewPublicKey(pkey)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 
 func (rs *RedeemScript) getAddress() string {
 	script := rs.getRedeemScript()
-	hash := libsv.Hash160(script)
+	hash := crypto.Hash160(script)
 	// hash = append([]byte{0x05}, hash...)
 	return base58.CheckEncode(hash, 0x05)
 }
@@ -168,22 +168,22 @@ func (rs *RedeemScript) getPublicKeys() [][]byte {
 func (rs *RedeemScript) getRedeemScript() []byte {
 	var b []byte
 
-	b = append(b, byte(libsv.OpBASE+rs.SignaturesRequired))
-	rs.PublicKeys = libsv.SortByteArrays(rs.PublicKeys)
+	b = append(b, byte(utils.OpBASE+rs.SignaturesRequired))
+	rs.PublicKeys = utils.SortByteArrays(rs.PublicKeys)
 	for _, pk := range rs.PublicKeys {
 		b = append(b, byte(len(pk)))
 		b = append(b, pk...)
 	}
 
-	b = append(b, byte(libsv.OpBASE+len(rs.PublicKeys)))
+	b = append(b, byte(utils.OpBASE+len(rs.PublicKeys)))
 
-	b = append(b, libsv.OpCHECKMULTISIG)
+	b = append(b, utils.OpCHECKMULTISIG)
 
 	return b
 }
 
 func (rs *RedeemScript) getRedeemScriptHash() []byte {
-	return libsv.Hash160(rs.getRedeemScript())
+	return crypto.Hash160(rs.getRedeemScript())
 }
 
 func (rs *RedeemScript) getScriptPubKey() []byte {
@@ -191,10 +191,10 @@ func (rs *RedeemScript) getScriptPubKey() []byte {
 
 	h := rs.getRedeemScriptHash()
 
-	b = append(b, libsv.OpHASH160)
+	b = append(b, utils.OpHASH160)
 	b = append(b, byte(len(h)))
 	b = append(b, h...)
-	b = append(b, libsv.OpEQUAL)
+	b = append(b, utils.OpEQUAL)
 
 	return b
 }

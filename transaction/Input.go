@@ -3,8 +3,7 @@ package transaction
 import (
 	"encoding/binary"
 	"fmt"
-
-	"github.com/jadwahab/libsv"
+	utils2 "github.com/jadwahab/libsv/utils"
 )
 
 /*
@@ -44,12 +43,12 @@ func NewInput() *Input {
 func NewInputFromBytes(bytes []byte) (*Input, int) {
 	i := Input{}
 
-	copy(i.PreviousTxHash[:], libsv.ReverseBytes(bytes[0:32]))
+	copy(i.PreviousTxHash[:], utils2.ReverseBytes(bytes[0:32]))
 
 	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
 	offset := 36
-	l, size := libsv.DecodeVarInt(bytes[offset:])
+	l, size := utils2.DecodeVarInt(bytes[offset:])
 	offset += size
 
 	i.SigScript = NewScriptFromBytes(bytes[offset : offset+int(l)])
@@ -72,19 +71,19 @@ sequence:     %x
 func (i *Input) Hex(clear bool) []byte {
 	hex := make([]byte, 0)
 
-	hex = append(hex, libsv.ReverseBytes(i.PreviousTxHash[:])...)
-	hex = append(hex, libsv.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
+	hex = append(hex, utils2.ReverseBytes(i.PreviousTxHash[:])...)
+	hex = append(hex, utils2.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		hex = append(hex, 0x00)
 	} else {
 		if i.SigScript == nil {
-			hex = append(hex, libsv.VarInt(0)...)
+			hex = append(hex, utils2.VarInt(0)...)
 		} else {
-			hex = append(hex, libsv.VarInt(uint64(len(*i.SigScript)))...)
+			hex = append(hex, utils2.VarInt(uint64(len(*i.SigScript)))...)
 			hex = append(hex, *i.SigScript...)
 		}
 	}
-	hex = append(hex, libsv.GetLittleEndianBytes(i.SequenceNumber, 4)...)
+	hex = append(hex, utils2.GetLittleEndianBytes(i.SequenceNumber, 4)...)
 
 	return hex
 }

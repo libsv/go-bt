@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"github.com/jadwahab/libsv/utils"
 	"strings"
 )
 
@@ -146,7 +147,7 @@ func validateBCHWalletAddress(coin string, address string) (bool, error) {
 
 func validateBSVWalletAddress(coin string, address string) (bool, error) {
 	if strings.HasPrefix(address, "bitcoin-script:") {
-		_, _, network, _, err := DecodeBIP276(address)
+		_, _, network, _, err := utils.DecodeBIP276(address)
 
 		if err != nil {
 			return false, fmt.Errorf("bitcoin-script invalid [%+v]", err)

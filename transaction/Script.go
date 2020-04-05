@@ -3,8 +3,7 @@ package transaction
 import (
 	"encoding/hex"
 	"fmt"
-
-	"github.com/jadwahab/libsv"
+	"github.com/jadwahab/libsv/utils"
 )
 
 // Script type
@@ -35,7 +34,7 @@ func (s *Script) ToString() string {
 
 // AppendPushDataToScript takes data bytes and appends them to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataToScript(d []byte) error {
-	p, err := libsv.EncodeParts([][]byte{d})
+	p, err := utils.EncodeParts([][]byte{d})
 	if err != nil {
 		return err
 	}
@@ -52,7 +51,7 @@ func (s *Script) AppendPushDataStringToScript(str string) error {
 
 // AppendPushDataArrayToScript takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataArrayToScript(d [][]byte) error {
-	p, err := libsv.EncodeParts(d)
+	p, err := utils.EncodeParts(d)
 	if err != nil {
 		return err
 	}
@@ -82,23 +81,23 @@ func (s *Script) AppendOpCode(o uint8) {
 func (s *Script) IsPublicKeyHashOut() bool {
 	b := []byte(*s)
 	return len(b) == 25 &&
-		b[0] == libsv.OpDUP &&
-		b[1] == libsv.OpHASH160 &&
+		b[0] == utils.OpDUP &&
+		b[1] == utils.OpHASH160 &&
 		b[2] == 0x14 &&
-		b[23] == libsv.OpEQUALVERIFY &&
-		b[24] == libsv.OpCHECKSIG
+		b[23] == utils.OpEQUALVERIFY &&
+		b[24] == utils.OpCHECKSIG
 }
 
 // IsPublicKeyOut returns true if this is a public key output script.
 func (s *Script) IsPublicKeyOut() bool {
-	parts, err := libsv.DecodeParts(*s)
+	parts, err := utils.DecodeParts(*s)
 	if err != nil {
 		return false
 	}
 
 	if len(parts) == 2 &&
 		len(parts[0]) > 0 &&
-		parts[1][0] == libsv.OpCHECKSIG {
+		parts[1][0] == utils.OpCHECKSIG {
 
 		pubkey := parts[0]
 		version := pubkey[0]
@@ -117,14 +116,14 @@ func (s *Script) IsScriptHashOut() bool {
 	b := []byte(*s)
 
 	return len(b) == 23 &&
-		b[0] == libsv.OpHASH160 &&
+		b[0] == utils.OpHASH160 &&
 		b[1] == 0x14 &&
-		b[22] == libsv.OpEQUAL
+		b[22] == utils.OpEQUAL
 }
 
 // IsMultisigOut returns true if this is a multisig output script.
 func (s *Script) IsMultisigOut() bool {
-	parts, err := libsv.DecodeParts(*s)
+	parts, err := utils.DecodeParts(*s)
 	if err != nil {
 		return false
 	}
@@ -144,11 +143,11 @@ func (s *Script) IsMultisigOut() bool {
 	}
 
 	return isSmallIntOp(parts[len(parts)-2][0]) &&
-		parts[len(parts)-1][0] == libsv.OpCHECKMULTISIG
+		parts[len(parts)-1][0] == utils.OpCHECKMULTISIG
 }
 
 func isSmallIntOp(opcode byte) bool {
-	return opcode == libsv.OpZERO || (opcode >= libsv.OpONE && opcode <= libsv.OpSIXTEEN)
+	return opcode == utils.OpZERO || (opcode >= utils.OpONE && opcode <= utils.OpSIXTEEN)
 }
 
 // GetPublicKeyHash returns a public key hash byte array if the script is a P2PKH script
@@ -161,7 +160,7 @@ func (s *Script) GetPublicKeyHash() ([]byte, error) {
 		return nil, fmt.Errorf("Not a P2PKH")
 	}
 
-	parts, err := libsv.DecodeParts((*s)[2:])
+	parts, err := utils.DecodeParts((*s)[2:])
 	if err != nil {
 		return nil, err
 	}

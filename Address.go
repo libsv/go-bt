@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/jadwahab/libsv/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
@@ -28,7 +29,7 @@ func checksum(input []byte) (cksum [4]byte) {
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
 func AddressFromPublicKey(pubKey *btcec.PublicKey, mainnet bool) string {
-	hash := Hash160(pubKey.SerializeCompressed())
+	hash := crypto.Hash160(pubKey.SerializeCompressed())
 
 	// regtest := 111
 	// mainnet: 0
@@ -77,7 +78,7 @@ func PublicKeyHashFromPublicKeyStr(pubKeyStr string) (string, error) {
 // PublicKeyHashFromPublicKey hashes a btcec public key (in compressed format starting with 03 or 02)
 // and returns the hash encoded as a string of hex values.
 func PublicKeyHashFromPublicKey(pubKey *btcec.PublicKey) string {
-	hash := Hash160(pubKey.SerializeCompressed())
+	hash := crypto.Hash160(pubKey.SerializeCompressed())
 
 	return hex.EncodeToString(hash)
 }
@@ -136,7 +137,7 @@ func NewAddressFromString(addr string) (*Address, error) {
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
 func NewAddressFromPublicKey(pubKey string, mainnet bool) (*Address, error) {
-	return NewAddressFromPublicKeyHash(Hash160([]byte(pubKey)), mainnet)
+	return NewAddressFromPublicKeyHash(crypto.Hash160([]byte(pubKey)), mainnet)
 }
 
 // NewAddressFromPublicKeyHash takes a public key hash in bytes and returns an Address struct pointer.
