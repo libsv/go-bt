@@ -1,4 +1,4 @@
-package cryptolib
+package libsv
 
 import (
 	"encoding/hex"

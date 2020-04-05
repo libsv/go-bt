@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"bitbucket.org/simon_ordish/cryptolib"
+	"github.com/jadwahab/libsv"
 )
 
 /*
@@ -42,12 +42,12 @@ func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, 
 		return nil, err
 	}
 	script := make([]byte, 0, len(publicKeyHash)+8)
-	script = append(script, cryptolib.OpDUP)
-	script = append(script, cryptolib.OpHASH160)
-	script = append(script, cryptolib.VarInt(uint64(len(publicKeyHash)/2))...)
+	script = append(script, libsv.OpDUP)
+	script = append(script, libsv.OpHASH160)
+	script = append(script, libsv.VarInt(uint64(len(publicKeyHash)/2))...)
 	script = append(script, publicKeyHashBytes...)
-	script = append(script, cryptolib.OpEQUALVERIFY)
-	script = append(script, cryptolib.OpCHECKSIG)
+	script = append(script, libsv.OpEQUALVERIFY)
+	script = append(script, libsv.OpCHECKSIG)
 	o.Script = script
 	return &o, nil
 }
@@ -63,16 +63,16 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 	}
 	s := NewScript()
 
-	s.AppendOpCode(cryptolib.OpHASH160)
-	secretBytesHash := cryptolib.Hash160([]byte(secret))
+	s.AppendOpCode(libsv.OpHASH160)
+	secretBytesHash := libsv.Hash160([]byte(secret))
 	s.AppendPushDataToScript(secretBytesHash)
-	s.AppendOpCode(cryptolib.OpEQUALVERIFY)
+	s.AppendOpCode(libsv.OpEQUALVERIFY)
 
-	s.AppendOpCode(cryptolib.OpDUP)
-	s.AppendOpCode(cryptolib.OpHASH160)
+	s.AppendOpCode(libsv.OpDUP)
+	s.AppendOpCode(libsv.OpHASH160)
 	s.AppendPushDataToScript(publicKeyHashBytes)
-	s.AppendOpCode(cryptolib.OpEQUALVERIFY)
-	s.AppendOpCode(cryptolib.OpCHECKSIG)
+	s.AppendOpCode(libsv.OpEQUALVERIFY)
+	s.AppendOpCode(libsv.OpCHECKSIG)
 
 	o.Script = *s
 	return &o, nil
@@ -85,7 +85,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 	o.Value = binary.LittleEndian.Uint64(bytes[0:8])
 
 	offset := 8
-	i, size := cryptolib.DecodeVarInt(bytes[offset:])
+	i, size := libsv.DecodeVarInt(bytes[offset:])
 	offset += size
 
 	o.Script = bytes[offset : offset+int(i)]
@@ -97,13 +97,13 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 // passed in encoded as hex.
 func NewOutputOpReturn(data []byte) (*Output, error) {
 
-	b, err := cryptolib.EncodeParts([][]byte{data})
+	b, err := libsv.EncodeParts([][]byte{data})
 	if err != nil {
 		return nil, err
 	}
 	script := make([]byte, 0)
-	script = append(script, cryptolib.OpFALSE)
-	script = append(script, cryptolib.OpRETURN)
+	script = append(script, libsv.OpFALSE)
+	script = append(script, libsv.OpRETURN)
 	script = append(script, b...)
 
 	o := Output{}
@@ -115,14 +115,14 @@ func NewOutputOpReturn(data []byte) (*Output, error) {
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
 func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
 
-	b, err := cryptolib.EncodeParts(data)
+	b, err := libsv.EncodeParts(data)
 	if err != nil {
 		return nil, err
 	}
 
 	script := make([]byte, 0)
-	script = append(script, cryptolib.OpFALSE)
-	script = append(script, cryptolib.OpRETURN)
+	script = append(script, libsv.OpFALSE)
+	script = append(script, libsv.OpRETURN)
 	script = append(script, b...)
 
 	o := Output{}
@@ -150,7 +150,7 @@ func (o *Output) Hex() []byte {
 
 	hex := make([]byte, 0)
 	hex = append(hex, b...)
-	hex = append(hex, cryptolib.VarInt(uint64(len(o.Script)))...)
+	hex = append(hex, libsv.VarInt(uint64(len(o.Script)))...)
 	hex = append(hex, o.Script...)
 
 	return hex
@@ -163,7 +163,7 @@ func (o *Output) getBytesForSigHash() []byte {
 	binary.LittleEndian.PutUint64(satoshis, o.Value)
 	buf = append(buf, satoshis...)
 
-	buf = append(buf, cryptolib.VarInt(uint64(len(o.Script)))...)
+	buf = append(buf, libsv.VarInt(uint64(len(o.Script)))...)
 	buf = append(buf, o.Script...)
 
 	return buf

@@ -36,7 +36,7 @@ func TestNew(t *testing.T) {
 // 	bytes, _ := hex.DecodeString(coinbase)
 // 	i, _ := NewInput(bytes)
 
-// 	length, size := cryptolib.DecodeVarInt(*i.script)
+// 	length, size := libsv.DecodeVarInt(*i.script)
 // 	heightPart := *i.script[size : size+int(length)]
 // 	var heightBytes [4]byte
 // 	copy(heightBytes[:], heightPart)

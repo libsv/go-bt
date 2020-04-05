@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"bitbucket.org/simon_ordish/cryptolib"
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/jadwahab/libsv"
 )
 
 /*
@@ -99,7 +99,7 @@ func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
 		offset += 2
 	}
 
-	inputCount, size := cryptolib.DecodeVarInt(bytes[offset:])
+	inputCount, size := libsv.DecodeVarInt(bytes[offset:])
 	offset += size
 
 	var i uint64
@@ -110,7 +110,7 @@ func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
 		bt.Inputs = append(bt.Inputs, input)
 	}
 
-	outputCount, size := cryptolib.DecodeVarInt(bytes[offset:])
+	outputCount, size := libsv.DecodeVarInt(bytes[offset:])
 	offset += size
 
 	for i = 0; i < outputCount; i++ {
@@ -173,7 +173,7 @@ func (bt *BitcoinTransaction) AddOutput(output *Output) {
 
 // PayTo function
 func (bt *BitcoinTransaction) PayTo(address string, amount uint64) error {
-	script, err := cryptolib.AddressToScript(address)
+	script, err := libsv.AddressToScript(address)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (bt *BitcoinTransaction) GetOutputs() []*Output {
 // GetTxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
 func (bt *BitcoinTransaction) GetTxID() string {
-	return hex.EncodeToString(cryptolib.ReverseBytes(cryptolib.Sha256d(bt.Hex())))
+	return hex.EncodeToString(libsv.ReverseBytes(libsv.Sha256d(bt.Hex())))
 }
 
 // Hex encodes the transaction into a hex byte array.
@@ -245,26 +245,26 @@ func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload
 func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
 	hex := make([]byte, 0)
 
-	hex = append(hex, cryptolib.GetLittleEndianBytes(bt.Version, 4)...)
+	hex = append(hex, libsv.GetLittleEndianBytes(bt.Version, 4)...)
 
 	if bt.Witness {
 		hex = append(hex, 0x00)
 		hex = append(hex, 0x01)
 	}
 
-	hex = append(hex, cryptolib.VarInt(uint64(len(bt.GetInputs())))...)
+	hex = append(hex, libsv.VarInt(uint64(len(bt.GetInputs())))...)
 
 	for i, in := range bt.GetInputs() {
 		script := in.Hex(scriptPubKey != nil)
 		if i == index && scriptPubKey != nil {
-			hex = append(hex, cryptolib.VarInt(uint64(len(scriptPubKey)))...)
+			hex = append(hex, libsv.VarInt(uint64(len(scriptPubKey)))...)
 			hex = append(hex, scriptPubKey...)
 		} else {
 			hex = append(hex, script...)
 		}
 	}
 
-	hex = append(hex, cryptolib.VarInt(uint64(len(bt.GetOutputs())))...)
+	hex = append(hex, libsv.VarInt(uint64(len(bt.GetOutputs())))...)
 	for _, out := range bt.GetOutputs() {
 		hex = append(hex, out.Hex()...)
 	}
@@ -315,17 +315,17 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 
 			const sigTypeLength = 1 // Include sighash all fork id hash type when we count length of signature.
 			buf := make([]byte, 0)
-			buf = append(buf, cryptolib.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
+			buf = append(buf, libsv.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
 			buf = append(buf, sigBytes...)
 			buf = append(buf, (SighashAll | SighashForkID))
-			buf = append(buf, cryptolib.VarInt(uint64(len(signingItem.PublicKey)/2))...)
+			buf = append(buf, libsv.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
 			bt.Inputs[index].SigScript = NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 	}
 	if sigsApplied == 0 {
-		return errors.New("Error - cryptolib found no signatures in signingPayload to apply to this tx")
+		return errors.New("Error - libsv found no signatures in signingPayload to apply to this tx")
 	}
 	return nil
 }
@@ -359,7 +359,7 @@ func submitToDummySigningService(payload *SigningPayload, privateKey *btcec.Priv
 		if err != nil {
 			return nil, err
 		}
-		sig, err := privateKey.Sign(cryptolib.ReverseBytes(h))
+		sig, err := privateKey.Sign(libsv.ReverseBytes(h))
 		if err != nil {
 			return nil, err
 		}
@@ -394,17 +394,17 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 
 			const sigTypeLength = 1 // Include sighash all fork id hash type when we count length of signature.
 			buf := make([]byte, 0)
-			buf = append(buf, cryptolib.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
+			buf = append(buf, libsv.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
 			buf = append(buf, sigBytes...)
 			buf = append(buf, (SighashAll | SighashForkID))
-			buf = append(buf, cryptolib.VarInt(uint64(len(signingItem.PublicKey)/2))...)
+			buf = append(buf, libsv.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
 			bt.Inputs[index].SigScript = NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 	}
 	if sigsApplied == 0 {
-		return errors.New("Error - cryptolib found no signatures in signingPayload to apply to this tx")
+		return errors.New("Error - libsv found no signatures in signingPayload to apply to this tx")
 	}
 	return nil
 }

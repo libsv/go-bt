@@ -1,4 +1,4 @@
-package cryptolib
+package libsv
 
 /*
 Here is a real example coinbase broken down...

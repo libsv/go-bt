@@ -1,4 +1,4 @@
-package cryptolib
+package libsv
 
 // PrivateKeyToWIF takes a 256 bit private key and outputs it in Wallet Interchange Format
 func PrivateKeyToWIF(key []byte) string {

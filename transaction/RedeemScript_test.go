@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"bitbucket.org/simon_ordish/cryptolib"
+	"github.com/jadwahab/libsv"
 )
 
 func TestGetRedeemScript(t *testing.T) {
@@ -29,7 +29,7 @@ func TestBase58(t *testing.T) {
 func TestHash160(t *testing.T) {
 	input, _ := hex.DecodeString("522103d10369cb9603521e3b2b2f13b71d356e9465867c7c79233e58d85f82dec241942103f2538c34a0991dcbcae32c56c1158822c88a4149e0549363dd9c541a6455114552ae")
 	expected := "0e95261082d65c384a6106f114474bc0784ba67e"
-	result := cryptolib.Hash160(input)
+	result := libsv.Hash160(input)
 
 	if hex.EncodeToString(result) != expected {
 		t.Errorf("Expected %q, got %q", expected, result)

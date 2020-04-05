@@ -1,4 +1,4 @@
-package cryptolib
+package libsv
 
 // PublicKeyToP2PKHScript turns a public key string (in compressed format) into a P2PKH script.
 // Example:

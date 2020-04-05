@@ -1,4 +1,4 @@
-package cryptolib
+package libsv
 
 // ReverseHexString reverses the hex string (little endian/big endian).
 // This is used when computing merkle trees in Bitcoin, for example.

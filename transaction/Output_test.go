@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"bitbucket.org/simon_ordish/cryptolib"
+	"github.com/jadwahab/libsv"
 )
 
 const output = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
@@ -48,7 +48,7 @@ func TestNewOutputForPublicKeyHash(t *testing.T) {
 
 func TestNewOutputForHashPuzzle(t *testing.T) {
 	secret := "secret1"
-	address, _ := cryptolib.NewAddressFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
+	address, _ := libsv.NewAddressFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
 	value := uint64(5000)
 	output, err := NewOutputForHashPuzzle(secret, address.PublicKeyHash, value)
 	if err != nil {
@@ -70,7 +70,7 @@ func TestNewOutputOpReturn(t *testing.T) {
 	}
 	dataHexStr := hex.EncodeToString(dataBytes)
 	script := hex.EncodeToString(output.Script)
-	dataLength := cryptolib.VarInt(uint64(len(dataBytes)))
+	dataLength := libsv.VarInt(uint64(len(dataBytes)))
 	fmt.Printf("%x", dataLength)
 	expectedScript := "006a4d2201" + dataHexStr
 

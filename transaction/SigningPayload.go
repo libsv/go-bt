@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"bitbucket.org/simon_ordish/cryptolib"
+	"github.com/jadwahab/libsv"
 )
 
 // SigningItem contains the metadata neeeded to sign a transaction.
@@ -65,13 +65,13 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
-			buf = append(buf, cryptolib.ReverseBytes(in.PreviousTxHash[:])...)
+			buf = append(buf, libsv.ReverseBytes(in.PreviousTxHash[:])...)
 			oi := make([]byte, 4)
 			binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 			buf = append(buf, oi...)
 		}
 
-		return cryptolib.Sha256d(buf)
+		return libsv.Sha256d(buf)
 	}
 
 	getSequenceHash := func(tx *BitcoinTransaction) []byte {
@@ -83,7 +83,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 			buf = append(buf, oi...)
 		}
 
-		return cryptolib.Sha256d(buf)
+		return libsv.Sha256d(buf)
 	}
 
 	getOutputsHash := func(tx *BitcoinTransaction, n int32) []byte {
@@ -97,7 +97,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 			buf = append(buf, tx.Outputs[n].getBytesForSigHash()...)
 		}
 
-		return cryptolib.Sha256d(buf)
+		return libsv.Sha256d(buf)
 	}
 
 	hashPrevouts := make([]byte, 32)
@@ -136,13 +136,13 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 	buf = append(buf, hashSequence...)
 
 	//  outpoint (32-byte hash + 4-byte little endian)
-	buf = append(buf, cryptolib.ReverseBytes(input.PreviousTxHash[:])...)
+	buf = append(buf, libsv.ReverseBytes(input.PreviousTxHash[:])...)
 	oi := make([]byte, 4)
 	binary.LittleEndian.PutUint32(oi, input.PreviousTxOutIndex)
 	buf = append(buf, oi...)
 
 	// scriptCode of the input (serialized as scripts inside CTxOuts)
-	buf = append(buf, cryptolib.VarInt(uint64(len(*input.PreviousTxScript)))...)
+	buf = append(buf, libsv.VarInt(uint64(len(*input.PreviousTxScript)))...)
 	buf = append(buf, *input.PreviousTxScript...)
 
 	// value of the output spent by this input (8-byte little endian)
@@ -168,8 +168,8 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 	st := make([]byte, 4)
 	binary.LittleEndian.PutUint32(st, sighashType>>0)
 	buf = append(buf, st...)
-	ret := cryptolib.Sha256d(buf)
-	return hex.EncodeToString(cryptolib.ReverseBytes(ret))
+	ret := libsv.Sha256d(buf)
+	return hex.EncodeToString(libsv.ReverseBytes(ret))
 }
 
 func getSighashForInputValidation(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, previousTxOutIndex uint32, previousTxSatoshis uint64, previousTxScript *Script) string {
@@ -180,13 +180,13 @@ func getSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
-			buf = append(buf, cryptolib.ReverseBytes(in.PreviousTxHash[:])...)
+			buf = append(buf, libsv.ReverseBytes(in.PreviousTxHash[:])...)
 			oi := make([]byte, 4)
 			binary.LittleEndian.PutUint32(oi, previousTxOutIndex)
 			buf = append(buf, oi...)
 		}
 
-		return cryptolib.Sha256d(buf)
+		return libsv.Sha256d(buf)
 	}
 
 	getSequenceHash := func(tx *BitcoinTransaction) []byte {
@@ -198,7 +198,7 @@ func getSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 			buf = append(buf, oi...)
 		}
 
-		return cryptolib.Sha256d(buf)
+		return libsv.Sha256d(buf)
 	}
 
 	getOutputsHash := func(tx *BitcoinTransaction, n int32) []byte {
@@ -212,7 +212,7 @@ func getSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 			buf = append(buf, tx.Outputs[n].getBytesForSigHash()...)
 		}
 
-		return cryptolib.Sha256d(buf)
+		return libsv.Sha256d(buf)
 	}
 
 	hashPrevouts := make([]byte, 32)
@@ -251,13 +251,13 @@ func getSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 	buf = append(buf, hashSequence...)
 
 	//  outpoint (32-byte hash + 4-byte little endian)
-	buf = append(buf, cryptolib.ReverseBytes(input.PreviousTxHash[:])...)
+	buf = append(buf, libsv.ReverseBytes(input.PreviousTxHash[:])...)
 	oi := make([]byte, 4)
 	binary.LittleEndian.PutUint32(oi, previousTxOutIndex)
 	buf = append(buf, oi...)
 
 	// scriptCode of the input (serialized as scripts inside CTxOuts)
-	buf = append(buf, cryptolib.VarInt(uint64(len(*previousTxScript)))...)
+	buf = append(buf, libsv.VarInt(uint64(len(*previousTxScript)))...)
 	buf = append(buf, *previousTxScript...)
 
 	// value of the output spent by this input (8-byte little endian)
@@ -283,6 +283,6 @@ func getSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 	st := make([]byte, 4)
 	binary.LittleEndian.PutUint32(st, sighashType>>0)
 	buf = append(buf, st...)
-	ret := cryptolib.Sha256d(buf)
-	return hex.EncodeToString(cryptolib.ReverseBytes(ret))
+	ret := libsv.Sha256d(buf)
+	return hex.EncodeToString(libsv.ReverseBytes(ret))
 }

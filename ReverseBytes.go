@@ -1,4 +1,4 @@
-package cryptolib
+package libsv
 
 // ReverseBytes reverses the bytes (little endian/big endian).
 // This is used when computing merkle trees in Bitcoin, for example.

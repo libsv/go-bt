@@ -1,4 +1,4 @@
-package cryptolib
+package libsv
 
 // Equals checks if two byte arrays are equal.
 func Equals(b1 []byte, b2 []byte) bool {

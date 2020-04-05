@@ -1,4 +1,4 @@
-module bitbucket.org/simon_ordish/cryptolib
+module github.com/jadwahab/libsv
 
 go 1.13
 

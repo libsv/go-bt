@@ -6,10 +6,10 @@ import (
 	"reflect"
 	"testing"
 
-	"bitbucket.org/simon_ordish/cryptolib"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
+	"github.com/jadwahab/libsv"
 )
 
 func TestRegTestCoinbase(t *testing.T) {
@@ -43,7 +43,7 @@ func TestConvertXPriv(t *testing.T) {
 	const xprv = "xprv9s21ZrQH143K2beTKhLXFRWWFwH8jkwUssjk3SVTiApgmge7kNC3jhVc4NgHW8PhW2y7BCDErqnKpKuyQMjqSePPJooPJowAz5BVLThsv6c"
 	const expected = "5f86e4023a4e94f00463f81b70ff951f83f896a0a3e6ed89cf163c152f954f8b"
 
-	r, _ := cryptolib.NewPrivateKey(xprv)
+	r, _ := libsv.NewPrivateKey(xprv)
 
 	t.Logf("%x", r.PrivateKey)
 }
@@ -298,7 +298,7 @@ func TestValidSignature(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	valid := sig.Verify(cryptolib.ReverseBytes(h), publicKey)
+	valid := sig.Verify(libsv.ReverseBytes(h), publicKey)
 	t.Logf("%v\n", valid)
 
 }
@@ -343,7 +343,7 @@ func TestValidSignature2(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	valid := sig.Verify(cryptolib.ReverseBytes(h), publicKey)
+	valid := sig.Verify(libsv.ReverseBytes(h), publicKey)
 	t.Logf("%v\n", valid)
 
 }
@@ -416,7 +416,7 @@ func TestBareMultiSigValidation(t *testing.T) {
 			return
 		}
 		for j, pk := range publicKeys {
-			valid := sig.Verify(cryptolib.ReverseBytes(h), pk)
+			valid := sig.Verify(libsv.ReverseBytes(h), pk)
 			t.Logf("signature %d against pulbic key %d => %v\n", i, j, valid)
 		}
 
@@ -492,7 +492,7 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 			return
 		}
 		for j, pk := range publicKeys {
-			valid := sig.Verify(cryptolib.ReverseBytes(h), pk)
+			valid := sig.Verify(libsv.ReverseBytes(h), pk)
 			t.Logf("signature %d against pulbic key %d => %v\n", i, j, valid)
 		}
 
