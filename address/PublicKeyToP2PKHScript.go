@@ -1,7 +1,7 @@
-package libsv
+package address
 
 import (
-	"github.com/jadwahab/libsv/crypto"
+	hash2 "github.com/jadwahab/libsv/crypto/hash"
 	"github.com/jadwahab/libsv/utils"
 )
 
@@ -11,7 +11,7 @@ import (
 // to 76a9144d5d1920331b71735a97a606d9734aed83cb3dfa88ac
 
 func PublicKeyToP2PKHScript(pubkey []byte) []byte {
-	hash := crypto.Hash160(pubkey)
+	hash := hash2.Hash160(pubkey)
 
 	ret := []byte{
 		utils.OpDUP,

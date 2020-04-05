@@ -1,4 +1,4 @@
-package libsv
+package address
 
 // Copied from github.com/drewwells/go-bitpay-client/encoding/base58
 /*

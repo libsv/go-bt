@@ -10,7 +10,7 @@ func TestEncode(t *testing.T) {
 	fakeScript := "fake script"
 	fakeScriptBytes := []byte(fakeScript)
 
-	s := utils.EncodeBIP276(utils.prefixScript, utils.networkMainnet, utils.currentVersion, fakeScriptBytes)
+	s := utils.EncodeBIP276(utils.PrefixScript, utils.NetworkMainnet, utils.CurrentVersion, fakeScriptBytes)
 
 	expected := "bitcoin-script:010166616b65207363726970746f0cd86a"
 

@@ -9,12 +9,12 @@ import (
 	"strconv"
 )
 
-const prefixScript = "bitcoin-script"
+const PrefixScript = "bitcoin-script"
 const prefixTemplate = "bitcoin-template"
 
-const currentVersion = 1
+const CurrentVersion = 1
 
-const networkMainnet = 1
+const NetworkMainnet = 1
 const networkTestnet = 2
 
 func sha256d(b []byte) []byte {

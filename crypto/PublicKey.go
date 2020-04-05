@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"github.com/jadwahab/libsv"
+	"github.com/jadwahab/libsv/address"
 	"github.com/jadwahab/libsv/utils"
 	"math/big"
 
@@ -58,7 +58,7 @@ var curve = btcec.S256()
 
 // NewPrivateKey comment TODO: public key or private key?
 func NewPrivateKey(xprv string) (*PublicKey, error) {
-	decoded, err := libsv.DecodeString(xprv)
+	decoded, err := address.DecodeString(xprv)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func NewPrivateKey(xprv string) (*PublicKey, error) {
 // NewPublicKey takes an xpub string and returns a PublicKey pointer.
 // See BIP32 https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 func NewPublicKey(xpub string) (*PublicKey, error) {
-	decoded, err := libsv.DecodeString(xpub)
+	decoded, err := address.DecodeString(xpub)
 	if err != nil {
 		return nil, err
 	}

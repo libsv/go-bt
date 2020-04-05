@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"github.com/jadwahab/libsv/crypto"
+	hash2 "github.com/jadwahab/libsv/crypto/hash"
 	"github.com/jadwahab/libsv/utils"
 	"log"
 
@@ -71,7 +72,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		}
 
 		pubkey = pubkey[1:]
-		xpub := base58Encode(pubkey[0:78])
+		xpub := Base58Encode(pubkey[0:78])
 
 		derivationPath := pubkey[78:]
 		var s []uint16
@@ -110,7 +111,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 	return rs, nil
 }
 
-func base58Encode(input []byte) string {
+func Base58Encode(input []byte) string {
 	b := make([]byte, 0, len(input)+4)
 	b = append(b, input[:]...)
 	cksum := checksum(b)
@@ -154,9 +155,9 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 	return nil
 }
 
-func (rs *RedeemScript) getAddress() string {
-	script := rs.getRedeemScript()
-	hash := crypto.Hash160(script)
+func (rs *RedeemScript) GetAddress() string {
+	script := rs.GetRedeemScript()
+	hash := hash2.Hash160(script)
 	// hash = append([]byte{0x05}, hash...)
 	return base58.CheckEncode(hash, 0x05)
 }
@@ -165,7 +166,7 @@ func (rs *RedeemScript) getPublicKeys() [][]byte {
 	return rs.PublicKeys
 }
 
-func (rs *RedeemScript) getRedeemScript() []byte {
+func (rs *RedeemScript) GetRedeemScript() []byte {
 	var b []byte
 
 	b = append(b, byte(utils.OpBASE+rs.SignaturesRequired))
@@ -182,14 +183,14 @@ func (rs *RedeemScript) getRedeemScript() []byte {
 	return b
 }
 
-func (rs *RedeemScript) getRedeemScriptHash() []byte {
-	return crypto.Hash160(rs.getRedeemScript())
+func (rs *RedeemScript) GetRedeemScriptHash() []byte {
+	return hash2.Hash160(rs.GetRedeemScript())
 }
 
 func (rs *RedeemScript) getScriptPubKey() []byte {
 	var b []byte
 
-	h := rs.getRedeemScriptHash()
+	h := rs.GetRedeemScriptHash()
 
 	b = append(b, utils.OpHASH160)
 	b = append(b, byte(len(h)))

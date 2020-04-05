@@ -293,7 +293,7 @@ func TestValidSignature(t *testing.T) {
 	var prevIndex uint32 = 0
 	var outIndex uint32 = 0
 
-	sighash := transaction.getSighashForInputValidation(tx, uint32(sigHashType), outIndex, prevIndex, previousTxSatoshis, previousTxScript)
+	sighash := transaction.GetSighashForInputValidation(tx, uint32(sigHashType), outIndex, prevIndex, previousTxSatoshis, previousTxScript)
 
 	h, err := hex.DecodeString(sighash)
 	if err != nil {
@@ -338,7 +338,7 @@ func TestValidSignature2(t *testing.T) {
 	var prevIndex uint32 = 1
 	var outIndex uint32 = 0
 
-	sighash := transaction.getSighashForInputValidation(tx, uint32(sigHashType), outIndex, prevIndex, previousTxSatoshis, previousTxScript)
+	sighash := transaction.GetSighashForInputValidation(tx, uint32(sigHashType), outIndex, prevIndex, previousTxSatoshis, previousTxScript)
 
 	h, err := hex.DecodeString(sighash)
 	if err != nil {
@@ -411,7 +411,7 @@ func TestBareMultiSigValidation(t *testing.T) {
 	var outIndex uint32 = 0
 
 	for i, sig := range sigs {
-		sighash := transaction.getSighashForInputValidation(tx, sigHashTypes[i], outIndex, prevIndex, previousTxSatoshis, previousTxScript)
+		sighash := transaction.GetSighashForInputValidation(tx, sigHashTypes[i], outIndex, prevIndex, previousTxSatoshis, previousTxScript)
 		h, err := hex.DecodeString(sighash)
 		if err != nil {
 			t.Error(err)
@@ -487,7 +487,7 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 	var outIndex uint32 = 0
 
 	for i, sig := range sigs {
-		sighash := transaction.getSighashForInputValidation(tx, sigHashTypes[i], outIndex, prevIndex, previousTxSatoshis, previousTxScript)
+		sighash := transaction.GetSighashForInputValidation(tx, sigHashTypes[i], outIndex, prevIndex, previousTxSatoshis, previousTxScript)
 		h, err := hex.DecodeString(sighash)
 		if err != nil {
 			t.Error(err)

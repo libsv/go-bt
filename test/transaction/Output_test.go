@@ -3,11 +3,10 @@ package transaction
 import (
 	"encoding/hex"
 	"fmt"
+	address2 "github.com/jadwahab/libsv/address"
 	"github.com/jadwahab/libsv/transaction"
 	utils2 "github.com/jadwahab/libsv/utils"
 	"testing"
-
-	"github.com/jadwahab/libsv"
 )
 
 const output = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
@@ -50,7 +49,7 @@ func TestNewOutputForPublicKeyHash(t *testing.T) {
 
 func TestNewOutputForHashPuzzle(t *testing.T) {
 	secret := "secret1"
-	address, _ := libsv.NewAddressFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
+	address, _ := address2.NewAddressFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
 	value := uint64(5000)
 	output, err := transaction.NewOutputForHashPuzzle(secret, address.PublicKeyHash, value)
 	if err != nil {

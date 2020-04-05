@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/jadwahab/libsv/crypto"
+	"github.com/jadwahab/libsv/crypto/hash"
 	"github.com/jadwahab/libsv/utils"
 )
 
@@ -64,7 +64,7 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 	s := NewScript()
 
 	s.AppendOpCode(utils.OpHASH160)
-	secretBytesHash := crypto.Hash160([]byte(secret))
+	secretBytesHash := hash.Hash160([]byte(secret))
 	s.AppendPushDataToScript(secretBytesHash)
 	s.AppendOpCode(utils.OpEQUALVERIFY)
 

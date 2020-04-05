@@ -40,7 +40,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/jadwahab/libsv"
+	address2 "github.com/jadwahab/libsv/address"
 	"github.com/jadwahab/libsv/utils"
 	"log"
 )
@@ -85,7 +85,7 @@ func makeCoinbaseInputTransaction(coinbaseData []byte) []byte {
 
 // AddressToScript comment
 func AddressToScript(address string) (script []byte, err error) {
-	decoded, err := libsv.DecodeString(address)
+	decoded, err := address2.DecodeString(address)
 
 	if err != nil {
 		return nil, err

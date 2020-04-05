@@ -1,6 +1,7 @@
-package libsv
+package address
 
 import (
+	"github.com/jadwahab/libsv/address"
 	"testing"
 )
 
@@ -8,11 +9,11 @@ func TestAddressToPubKeyHash(t *testing.T) {
 	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
 
 	addressTestnet := "mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd"
-	addr, err := NewAddressFromString(addressTestnet)
+	addr, err := address.NewAddressFromString(addressTestnet)
 	expectedPublicKeyhashTestnet := addr.PublicKeyHash
 
 	addressLive := "1E7ucTTWRTahCyViPhxSMor2pj4VGQdFMr"
-	addr2, err := NewAddressFromString(addressLive)
+	addr2, err := address.NewAddressFromString(addressLive)
 	expectedPublicKeyhashLivenet := addr2.PublicKeyHash
 
 	if err != nil {
@@ -32,7 +33,7 @@ func TestPublicKeyHashFromPublicKeyStr(t *testing.T) {
 	pubKey := "03630019a270db9f09ba635bccee980a0b96e19d89533c6a9be26e5f6282ccc47a"
 	expectedPublicKeyhash := "05a23cf9b42a0ccb5cf2b2bcb70bd3ac0d2c9852"
 
-	publicKeyHash, err := PublicKeyHashFromPublicKeyStr(pubKey)
+	publicKeyHash, err := address.PublicKeyHashFromPublicKeyStr(pubKey)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -49,11 +50,11 @@ func TestPublicKeyToAddress(t *testing.T) {
 	// pkh := "9cf8b938ce2b14f68c59d7ed166b2ae242198037"
 
 	expectedAddressTestnet := "mupwfbLpEposb7h4E8WyxCWbt5UYMHcV27"
-	addr, err := NewAddressFromPublicKey(publicKey, false)
+	addr, err := address.NewAddressFromPublicKey(publicKey, false)
 	addressTestnet := addr.AddressString
 
 	expectedAddressLive := "1FJzNYFqRoNcp1DSWZYc8HJH25sqPgmyw3"
-	addr2, err := NewAddressFromPublicKey(publicKey, true)
+	addr2, err := address.NewAddressFromPublicKey(publicKey, true)
 	addressLive := addr2.AddressString
 
 	if err != nil {
