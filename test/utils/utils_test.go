@@ -30,7 +30,7 @@ func TestReverseHexString(t *testing.T) {
 	}
 }
 func TestDifficultyFromBits(t *testing.T) {
-	// genisis block should be difficulty 1
+	// genesis block should be difficulty 1
 	testDifficulty("1d00ffff", float64(1), t)
 	testDifficulty("1745fb53", float64(4.022059196164954e+12), t)
 	testDifficulty("207fffff", float64(4.6565423739069247e-10), t)

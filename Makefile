@@ -1,3 +1,3 @@
-test: ;go clean -testcache; go test ./...;
+test: ;go clean -testcache; go test  ./... --cover;
 
 .PHONY:  test
