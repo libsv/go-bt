@@ -3,14 +3,14 @@ package address
 import (
 	"bytes"
 	"crypto/sha256"
+
 	"errors"
 	"fmt"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/utils"
 	"strings"
 )
 
-// https://github.com/cpacia/bchutil/blob/master/cashaddr.go
-
+// TODO: cleanup
 var (
 	prefixes map[string]string
 )

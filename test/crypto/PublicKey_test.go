@@ -1,12 +1,12 @@
 package crypto
 
 import (
-	"github.com/jadwahab/libsv/crypto"
+	"github.com/libsv/libsv/keys"
 	"testing"
 )
 
 func TestNewPublicKey(t *testing.T) {
-	p, err := crypto.NewPublicKey("xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4")
+	p, err := keys.NewPublicKey("xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4")
 	if err != nil {
 		t.Error(err)
 		return
@@ -27,7 +27,7 @@ func TestNewPublicKey(t *testing.T) {
 }
 
 func TestChild(t *testing.T) {
-	p, err := crypto.NewPublicKey("xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4")
+	p, err := keys.NewPublicKey("xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4")
 	if err != nil {
 		t.Error(err)
 		return
@@ -65,7 +65,7 @@ func TestChild(t *testing.T) {
 }
 
 func TestAddress(t *testing.T) {
-	p, err := crypto.NewPublicKey("xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4")
+	p, err := keys.NewPublicKey("xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4")
 	if err != nil {
 		t.Error(err)
 		return
@@ -80,7 +80,7 @@ func TestAddress(t *testing.T) {
 
 func TestGetXPub(t *testing.T) {
 	expected := "xpub661MyMwAqRbcFCY8gDwbuGXzaissPEB7QBGdktacSbuwPiXdftuKxCttUPAMxw7ezZ2DEcC9hPcoz5AK3S3corSXx5F1s3MNiqCBbQztkR4"
-	p, err := crypto.NewPublicKey(expected)
+	p, err := keys.NewPublicKey(expected)
 	if err != nil {
 		t.Error(err)
 		return

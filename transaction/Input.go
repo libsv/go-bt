@@ -3,7 +3,8 @@ package transaction
 import (
 	"encoding/binary"
 	"fmt"
-	utils2 "github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/script"
+	utils2 "github.com/libsv/libsv/utils"
 )
 
 /*
@@ -23,15 +24,15 @@ type Input struct {
 	PreviousTxHash     [32]byte
 	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
-	PreviousTxScript   *Script
-	SigScript          *Script
+	PreviousTxScript   *script.Script
+	SigScript          *script.Script
 	SequenceNumber     uint32
 }
 
 // NewInput creates a new Input object with a finalised sequence number.
 func NewInput() *Input {
 	b := make([]byte, 0)
-	s := NewScriptFromBytes(b)
+	s := script.NewScriptFromBytes(b)
 
 	return &Input{
 		SigScript:      s,
@@ -51,7 +52,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int) {
 	l, size := utils2.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	i.SigScript = NewScriptFromBytes(bytes[offset : offset+int(l)])
+	i.SigScript = script.NewScriptFromBytes(bytes[offset : offset+int(l)])
 
 	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 

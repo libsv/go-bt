@@ -4,8 +4,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"github.com/jadwahab/libsv/block"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/block"
+	"github.com/libsv/libsv/crypto"
+	script2 "github.com/libsv/libsv/script"
+	"github.com/libsv/libsv/utils"
 
 	"github.com/btcsuite/btcd/btcec"
 )
@@ -142,7 +144,7 @@ func (bt *BitcoinTransaction) AddInput(input *Input) {
 func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, script string, satoshis uint64) error {
 	i := &Input{
 		PreviousTxOutIndex: vout,
-		PreviousTxScript:   NewScriptFromString(script),
+		PreviousTxScript:   script2.NewScriptFromString(script),
 		PreviousTxSatoshis: satoshis,
 	}
 
@@ -219,7 +221,7 @@ func (bt *BitcoinTransaction) GetOutputs() []*Output {
 // GetTxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
 func (bt *BitcoinTransaction) GetTxID() string {
-	return hex.EncodeToString(utils.ReverseBytes(utils.Sha256d(bt.Hex())))
+	return hex.EncodeToString(utils.ReverseBytes(crypto.Sha256d(bt.Hex())))
 }
 
 // Hex encodes the transaction into a hex byte array.
@@ -321,7 +323,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			buf = append(buf, (SighashAll | SighashForkID))
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].SigScript = NewScriptFromBytes(buf)
+			bt.Inputs[index].SigScript = script2.NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 	}
@@ -400,7 +402,7 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 			buf = append(buf, (SighashAll | SighashForkID))
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].SigScript = NewScriptFromBytes(buf)
+			bt.Inputs[index].SigScript = script2.NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 	}

@@ -3,7 +3,8 @@ package block
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/libsv/utils"
 )
 
 func getHashes(txHashes []string) []string {
@@ -44,7 +45,7 @@ func GetMerkleBranches(template []string) []string {
 			}
 
 			concat := append(a, b...)
-			hash := utils.Sha256d(concat)
+			hash := crypto.Sha256d(concat)
 			results = append(results, hex.EncodeToString(hash[:]))
 		}
 
@@ -74,9 +75,9 @@ func MerkleRootFromBranches(txHash string, txIndex int, branches []string) (stri
 		h = utils.ReverseBytes(h)
 
 		if txIndex&1 > 0 {
-			hash = utils.Sha256d(append(h, hash...))
+			hash = crypto.Sha256d(append(h, hash...))
 		} else {
-			hash = utils.Sha256d(append(hash, h...))
+			hash = crypto.Sha256d(append(hash, h...))
 		}
 
 		txIndex >>= 1

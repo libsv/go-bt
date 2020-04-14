@@ -1,8 +1,8 @@
 package block
 
 import (
-	"github.com/jadwahab/libsv/block"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/block"
+	"github.com/libsv/libsv/utils"
 	"testing"
 )
 

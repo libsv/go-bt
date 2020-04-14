@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"encoding/hex"
-	"github.com/jadwahab/libsv/transaction"
+	"github.com/libsv/libsv/transaction"
 	"testing"
 )
 

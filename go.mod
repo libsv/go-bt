@@ -1,4 +1,4 @@
-module github.com/jadwahab/libsv
+module github.com/libsv/libsv
 
 go 1.13
 

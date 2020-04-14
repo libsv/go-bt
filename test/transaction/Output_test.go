@@ -3,9 +3,9 @@ package transaction
 import (
 	"encoding/hex"
 	"fmt"
-	address2 "github.com/jadwahab/libsv/address"
-	"github.com/jadwahab/libsv/transaction"
-	utils2 "github.com/jadwahab/libsv/utils"
+	address2 "github.com/libsv/libsv/address"
+	"github.com/libsv/libsv/transaction"
+	utils2 "github.com/libsv/libsv/utils"
 	"testing"
 )
 

@@ -4,8 +4,9 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/jadwahab/libsv/crypto/hash"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/libsv/script"
+	"github.com/libsv/libsv/utils"
 )
 
 /*
@@ -41,14 +42,14 @@ func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, 
 	if err != nil {
 		return nil, err
 	}
-	script := make([]byte, 0, len(publicKeyHash)+8)
-	script = append(script, utils.OpDUP)
-	script = append(script, utils.OpHASH160)
-	script = append(script, utils.VarInt(uint64(len(publicKeyHash)/2))...)
-	script = append(script, publicKeyHashBytes...)
-	script = append(script, utils.OpEQUALVERIFY)
-	script = append(script, utils.OpCHECKSIG)
-	o.Script = script
+	s := make([]byte, 0, len(publicKeyHash)+8)
+	s = append(s, utils.OpDUP)
+	s = append(s, utils.OpHASH160)
+	s = append(s, utils.VarInt(uint64(len(publicKeyHash)/2))...)
+	s = append(s, publicKeyHashBytes...)
+	s = append(s, utils.OpEQUALVERIFY)
+	s = append(s, utils.OpCHECKSIG)
+	o.Script = s
 	return &o, nil
 }
 
@@ -61,10 +62,10 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 	if err != nil {
 		return nil, err
 	}
-	s := NewScript()
+	s := script.NewScript()
 
 	s.AppendOpCode(utils.OpHASH160)
-	secretBytesHash := hash.Hash160([]byte(secret))
+	secretBytesHash := crypto.Hash160([]byte(secret))
 	s.AppendPushDataToScript(secretBytesHash)
 	s.AppendOpCode(utils.OpEQUALVERIFY)
 
@@ -97,7 +98,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 // passed in encoded as hex.
 func NewOutputOpReturn(data []byte) (*Output, error) {
 
-	b, err := utils.EncodeParts([][]byte{data})
+	b, err := script.EncodeParts([][]byte{data})
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +116,7 @@ func NewOutputOpReturn(data []byte) (*Output, error) {
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
 func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
 
-	b, err := utils.EncodeParts(data)
+	b, err := script.EncodeParts(data)
 	if err != nil {
 		return nil, err
 	}

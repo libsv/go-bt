@@ -1,7 +1,7 @@
 package address
 
 import (
-	"github.com/jadwahab/libsv/address"
+	"github.com/libsv/libsv/address"
 	"testing"
 )
 

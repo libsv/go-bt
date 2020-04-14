@@ -3,7 +3,7 @@ package block
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jadwahab/libsv/block"
+	"github.com/libsv/libsv/block"
 	"testing"
 )
 

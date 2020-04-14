@@ -3,7 +3,7 @@ package transaction
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jadwahab/libsv/transaction"
+	"github.com/libsv/libsv/script"
 	"io/ioutil"
 	"log"
 	"os"
@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 func TestMultiSig(t *testing.T) {
 
 	// Create 2of2 redeem script
-	rs, err := transaction.NewRedeemScript(2)
+	rs, err := script.NewRedeemScript(2)
 	if err != nil {
 		t.Error(err)
 	}

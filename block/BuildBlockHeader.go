@@ -3,7 +3,7 @@ package block
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/utils"
 )
 
 // BuildBlockHeader builds the block header byte array from the specific fields in the header.

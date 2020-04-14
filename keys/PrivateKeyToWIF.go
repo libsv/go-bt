@@ -1,8 +1,8 @@
-package crypto
+package keys
 
 import (
-	"github.com/jadwahab/libsv/address"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/address"
+	"github.com/libsv/libsv/crypto"
 )
 
 // PrivateKeyToWIF takes a 256 bit private key and outputs it in Wallet Interchange Format
@@ -12,7 +12,7 @@ func PrivateKeyToWIF(key []byte) string {
 	key = append(b, key...)
 
 	// Perform double SHA-256 hash on the extended key...
-	checksum := utils.Sha256d(key)
+	checksum := crypto.Sha256d(key)
 
 	// Take the first 4 bytes of the double SHA-256 hash, this is the checksum.  Append it to the extended key.
 	key = append(key, checksum[0:4]...)
