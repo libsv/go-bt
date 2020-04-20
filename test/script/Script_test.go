@@ -2,9 +2,24 @@ package script
 
 import (
 	"encoding/hex"
-	"github.com/libsv/libsv/script"
 	"testing"
+
+	"github.com/libsv/libsv/script"
 )
+
+func TestNewP2PKHScriptFromPubKeyStr(t *testing.T) {
+	scriptP2PKH, err := script.NewP2PKHScriptFromPubKeyStr("023717efaec6761e457f55c8417815505b695209d0bbfed8c3265be425b373c2d6")
+	if err != nil {
+		t.Error(err)
+	}
+
+	res := hex.EncodeToString(*scriptP2PKH)
+	expected := "76a9144d5d1920331b71735a97a606d9734aed83cb3dfa88ac"
+
+	if res != expected {
+		t.Errorf("Expected %q, got %q", expected, res)
+	}
+}
 
 func TestIsPublicKeyHashOut(t *testing.T) {
 	b, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")

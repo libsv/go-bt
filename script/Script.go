@@ -3,6 +3,8 @@ package script
 import (
 	"encoding/hex"
 	"fmt"
+
+	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/utils"
 )
 
@@ -25,6 +27,28 @@ func NewScriptFromString(s string) *Script {
 func NewScriptFromBytes(b []byte) *Script {
 	s := Script(b)
 	return &s
+}
+
+// NewP2PKHScriptFromPubKeyStr takes a public key hex string (in
+// compressed format) and creates a P2PKH script from it.
+func NewP2PKHScriptFromPubKeyStr(pubKey string) (*Script, error) {
+	pubKeyBytes, err := hex.DecodeString(pubKey)
+	if err != nil {
+		return nil, err
+	}
+	hash := crypto.Hash160(pubKeyBytes)
+
+	b := []byte{
+		utils.OpDUP,
+		utils.OpHASH160,
+		0x14,
+	}
+	b = append(b, hash...)
+	b = append(b, utils.OpEQUALVERIFY)
+	b = append(b, utils.OpCHECKSIG)
+
+	s := Script(b)
+	return &s, nil
 }
 
 // ToString returns hex string of script.
