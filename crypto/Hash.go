@@ -26,6 +26,6 @@ func Ripemd160(b []byte) []byte {
 
 // Hash160 hashes with SHA256 and then hashes again with RIPEMD160.
 func Hash160(b []byte) []byte {
-	h := Sha256(b)
-	return Ripemd160(h[:])
+	hash := Sha256(b)
+	return Ripemd160(hash[:])
 }

@@ -1,4 +1,4 @@
-package crypto
+package keys
 
 import (
 	"github.com/libsv/libsv/keys"
