@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/utils"
 	"testing"
 )
 

@@ -1,12 +1,11 @@
-package transaction
+package script
 
 import (
-	"crypto/sha256"
 	"encoding/binary"
 	"errors"
-	"github.com/jadwahab/libsv/crypto"
-	hash2 "github.com/jadwahab/libsv/crypto/hash"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/libsv/keys"
+	"github.com/libsv/libsv/utils"
 	"log"
 
 	"github.com/btcsuite/btcutil/base58"
@@ -38,7 +37,7 @@ func NewRedeemScript(signaturesRequired int) (*RedeemScript, error) {
 
 // NewRedeemScriptFromElectrum  TODO:
 func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
-	parts, err := utils.DecodeStringParts(script)
+	parts, err := DecodeStringParts(script)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +86,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		}
 
 		// rs.AddPublicKey("", s)
-		publicKey, err := crypto.NewPublicKey(xpub)
+		publicKey, err := keys.NewPublicKey(xpub)
 		if err != nil {
 			return nil, err
 		}
@@ -111,6 +110,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 	return rs, nil
 }
 
+// Base58Encode encodes a byte sequence into base58 encoding
 func Base58Encode(input []byte) string {
 	b := make([]byte, 0, len(input)+4)
 	b = append(b, input[:]...)
@@ -120,9 +120,8 @@ func Base58Encode(input []byte) string {
 }
 
 func checksum(input []byte) (cksum [4]byte) {
-	h := sha256.Sum256(input)
-	h2 := sha256.Sum256(h[:])
-	copy(cksum[:], h2[:4])
+	h := crypto.Sha256d(input)
+	copy(cksum[:], h[:4])
 	return
 }
 
@@ -133,7 +132,7 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 		return errors.New("We only support derivation paths with exactly 2 levels")
 	}
 
-	pk, err := crypto.NewPublicKey(pkey)
+	pk, err := keys.NewPublicKey(pkey)
 	if err != nil {
 		return err
 	}
@@ -155,9 +154,10 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 	return nil
 }
 
+// GetAddress returns the address from a redeem script
 func (rs *RedeemScript) GetAddress() string {
 	script := rs.GetRedeemScript()
-	hash := hash2.Hash160(script)
+	hash := crypto.Hash160(script)
 	// hash = append([]byte{0x05}, hash...)
 	return base58.CheckEncode(hash, 0x05)
 }
@@ -166,6 +166,7 @@ func (rs *RedeemScript) getPublicKeys() [][]byte {
 	return rs.PublicKeys
 }
 
+// GetRedeemScript returns the redeem script
 func (rs *RedeemScript) GetRedeemScript() []byte {
 	var b []byte
 
@@ -183,8 +184,9 @@ func (rs *RedeemScript) GetRedeemScript() []byte {
 	return b
 }
 
+// GetRedeemScriptHash returns the hash 160 of the redeem script
 func (rs *RedeemScript) GetRedeemScriptHash() []byte {
-	return hash2.Hash160(rs.GetRedeemScript())
+	return crypto.Hash160(rs.GetRedeemScript())
 }
 
 func (rs *RedeemScript) getScriptPubKey() []byte {

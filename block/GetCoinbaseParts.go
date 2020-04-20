@@ -40,8 +40,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	address2 "github.com/jadwahab/libsv/address"
-	"github.com/jadwahab/libsv/utils"
+	address2 "github.com/libsv/libsv/address"
+	"github.com/libsv/libsv/utils"
 	"log"
 )
 

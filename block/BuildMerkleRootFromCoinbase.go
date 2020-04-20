@@ -2,7 +2,7 @@ package block
 
 import (
 	"encoding/hex"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/crypto"
 )
 
 // BuildMerkleRootFromCoinbase builds the merkle root of the block from the coinbase transaction hash (txid)
@@ -13,8 +13,10 @@ func BuildMerkleRootFromCoinbase(coinbaseHash []byte, merkleBranches []string) [
 	for i := 0; i < len(merkleBranches); i++ {
 		branch, _ := hex.DecodeString(merkleBranches[i])
 		concat := append(acc, branch...)
-		hash := utils.Sha256d(concat)
+		hash := crypto.Sha256d(concat)
 		acc = hash[:]
 	}
 	return acc
 }
+
+// TODO: build generic merkle root

@@ -1,15 +1,14 @@
 package address
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/jadwahab/libsv/crypto/hash"
-
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/libsv/libsv/crypto"
 )
 
+// Base58Encode encodes a byte sequence into base58 encoding
 func Base58Encode(input []byte) string {
 	b := make([]byte, 0, len(input)+4)
 	b = append(b, input[:]...)
@@ -19,9 +18,8 @@ func Base58Encode(input []byte) string {
 }
 
 func checksum(input []byte) (cksum [4]byte) {
-	h := sha256.Sum256(input)
-	h2 := sha256.Sum256(h[:])
-	copy(cksum[:], h2[:4])
+	h := crypto.Sha256d(input)
+	copy(cksum[:], h[:4])
 	return
 }
 
@@ -29,7 +27,7 @@ func checksum(input []byte) (cksum [4]byte) {
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
 func AddressFromPublicKey(pubKey *btcec.PublicKey, mainnet bool) string {
-	hash := hash.Hash160(pubKey.SerializeCompressed())
+	hash := crypto.Hash160(pubKey.SerializeCompressed())
 
 	// regtest := 111
 	// mainnet: 0
@@ -78,7 +76,7 @@ func PublicKeyHashFromPublicKeyStr(pubKeyStr string) (string, error) {
 // PublicKeyHashFromPublicKey hashes a btcec public key (in compressed format starting with 03 or 02)
 // and returns the hash encoded as a string of hex values.
 func PublicKeyHashFromPublicKey(pubKey *btcec.PublicKey) string {
-	hash := hash.Hash160(pubKey.SerializeCompressed())
+	hash := crypto.Hash160(pubKey.SerializeCompressed())
 
 	return hex.EncodeToString(hash)
 }
@@ -137,7 +135,7 @@ func NewAddressFromString(addr string) (*Address, error) {
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
 func NewAddressFromPublicKey(pubKey string, mainnet bool) (*Address, error) {
-	return NewAddressFromPublicKeyHash(hash.Hash160([]byte(pubKey)), mainnet)
+	return NewAddressFromPublicKeyHash(crypto.Hash160([]byte(pubKey)), mainnet)
 }
 
 // NewAddressFromPublicKeyHash takes a public key hash in bytes and returns an Address struct pointer.

@@ -1,9 +1,9 @@
-package transaction
+package script
 
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/utils"
 )
 
 // Script type
@@ -34,7 +34,7 @@ func (s *Script) ToString() string {
 
 // AppendPushDataToScript takes data bytes and appends them to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataToScript(d []byte) error {
-	p, err := utils.EncodeParts([][]byte{d})
+	p, err := EncodeParts([][]byte{d})
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (s *Script) AppendPushDataStringToScript(str string) error {
 
 // AppendPushDataArrayToScript takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataArrayToScript(d [][]byte) error {
-	p, err := utils.EncodeParts(d)
+	p, err := EncodeParts(d)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func (s *Script) IsPublicKeyHashOut() bool {
 
 // IsPublicKeyOut returns true if this is a public key output script.
 func (s *Script) IsPublicKeyOut() bool {
-	parts, err := utils.DecodeParts(*s)
+	parts, err := DecodeParts(*s)
 	if err != nil {
 		return false
 	}
@@ -123,7 +123,7 @@ func (s *Script) IsScriptHashOut() bool {
 
 // IsMultisigOut returns true if this is a multisig output script.
 func (s *Script) IsMultisigOut() bool {
-	parts, err := utils.DecodeParts(*s)
+	parts, err := DecodeParts(*s)
 	if err != nil {
 		return false
 	}
@@ -160,7 +160,7 @@ func (s *Script) GetPublicKeyHash() ([]byte, error) {
 		return nil, fmt.Errorf("Not a P2PKH")
 	}
 
-	parts, err := utils.DecodeParts((*s)[2:])
+	parts, err := DecodeParts((*s)[2:])
 	if err != nil {
 		return nil, err
 	}

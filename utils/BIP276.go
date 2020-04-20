@@ -1,27 +1,25 @@
 package utils
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/libsv/libsv/crypto"
 	"regexp"
 	"strconv"
 )
 
 const PrefixScript = "bitcoin-script"
-const prefixTemplate = "bitcoin-template"
+
+//const prefixTemplate = "bitcoin-template"
 
 const CurrentVersion = 1
 
 const NetworkMainnet = 1
-const networkTestnet = 2
 
-func sha256d(b []byte) []byte {
-	first := sha256.Sum256(b)
-	second := sha256.Sum256(first[:])
-	return second[:]
-}
+//const networkTestnet = 2
+
+// TODO: consider moving to script or utils
 
 // EncodeBIP276 is used to encode specific (non-standard) scripts in BIP276 format.
 // See https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki
@@ -37,7 +35,7 @@ func EncodeBIP276(prefix string, network int, version int, data []byte) string {
 
 func createBIP276(prefix string, network int, version int, data []byte) (string, string) {
 	payload := fmt.Sprintf("%s:%.2x%.2x%x", prefix, network, version, data)
-	checksum := hex.EncodeToString(sha256d([]byte(payload))[:4])
+	checksum := hex.EncodeToString(crypto.Sha256d([]byte(payload))[:4])
 
 	return payload, checksum
 }

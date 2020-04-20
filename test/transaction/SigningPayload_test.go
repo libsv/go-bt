@@ -2,7 +2,8 @@ package transaction
 
 import (
 	"encoding/json"
-	"github.com/jadwahab/libsv/transaction"
+	"github.com/libsv/libsv/script"
+	"github.com/libsv/libsv/transaction"
 	"testing"
 )
 
@@ -74,7 +75,7 @@ func TestGetSighashForInput(t *testing.T) {
 
 	//Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = uint64(100000000)
-	tx.Inputs[0].PreviousTxScript = transaction.NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+	tx.Inputs[0].PreviousTxScript = script.NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
 	expectedSigHash := "b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe"
 	actualSigHash := transaction.GetSighashForInput(tx, (transaction.SighashAll | transaction.SighashForkID), uint32(0))

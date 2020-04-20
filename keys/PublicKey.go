@@ -1,16 +1,16 @@
-package crypto
+package keys
 
 import (
 	"bytes"
 	"crypto/hmac"
-	"crypto/sha256"
+	"github.com/libsv/libsv/crypto"
+
 	"crypto/sha512"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"github.com/jadwahab/libsv/address"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/address"
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -67,7 +67,7 @@ func NewPrivateKey(xprv string) (*PublicKey, error) {
 
 	// The fingerprint is the 1st 4 bytes of the ripemd160 of the sha256 of the public key.
 	// hasher := ripemd160.New()
-	// sha := sha256.Sum256(publicKey)
+	// sha := Sha256(publicKey)
 	// hasher.Write(sha[:])
 	// hashBytes := hasher.Sum(nil)
 	// fingerPrint := hashBytes[0:4]
@@ -103,7 +103,7 @@ func NewPublicKey(xpub string) (*PublicKey, error) {
 
 	// The fingerprint is the 1st 4 bytes of the ripemd160 of the sha256 of the public key.
 	hasher := ripemd160.New()
-	sha := sha256.Sum256(publicKey)
+	sha := crypto.Sha256(publicKey)
 	hasher.Write(sha[:])
 	hashBytes := hasher.Sum(nil)
 	fingerPrint := hashBytes[0:4]
@@ -160,7 +160,7 @@ func (pk *PublicKey) Child(i uint32) (*PublicKey, error) {
 		return nil, errors.New("Invalid Child")
 	}
 	newKey := addPubKeys(privToPub(I[:32]), pk.PublicKey)
-	fingerPrint := hash160(pk.PublicKey)[:4]
+	fingerPrint := crypto.Hash160(pk.PublicKey)[:4]
 
 	child := &PublicKey{
 		Network: "livenet",
@@ -191,8 +191,8 @@ func (pk *PublicKey) Address() (string, error) {
 	} else {
 		prefix, _ = hex.DecodeString("00")
 	}
-	addr1 := append(prefix, hash160(pk.PublicKey)...)
-	chksum := utils.Sha256d(addr1)
+	addr1 := append(prefix, crypto.Hash160(pk.PublicKey)...)
+	chksum := crypto.Sha256d(addr1)
 	return base58.Encode(append(addr1, chksum[:4]...)), nil
 }
 
@@ -235,14 +235,6 @@ func privToPub(key []byte) []byte {
 	return compress(curve.ScalarBaseMult(key))
 }
 
-func hash160(data []byte) []byte {
-	sha := sha256.New()
-	ripe := ripemd160.New()
-	sha.Write(data)
-	ripe.Write(sha.Sum(nil))
-	return ripe.Sum(nil)
-}
-
 func uint32ToByte(i uint32) []byte {
 	a := make([]byte, 4)
 	binary.BigEndian.PutUint32(a, i)
@@ -275,7 +267,7 @@ func (pk *PublicKey) GetXPub() string {
 	copy(bindata[9:], pk.ChildIndex)
 	copy(bindata[13:], pk.ChainCode)
 	copy(bindata[45:], pk.PublicKey)
-	chksum := utils.Sha256d(bindata)[:4]
+	chksum := crypto.Sha256d(bindata)[:4]
 
 	// fmt.Printf("Checksum:    %+v\n", chksum)
 
@@ -294,4 +286,10 @@ func byteToUint16(b []byte) uint16 {
 		b = append(zero, b...)
 	}
 	return binary.BigEndian.Uint16(b)
+}
+
+func pubKeyFromPrivate(private []byte) []byte {
+	_, pubkey := btcec.PrivKeyFromBytes(btcec.S256(), private)
+	//pubkeyaddr  := &pubkey
+	return pubkey.SerializeCompressed()
 }

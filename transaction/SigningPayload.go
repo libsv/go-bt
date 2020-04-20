@@ -4,10 +4,12 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"github.com/jadwahab/libsv/utils"
+	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/libsv/script"
+	"github.com/libsv/libsv/utils"
 )
 
-// SigningItem contains the metadata neeeded to sign a transaction.
+// SigningItem contains the metadata needed to sign a transaction.
 type SigningItem struct {
 	PublicKeyHash string `json:"publicKeyHash"`
 	SigHash       string `json:"sigHash"`
@@ -70,7 +72,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 			buf = append(buf, oi...)
 		}
 
-		return utils.Sha256d(buf)
+		return crypto.Sha256d(buf)
 	}
 
 	getSequenceHash := func(tx *BitcoinTransaction) []byte {
@@ -82,7 +84,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 			buf = append(buf, oi...)
 		}
 
-		return utils.Sha256d(buf)
+		return crypto.Sha256d(buf)
 	}
 
 	getOutputsHash := func(tx *BitcoinTransaction, n int32) []byte {
@@ -96,7 +98,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 			buf = append(buf, tx.Outputs[n].getBytesForSigHash()...)
 		}
 
-		return utils.Sha256d(buf)
+		return crypto.Sha256d(buf)
 	}
 
 	hashPrevouts := make([]byte, 32)
@@ -167,11 +169,12 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 	st := make([]byte, 4)
 	binary.LittleEndian.PutUint32(st, sighashType>>0)
 	buf = append(buf, st...)
-	ret := utils.Sha256d(buf)
+	ret := crypto.Sha256d(buf)
 	return hex.EncodeToString(utils.ReverseBytes(ret))
 }
 
-func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, previousTxOutIndex uint32, previousTxSatoshis uint64, previousTxScript *Script) string {
+// GetSighashForInputValidation comment todo
+func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, previousTxOutIndex uint32, previousTxSatoshis uint64, previousTxScript *script.Script) string {
 
 	input := transaction.Inputs[inputNumber]
 
@@ -185,7 +188,7 @@ func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 			buf = append(buf, oi...)
 		}
 
-		return utils.Sha256d(buf)
+		return crypto.Sha256d(buf)
 	}
 
 	getSequenceHash := func(tx *BitcoinTransaction) []byte {
@@ -197,7 +200,7 @@ func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 			buf = append(buf, oi...)
 		}
 
-		return utils.Sha256d(buf)
+		return crypto.Sha256d(buf)
 	}
 
 	getOutputsHash := func(tx *BitcoinTransaction, n int32) []byte {
@@ -211,7 +214,7 @@ func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 			buf = append(buf, tx.Outputs[n].getBytesForSigHash()...)
 		}
 
-		return utils.Sha256d(buf)
+		return crypto.Sha256d(buf)
 	}
 
 	hashPrevouts := make([]byte, 32)
@@ -282,6 +285,6 @@ func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 	st := make([]byte, 4)
 	binary.LittleEndian.PutUint32(st, sighashType>>0)
 	buf = append(buf, st...)
-	ret := utils.Sha256d(buf)
+	ret := crypto.Sha256d(buf)
 	return hex.EncodeToString(utils.ReverseBytes(ret))
 }

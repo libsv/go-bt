@@ -1,8 +1,8 @@
-package crypto
+package keys
 
 import (
 	"encoding/hex"
-	"github.com/jadwahab/libsv/crypto"
+	"github.com/libsv/libsv/keys"
 	"testing"
 )
 
@@ -13,7 +13,7 @@ func TestPrivateKeyToWif1(t *testing.T) {
 		t.Error(err)
 	}
 
-	wif := crypto.PrivateKeyToWIF(hex)
+	wif := keys.PrivateKeyToWIF(hex)
 	if wif != "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ" {
 		t.Errorf("PrivateKeyToWIF failed")
 	}
@@ -26,7 +26,7 @@ func TestPrivateKeyToWif2(t *testing.T) {
 		t.Error(err)
 	}
 
-	wif := crypto.PrivateKeyToWIF(hex)
+	wif := keys.PrivateKeyToWIF(hex)
 	if wif != "5KehCbbxxMsPomgbYqJf2VXKtiD8UKVuaHStjaUyRsZ1X2KjmFZ" {
 		t.Errorf("PrivateKeyToWIF failed")
 	}
