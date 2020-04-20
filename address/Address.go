@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
-	"math/big"
 	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -13,9 +11,6 @@ import (
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/utils"
 )
-
-const base58table = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-const radix = 58
 
 // An Address struct contains the address string as well as the hash160 hexstring of the public key.
 // The address string will be human readable and specific to the network type, but the public key hash
@@ -40,8 +35,7 @@ func NewAddressFromString(addr string) (*Address, error) {
 }
 
 func addressToPubKeyHashStr(address string) (publicKeyHash string, err error) {
-	// decoded, err := DecodeString(address)
-	decoded, _, err := decode(address)
+	decoded, err := DecodeString(address)
 
 	if err != nil {
 		return "", err
@@ -66,41 +60,6 @@ func addressToPubKeyHashStr(address string) (publicKeyHash string, err error) {
 	default:
 		return "", fmt.Errorf("Address %s is not supported", address)
 	}
-}
-
-//  decode address string (base58) into bytes and length (int).
-func decode(addr string) ([]byte, int, error) {
-	answer := big.NewInt(0)
-	j := big.NewInt(1)
-
-	for i := len(addr) - 1; i >= 0; i-- {
-		tmp := strings.IndexAny(base58table, string(addr[i]))
-		if tmp == -1 {
-			log.Println(addr)
-			return []byte(""), 0,
-				errors.New("encoding/base58: invalid character found: ~" +
-					string(addr[i]) + "~")
-		}
-		idx := big.NewInt(int64(tmp))
-		tmp1 := big.NewInt(0)
-		tmp1.Mul(j, idx)
-
-		answer.Add(answer, tmp1)
-		j.Mul(j, big.NewInt(radix))
-	}
-
-	tmpval := answer.Bytes()
-
-	var numZeros int
-	for numZeros = 0; numZeros < len(addr); numZeros++ {
-		if addr[numZeros] != base58table[0] {
-			break
-		}
-	}
-	flen := numZeros + len(tmpval)
-	val := make([]byte, flen, flen)
-	copy(val[numZeros:], tmpval)
-	return val, len(val), nil
 }
 
 // NewAddressFromPublicKeyString takes a public key string and returns an Address struct pointer.
