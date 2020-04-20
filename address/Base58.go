@@ -16,9 +16,6 @@ import (
 )
 
 const base58table = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-
-//var errInvalid = errors.New("encoding/base58: invalid character found")
-
 const radix = 58
 
 // Decode decodes src base10 string and returns the base58 encoded string

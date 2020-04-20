@@ -1,71 +1,114 @@
 package address
 
 import (
-	"github.com/libsv/libsv/address"
+	"encoding/hex"
 	"testing"
+
+	"github.com/btcsuite/btcd/btcec"
+	"github.com/libsv/libsv/address"
 )
 
-func TestAddressToPubKeyHash(t *testing.T) {
-	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
+func TestNewAddressFromStringMainnet(t *testing.T) {
+	addressMain := "1E7ucTTWRTahCyViPhxSMor2pj4VGQdFMr"
+	expectedPublicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
 
+	addr, err := address.NewAddressFromString(addressMain)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if addr.PublicKeyHash != expectedPublicKeyhash {
+		t.Errorf("PKH from Main address %s incorrect,\ngot: %s\nexpected: %s", addressMain, addr.PublicKeyHash, expectedPublicKeyhash)
+	}
+
+	if addr.AddressString != addressMain {
+		t.Errorf("Address from Main address %s incorrect,\ngot: %s\nexpected: %s", addressMain, addr.AddressString, addressMain)
+	}
+}
+
+func TestNewAddressFromStringTestnet(t *testing.T) {
 	addressTestnet := "mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd"
+	expectedPublicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
+
 	addr, err := address.NewAddressFromString(addressTestnet)
-	expectedPublicKeyhashTestnet := addr.PublicKeyHash
-
-	addressLive := "1E7ucTTWRTahCyViPhxSMor2pj4VGQdFMr"
-	addr2, err := address.NewAddressFromString(addressLive)
-	expectedPublicKeyhashLivenet := addr2.PublicKeyHash
-
 	if err != nil {
 		t.Error(err)
 	}
 
-	if publicKeyhash != expectedPublicKeyhashTestnet {
-		t.Errorf("PKH from testnet address %s incorrect,\ngot: %s\nexpected: %s", addressTestnet, publicKeyhash, expectedPublicKeyhashTestnet)
+	if addr.PublicKeyHash != expectedPublicKeyhash {
+		t.Errorf("PKH from Main address %s incorrect,\ngot: %s\nexpected: %s", addressTestnet, addr.PublicKeyHash, expectedPublicKeyhash)
 	}
 
-	if publicKeyhash != expectedPublicKeyhashLivenet {
-		t.Errorf("PKH from Live address %s incorrect,\ngot: %s\nexpected: %s", addressLive, publicKeyhash, expectedPublicKeyhashTestnet)
+	if addr.AddressString != addressTestnet {
+		t.Errorf("Address from Main address %s incorrect,\ngot: %s\nexpected: %s", addressTestnet, addr.AddressString, addressTestnet)
 	}
 }
 
-func TestPublicKeyHashFromPublicKeyStr(t *testing.T) {
-	pubKey := "03630019a270db9f09ba635bccee980a0b96e19d89533c6a9be26e5f6282ccc47a"
-	expectedPublicKeyhash := "05a23cf9b42a0ccb5cf2b2bcb70bd3ac0d2c9852"
+func TestNewAddressFromPublicKeyStringMainnet(t *testing.T) {
+	pubKey := "026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce"
+	expectedPublicKeyhash := "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"
+	expectedAddress := "114ZWApV4EEU8frr7zygqQcB1V2BodGZuS"
 
-	publicKeyHash, err := address.PublicKeyHashFromPublicKeyStr(pubKey)
+	addr, err := address.NewAddressFromPublicKeyString(pubKey, true)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
 
-	if expectedPublicKeyhash != publicKeyHash {
-		t.Logf("Expected %q, got %q", expectedPublicKeyhash, publicKeyHash)
-		t.FailNow()
+	if addr.PublicKeyHash != expectedPublicKeyhash {
+		t.Errorf("PKH is incorrect,\ngot: %s\nexpected: %s", addr.PublicKeyHash, expectedPublicKeyhash)
+	}
+
+	if addr.AddressString != expectedAddress {
+		t.Errorf("Address is incorrect,\ngot: %s\nexpected: %s", addr.AddressString, expectedAddress)
 	}
 }
 
-func TestPublicKeyToAddress(t *testing.T) {
-	publicKey := "0285e9737a74c30a873f74df05124f2aa6f53042c2fc0a130d6cbd7d16b944b004"
-	// pkh := "9cf8b938ce2b14f68c59d7ed166b2ae242198037"
+func TestNewAddressFromPublicKeyStringTestnet(t *testing.T) {
+	pubKey := "026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce"
+	expectedPublicKeyhash := "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"
+	expectedAddress := "mfaWoDuTsFfiunLTqZx4fKpVsUctiDV9jk"
 
-	expectedAddressTestnet := "mupwfbLpEposb7h4E8WyxCWbt5UYMHcV27"
-	addr, err := address.NewAddressFromPublicKey(publicKey, false)
-	addressTestnet := addr.AddressString
-
-	expectedAddressLive := "1FJzNYFqRoNcp1DSWZYc8HJH25sqPgmyw3"
-	addr2, err := address.NewAddressFromPublicKey(publicKey, true)
-	addressLive := addr2.AddressString
-
+	addr, err := address.NewAddressFromPublicKeyString(pubKey, false)
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 
-	if addressTestnet != expectedAddressTestnet {
-		t.Errorf("Address Testnet from public key address %s incorrect,\ngot: %s\nexpected: %s", publicKey, addressTestnet, expectedAddressTestnet)
+	if addr.PublicKeyHash != expectedPublicKeyhash {
+		t.Errorf("PKH is incorrect,\ngot: %s\nexpected: %s", addr.PublicKeyHash, expectedPublicKeyhash)
 	}
 
-	if addressLive != expectedAddressLive {
-		t.Errorf("Address Live from public key  %s incorrect,\ngot: %s\nexpected: %s", publicKey, addressLive, expectedAddressLive)
+	if addr.AddressString != expectedAddress {
+		t.Errorf("Address is incorrect,\ngot: %s\nexpected: %s", addr.AddressString, expectedAddress)
+	}
+}
+
+func TestNewAddressFromPublicKey(t *testing.T) {
+	pubKeyBytes, err := hex.DecodeString("026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	pubKey, err := btcec.ParsePubKey(pubKeyBytes, btcec.S256())
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	expectedPublicKeyhash := "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"
+	expectedAddress := "114ZWApV4EEU8frr7zygqQcB1V2BodGZuS"
+
+	addr, err := address.NewAddressFromPublicKey(pubKey, true)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	if addr.PublicKeyHash != expectedPublicKeyhash {
+		t.Errorf("PKH is incorrect,\ngot: %s\nexpected: %s", addr.PublicKeyHash, expectedPublicKeyhash)
+	}
+
+	if addr.AddressString != expectedAddress {
+		t.Errorf("Address is incorrect,\ngot: %s\nexpected: %s", addr.AddressString, expectedAddress)
 	}
 }
