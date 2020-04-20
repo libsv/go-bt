@@ -2,14 +2,24 @@ package address
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"log"
+	"math/big"
+	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/libsv/utils"
 )
 
-// An Address contains the address string as well as the public key hash string.
+const base58table = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+const radix = 58
+
+// An Address struct contains the address string as well as the hash160 hexstring of the public key.
+// The address string will be human readable and specific to the network type, but the public key hash
+// is useful because it stays the same regardless of the network type (mainnet, testnet).
 type Address struct {
 	AddressString string
 	PublicKeyHash string
@@ -29,9 +39,9 @@ func NewAddressFromString(addr string) (*Address, error) {
 	return &a, nil
 }
 
-// addressToPubKeyHashStr comment
 func addressToPubKeyHashStr(address string) (publicKeyHash string, err error) {
-	decoded, err := DecodeString(address)
+	// decoded, err := DecodeString(address)
+	decoded, _, err := decode(address)
 
 	if err != nil {
 		return "", err
@@ -56,6 +66,41 @@ func addressToPubKeyHashStr(address string) (publicKeyHash string, err error) {
 	default:
 		return "", fmt.Errorf("Address %s is not supported", address)
 	}
+}
+
+//  decode address string (base58) into bytes and length (int).
+func decode(addr string) ([]byte, int, error) {
+	answer := big.NewInt(0)
+	j := big.NewInt(1)
+
+	for i := len(addr) - 1; i >= 0; i-- {
+		tmp := strings.IndexAny(base58table, string(addr[i]))
+		if tmp == -1 {
+			log.Println(addr)
+			return []byte(""), 0,
+				errors.New("encoding/base58: invalid character found: ~" +
+					string(addr[i]) + "~")
+		}
+		idx := big.NewInt(int64(tmp))
+		tmp1 := big.NewInt(0)
+		tmp1.Mul(j, idx)
+
+		answer.Add(answer, tmp1)
+		j.Mul(j, big.NewInt(radix))
+	}
+
+	tmpval := answer.Bytes()
+
+	var numZeros int
+	for numZeros = 0; numZeros < len(addr); numZeros++ {
+		if addr[numZeros] != base58table[0] {
+			break
+		}
+	}
+	flen := numZeros + len(tmpval)
+	val := make([]byte, flen, flen)
+	copy(val[numZeros:], tmpval)
+	return val, len(val), nil
 }
 
 // NewAddressFromPublicKeyString takes a public key string and returns an Address struct pointer.
@@ -128,4 +173,37 @@ func checksum(input []byte) (cksum [4]byte) {
 	h := crypto.Sha256d(input)
 	copy(cksum[:], h[:4])
 	return
+}
+
+// ValidateAddress checks if an address string is a valid Bitcoin address (ex. P2PKH, BIP276).
+// Checks both mainnet and testnet.
+func ValidateAddress(address string) (bool, error) {
+	if strings.HasPrefix(address, "bitcoin-script:") {
+		_, _, _, _, err := utils.DecodeBIP276(address)
+
+		if err != nil {
+			return false, fmt.Errorf("bitcoin-script invalid [%+v]", err)
+		}
+		return true, nil
+	}
+
+	return validA58([]byte(address))
+}
+
+func validA58(a58 []byte) (bool, error) {
+	var a a25
+	if err := a.set58(a58); err != nil {
+		return false, err
+	}
+	if a[0] != 0 && a[0] != 0x6f {
+		return false, errors.New("not version 0 or 6f")
+	}
+
+	checksumOK := a.embeddedChecksum() == a.computeChecksum()
+
+	if !checksumOK {
+		return false, errors.New("checksum failed")
+	}
+
+	return true, nil
 }
