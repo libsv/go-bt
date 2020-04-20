@@ -110,6 +110,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 	return rs, nil
 }
 
+// Base58Encode encodes a byte sequence into base58 encoding
 func Base58Encode(input []byte) string {
 	b := make([]byte, 0, len(input)+4)
 	b = append(b, input[:]...)
@@ -153,6 +154,7 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 	return nil
 }
 
+// GetAddress returns the address from a redeem script
 func (rs *RedeemScript) GetAddress() string {
 	script := rs.GetRedeemScript()
 	hash := crypto.Hash160(script)
@@ -164,6 +166,7 @@ func (rs *RedeemScript) getPublicKeys() [][]byte {
 	return rs.PublicKeys
 }
 
+// GetRedeemScript returns the redeem script
 func (rs *RedeemScript) GetRedeemScript() []byte {
 	var b []byte
 
@@ -181,6 +184,7 @@ func (rs *RedeemScript) GetRedeemScript() []byte {
 	return b
 }
 
+// GetRedeemScriptHash returns the hash 160 of the redeem script
 func (rs *RedeemScript) GetRedeemScriptHash() []byte {
 	return crypto.Hash160(rs.GetRedeemScript())
 }

@@ -173,6 +173,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 	return hex.EncodeToString(utils.ReverseBytes(ret))
 }
 
+// GetSighashForInputValidation comment todo
 func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, previousTxOutIndex uint32, previousTxSatoshis uint64, previousTxScript *script.Script) string {
 
 	input := transaction.Inputs[inputNumber]

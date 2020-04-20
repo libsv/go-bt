@@ -5,6 +5,7 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
+// Sha256 calculates hash(b) and returns the resulting bytes.
 func Sha256(b []byte) []byte {
 	data := sha256.Sum256(b)
 	return data[:]

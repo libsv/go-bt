@@ -20,6 +20,7 @@ const NetworkMainnet = 1
 //const networkTestnet = 2
 
 // TODO: consider moving to script or utils
+
 // EncodeBIP276 is used to encode specific (non-standard) scripts in BIP276 format.
 // See https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki
 func EncodeBIP276(prefix string, network int, version int, data []byte) string {

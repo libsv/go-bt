@@ -8,6 +8,7 @@ import (
 	"github.com/libsv/libsv/crypto"
 )
 
+// Base58Encode encodes a byte sequence into base58 encoding
 func Base58Encode(input []byte) string {
 	b := make([]byte, 0, len(input)+4)
 	b = append(b, input[:]...)

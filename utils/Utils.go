@@ -100,6 +100,7 @@ func divmod256(number58 []byte, startAt int) byte {
 }
 
 // TODO: review base58 function used multiple times
+
 // Base58Encode encodes a byte slice to a modified base58 string.
 func Base58Encode(b []byte) string {
 	x := new(big.Int)
