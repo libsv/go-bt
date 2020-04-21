@@ -2,9 +2,7 @@ package address
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
@@ -20,9 +18,9 @@ type Address struct {
 	PublicKeyHash string
 }
 
-// NewAddressFromString takes a string address (P2PKH) and returns a pointer to an Address
+// NewFromString takes a string address (P2PKH) and returns a pointer to an Address
 // which contains the address string as well as the public key hash string.
-func NewAddressFromString(addr string) (*Address, error) {
+func NewFromString(addr string) (*Address, error) {
 	pkh, err := addressToPubKeyHashStr(addr)
 	if err != nil {
 		return nil, err
@@ -35,7 +33,8 @@ func NewAddressFromString(addr string) (*Address, error) {
 }
 
 func addressToPubKeyHashStr(address string) (publicKeyHash string, err error) {
-	decoded, err := DecodeString(address)
+	// decoded, err := DecodeString(address)
+	decoded := utils.Base58Decode(address)
 
 	if err != nil {
 		return "", err
@@ -62,21 +61,21 @@ func addressToPubKeyHashStr(address string) (publicKeyHash string, err error) {
 	}
 }
 
-// NewAddressFromPublicKeyString takes a public key string and returns an Address struct pointer.
+// NewFromPublicKeyString takes a public key string and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func NewAddressFromPublicKeyString(pubKey string, mainnet bool) (*Address, error) {
+func NewFromPublicKeyString(pubKey string, mainnet bool) (*Address, error) {
 	pubKeyBytes, err := hex.DecodeString(pubKey)
 	if err != nil {
 		return nil, err
 	}
-	return NewAddressFromPublicKeyHash(crypto.Hash160(pubKeyBytes), mainnet)
+	return NewFromPublicKeyHash(crypto.Hash160(pubKeyBytes), mainnet)
 }
 
-// NewAddressFromPublicKeyHash takes a public key hash in bytes and returns an Address struct pointer.
+// NewFromPublicKeyHash takes a public key hash in bytes and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
+func NewFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 
 	// regtest := 111
 	// mainnet: 0
@@ -87,7 +86,7 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	}
 
 	bb = append(bb, hash...)
-	addr := base58Encode(bb)
+	addr := Base58EncodeMissingChecksum(bb)
 
 	a := Address{
 		AddressString: addr,
@@ -96,10 +95,10 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	return &a, nil
 }
 
-// NewAddressFromPublicKey takes a btcec public key and returns an Address struct pointer.
+// NewFromPublicKey takes a btcec public key and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func NewAddressFromPublicKey(pubKey *btcec.PublicKey, mainnet bool) (*Address, error) {
+func NewFromPublicKey(pubKey *btcec.PublicKey, mainnet bool) (*Address, error) {
 	hash := crypto.Hash160(pubKey.SerializeCompressed())
 
 	// regtest := 111
@@ -111,7 +110,7 @@ func NewAddressFromPublicKey(pubKey *btcec.PublicKey, mainnet bool) (*Address, e
 	}
 
 	bb = append(bb, hash...)
-	addr := base58Encode(bb)
+	addr := Base58EncodeMissingChecksum(bb)
 
 	a := Address{
 		AddressString: addr,
@@ -120,7 +119,9 @@ func NewAddressFromPublicKey(pubKey *btcec.PublicKey, mainnet bool) (*Address, e
 	return &a, nil
 }
 
-func base58Encode(input []byte) string {
+// Base58EncodeMissingChecksum appends a checksum to a byte sequence
+// then encodes into base58 encoding.
+func Base58EncodeMissingChecksum(input []byte) string {
 	b := make([]byte, 0, len(input)+4)
 	b = append(b, input[:]...)
 	cksum := checksum(b)
@@ -132,37 +133,4 @@ func checksum(input []byte) (cksum [4]byte) {
 	h := crypto.Sha256d(input)
 	copy(cksum[:], h[:4])
 	return
-}
-
-// ValidateAddress checks if an address string is a valid Bitcoin address (ex. P2PKH, BIP276).
-// Checks both mainnet and testnet.
-func ValidateAddress(address string) (bool, error) {
-	if strings.HasPrefix(address, "bitcoin-script:") {
-		_, _, _, _, err := utils.DecodeBIP276(address)
-
-		if err != nil {
-			return false, fmt.Errorf("bitcoin-script invalid [%+v]", err)
-		}
-		return true, nil
-	}
-
-	return validA58([]byte(address))
-}
-
-func validA58(a58 []byte) (bool, error) {
-	var a a25
-	if err := a.set58(a58); err != nil {
-		return false, err
-	}
-	if a[0] != 0 && a[0] != 0x6f {
-		return false, errors.New("not version 0 or 6f")
-	}
-
-	checksumOK := a.embeddedChecksum() == a.computeChecksum()
-
-	if !checksumOK {
-		return false, errors.New("checksum failed")
-	}
-
-	return true, nil
 }

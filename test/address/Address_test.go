@@ -8,11 +8,11 @@ import (
 	"github.com/libsv/libsv/address"
 )
 
-func TestNewAddressFromStringMainnet(t *testing.T) {
+func TestNewFromStringMainnet(t *testing.T) {
 	addressMain := "1E7ucTTWRTahCyViPhxSMor2pj4VGQdFMr"
 	expectedPublicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
 
-	addr, err := address.NewAddressFromString(addressMain)
+	addr, err := address.NewFromString(addressMain)
 	if err != nil {
 		t.Error(err)
 	}
@@ -26,11 +26,11 @@ func TestNewAddressFromStringMainnet(t *testing.T) {
 	}
 }
 
-func TestNewAddressFromStringTestnet(t *testing.T) {
+func TestNewFromStringTestnet(t *testing.T) {
 	addressTestnet := "mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd"
 	expectedPublicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
 
-	addr, err := address.NewAddressFromString(addressTestnet)
+	addr, err := address.NewFromString(addressTestnet)
 	if err != nil {
 		t.Error(err)
 	}
@@ -44,12 +44,12 @@ func TestNewAddressFromStringTestnet(t *testing.T) {
 	}
 }
 
-func TestNewAddressFromPublicKeyStringMainnet(t *testing.T) {
+func TestNewFromPublicKeyStringMainnet(t *testing.T) {
 	pubKey := "026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce"
 	expectedPublicKeyhash := "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"
 	expectedAddress := "114ZWApV4EEU8frr7zygqQcB1V2BodGZuS"
 
-	addr, err := address.NewAddressFromPublicKeyString(pubKey, true)
+	addr, err := address.NewFromPublicKeyString(pubKey, true)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -64,12 +64,12 @@ func TestNewAddressFromPublicKeyStringMainnet(t *testing.T) {
 	}
 }
 
-func TestNewAddressFromPublicKeyStringTestnet(t *testing.T) {
+func TestNewFromPublicKeyStringTestnet(t *testing.T) {
 	pubKey := "026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce"
 	expectedPublicKeyhash := "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"
 	expectedAddress := "mfaWoDuTsFfiunLTqZx4fKpVsUctiDV9jk"
 
-	addr, err := address.NewAddressFromPublicKeyString(pubKey, false)
+	addr, err := address.NewFromPublicKeyString(pubKey, false)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -84,7 +84,7 @@ func TestNewAddressFromPublicKeyStringTestnet(t *testing.T) {
 	}
 }
 
-func TestNewAddressFromPublicKey(t *testing.T) {
+func TestNewFromPublicKey(t *testing.T) {
 	pubKeyBytes, err := hex.DecodeString("026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce")
 	if err != nil {
 		t.Error(err)
@@ -98,7 +98,7 @@ func TestNewAddressFromPublicKey(t *testing.T) {
 	expectedPublicKeyhash := "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"
 	expectedAddress := "114ZWApV4EEU8frr7zygqQcB1V2BodGZuS"
 
-	addr, err := address.NewAddressFromPublicKey(pubKey, true)
+	addr, err := address.NewFromPublicKey(pubKey, true)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

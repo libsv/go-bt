@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/libsv/libsv/address"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/keys"
 	"github.com/libsv/libsv/utils"
@@ -72,7 +73,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		}
 
 		pubkey = pubkey[1:]
-		xpub := XPubEncode(pubkey[0:78])
+		xpub := address.Base58EncodeMissingChecksum(pubkey[0:78])
 
 		derivationPath := pubkey[78:]
 		var s []uint16
@@ -109,21 +110,6 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 	}
 
 	return rs, nil
-}
-
-// XPubEncode encodes a byte sequence into base58 encoding
-func XPubEncode(input []byte) string {
-	b := make([]byte, 0, len(input)+4)
-	b = append(b, input[:]...)
-	cksum := checksum(b)
-	b = append(b, cksum[:]...)
-	return base58.Encode(b)
-}
-
-func checksum(input []byte) (cksum [4]byte) {
-	h := crypto.Sha256d(input)
-	copy(cksum[:], h[:4])
-	return
 }
 
 // AddPublicKey appends a public key to the RedeemScript.

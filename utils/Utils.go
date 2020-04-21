@@ -1,12 +1,9 @@
 package utils
 
 import (
-	"github.com/libsv/libsv/crypto"
-
 	"math/big"
 )
 
-//region V2 Utils
 const (
 	alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 )
@@ -17,23 +14,37 @@ var (
 	bigZero  = big.NewInt(0)
 )
 
-func encodeAddress(hash160 []byte, key byte) string {
-	tosum := make([]byte, 21)
-	tosum[0] = key
-	copy(tosum[1:], hash160)
-	cksum := crypto.Sha256d(tosum)
+// Base58Encode encodes a byte slice to a modified base58 string.
+func Base58Encode(b []byte) string {
+	x := new(big.Int)
+	x.SetBytes(b)
 
-	// Address before base58 encoding is 1 byte for netID, ripemd160 hash
-	// size, plus 4 bytes of checksum (total 25).
-	b := make([]byte, 25)
-	b[0] = key
-	copy(b[1:], hash160)
-	copy(b[21:], cksum[:4])
+	answer := make([]byte, 0)
+	for x.Cmp(bigZero) > 0 {
+		mod := new(big.Int)
+		x.DivMod(x, bigRadix, mod)
+		answer = append(answer, alphabet[mod.Int64()])
+	}
 
-	return Base58Encode(b)
+	// leading zero bytes
+	for _, i := range b {
+		if i != 0 {
+			break
+		}
+		answer = append(answer, alphabet[0])
+	}
+
+	// reverse
+	alen := len(answer)
+	for i := 0; i < alen/2; i++ {
+		answer[i], answer[alen-1-i] = answer[alen-1-i], answer[i]
+	}
+
+	return string(answer)
 }
 
-func base58Decode(b string) []byte {
+// Base58Decode comment
+func Base58Decode(b string) []byte {
 	if indexes == nil {
 		indexes = make([]int, 128)
 		for i := 0; i < len(indexes); i++ {
@@ -98,40 +109,3 @@ func divmod256(number58 []byte, startAt int) byte {
 
 	return byte(remainder)
 }
-
-// TODO: review base58 function used multiple times
-
-// Base58Encode encodes a byte slice to a modified base58 string.
-func Base58Encode(b []byte) string {
-	x := new(big.Int)
-	x.SetBytes(b)
-
-	answer := make([]byte, 0)
-	for x.Cmp(bigZero) > 0 {
-		mod := new(big.Int)
-		x.DivMod(x, bigRadix, mod)
-		answer = append(answer, alphabet[mod.Int64()])
-	}
-
-	// leading zero bytes
-	for _, i := range b {
-		if i != 0 {
-			break
-		}
-		answer = append(answer, alphabet[0])
-	}
-
-	// reverse
-	alen := len(answer)
-	for i := 0; i < alen/2; i++ {
-		answer[i], answer[alen-1-i] = answer[alen-1-i], answer[i]
-	}
-
-	return string(answer)
-}
-
-//endregion
-
-//region V1 Utils
-
-//endregion
