@@ -3,12 +3,13 @@ package transaction
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"reflect"
+	"testing"
+
 	"github.com/libsv/libsv/keys"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction"
 	"github.com/libsv/libsv/utils"
-	"reflect"
-	"testing"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"

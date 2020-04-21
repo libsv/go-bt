@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/utils"
