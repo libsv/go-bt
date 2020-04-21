@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"testing"
 
-	address2 "github.com/libsv/libsv/address"
-	output2 "github.com/libsv/libsv/transaction/output"
-	utils2 "github.com/libsv/libsv/utils"
+	"github.com/libsv/libsv/address"
+	"github.com/libsv/libsv/transaction/output"
+	"github.com/libsv/libsv/utils"
 )
 
-const output = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
+const outputHexStr = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
 
 func TestNewOutput(t *testing.T) {
-	bytes, _ := hex.DecodeString(output)
-	o, s := output2.NewFromBytes(bytes)
+	bytes, _ := hex.DecodeString(outputHexStr)
+	o, s := output.NewFromBytes(bytes)
 
 	// t.Errorf("\n%s\n", o)
 	if s != 34 {
@@ -38,7 +38,7 @@ func TestNewOutput(t *testing.T) {
 func TestNewOutputForPublicKeyHash(t *testing.T) {
 	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b" // This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
 	value := uint64(5000)
-	o, err := output2.NewP2PkhFromPubKeyHash(publicKeyhash, value)
+	o, err := output.NewP2PkhFromPubKeyHash(publicKeyhash, value)
 	if err != nil {
 		t.Error("Error")
 	}
@@ -50,9 +50,9 @@ func TestNewOutputForPublicKeyHash(t *testing.T) {
 
 func TestNewOutputForHashPuzzle(t *testing.T) {
 	secret := "secret1"
-	address, _ := address2.NewFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
+	addr, _ := address.NewFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
 	value := uint64(5000)
-	o, err := output2.NewHashPuzzle(secret, address.PublicKeyHash, value)
+	o, err := output.NewHashPuzzle(secret, addr.PublicKeyHash, value)
 	if err != nil {
 		t.Error("Error")
 	}
@@ -65,14 +65,14 @@ func TestNewOutputForHashPuzzle(t *testing.T) {
 func TestNewOutputOpReturn(t *testing.T) {
 	data := "On February 4th, 2020 The Return to Genesis was activated to restore the Satoshi Vision for Bitcoin. It is locked in irrevocably by this transaction. Bitcoin can finally be Bitcoin again and the miners can continue to write the Chronicle of everything. Thank you and goodnight from team SV."
 	dataBytes := []byte(data)
-	o, err := output2.NewOpReturn(dataBytes)
+	o, err := output.NewOpReturn(dataBytes)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	dataHexStr := hex.EncodeToString(dataBytes)
 	script := o.GetLockingScriptHexString()
-	dataLength := utils2.VarInt(uint64(len(dataBytes)))
+	dataLength := utils.VarInt(uint64(len(dataBytes)))
 	fmt.Printf("%x", dataLength)
 	expectedScript := "006a4d2201" + dataHexStr
 
@@ -87,7 +87,7 @@ func TestNewOutputOpReturnPush(t *testing.T) {
 	data3 := "are"
 	data4 := "you"
 	dataBytes := [][]byte{[]byte(data1), []byte(data2), []byte(data3), []byte(data4)}
-	o, err := output2.NewOpReturnPush(dataBytes)
+	o, err := output.NewOpReturnPush(dataBytes)
 	if err != nil {
 		t.Error(err)
 		return

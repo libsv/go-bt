@@ -32,11 +32,11 @@ func NewSigningPayloadFromTx(bt *BitcoinTransaction, sigType uint32) (*SigningPa
 	p := NewSigningPayload()
 	for idx, input := range bt.Inputs {
 		if input.PreviousTxSatoshis == 0 {
-			return nil, errors.New("Signing service error - error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
+			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
 		}
 
 		if input.PreviousTxScript == nil {
-			return nil, errors.New("Signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
+			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
 
 		}
 
@@ -165,7 +165,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 	buf = append(buf, lt...)
 
 	// sighashType
-	//writer.writeUInt32LE(sighashType >>> 0)
+	// writer.writeUInt32LE(sighashType >>> 0)
 	st := make([]byte, 4)
 	binary.LittleEndian.PutUint32(st, sighashType>>0)
 	buf = append(buf, st...)
@@ -281,7 +281,7 @@ func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 	buf = append(buf, lt...)
 
 	// sighashType
-	//writer.writeUInt32LE(sighashType >>> 0)
+	// writer.writeUInt32LE(sighashType >>> 0)
 	st := make([]byte, 4)
 	binary.LittleEndian.PutUint32(st, sighashType>>0)
 	buf = append(buf, st...)
