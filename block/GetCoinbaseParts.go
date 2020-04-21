@@ -135,7 +135,7 @@ func makeCoinbase1(height uint32, coinbaseText string) []byte {
 	arbitraryData = append(arbitraryData, blockHeightBytes[:3]...)
 	arbitraryData = append(arbitraryData, []byte(coinbaseText)...)
 
-	//Arbitrary data should leave enough space for the extra nonce
+	// Arbitrary data should leave enough space for the extra nonce
 	if len(arbitraryData) > (100 - spaceForExtraNonce) {
 		arbitraryData = arbitraryData[:100-spaceForExtraNonce] // Slice the arbitrary text so everything fits in 100 bytes
 	}

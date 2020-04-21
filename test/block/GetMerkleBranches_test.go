@@ -1,8 +1,9 @@
 package block
 
 import (
-	"github.com/libsv/libsv/block"
 	"testing"
+
+	"github.com/libsv/libsv/block"
 )
 
 func Test2(t *testing.T) {

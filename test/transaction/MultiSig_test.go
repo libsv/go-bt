@@ -3,11 +3,12 @@ package transaction
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/libsv/libsv/script"
 	"io/ioutil"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/libsv/libsv/script"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"

@@ -4,9 +4,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/libsv/libsv/crypto"
 	"regexp"
 	"strconv"
+
+	"github.com/libsv/libsv/crypto"
 )
 
 // PrefixScript is the prefix in the BIP276 standard which

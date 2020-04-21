@@ -2,9 +2,10 @@ package utils
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/utils"
-	"testing"
 )
 
 func TestGenesisHash(t *testing.T) {

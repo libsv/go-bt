@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/libsv/libsv/utils"
 	"testing"
+
+	"github.com/libsv/libsv/utils"
 )
 
 // TestEncode comment

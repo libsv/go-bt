@@ -113,7 +113,7 @@ func TestGetSighashPayload(t *testing.T) {
 	tx, err := transaction.NewFromString(unsignedTx)
 	// Previous txid 5b1a7dabe570741c2da71111d396e0be19778d8782c9f28b98d7c72d1b9b417e
 
-	//Add the UTXO amount and script.
+	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 2000000000
 	tx.Inputs[0].PreviousTxScript = script.NewFromString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
 	// t.Logf("%x\n", tx.Hex())
@@ -190,7 +190,7 @@ func TestSignTx(t *testing.T) {
 	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
 
-	//Add the UTXO amount and script.
+	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 100000000
 	tx.Inputs[0].PreviousTxScript = script.NewFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
@@ -232,7 +232,7 @@ func TestSignTxForced(t *testing.T) {
 	unsignedTx := "0100000001f59f8ee5745b020dd3e3a561a539defb626117befc554e168c3bfb88b56ab0f20000000000ffffffff01d0200000000000001976a91447862fe165e6121af80d5dde1ecb478ed170565b88ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
 
-	//Add the UTXO amount and script.
+	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 8519
 	tx.Inputs[0].PreviousTxScript = script.NewFromString("a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac")
 

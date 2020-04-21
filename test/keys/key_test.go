@@ -2,8 +2,9 @@ package keys
 
 import (
 	"encoding/hex"
-	"github.com/libsv/libsv/keys"
 	"testing"
+
+	"github.com/libsv/libsv/keys"
 )
 
 func TestPrivateKeyToWif1(t *testing.T) {

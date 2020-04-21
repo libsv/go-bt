@@ -2,9 +2,10 @@ package transaction
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction"
-	"testing"
 )
 
 func Test(t *testing.T) {
@@ -73,7 +74,7 @@ func TestGetSighashForInput(t *testing.T) {
 	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
 
-	//Add the UTXO amount and script.
+	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = uint64(100000000)
 	tx.Inputs[0].PreviousTxScript = script.NewFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 

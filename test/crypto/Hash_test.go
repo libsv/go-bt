@@ -3,8 +3,9 @@ package crypto
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/libsv/libsv/crypto"
 	"testing"
+
+	"github.com/libsv/libsv/crypto"
 )
 
 var hashTests = []struct {

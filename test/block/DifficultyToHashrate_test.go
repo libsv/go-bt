@@ -1,9 +1,10 @@
 package block
 
 import (
+	"testing"
+
 	"github.com/libsv/libsv/block"
 	"github.com/libsv/libsv/utils"
-	"testing"
 )
 
 func TestDifficultyToHashratBSV(t *testing.T) {

@@ -31,12 +31,8 @@ func NewFromString(addr string) (*Address, error) {
 	return &a, nil
 }
 
-func addressToPubKeyHashStr(address string) (publicKeyHash string, err error) {
+func addressToPubKeyHashStr(address string) (string, error) {
 	decoded := base58.Decode(address)
-
-	if err != nil {
-		return "", err
-	}
 
 	if len(decoded) != 25 {
 		return "", fmt.Errorf("invalid address length for '%s'", address)

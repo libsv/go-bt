@@ -3,15 +3,14 @@ package keys
 import (
 	"bytes"
 	"crypto/hmac"
-
-	"github.com/libsv/libsv/crypto"
-
 	"crypto/sha512"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"math/big"
+
+	"github.com/libsv/libsv/crypto"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
@@ -40,16 +39,16 @@ type PublicKey struct {
 	Depth                uint16 `json:"depth"`
 	FingerPrint          []byte `json:"-"`                 // : -1440106556,
 	FingerPrintStr       string `json:"fingerPrint"`       // : -1440106556,
-	ParentFingerPrint    []byte `json:"-"`                 //: 0,
-	ParentFingerPrintStr string `json:"parentFingerPrint"` //: 0,
-	ChildIndex           []byte `json:"childIndex"`        //: 0,
+	ParentFingerPrint    []byte `json:"-"`                 // : 0,
+	ParentFingerPrintStr string `json:"parentFingerPrint"` // : 0,
+	ChildIndex           []byte `json:"childIndex"`        // : 0,
 	ChainCode            []byte `json:"-"`                 //   '41fc504936a63056da1a0f9dd44cad3651b64a17b53e523e18a8d228a489c16a',
 	ChainCodeStr         string `json:"chainCode"`
 	PrivateKey           []byte `json:"-"`          //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
 	PrivateKeyStr        string `json:"privateKey"` //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
 	PublicKey            []byte `json:"-"`          //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
 	PublicKeyStr         string `json:"publicKey"`  //   '0362e448fdb4c7c307a80cc3c8ede19cd2599a5ea5c05b188fc56a25c59bfcf125',
-	Checksum             []byte `json:"-"`          //: 43286247,
+	Checksum             []byte `json:"-"`          // : 43286247,
 	XPrvKey              string `json:"xprvkey"`    // 'xprv661My
 	XPubKey              string `json:"xpubkey"`    // 'xpub661My
 }
@@ -190,7 +189,7 @@ func (pk *PublicKey) Address() (string, error) {
 	return base58.Encode(append(addr1, chksum[:4]...)), nil
 }
 
-//2.3.4 of SEC1 - http://www.secg.org/index.php?action=secg,docs_secg
+// 2.3.4 of SEC1 - http://www.secg.org/index.php?action=secg,docs_secg
 func expand(key []byte) (*big.Int, *big.Int) {
 	params := curve.Params()
 	exp := big.NewInt(1)
@@ -253,7 +252,7 @@ func (pk *PublicKey) GetXPub() string {
 	// fmt.Printf("ChainCode:   %+v\n", pk.ChainCode)
 	// fmt.Printf("PublicKey:   %+v\n", pk.PublicKey)
 
-	//bindata = vbytes||depth||fingerprint||i||chaincode||key
+	// bindata = vbytes||depth||fingerprint||i||chaincode||key
 	bindata := make([]byte, 78)
 	copy(bindata, pk.Version)
 	copy(bindata[4:], depth)
@@ -284,6 +283,6 @@ func byteToUint16(b []byte) uint16 {
 
 func pubKeyFromPrivate(private []byte) []byte {
 	_, pubkey := btcec.PrivKeyFromBytes(btcec.S256(), private)
-	//pubkeyaddr  := &pubkey
+	// pubkeyaddr  := &pubkey
 	return pubkey.SerializeCompressed()
 }
