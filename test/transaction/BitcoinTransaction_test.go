@@ -248,7 +248,7 @@ func TestSignTxForced(t *testing.T) {
 	}
 
 	secret := "secret1"
-	tx.GetInputs()[0].SigScript.AppendPushDataStringToScript(secret)
+	tx.GetInputs()[0].UnlockingScript.AppendPushDataStringToScript(secret)
 
 	expectedSignedTx := "0100000001f59f8ee5745b020dd3e3a561a539defb626117befc554e168c3bfb88b56ab0f20000000073483045022100b30ce9d7e143c3d48a9202b82cf8a32cbe1ee1d9c2a36976bf78a65e71c2255b02203b6152deb3c041179856cc85874a599f2ac41fdbefff28745cafb551630762f9412102adbf278425824e49c1b9f09679451f8754b609544ff72512190ed21881d1ca510773656372657431ffffffff01d0200000000000001976a91447862fe165e6121af80d5dde1ecb478ed170565b88ac00000000"
 
@@ -272,7 +272,7 @@ func TestValidSignature(t *testing.T) {
 	// txid := tx.GetTxID()
 	// fmt.Println(txid)
 
-	sigScript := tx.GetInputs()[0].SigScript
+	sigScript := tx.GetInputs()[0].UnlockingScript
 
 	publicKeyBytes := []byte(*sigScript)[len(*sigScript)-33:]
 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
@@ -317,7 +317,7 @@ func TestValidSignature2(t *testing.T) {
 	// txid := tx.GetTxID()
 	// fmt.Println(txid)
 
-	sigScript := tx.GetInputs()[0].SigScript
+	sigScript := tx.GetInputs()[0].UnlockingScript
 
 	publicKeyBytes := []byte(*sigScript)[len(*sigScript)-33:]
 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
@@ -366,7 +366,7 @@ func TestBareMultiSigValidation(t *testing.T) {
 	var sigHashTypes = make([]uint32, 2)
 	var publicKeys = make([]*btcec.PublicKey, 3)
 
-	sigScript := tx.GetInputs()[0].SigScript
+	sigScript := tx.GetInputs()[0].UnlockingScript
 
 	sig0Bytes := []byte(*sigScript)[2:73]
 	sig0HashType, _ := binary.Uvarint([]byte(*sigScript)[73:74])
@@ -442,7 +442,7 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 	var sigHashTypes = make([]uint32, 2)
 	var publicKeys = make([]*btcec.PublicKey, 3)
 
-	sigScript := tx.GetInputs()[0].SigScript
+	sigScript := tx.GetInputs()[0].UnlockingScript
 
 	sig0Bytes := []byte(*sigScript)[2:73]
 	sig0HashType, _ := binary.Uvarint([]byte(*sigScript)[73:74])

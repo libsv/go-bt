@@ -22,8 +22,8 @@ func TestNew(t *testing.T) {
 		t.Errorf("Expected 1, got %d", i.PreviousTxOutIndex)
 	}
 
-	if len(*i.SigScript) != 107 {
-		t.Errorf("Expected 107, got %d", len(*i.SigScript))
+	if len(*i.UnlockingScript) != 107 {
+		t.Errorf("Expected 107, got %d", len(*i.UnlockingScript))
 	}
 
 	if i.SequenceNumber != 0xFFFFFFFF {

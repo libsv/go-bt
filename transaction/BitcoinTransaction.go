@@ -183,8 +183,8 @@ func (bt *BitcoinTransaction) PayTo(address string, amount uint64) error {
 	}
 
 	bt.AddOutput(&Output{
-		Value:  amount,
-		Script: script,
+		Value:         amount,
+		LockingScript: script,
 	})
 	return nil
 }
@@ -324,7 +324,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			buf = append(buf, (SighashAll | SighashForkID))
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].SigScript = script.NewScriptFromBytes(buf)
+			bt.Inputs[index].UnlockingScript = script.NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 	}
@@ -403,7 +403,7 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 			buf = append(buf, (SighashAll | SighashForkID))
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].SigScript = script.NewScriptFromBytes(buf)
+			bt.Inputs[index].UnlockingScript = script.NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 	}

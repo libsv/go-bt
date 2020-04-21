@@ -22,14 +22,14 @@ Txout-script / scriptPubKey   Script                                      <out-s
 
 // Output is a representation of a transaction output
 type Output struct {
-	Value  uint64
-	Script []byte
+	Value         uint64
+	LockingScript []byte
 }
 
 // NewOutput creates a new Output object.
 func NewOutput() *Output {
 	return &Output{
-		Script: make([]byte, 0),
+		LockingScript: make([]byte, 0),
 	}
 }
 
@@ -49,7 +49,7 @@ func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, 
 	s = append(s, publicKeyHashBytes...)
 	s = append(s, script.OpEQUALVERIFY)
 	s = append(s, script.OpCHECKSIG)
-	o.Script = s
+	o.LockingScript = s
 	return &o, nil
 }
 
@@ -75,7 +75,7 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 	s.AppendOpCode(script.OpEQUALVERIFY)
 	s.AppendOpCode(script.OpCHECKSIG)
 
-	o.Script = *s
+	o.LockingScript = *s
 	return &o, nil
 }
 
@@ -89,7 +89,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 	i, size := utils.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	o.Script = bytes[offset : offset+int(i)]
+	o.LockingScript = bytes[offset : offset+int(i)]
 
 	return &o, offset + int(i)
 }
@@ -108,7 +108,7 @@ func NewOutputOpReturn(data []byte) (*Output, error) {
 	s = append(s, b...)
 
 	o := Output{}
-	o.Script = s
+	o.LockingScript = s
 	return &o, nil
 }
 
@@ -127,20 +127,20 @@ func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
 	s = append(s, b...)
 
 	o := Output{}
-	o.Script = s
+	o.LockingScript = s
 	return &o, nil
 }
 
 // GetOutputScript returns the script of the output
 func (o *Output) GetOutputScript() []byte {
-	return o.Script
+	return o.LockingScript
 }
 
 func (o *Output) String() string {
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d
 script:    %x
-`, o.Value, len(o.Script), o.Script)
+`, o.Value, len(o.LockingScript), o.LockingScript)
 }
 
 // Hex encodes the Output into a hex byte array.
@@ -151,8 +151,8 @@ func (o *Output) Hex() []byte {
 
 	hex := make([]byte, 0)
 	hex = append(hex, b...)
-	hex = append(hex, utils.VarInt(uint64(len(o.Script)))...)
-	hex = append(hex, o.Script...)
+	hex = append(hex, utils.VarInt(uint64(len(o.LockingScript)))...)
+	hex = append(hex, o.LockingScript...)
 
 	return hex
 }
@@ -164,8 +164,8 @@ func (o *Output) getBytesForSigHash() []byte {
 	binary.LittleEndian.PutUint64(satoshis, o.Value)
 	buf = append(buf, satoshis...)
 
-	buf = append(buf, utils.VarInt(uint64(len(o.Script)))...)
-	buf = append(buf, o.Script...)
+	buf = append(buf, utils.VarInt(uint64(len(o.LockingScript)))...)
+	buf = append(buf, o.LockingScript...)
 
 	return buf
 }

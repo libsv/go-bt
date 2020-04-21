@@ -26,7 +26,7 @@ type Input struct {
 	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *script.Script
-	SigScript          *script.Script
+	UnlockingScript    *script.Script
 	SequenceNumber     uint32
 }
 
@@ -36,8 +36,8 @@ func NewInput() *Input {
 	s := script.NewScriptFromBytes(b)
 
 	return &Input{
-		SigScript:      s,
-		SequenceNumber: 0xFFFFFFFF,
+		UnlockingScript: s,
+		SequenceNumber:  0xFFFFFFFF,
 	}
 }
 
@@ -53,7 +53,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int) {
 	l, size := utils.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	i.SigScript = script.NewScriptFromBytes(bytes[offset : offset+int(l)])
+	i.UnlockingScript = script.NewScriptFromBytes(bytes[offset : offset+int(l)])
 
 	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 
@@ -66,7 +66,7 @@ prevOutIndex: %d
 scriptLen:    %d
 script:       %x
 sequence:     %x
-`, i.PreviousTxHash, i.PreviousTxOutIndex, len(*i.SigScript), i.SigScript, i.SequenceNumber)
+`, i.PreviousTxHash, i.PreviousTxOutIndex, len(*i.UnlockingScript), i.UnlockingScript, i.SequenceNumber)
 }
 
 // Hex encodes the Input into a hex byte array.
@@ -78,11 +78,11 @@ func (i *Input) Hex(clear bool) []byte {
 	if clear {
 		hex = append(hex, 0x00)
 	} else {
-		if i.SigScript == nil {
+		if i.UnlockingScript == nil {
 			hex = append(hex, utils.VarInt(0)...)
 		} else {
-			hex = append(hex, utils.VarInt(uint64(len(*i.SigScript)))...)
-			hex = append(hex, *i.SigScript...)
+			hex = append(hex, utils.VarInt(uint64(len(*i.UnlockingScript)))...)
+			hex = append(hex, *i.UnlockingScript...)
 		}
 	}
 	hex = append(hex, utils.GetLittleEndianBytes(i.SequenceNumber, 4)...)
