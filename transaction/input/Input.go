@@ -33,7 +33,7 @@ type Input struct {
 // NewInput creates a new Input object with a finalised sequence number.
 func NewInput() *Input {
 	b := make([]byte, 0)
-	s := script.NewScriptFromBytes(b)
+	s := script.NewFromBytes(b)
 
 	return &Input{
 		UnlockingScript: s,
@@ -53,7 +53,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int) {
 	l, size := utils.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	i.UnlockingScript = script.NewScriptFromBytes(bytes[offset : offset+int(l)])
+	i.UnlockingScript = script.NewFromBytes(bytes[offset : offset+int(l)])
 
 	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 

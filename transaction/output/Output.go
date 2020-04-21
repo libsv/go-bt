@@ -45,7 +45,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 
 // NewOutputForPublicKeyHash makes an output to a PKH with a value.
 func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, error) {
-	s, err := script.NewP2PKHScriptFromPubKeyHashStr(publicKeyHash)
+	s, err := script.NewP2PKHFromPubKeyHashStr(publicKeyHash)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, 
 
 // NewOutputForP2PKH makes an output to a PKH with a value.
 func NewOutputForP2PKH(addr string, satoshis uint64) (*Output, error) {
-	s, err := script.NewP2PKHScriptFromAddress(addr)
+	s, err := script.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -83,14 +83,14 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 
 	s.AppendOpCode(script.OpHASH160)
 	secretBytesHash := crypto.Hash160([]byte(secret))
-	err = s.AppendPushDataToScript(secretBytesHash)
+	err = s.AppendPushData(secretBytesHash)
 	if err != nil {
 		return nil, err
 	}
 	s.AppendOpCode(script.OpEQUALVERIFY)
 	s.AppendOpCode(script.OpDUP)
 	s.AppendOpCode(script.OpHASH160)
-	err = s.AppendPushDataToScript(publicKeyHashBytes)
+	err = s.AppendPushData(publicKeyHashBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func createOpReturnOutput(data [][]byte) (*Output, error) {
 
 	s.AppendOpCode(script.OpFALSE)
 	s.AppendOpCode(script.OpRETURN)
-	err := s.AppendPushDataArrayToScript(data)
+	err := s.AppendPushDataArray(data)
 	if err != nil {
 		return nil, err
 	}

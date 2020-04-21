@@ -11,21 +11,21 @@ import (
 // Script type
 type Script []byte
 
-// NewScriptFromString creates a new script from a hex encoded string.
-func NewScriptFromString(s string) *Script {
+// NewFromString creates a new script from a hex encoded string.
+func NewFromString(s string) *Script {
 	b, _ := hex.DecodeString(s)
-	return NewScriptFromBytes(b)
+	return NewFromBytes(b)
 }
 
-// NewScriptFromBytes wraps a byte slice with the Script type.
-func NewScriptFromBytes(b []byte) *Script {
+// NewFromBytes wraps a byte slice with the Script type.
+func NewFromBytes(b []byte) *Script {
 	s := Script(b)
 	return &s
 }
 
-// NewP2PKHScriptFromPubKeyStr takes a public key hex string (in
+// NewP2PKHFromPubKeyStr takes a public key hex string (in
 // compressed format) and creates a P2PKH script from it.
-func NewP2PKHScriptFromPubKeyStr(pubKey string) (*Script, error) {
+func NewP2PKHFromPubKeyStr(pubKey string) (*Script, error) {
 	pubKeyBytes, err := hex.DecodeString(pubKey)
 	if err != nil {
 		return nil, err
@@ -45,9 +45,9 @@ func NewP2PKHScriptFromPubKeyStr(pubKey string) (*Script, error) {
 	return &s, nil
 }
 
-// NewP2PKHScriptFromPubKeyHashStr takes a public key hex string (in
+// NewP2PKHFromPubKeyHashStr takes a public key hex string (in
 // compressed format) and creates a P2PKH script from it.
-func NewP2PKHScriptFromPubKeyHashStr(pubKeyHash string) (*Script, error) {
+func NewP2PKHFromPubKeyHashStr(pubKeyHash string) (*Script, error) {
 	hash, err := hex.DecodeString(pubKeyHash)
 	if err != nil {
 		return nil, err
@@ -66,9 +66,9 @@ func NewP2PKHScriptFromPubKeyHashStr(pubKeyHash string) (*Script, error) {
 	return &s, nil
 }
 
-// NewP2PKHScriptFromAddress takes an address
+// NewP2PKHFromAddress takes an address
 // and creates a P2PKH script from it.
-func NewP2PKHScriptFromAddress(addr string) (*Script, error) {
+func NewP2PKHFromAddress(addr string) (*Script, error) {
 
 	a, err := address.NewFromString(addr)
 	if err != nil {
@@ -83,7 +83,7 @@ func NewP2PKHScriptFromAddress(addr string) (*Script, error) {
 	s := &Script{}
 	s.AppendOpCode(OpDUP)
 	s.AppendOpCode(OpHASH160)
-	err = s.AppendPushDataToScript(publicKeyHashBytes)
+	err = s.AppendPushData(publicKeyHashBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,8 @@ func (s *Script) ToString() string {
 	return hex.EncodeToString(*s)
 }
 
-// AppendPushDataToScript takes data bytes and appends them to the script with proper PUSHDATA prefixes
-func (s *Script) AppendPushDataToScript(d []byte) error {
+// AppendPushData takes data bytes and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushData(d []byte) error {
 	p, err := EncodeParts([][]byte{d})
 	if err != nil {
 		return err
@@ -109,14 +109,14 @@ func (s *Script) AppendPushDataToScript(d []byte) error {
 	return nil
 }
 
-// AppendPushDataStringToScript takes a string and appends them to the script with proper PUSHDATA prefixes
-func (s *Script) AppendPushDataStringToScript(str string) error {
-	err := s.AppendPushDataToScript([]byte(str))
+// AppendPushDataString takes a string and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataString(str string) error {
+	err := s.AppendPushData([]byte(str))
 	return err
 }
 
-// AppendPushDataArrayToScript takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
-func (s *Script) AppendPushDataArrayToScript(d [][]byte) error {
+// AppendPushDataArray takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataArray(d [][]byte) error {
 	p, err := EncodeParts(d)
 	if err != nil {
 		return err
@@ -126,15 +126,15 @@ func (s *Script) AppendPushDataArrayToScript(d [][]byte) error {
 	return nil
 }
 
-// AppendPushDataStringsToScript takes an array of strings and appends them to the script with proper PUSHDATA prefixes
-func (s *Script) AppendPushDataStringsToScript(strs []string) error {
+// AppendPushDataStrings takes an array of strings and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataStrings(strs []string) error {
 	dataBytes := make([][]byte, 0)
 	for _, str := range strs {
 		strBytes := []byte(str)
 		dataBytes = append(dataBytes, strBytes)
 	}
 
-	err := s.AppendPushDataArrayToScript(dataBytes)
+	err := s.AppendPushDataArray(dataBytes)
 	return err
 }
 

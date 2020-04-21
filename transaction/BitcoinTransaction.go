@@ -139,7 +139,7 @@ func (bt *BitcoinTransaction) AddInput(input *input.Input) {
 func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
 	i := &input.Input{
 		PreviousTxOutIndex: vout,
-		PreviousTxScript:   script.NewScriptFromString(scriptSig),
+		PreviousTxScript:   script.NewFromString(scriptSig),
 		PreviousTxSatoshis: satoshis,
 	}
 
@@ -315,7 +315,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			buf = append(buf, SighashAll|SighashForkID)
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].UnlockingScript = script.NewScriptFromBytes(buf)
+			bt.Inputs[index].UnlockingScript = script.NewFromBytes(buf)
 			sigsApplied++
 		}
 	}
@@ -394,7 +394,7 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 			buf = append(buf, SighashAll|SighashForkID)
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].UnlockingScript = script.NewScriptFromBytes(buf)
+			bt.Inputs[index].UnlockingScript = script.NewFromBytes(buf)
 			sigsApplied++
 		}
 	}
