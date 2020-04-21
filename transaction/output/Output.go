@@ -137,6 +137,8 @@ func createOpReturnOutput(data [][]byte) (*Output, error) {
 	return &o, nil
 }
 
+// GetLockingScriptHexString returns the locking script
+// of an output encoded as a hex string.
 func (o *Output) GetLockingScriptHexString() string {
 	return hex.EncodeToString(*o.LockingScript)
 }

@@ -14,7 +14,7 @@ import (
 // specifies if it is a script or template.
 const PrefixScript = "bitcoin-script"
 
-// PrefixScript is the prefix in the BIP276 standard which
+// PrefixTemplate is the prefix in the BIP276 standard which
 // specifies if it is a script or template.
 const PrefixTemplate = "bitcoin-template"
 
@@ -27,7 +27,7 @@ const CurrentVersion = 1
 // valid for use on the main network.
 const NetworkMainnet = 1
 
-// NetworkMainnet specifies that the data is only
+// NetworkTestnet specifies that the data is only
 // valid for use on the test network.
 const NetworkTestnet = 2
 
