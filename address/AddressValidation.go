@@ -3,8 +3,11 @@ package address
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/libsv/utils"
 )
 
 type a25 [25]byte
@@ -45,4 +48,37 @@ func (a *a25) set58(s []byte) error {
 		}
 	}
 	return nil
+}
+
+// ValidateAddress checks if an address string is a valid Bitcoin address (ex. P2PKH, BIP276).
+// Checks both mainnet and testnet.
+func ValidateAddress(address string) (bool, error) {
+	if strings.HasPrefix(address, "bitcoin-script:") {
+		_, _, _, _, err := utils.DecodeBIP276(address)
+
+		if err != nil {
+			return false, fmt.Errorf("bitcoin-script invalid [%+v]", err)
+		}
+		return true, nil
+	}
+
+	return validA58([]byte(address))
+}
+
+func validA58(a58 []byte) (bool, error) {
+	var a a25
+	if err := a.set58(a58); err != nil {
+		return false, err
+	}
+	if a[0] != 0 && a[0] != 0x6f {
+		return false, errors.New("not version 0 or 6f")
+	}
+
+	checksumOK := a.embeddedChecksum() == a.computeChecksum()
+
+	if !checksumOK {
+		return false, errors.New("checksum failed")
+	}
+
+	return true, nil
 }

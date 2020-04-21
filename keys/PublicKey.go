@@ -3,6 +3,7 @@ package keys
 import (
 	"bytes"
 	"crypto/hmac"
+
 	"github.com/libsv/libsv/crypto"
 
 	"crypto/sha512"
@@ -10,7 +11,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"github.com/libsv/libsv/address"
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -58,10 +58,7 @@ var curve = btcec.S256()
 
 // NewPrivateKey comment TODO: public key or private key?
 func NewPrivateKey(xprv string) (*PublicKey, error) {
-	decoded, err := address.DecodeString(xprv)
-	if err != nil {
-		return nil, err
-	}
+	decoded := base58.Decode(xprv)
 
 	privateKey := decoded[46:78]
 
@@ -94,10 +91,7 @@ func NewPrivateKey(xprv string) (*PublicKey, error) {
 // NewPublicKey takes an xpub string and returns a PublicKey pointer.
 // See BIP32 https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
 func NewPublicKey(xpub string) (*PublicKey, error) {
-	decoded, err := address.DecodeString(xpub)
-	if err != nil {
-		return nil, err
-	}
+	decoded := base58.Decode(xpub)
 
 	publicKey := decoded[45:78]
 

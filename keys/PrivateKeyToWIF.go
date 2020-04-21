@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/libsv/libsv/address"
+	"github.com/btcsuite/btcutil/base58"
 	"github.com/libsv/libsv/crypto"
 )
 
@@ -18,7 +18,7 @@ func PrivateKeyToWIF(key []byte) string {
 	key = append(key, checksum[0:4]...)
 
 	// Convert the result from a byte string into a base58 string using Base58Check encoding. This is the Wallet Import Format
-	base58 := address.EncodeToString(key)
+	base58 := base58.Encode(key)
 	// fmt.Printf("WIF: %v\n", base58)
 	return base58
 }

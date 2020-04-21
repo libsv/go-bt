@@ -3,10 +3,12 @@ package script
 import (
 	"encoding/binary"
 	"errors"
+	"log"
+
+	"github.com/libsv/libsv/address"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/keys"
 	"github.com/libsv/libsv/utils"
-	"log"
 
 	"github.com/btcsuite/btcutil/base58"
 )
@@ -71,7 +73,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		}
 
 		pubkey = pubkey[1:]
-		xpub := Base58Encode(pubkey[0:78])
+		xpub := address.Base58EncodeMissingChecksum(pubkey[0:78])
 
 		derivationPath := pubkey[78:]
 		var s []uint16
@@ -108,21 +110,6 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 	}
 
 	return rs, nil
-}
-
-// Base58Encode encodes a byte sequence into base58 encoding
-func Base58Encode(input []byte) string {
-	b := make([]byte, 0, len(input)+4)
-	b = append(b, input[:]...)
-	cksum := checksum(b)
-	b = append(b, cksum[:]...)
-	return base58.Encode(b)
-}
-
-func checksum(input []byte) (cksum [4]byte) {
-	h := crypto.Sha256d(input)
-	copy(cksum[:], h[:4])
-	return
 }
 
 // AddPublicKey appends a public key to the RedeemScript.
