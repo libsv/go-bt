@@ -40,6 +40,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	script2 "github.com/libsv/libsv/script"
 	"log"
 
 	"github.com/btcsuite/btcutil/base58"
@@ -107,13 +108,13 @@ func AddressToScript(address string) (script []byte, err error) {
 		pubkey := decoded[1 : len(decoded)-4]
 
 		ret := []byte{
-			utils.OpDUP,
-			utils.OpHASH160,
+			script2.OpDUP,
+			script2.OpHASH160,
 			0x14,
 		}
 		ret = append(ret, pubkey...)
-		ret = append(ret, utils.OpEQUALVERIFY)
-		ret = append(ret, utils.OpCHECKSIG)
+		ret = append(ret, script2.OpEQUALVERIFY)
+		ret = append(ret, script2.OpCHECKSIG)
 
 		return ret, nil
 
@@ -123,11 +124,11 @@ func AddressToScript(address string) (script []byte, err error) {
 		redeemScriptHash := decoded[1 : len(decoded)-4]
 
 		ret := []byte{
-			utils.OpHASH160,
+			script2.OpHASH160,
 			0x14,
 		}
 		ret = append(ret, redeemScriptHash...)
-		ret = append(ret, utils.OpEQUAL)
+		ret = append(ret, script2.OpEQUAL)
 
 		return ret, nil
 

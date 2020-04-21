@@ -43,12 +43,12 @@ func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, 
 		return nil, err
 	}
 	s := make([]byte, 0, len(publicKeyHash)+8)
-	s = append(s, utils.OpDUP)
-	s = append(s, utils.OpHASH160)
+	s = append(s, script.OpDUP)
+	s = append(s, script.OpHASH160)
 	s = append(s, utils.VarInt(uint64(len(publicKeyHash)/2))...)
 	s = append(s, publicKeyHashBytes...)
-	s = append(s, utils.OpEQUALVERIFY)
-	s = append(s, utils.OpCHECKSIG)
+	s = append(s, script.OpEQUALVERIFY)
+	s = append(s, script.OpCHECKSIG)
 	o.Script = s
 	return &o, nil
 }
@@ -64,16 +64,16 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 	}
 	s := script.NewScript()
 
-	s.AppendOpCode(utils.OpHASH160)
+	s.AppendOpCode(script.OpHASH160)
 	secretBytesHash := crypto.Hash160([]byte(secret))
 	s.AppendPushDataToScript(secretBytesHash)
-	s.AppendOpCode(utils.OpEQUALVERIFY)
+	s.AppendOpCode(script.OpEQUALVERIFY)
 
-	s.AppendOpCode(utils.OpDUP)
-	s.AppendOpCode(utils.OpHASH160)
+	s.AppendOpCode(script.OpDUP)
+	s.AppendOpCode(script.OpHASH160)
 	s.AppendPushDataToScript(publicKeyHashBytes)
-	s.AppendOpCode(utils.OpEQUALVERIFY)
-	s.AppendOpCode(utils.OpCHECKSIG)
+	s.AppendOpCode(script.OpEQUALVERIFY)
+	s.AppendOpCode(script.OpCHECKSIG)
 
 	o.Script = *s
 	return &o, nil
@@ -102,13 +102,13 @@ func NewOutputOpReturn(data []byte) (*Output, error) {
 	if err != nil {
 		return nil, err
 	}
-	script := make([]byte, 0)
-	script = append(script, utils.OpFALSE)
-	script = append(script, utils.OpRETURN)
-	script = append(script, b...)
+	s := make([]byte, 0)
+	s = append(s, script.OpFALSE)
+	s = append(s, script.OpRETURN)
+	s = append(s, b...)
 
 	o := Output{}
-	o.Script = script
+	o.Script = s
 	return &o, nil
 }
 
@@ -121,13 +121,13 @@ func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
 		return nil, err
 	}
 
-	script := make([]byte, 0)
-	script = append(script, utils.OpFALSE)
-	script = append(script, utils.OpRETURN)
-	script = append(script, b...)
+	s := make([]byte, 0)
+	s = append(s, script.OpFALSE)
+	s = append(s, script.OpRETURN)
+	s = append(s, b...)
 
 	o := Output{}
-	o.Script = script
+	o.Script = s
 	return &o, nil
 }
 

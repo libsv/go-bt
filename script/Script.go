@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/utils"
 )
 
 // Script type
@@ -39,13 +38,13 @@ func NewP2PKHScriptFromPubKeyStr(pubKey string) (*Script, error) {
 	hash := crypto.Hash160(pubKeyBytes)
 
 	b := []byte{
-		utils.OpDUP,
-		utils.OpHASH160,
+		OpDUP,
+		OpHASH160,
 		0x14,
 	}
 	b = append(b, hash...)
-	b = append(b, utils.OpEQUALVERIFY)
-	b = append(b, utils.OpCHECKSIG)
+	b = append(b, OpEQUALVERIFY)
+	b = append(b, OpCHECKSIG)
 
 	s := Script(b)
 	return &s, nil
@@ -105,11 +104,11 @@ func (s *Script) AppendOpCode(o uint8) {
 func (s *Script) IsPublicKeyHashOut() bool {
 	b := []byte(*s)
 	return len(b) == 25 &&
-		b[0] == utils.OpDUP &&
-		b[1] == utils.OpHASH160 &&
+		b[0] == OpDUP &&
+		b[1] == OpHASH160 &&
 		b[2] == 0x14 &&
-		b[23] == utils.OpEQUALVERIFY &&
-		b[24] == utils.OpCHECKSIG
+		b[23] == OpEQUALVERIFY &&
+		b[24] == OpCHECKSIG
 }
 
 // IsPublicKeyOut returns true if this is a public key output script.
@@ -121,7 +120,7 @@ func (s *Script) IsPublicKeyOut() bool {
 
 	if len(parts) == 2 &&
 		len(parts[0]) > 0 &&
-		parts[1][0] == utils.OpCHECKSIG {
+		parts[1][0] == OpCHECKSIG {
 
 		pubkey := parts[0]
 		version := pubkey[0]
@@ -140,9 +139,9 @@ func (s *Script) IsScriptHashOut() bool {
 	b := []byte(*s)
 
 	return len(b) == 23 &&
-		b[0] == utils.OpHASH160 &&
+		b[0] == OpHASH160 &&
 		b[1] == 0x14 &&
-		b[22] == utils.OpEQUAL
+		b[22] == OpEQUAL
 }
 
 // IsMultisigOut returns true if this is a multisig output script.
@@ -167,11 +166,11 @@ func (s *Script) IsMultisigOut() bool {
 	}
 
 	return isSmallIntOp(parts[len(parts)-2][0]) &&
-		parts[len(parts)-1][0] == utils.OpCHECKMULTISIG
+		parts[len(parts)-1][0] == OpCHECKMULTISIG
 }
 
 func isSmallIntOp(opcode byte) bool {
-	return opcode == utils.OpZERO || (opcode >= utils.OpONE && opcode <= utils.OpSIXTEEN)
+	return opcode == OpZERO || (opcode >= OpONE && opcode <= OpSIXTEEN)
 }
 
 // GetPublicKeyHash returns a public key hash byte array if the script is a P2PKH script
