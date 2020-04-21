@@ -24,7 +24,7 @@ Txout-script / scriptPubKey   Script                                      <out-s
 // Output is a representation of a transaction output
 type Output struct {
 	Value         uint64
-	LockingScript []byte
+	LockingScript *script.Script
 }
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
@@ -37,7 +37,8 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 	i, size := utils.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	o.LockingScript = bytes[offset : offset+int(i)]
+	s := script.Script(bytes[offset : offset+int(i)])
+	o.LockingScript = &s
 
 	return &o, offset + int(i)
 }
@@ -51,14 +52,19 @@ func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, 
 	if err != nil {
 		return nil, err
 	}
-	s := make([]byte, 0, len(publicKeyHash)+8)
-	s = append(s, script.OpDUP)
-	s = append(s, script.OpHASH160)
-	s = append(s, utils.VarInt(uint64(len(publicKeyHash)/2))...)
-	s = append(s, publicKeyHashBytes...)
-	s = append(s, script.OpEQUALVERIFY)
-	s = append(s, script.OpCHECKSIG)
+
+	s := &script.Script{}
+	s.AppendOpCode(script.OpDUP)
+	s.AppendOpCode(script.OpHASH160)
+	err = s.AppendPushDataToScript(publicKeyHashBytes)
+	if err != nil {
+		return nil, err
+	}
+	s.AppendOpCode(script.OpEQUALVERIFY)
+	s.AppendOpCode(script.OpCHECKSIG)
+
 	o.LockingScript = s
+
 	return &o, nil
 }
 
@@ -71,6 +77,7 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 	if err != nil {
 		return nil, err
 	}
+
 	s := &script.Script{}
 
 	s.AppendOpCode(script.OpHASH160)
@@ -89,7 +96,7 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 	s.AppendOpCode(script.OpEQUALVERIFY)
 	s.AppendOpCode(script.OpCHECKSIG)
 
-	o.LockingScript = *s
+	o.LockingScript = s
 	return &o, nil
 }
 
@@ -97,44 +104,53 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 // passed in encoded as hex.
 func NewOutputOpReturn(data []byte) (*Output, error) {
 
-	b, err := script.EncodeParts([][]byte{data})
+	o, err := createOpReturnOutput([][]byte{data})
 	if err != nil {
 		return nil, err
 	}
-	s := make([]byte, 0)
-	s = append(s, script.OpFALSE)
-	s = append(s, script.OpRETURN)
-	s = append(s, b...)
 
-	o := Output{}
-	o.LockingScript = s
-	return &o, nil
+	return o, nil
 }
 
 // NewOutputOpReturnPush creates a new Output with OP_FALSE OP_RETURN and then
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
 func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
 
-	b, err := script.EncodeParts(data)
+	o, err := createOpReturnOutput(data)
 	if err != nil {
 		return nil, err
 	}
 
-	s := make([]byte, 0)
-	s = append(s, script.OpFALSE)
-	s = append(s, script.OpRETURN)
-	s = append(s, b...)
+	return o, nil
+}
 
+func createOpReturnOutput(data [][]byte) (*Output, error) {
+	b, err := script.EncodeParts(data)
+	if err != nil {
+		return nil, err
+	}
+	s := &script.Script{}
+
+	s.AppendOpCode(script.OpFALSE)
+	s.AppendOpCode(script.OpRETURN)
+	err = s.AppendPushDataToScript(b)
+	if err != nil {
+		return nil, err
+	}
 	o := Output{}
 	o.LockingScript = s
 	return &o, nil
+}
+
+func (o *Output) GetLockingScriptHexString() string {
+	return hex.EncodeToString(*o.LockingScript)
 }
 
 func (o *Output) String() string {
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d
 script:    %x
-`, o.Value, len(o.LockingScript), o.LockingScript)
+`, o.Value, len(*o.LockingScript), o.LockingScript)
 }
 
 // Hex encodes the Output into a byte array.
@@ -145,8 +161,8 @@ func (o *Output) Hex() []byte {
 
 	h := make([]byte, 0)
 	h = append(h, b...)
-	h = append(h, utils.VarInt(uint64(len(o.LockingScript)))...)
-	h = append(h, o.LockingScript...)
+	h = append(h, utils.VarInt(uint64(len(*o.LockingScript)))...)
+	h = append(h, *o.LockingScript...)
 
 	return h
 }
@@ -158,8 +174,8 @@ func (o *Output) getBytesForSigHash() []byte {
 	binary.LittleEndian.PutUint64(satoshis, o.Value)
 	buf = append(buf, satoshis...)
 
-	buf = append(buf, utils.VarInt(uint64(len(o.LockingScript)))...)
-	buf = append(buf, o.LockingScript...)
+	buf = append(buf, utils.VarInt(uint64(len(*o.LockingScript)))...)
+	buf = append(buf, *o.LockingScript...)
 
 	return buf
 }

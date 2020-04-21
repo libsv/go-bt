@@ -10,12 +10,6 @@ import (
 // Script type
 type Script []byte
 
-// NewScript creates a new Script.
-func NewScript() *Script {
-	s := Script(make([]byte, 0))
-	return &s
-}
-
 // NewScriptFromString creates a new script from a hex encoded string.
 func NewScriptFromString(s string) *Script {
 	b, _ := hex.DecodeString(s)
