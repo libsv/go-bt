@@ -112,7 +112,7 @@ func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
 	offset += size
 
 	for i = 0; i < outputCount; i++ {
-		o, size := output.NewOutputFromBytes(bytes[offset:])
+		o, size := output.NewFromBytes(bytes[offset:])
 		offset += size
 		bt.Outputs = append(bt.Outputs, o)
 	}
@@ -171,7 +171,7 @@ func (bt *BitcoinTransaction) AddOutput(output *output.Output) {
 
 // PayTo function
 func (bt *BitcoinTransaction) PayTo(addr string, satoshis uint64) error {
-	o, err := output.NewOutputForP2PKH(addr, satoshis)
+	o, err := output.NewP2PKHFromAddress(addr, satoshis)
 	if err != nil {
 		return err
 	}
