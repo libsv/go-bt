@@ -4,9 +4,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+
 	"github.com/libsv/libsv/block"
 	"github.com/libsv/libsv/crypto"
-	script2 "github.com/libsv/libsv/script"
+	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/utils"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -141,10 +142,10 @@ func (bt *BitcoinTransaction) AddInput(input *Input) {
 }
 
 // AddUTXO function
-func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, script string, satoshis uint64) error {
+func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
 	i := &Input{
 		PreviousTxOutIndex: vout,
-		PreviousTxScript:   script2.NewScriptFromString(script),
+		PreviousTxScript:   script.NewScriptFromString(scriptSig),
 		PreviousTxSatoshis: satoshis,
 	}
 
@@ -323,7 +324,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			buf = append(buf, (SighashAll | SighashForkID))
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].SigScript = script2.NewScriptFromBytes(buf)
+			bt.Inputs[index].SigScript = script.NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 	}
@@ -402,7 +403,7 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 			buf = append(buf, (SighashAll | SighashForkID))
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].SigScript = script2.NewScriptFromBytes(buf)
+			bt.Inputs[index].SigScript = script.NewScriptFromBytes(buf)
 			sigsApplied++
 		}
 	}

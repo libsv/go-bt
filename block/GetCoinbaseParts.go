@@ -40,10 +40,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	script2 "github.com/libsv/libsv/script"
 	"log"
 
 	"github.com/btcsuite/btcutil/base58"
+	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/utils"
 )
 
@@ -85,13 +85,9 @@ func makeCoinbaseInputTransaction(coinbaseData []byte) []byte {
 	return buf
 }
 
-// AddressToScript comment
-func AddressToScript(address string) (script []byte, err error) {
+// AddressToScript comment TODO: already there in address/script package?
+func AddressToScript(address string) ([]byte, error) {
 	decoded := base58.Decode(address)
-
-	if err != nil {
-		return nil, err
-	}
 
 	if len(decoded) != 25 {
 		return nil, fmt.Errorf("invalid address length for '%s'", address)
@@ -108,13 +104,13 @@ func AddressToScript(address string) (script []byte, err error) {
 		pubkey := decoded[1 : len(decoded)-4]
 
 		ret := []byte{
-			script2.OpDUP,
-			script2.OpHASH160,
+			script.OpDUP,
+			script.OpHASH160,
 			0x14,
 		}
 		ret = append(ret, pubkey...)
-		ret = append(ret, script2.OpEQUALVERIFY)
-		ret = append(ret, script2.OpCHECKSIG)
+		ret = append(ret, script.OpEQUALVERIFY)
+		ret = append(ret, script.OpCHECKSIG)
 
 		return ret, nil
 
@@ -124,11 +120,11 @@ func AddressToScript(address string) (script []byte, err error) {
 		redeemScriptHash := decoded[1 : len(decoded)-4]
 
 		ret := []byte{
-			script2.OpHASH160,
+			script.OpHASH160,
 			0x14,
 		}
 		ret = append(ret, redeemScriptHash...)
-		ret = append(ret, script2.OpEQUAL)
+		ret = append(ret, script.OpEQUAL)
 
 		return ret, nil
 
