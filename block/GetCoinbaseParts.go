@@ -40,9 +40,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	address2 "github.com/libsv/libsv/address"
-	"github.com/libsv/libsv/utils"
 	"log"
+
+	"github.com/btcsuite/btcutil/base58"
+	"github.com/libsv/libsv/utils"
 )
 
 // BuildCoinbase recombines the different parts of the coinbase transaction.
@@ -85,7 +86,7 @@ func makeCoinbaseInputTransaction(coinbaseData []byte) []byte {
 
 // AddressToScript comment
 func AddressToScript(address string) (script []byte, err error) {
-	decoded, err := address2.DecodeString(address)
+	decoded := base58.Decode(address)
 
 	if err != nil {
 		return nil, err

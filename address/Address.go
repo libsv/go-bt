@@ -7,7 +7,6 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil/base58"
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/utils"
 )
 
 // An Address struct contains the address string as well as the hash160 hexstring of the public key.
@@ -33,8 +32,7 @@ func NewFromString(addr string) (*Address, error) {
 }
 
 func addressToPubKeyHashStr(address string) (publicKeyHash string, err error) {
-	// decoded, err := DecodeString(address)
-	decoded := utils.Base58Decode(address)
+	decoded := base58.Decode(address)
 
 	if err != nil {
 		return "", err
