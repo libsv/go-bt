@@ -91,7 +91,7 @@ func TestGetPublicKeyHashAsString(t *testing.T) {
 }
 
 func TestGetPublicKeyHashEmptyScript(t *testing.T) {
-	s := script.NewScript()
+	s := &script.Script{}
 
 	_, err := s.GetPublicKeyHash()
 	if err == nil {
