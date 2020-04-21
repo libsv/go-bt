@@ -112,3 +112,14 @@ func TestNewFromPublicKey(t *testing.T) {
 		t.Errorf("Address is incorrect,\ngot: %s\nexpected: %s", addr.AddressString, expectedAddress)
 	}
 }
+
+func TestBase58EncodeMissingChecksum(t *testing.T) {
+	input, _ := hex.DecodeString("0488b21e000000000000000000362f7a9030543db8751401c387d6a71e870f1895b3a62569d455e8ee5f5f5e5f03036624c6df96984db6b4e625b6707c017eb0e0d137cd13a0c989bfa77a4473fd")
+	res := address.Base58EncodeMissingChecksum(input)
+
+	expected := "xpub661MyMwAqRbcF5ivRisXcZTEoy7d9DfLF6fLqpu5GWMfeUyGHuWJHVp5uexDqXTWoySh8pNx3ELW7qymwPNg3UEYHjwh1tpdm3P9J2j4g32"
+
+	if res != expected {
+		t.Errorf("Expected %q, got %q", expected, res)
+	}
+}
