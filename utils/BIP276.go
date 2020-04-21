@@ -9,15 +9,26 @@ import (
 	"strconv"
 )
 
+// PrefixScript is the prefix in the BIP276 standard which
+// specifies if it is a script or template.
 const PrefixScript = "bitcoin-script"
 
-//const prefixTemplate = "bitcoin-template"
+// PrefixScript is the prefix in the BIP276 standard which
+// specifies if it is a script or template.
+const PrefixTemplate = "bitcoin-template"
 
+// CurrentVersion provides the ability to
+// update the structure of the data that
+// follows it.
 const CurrentVersion = 1
 
+// NetworkMainnet specifies that the data is only
+// valid for use on the main network.
 const NetworkMainnet = 1
 
-//const networkTestnet = 2
+// NetworkMainnet specifies that the data is only
+// valid for use on the test network.
+const NetworkTestnet = 2
 
 // TODO: consider moving to script or utils
 

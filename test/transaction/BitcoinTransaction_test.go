@@ -409,8 +409,8 @@ func TestBareMultiSigValidation(t *testing.T) {
 
 	var previousTxSatoshis uint64 = 99728
 	var previousTxScript *script.Script = script.NewScriptFromString("5221023ff15e2676e03b2c0af30fc17b7fb354bbfa9f549812da945194d3407dc0969b21039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a32103ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e53ae")
-	var prevIndex uint32 = 0
-	var outIndex uint32 = 0
+	var prevIndex uint32
+	var outIndex uint32
 
 	for i, sig := range sigs {
 		sighash := transaction.GetSighashForInputValidation(tx, sigHashTypes[i], outIndex, prevIndex, previousTxSatoshis, previousTxScript)
