@@ -1,4 +1,4 @@
-package transaction
+package output
 
 import (
 	"encoding/binary"
@@ -15,7 +15,7 @@ General format (inside a block) of each output of a transaction - Txout
 Field	                        Description	                                Size
 -----------------------------------------------------------------------------------------------------
 value                         non negative integer giving the number of   8 bytes
-                              Satoshis(BTC/10^8) to be transfered
+                              Satoshis(BTC/10^8) to be transferred
 Txout-script length           non negative integer                        1 - 9 bytes VI = VarInt
 Txout-script / scriptPubKey   Script                                      <out-script length>-many bytes
 
@@ -45,27 +45,28 @@ func NewOutputFromBytes(bytes []byte) (*Output, int) {
 
 // NewOutputForPublicKeyHash makes an output to a PKH with a value.
 func NewOutputForPublicKeyHash(publicKeyHash string, satoshis uint64) (*Output, error) {
-	o := Output{}
-	o.Value = satoshis
-
-	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
+	s, err := script.NewP2PKHScriptFromPubKeyHashStr(publicKeyHash)
 	if err != nil {
 		return nil, err
 	}
 
-	s := &script.Script{}
-	s.AppendOpCode(script.OpDUP)
-	s.AppendOpCode(script.OpHASH160)
-	err = s.AppendPushDataToScript(publicKeyHashBytes)
+	return &Output{
+		Value:         satoshis,
+		LockingScript: s,
+	}, nil
+}
+
+// NewOutputForP2PKH makes an output to a PKH with a value.
+func NewOutputForP2PKH(addr string, satoshis uint64) (*Output, error) {
+	s, err := script.NewP2PKHScriptFromAddress(addr)
 	if err != nil {
 		return nil, err
 	}
-	s.AppendOpCode(script.OpEQUALVERIFY)
-	s.AppendOpCode(script.OpCHECKSIG)
 
-	o.LockingScript = s
-
-	return &o, nil
+	return &Output{
+		Value:         satoshis,
+		LockingScript: s,
+	}, nil
 }
 
 // NewOutputForHashPuzzle makes an output to a hash puzzle + PKH with a value.
@@ -103,7 +104,6 @@ func NewOutputForHashPuzzle(secret string, publicKeyHash string, satoshis uint64
 // NewOutputOpReturn creates a new Output with OP_FALSE OP_RETURN and then the data
 // passed in encoded as hex.
 func NewOutputOpReturn(data []byte) (*Output, error) {
-
 	o, err := createOpReturnOutput([][]byte{data})
 	if err != nil {
 		return nil, err
@@ -115,7 +115,6 @@ func NewOutputOpReturn(data []byte) (*Output, error) {
 // NewOutputOpReturnPush creates a new Output with OP_FALSE OP_RETURN and then
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
 func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
-
 	o, err := createOpReturnOutput(data)
 	if err != nil {
 		return nil, err
@@ -125,15 +124,11 @@ func NewOutputOpReturnPush(data [][]byte) (*Output, error) {
 }
 
 func createOpReturnOutput(data [][]byte) (*Output, error) {
-	b, err := script.EncodeParts(data)
-	if err != nil {
-		return nil, err
-	}
 	s := &script.Script{}
 
 	s.AppendOpCode(script.OpFALSE)
 	s.AppendOpCode(script.OpRETURN)
-	err = s.AppendPushDataToScript(b)
+	err := s.AppendPushDataArrayToScript(data)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +150,6 @@ script:    %x
 
 // Hex encodes the Output into a byte array.
 func (o *Output) Hex() []byte {
-
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, o.Value)
 
@@ -167,7 +161,9 @@ func (o *Output) Hex() []byte {
 	return h
 }
 
-func (o *Output) getBytesForSigHash() []byte {
+// GetBytesForSigHash returns the proper serialisation
+// of an output to be hashed and signed (sighash).
+func (o *Output) GetBytesForSigHash() []byte {
 	buf := make([]byte, 0)
 
 	satoshis := make([]byte, 8)

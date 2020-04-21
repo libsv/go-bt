@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/libsv/libsv/address"
 	"github.com/libsv/libsv/crypto"
 )
 
@@ -42,6 +43,54 @@ func NewP2PKHScriptFromPubKeyStr(pubKey string) (*Script, error) {
 
 	s := Script(b)
 	return &s, nil
+}
+
+// NewP2PKHScriptFromPubKeyHashStr takes a public key hex string (in
+// compressed format) and creates a P2PKH script from it.
+func NewP2PKHScriptFromPubKeyHashStr(pubKeyHash string) (*Script, error) {
+	hash, err := hex.DecodeString(pubKeyHash)
+	if err != nil {
+		return nil, err
+	}
+
+	b := []byte{
+		OpDUP,
+		OpHASH160,
+		0x14,
+	}
+	b = append(b, hash...)
+	b = append(b, OpEQUALVERIFY)
+	b = append(b, OpCHECKSIG)
+
+	s := Script(b)
+	return &s, nil
+}
+
+// NewP2PKHScriptFromAddress takes an address
+// and creates a P2PKH script from it.
+func NewP2PKHScriptFromAddress(addr string) (*Script, error) {
+
+	a, err := address.NewFromString(addr)
+	if err != nil {
+		return nil, err
+	}
+
+	publicKeyHashBytes, err := hex.DecodeString(a.PublicKeyHash)
+	if err != nil {
+		return nil, err
+	}
+
+	s := &Script{}
+	s.AppendOpCode(OpDUP)
+	s.AppendOpCode(OpHASH160)
+	err = s.AppendPushDataToScript(publicKeyHashBytes)
+	if err != nil {
+		return nil, err
+	}
+	s.AppendOpCode(OpEQUALVERIFY)
+	s.AppendOpCode(OpCHECKSIG)
+
+	return s, nil
 }
 
 // ToString returns hex string of script.

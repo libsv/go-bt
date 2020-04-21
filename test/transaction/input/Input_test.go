@@ -1,17 +1,17 @@
-package transaction
+package input
 
 import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/libsv/transaction"
+	input2 "github.com/libsv/libsv/transaction/input"
 )
 
 const input = "4c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff"
 
 func TestNew(t *testing.T) {
 	bytes, _ := hex.DecodeString(input)
-	i, s := transaction.NewInputFromBytes(bytes)
+	i, s := input2.NewInputFromBytes(bytes)
 
 	// t.Errorf("\n%s\n", i)
 

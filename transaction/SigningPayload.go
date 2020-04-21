@@ -92,10 +92,10 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 
 		if n == -1 {
 			for _, out := range tx.Outputs {
-				buf = append(buf, out.getBytesForSigHash()...)
+				buf = append(buf, out.GetBytesForSigHash()...)
 			}
 		} else {
-			buf = append(buf, tx.Outputs[n].getBytesForSigHash()...)
+			buf = append(buf, tx.Outputs[n].GetBytesForSigHash()...)
 		}
 
 		return crypto.Sha256d(buf)
@@ -208,10 +208,10 @@ func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 
 		if n == -1 {
 			for _, out := range tx.Outputs {
-				buf = append(buf, out.getBytesForSigHash()...)
+				buf = append(buf, out.GetBytesForSigHash()...)
 			}
 		} else {
-			buf = append(buf, tx.Outputs[n].getBytesForSigHash()...)
+			buf = append(buf, tx.Outputs[n].GetBytesForSigHash()...)
 		}
 
 		return crypto.Sha256d(buf)

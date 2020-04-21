@@ -5,9 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/libsv/libsv/block"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
+	"github.com/libsv/libsv/transaction/input"
+	"github.com/libsv/libsv/transaction/output"
 	"github.com/libsv/libsv/utils"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -45,7 +46,7 @@ const (
 	SighashSingle       = 0x00000003
 	SighashForkID       = 0x00000040
 	SighashAnyoneCanPay = 0x00000080
-	SighashAllForkID    = (0x00000001 | 0x00000040)
+	SighashAllForkID    = 0x00000001 | 0x00000040
 )
 
 // A BitcoinTransaction wraps a bitcoin transaction
@@ -53,19 +54,12 @@ type BitcoinTransaction struct {
 	Bytes    []byte
 	Version  uint32
 	Witness  bool
-	Inputs   []*Input
-	Outputs  []*Output
+	Inputs   []*input.Input
+	Outputs  []*output.Output
 	Locktime uint32
 }
 
-// New creates a new (version 1) BitcoinTransaction.
-func New() *BitcoinTransaction {
-	return &BitcoinTransaction{
-		Version: 1,
-	}
-}
-
-// NewFromString takes a hex string representation of a bitcoin transaction
+// NewFromString takes a h string representation of a bitcoin transaction
 // and returns a BitcoinTransaction object.
 func NewFromString(str string) (*BitcoinTransaction, error) {
 	bytes, err := hex.DecodeString(str)
@@ -108,19 +102,19 @@ func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
 
 	var i uint64
 	for ; i < inputCount; i++ {
-		input, size := NewInputFromBytes(bytes[offset:])
+		i, size := input.NewInputFromBytes(bytes[offset:])
 		offset += size
 
-		bt.Inputs = append(bt.Inputs, input)
+		bt.Inputs = append(bt.Inputs, i)
 	}
 
 	outputCount, size := utils.DecodeVarInt(bytes[offset:])
 	offset += size
 
 	for i = 0; i < outputCount; i++ {
-		output, size := NewOutputFromBytes(bytes[offset:])
+		o, size := output.NewOutputFromBytes(bytes[offset:])
 		offset += size
-		bt.Outputs = append(bt.Outputs, output)
+		bt.Outputs = append(bt.Outputs, o)
 	}
 
 	bt.Locktime = binary.LittleEndian.Uint32(bytes[offset:])
@@ -137,13 +131,13 @@ func (bt *BitcoinTransaction) HasWitnessData() bool {
 }
 
 // AddInput adds a new input to the transaction.
-func (bt *BitcoinTransaction) AddInput(input *Input) {
+func (bt *BitcoinTransaction) AddInput(input *input.Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
 
 // AddUTXO function
 func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
-	i := &Input{
+	i := &input.Input{
 		PreviousTxOutIndex: vout,
 		PreviousTxScript:   script.NewScriptFromString(scriptSig),
 		PreviousTxSatoshis: satoshis,
@@ -171,21 +165,18 @@ func (bt *BitcoinTransaction) OutputCount() int {
 }
 
 // AddOutput adds a new output to the transaction.
-func (bt *BitcoinTransaction) AddOutput(output *Output) {
+func (bt *BitcoinTransaction) AddOutput(output *output.Output) {
 	bt.Outputs = append(bt.Outputs, output)
 }
 
 // PayTo function
-func (bt *BitcoinTransaction) PayTo(address string, amount uint64) error {
-	script, err := block.AddressToScript(address)
+func (bt *BitcoinTransaction) PayTo(addr string, satoshis uint64) error {
+	o, err := output.NewOutputForP2PKH(addr, satoshis)
 	if err != nil {
 		return err
 	}
 
-	bt.AddOutput(&Output{
-		Value:         amount,
-		LockingScript: script,
-	})
+	bt.AddOutput(o)
 	return nil
 }
 
@@ -210,12 +201,12 @@ func (bt *BitcoinTransaction) IsCoinbase() bool {
 }
 
 // GetInputs returns an array of all inputs in the transaction.
-func (bt *BitcoinTransaction) GetInputs() []*Input {
+func (bt *BitcoinTransaction) GetInputs() []*input.Input {
 	return bt.Inputs
 }
 
 // GetOutputs returns an array of all outputs in the transaction.
-func (bt *BitcoinTransaction) GetOutputs() []*Output {
+func (bt *BitcoinTransaction) GetOutputs() []*output.Output {
 	return bt.Outputs
 }
 
@@ -225,16 +216,16 @@ func (bt *BitcoinTransaction) GetTxID() string {
 	return hex.EncodeToString(utils.ReverseBytes(crypto.Sha256d(bt.Hex())))
 }
 
-// Hex encodes the transaction into a hex byte array.
+// Hex encodes the transaction into a h byte array.
 // See https://chainquery.com/bitcoin-cli/decoderawtransaction
 func (bt *BitcoinTransaction) Hex() []byte {
-	return bt.hex(0, nil)
+	return bt.h(0, nil)
 }
 
-// HexWithClearedInputs encodes the transaction into a hex byte array but clears its inputs first.
+// HexWithClearedInputs encodes the transaction into a h byte array but clears its inputs first.
 // This is used when signing transactions.
 func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byte) []byte {
-	return bt.hex(index, scriptPubKey)
+	return bt.h(index, scriptPubKey)
 }
 
 // GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
@@ -246,38 +237,38 @@ func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload
 	return signingPayload, nil
 }
 
-func (bt *BitcoinTransaction) hex(index int, scriptPubKey []byte) []byte {
-	hex := make([]byte, 0)
+func (bt *BitcoinTransaction) h(index int, scriptPubKey []byte) []byte {
+	h := make([]byte, 0)
 
-	hex = append(hex, utils.GetLittleEndianBytes(bt.Version, 4)...)
+	h = append(h, utils.GetLittleEndianBytes(bt.Version, 4)...)
 
 	if bt.Witness {
-		hex = append(hex, 0x00)
-		hex = append(hex, 0x01)
+		h = append(h, 0x00)
+		h = append(h, 0x01)
 	}
 
-	hex = append(hex, utils.VarInt(uint64(len(bt.GetInputs())))...)
+	h = append(h, utils.VarInt(uint64(len(bt.GetInputs())))...)
 
 	for i, in := range bt.GetInputs() {
-		script := in.Hex(scriptPubKey != nil)
+		s := in.Hex(scriptPubKey != nil)
 		if i == index && scriptPubKey != nil {
-			hex = append(hex, utils.VarInt(uint64(len(scriptPubKey)))...)
-			hex = append(hex, scriptPubKey...)
+			h = append(h, utils.VarInt(uint64(len(scriptPubKey)))...)
+			h = append(h, scriptPubKey...)
 		} else {
-			hex = append(hex, script...)
+			h = append(h, s...)
 		}
 	}
 
-	hex = append(hex, utils.VarInt(uint64(len(bt.GetOutputs())))...)
+	h = append(h, utils.VarInt(uint64(len(bt.GetOutputs())))...)
 	for _, out := range bt.GetOutputs() {
-		hex = append(hex, out.Hex()...)
+		h = append(h, out.Hex()...)
 	}
 
 	lt := make([]byte, 4)
 	binary.LittleEndian.PutUint32(lt, bt.Locktime)
-	hex = append(hex, lt...)
+	h = append(h, lt...)
 
-	return hex
+	return h
 }
 
 // ApplySignatures applies the signatures passed in through SigningPayload parameter to the transaction inputs
@@ -290,7 +281,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 	}
 
 	if len(*signingPayload) != len(bt.GetInputs()) {
-		return errors.New("Error - signing payload number of items does not equal number of inputs")
+		return errors.New("error - signing payload number of items does not equal number of inputs")
 	}
 
 	sigsApplied := 0
@@ -307,7 +298,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 					return err
 				}
 				if hex.EncodeToString(txPubKeyHash) != signingItem.PublicKeyHash {
-					return errors.New("Error public key hash from signing payload does not match tx")
+					return errors.New("error public key hash from signing payload does not match tx")
 				}
 			}
 
@@ -321,7 +312,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 			buf := make([]byte, 0)
 			buf = append(buf, utils.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
 			buf = append(buf, sigBytes...)
-			buf = append(buf, (SighashAll | SighashForkID))
+			buf = append(buf, SighashAll|SighashForkID)
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
 			bt.Inputs[index].UnlockingScript = script.NewScriptFromBytes(buf)
@@ -329,7 +320,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 		}
 	}
 	if sigsApplied == 0 {
-		return errors.New("Error - libsv found no signatures in signingPayload to apply to this tx")
+		return errors.New("error - libsv found no signatures in signingPayload to apply to this tx")
 	}
 	return nil
 }
@@ -382,7 +373,7 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 	}
 
 	if len(*signingPayload) != len(bt.GetInputs()) {
-		return errors.New("Error - signing payload number of items does not equal number of inputs")
+		return errors.New("error - signing payload number of items does not equal number of inputs")
 	}
 
 	sigsApplied := 0
@@ -400,7 +391,7 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 			buf := make([]byte, 0)
 			buf = append(buf, utils.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
 			buf = append(buf, sigBytes...)
-			buf = append(buf, (SighashAll | SighashForkID))
+			buf = append(buf, SighashAll|SighashForkID)
 			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
 			buf = append(buf, pubKeyBytes...)
 			bt.Inputs[index].UnlockingScript = script.NewScriptFromBytes(buf)
@@ -408,7 +399,7 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 		}
 	}
 	if sigsApplied == 0 {
-		return errors.New("Error - libsv found no signatures in signingPayload to apply to this tx")
+		return errors.New("error - libsv found no signatures in signingPayload to apply to this tx")
 	}
 	return nil
 }
