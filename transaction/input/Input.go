@@ -30,8 +30,8 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
-// NewInput creates a new Input object with a finalised sequence number.
-func NewInput() *Input {
+// New creates a new empty Input object with a finalised sequence number.
+func New() *Input {
 	b := make([]byte, 0)
 	s := script.NewFromBytes(b)
 
@@ -41,8 +41,8 @@ func NewInput() *Input {
 	}
 }
 
-// NewInputFromBytes returns a transaction input from the bytes provided.
-func NewInputFromBytes(bytes []byte) (*Input, int) {
+// NewFromBytes returns a transaction input from the bytes provided.
+func NewFromBytes(bytes []byte) (*Input, int) {
 	i := Input{}
 
 	copy(i.PreviousTxHash[:], utils.ReverseBytes(bytes[0:32]))
