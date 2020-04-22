@@ -2,6 +2,7 @@ package block
 
 import (
 	"encoding/hex"
+
 	"github.com/libsv/libsv/crypto"
 )
 

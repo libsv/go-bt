@@ -3,6 +3,7 @@ package block
 import (
 	"encoding/hex"
 	"fmt"
+
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/utils"
 )

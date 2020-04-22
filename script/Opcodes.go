@@ -1,4 +1,4 @@
-package utils
+package script
 
 // Bitcoin Script constants
 const (

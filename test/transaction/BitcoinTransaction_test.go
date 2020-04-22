@@ -3,12 +3,13 @@ package transaction
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"reflect"
+	"testing"
+
 	"github.com/libsv/libsv/keys"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction"
 	"github.com/libsv/libsv/utils"
-	"reflect"
-	"testing"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -112,9 +113,9 @@ func TestGetSighashPayload(t *testing.T) {
 	tx, err := transaction.NewFromString(unsignedTx)
 	// Previous txid 5b1a7dabe570741c2da71111d396e0be19778d8782c9f28b98d7c72d1b9b417e
 
-	//Add the UTXO amount and script.
+	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 2000000000
-	tx.Inputs[0].PreviousTxScript = script.NewScriptFromString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
+	tx.Inputs[0].PreviousTxScript = script.NewFromString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
 	// t.Logf("%x\n", tx.Hex())
 	// tx with input 01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88acffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000
 
@@ -189,9 +190,9 @@ func TestSignTx(t *testing.T) {
 	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
 
-	//Add the UTXO amount and script.
+	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 100000000
-	tx.Inputs[0].PreviousTxScript = script.NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+	tx.Inputs[0].PreviousTxScript = script.NewFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
 	// Our private key.
 	wif, err := btcutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
@@ -231,9 +232,9 @@ func TestSignTxForced(t *testing.T) {
 	unsignedTx := "0100000001f59f8ee5745b020dd3e3a561a539defb626117befc554e168c3bfb88b56ab0f20000000000ffffffff01d0200000000000001976a91447862fe165e6121af80d5dde1ecb478ed170565b88ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
 
-	//Add the UTXO amount and script.
+	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 8519
-	tx.Inputs[0].PreviousTxScript = script.NewScriptFromString("a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac")
+	tx.Inputs[0].PreviousTxScript = script.NewFromString("a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac")
 
 	// Our private key.
 	wif, err := btcutil.DecodeWIF("L31FJtAimeRhprhFEuXpnw1E1sKKuKVgPNUaQ7MjpW3dCWEVuV6R")
@@ -248,7 +249,7 @@ func TestSignTxForced(t *testing.T) {
 	}
 
 	secret := "secret1"
-	tx.GetInputs()[0].SigScript.AppendPushDataStringToScript(secret)
+	tx.GetInputs()[0].UnlockingScript.AppendPushDataString(secret)
 
 	expectedSignedTx := "0100000001f59f8ee5745b020dd3e3a561a539defb626117befc554e168c3bfb88b56ab0f20000000073483045022100b30ce9d7e143c3d48a9202b82cf8a32cbe1ee1d9c2a36976bf78a65e71c2255b02203b6152deb3c041179856cc85874a599f2ac41fdbefff28745cafb551630762f9412102adbf278425824e49c1b9f09679451f8754b609544ff72512190ed21881d1ca510773656372657431ffffffff01d0200000000000001976a91447862fe165e6121af80d5dde1ecb478ed170565b88ac00000000"
 
@@ -272,7 +273,7 @@ func TestValidSignature(t *testing.T) {
 	// txid := tx.GetTxID()
 	// fmt.Println(txid)
 
-	sigScript := tx.GetInputs()[0].SigScript
+	sigScript := tx.GetInputs()[0].UnlockingScript
 
 	publicKeyBytes := []byte(*sigScript)[len(*sigScript)-33:]
 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
@@ -290,7 +291,7 @@ func TestValidSignature(t *testing.T) {
 	}
 
 	var previousTxSatoshis uint64 = 15564838601
-	var previousTxScript *script.Script = script.NewScriptFromString("76a914c7c6987b6e2345a6b138e3384141520a0fbc18c588ac")
+	var previousTxScript *script.Script = script.NewFromString("76a914c7c6987b6e2345a6b138e3384141520a0fbc18c588ac")
 	var prevIndex uint32 = 0
 	var outIndex uint32 = 0
 
@@ -317,7 +318,7 @@ func TestValidSignature2(t *testing.T) {
 	// txid := tx.GetTxID()
 	// fmt.Println(txid)
 
-	sigScript := tx.GetInputs()[0].SigScript
+	sigScript := tx.GetInputs()[0].UnlockingScript
 
 	publicKeyBytes := []byte(*sigScript)[len(*sigScript)-33:]
 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
@@ -335,7 +336,7 @@ func TestValidSignature2(t *testing.T) {
 	}
 
 	var previousTxSatoshis uint64 = 5000000000
-	var previousTxScript *script.Script = script.NewScriptFromString("76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac")
+	var previousTxScript *script.Script = script.NewFromString("76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac")
 	var prevIndex uint32 = 1
 	var outIndex uint32 = 0
 
@@ -366,7 +367,7 @@ func TestBareMultiSigValidation(t *testing.T) {
 	var sigHashTypes = make([]uint32, 2)
 	var publicKeys = make([]*btcec.PublicKey, 3)
 
-	sigScript := tx.GetInputs()[0].SigScript
+	sigScript := tx.GetInputs()[0].UnlockingScript
 
 	sig0Bytes := []byte(*sigScript)[2:73]
 	sig0HashType, _ := binary.Uvarint([]byte(*sigScript)[73:74])
@@ -407,9 +408,9 @@ func TestBareMultiSigValidation(t *testing.T) {
 	sigHashTypes[1] = uint32(sig1HashType)
 
 	var previousTxSatoshis uint64 = 99728
-	var previousTxScript *script.Script = script.NewScriptFromString("5221023ff15e2676e03b2c0af30fc17b7fb354bbfa9f549812da945194d3407dc0969b21039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a32103ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e53ae")
-	var prevIndex uint32 = 0
-	var outIndex uint32 = 0
+	var previousTxScript *script.Script = script.NewFromString("5221023ff15e2676e03b2c0af30fc17b7fb354bbfa9f549812da945194d3407dc0969b21039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a32103ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e53ae")
+	var prevIndex uint32
+	var outIndex uint32
 
 	for i, sig := range sigs {
 		sighash := transaction.GetSighashForInputValidation(tx, sigHashTypes[i], outIndex, prevIndex, previousTxSatoshis, previousTxScript)
@@ -442,7 +443,7 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 	var sigHashTypes = make([]uint32, 2)
 	var publicKeys = make([]*btcec.PublicKey, 3)
 
-	sigScript := tx.GetInputs()[0].SigScript
+	sigScript := tx.GetInputs()[0].UnlockingScript
 
 	sig0Bytes := []byte(*sigScript)[2:73]
 	sig0HashType, _ := binary.Uvarint([]byte(*sigScript)[73:74])
@@ -483,7 +484,7 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 	sigHashTypes[1] = uint32(sig1HashType)
 
 	var previousTxSatoshis uint64 = 8785040
-	var previousTxScript *script.Script = script.NewScriptFromString("5221021db57ae3de17143cb6c314fb206b56956e8ed45e2f1cbad3947411228b8d17f1210308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee419421030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd953ae")
+	var previousTxScript *script.Script = script.NewFromString("5221021db57ae3de17143cb6c314fb206b56956e8ed45e2f1cbad3947411228b8d17f1210308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee419421030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd953ae")
 	var prevIndex uint32 = 1
 	var outIndex uint32 = 0
 

@@ -1,8 +1,9 @@
 package block
 
 import (
-	"github.com/libsv/libsv/block"
 	"testing"
+
+	"github.com/libsv/libsv/block"
 )
 
 func TestExpandTargetFrom_GenesisBlock(t *testing.T) {

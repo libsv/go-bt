@@ -2,10 +2,11 @@ package utils
 
 import (
 	"encoding/hex"
+	"testing"
+
 	"github.com/libsv/libsv/block"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/utils"
-	"testing"
 )
 
 func TestReverseHexString(t *testing.T) {

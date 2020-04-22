@@ -2,6 +2,7 @@ package address
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -41,6 +42,30 @@ func TestNewFromStringTestnet(t *testing.T) {
 
 	if addr.AddressString != addressTestnet {
 		t.Errorf("Address from Main address %s incorrect,\ngot: %s\nexpected: %s", addressTestnet, addr.AddressString, addressTestnet)
+	}
+}
+
+func TestNewFromStringShortAddress(t *testing.T) {
+	_, err := address.NewFromString("ADD8E55")
+	if err == nil {
+		t.Errorf("Expected an error")
+	} else {
+		expected := "invalid address length for 'ADD8E55'"
+		if fmt.Sprint(err) != expected {
+			t.Errorf("Expected %s, got %s", expected, err)
+		}
+	}
+}
+
+func TestNewFromStringUnsupportedAddress(t *testing.T) {
+	_, err := address.NewFromString("27BvY7rFguYQvEL872Y7Fo77Y3EBApC2EK")
+	if err == nil {
+		t.Errorf("Expected an error")
+	} else {
+		expected := "Address 27BvY7rFguYQvEL872Y7Fo77Y3EBApC2EK is not supported"
+		if fmt.Sprint(err) != expected {
+			t.Errorf("Expected %s, got %s", expected, err)
+		}
 	}
 }
 

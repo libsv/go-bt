@@ -2,9 +2,10 @@ package transaction
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction"
-	"testing"
 )
 
 func Test(t *testing.T) {
@@ -56,8 +57,8 @@ func TestUnmarshall(t *testing.T) {
 
 // 	tx.Inputs[0].PreviousTxSatoshis = uint64(100000000)
 // 	tx.Inputs[1].PreviousTxSatoshis = uint64(100000000)
-// 	tx.Inputs[0].PreviousTxScript = NewScriptFromString("76a914bcd0bdbf5fcde5ed957396752d4bd2e01d36870288ac")
-// 	tx.Inputs[1].PreviousTxScript = NewScriptFromString("76a914bcd0bdbf5fcde5ed957396752d4bd2e01d36870288ac")
+// 	tx.Inputs[0].PreviousTxScript = NewFromString("76a914bcd0bdbf5fcde5ed957396752d4bd2e01d36870288ac")
+// 	tx.Inputs[1].PreviousTxScript = NewFromString("76a914bcd0bdbf5fcde5ed957396752d4bd2e01d36870288ac")
 
 // 	payload, err := tx.GetSighashPayload(0)
 // 	if err != nil {
@@ -73,9 +74,9 @@ func TestGetSighashForInput(t *testing.T) {
 	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
 
-	//Add the UTXO amount and script.
+	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = uint64(100000000)
-	tx.Inputs[0].PreviousTxScript = script.NewScriptFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+	tx.Inputs[0].PreviousTxScript = script.NewFromString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
 	expectedSigHash := "b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe"
 	actualSigHash := transaction.GetSighashForInput(tx, (transaction.SighashAll | transaction.SighashForkID), uint32(0))

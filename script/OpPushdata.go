@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/libsv/libsv/utils"
 )
 
 // EncodeParts takes a slice of slices and returns a single slice with the appropriate OP_PUSH commands embedded.
@@ -60,19 +59,19 @@ func DecodeParts(b []byte) ([][]byte, error) {
 	for len(b) > 0 {
 		// Handle OP codes
 		switch b[0] {
-		case utils.OpPUSHDATA1:
+		case OpPUSHDATA1:
 			length := b[1]
 			part := b[2 : 2+length]
 			r = append(r, part)
 			b = b[2+length:]
 
-		case utils.OpPUSHDATA2:
+		case OpPUSHDATA2:
 			length := binary.LittleEndian.Uint16(b[1:])
 			part := b[3 : 3+length]
 			r = append(r, part)
 			b = b[3+length:]
 
-		case utils.OpPUSHDATA4:
+		case OpPUSHDATA4:
 			length := binary.LittleEndian.Uint32(b[1:])
 			part := b[5 : 5+length]
 			r = append(r, part)

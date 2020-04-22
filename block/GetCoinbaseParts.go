@@ -39,10 +39,9 @@ Here is a real example coinbase broken down...
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"log"
 
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/libsv/libsv/transaction/output"
 	"github.com/libsv/libsv/utils"
 )
 
@@ -84,61 +83,8 @@ func makeCoinbaseInputTransaction(coinbaseData []byte) []byte {
 	return buf
 }
 
-// AddressToScript comment
-func AddressToScript(address string) (script []byte, err error) {
-	decoded := base58.Decode(address)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(decoded) != 25 {
-		return nil, fmt.Errorf("invalid address length for '%s'", address)
-	}
-
-	// A P2SH address always begins with a '3', instead of a '1' as in P2PKH addresses.
-	// This is because P2SH addresses have a version byte prefix of 0x05, instead of
-	// the 0x00 prefix in P2PKH addresses, and these come out as a '3' and '1' after
-	// base58check encoding.
-	switch decoded[0] {
-	case 0x00: // Pubkey hash (P2PKH address)
-		fallthrough
-	case 0x6f: // Testnet pubkey hash (P2PKH address)
-		pubkey := decoded[1 : len(decoded)-4]
-
-		ret := []byte{
-			utils.OpDUP,
-			utils.OpHASH160,
-			0x14,
-		}
-		ret = append(ret, pubkey...)
-		ret = append(ret, utils.OpEQUALVERIFY)
-		ret = append(ret, utils.OpCHECKSIG)
-
-		return ret, nil
-
-	case 0x05: // Script hash (P2SH address)
-		fallthrough
-	case 0xc4: // Testnet script hash (P2SH address)
-		redeemScriptHash := decoded[1 : len(decoded)-4]
-
-		ret := []byte{
-			utils.OpHASH160,
-			0x14,
-		}
-		ret = append(ret, redeemScriptHash...)
-		ret = append(ret, utils.OpEQUAL)
-
-		return ret, nil
-
-	default:
-		return nil, fmt.Errorf("Address %s is not supported", address)
-	}
-}
-
 func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitment string, wallet string, minerIDBytes []byte) ([]byte, error) {
-
-	lockingScript, err := AddressToScript(wallet)
+	o, err := output.NewP2PKHFromAddress(wallet, coinbaseValue)
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +93,8 @@ func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitme
 
 	binary.LittleEndian.PutUint64(buf[0:], coinbaseValue)
 
-	buf = append(buf, utils.VarInt(uint64(len(lockingScript)))...)
-	buf = append(buf, lockingScript...)
+	buf = append(buf, utils.VarInt(uint64(len(*o.LockingScript)))...)
+	buf = append(buf, *o.LockingScript...)
 
 	numberOfTransactions := 1
 	if defaultWitnessCommitment != "" {
@@ -189,7 +135,7 @@ func makeCoinbase1(height uint32, coinbaseText string) []byte {
 	arbitraryData = append(arbitraryData, blockHeightBytes[:3]...)
 	arbitraryData = append(arbitraryData, []byte(coinbaseText)...)
 
-	//Arbitrary data should leave enough space for the extra nonce
+	// Arbitrary data should leave enough space for the extra nonce
 	if len(arbitraryData) > (100 - spaceForExtraNonce) {
 		arbitraryData = arbitraryData[:100-spaceForExtraNonce] // Slice the arbitrary text so everything fits in 100 bytes
 	}

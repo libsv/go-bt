@@ -3,6 +3,7 @@ package block
 import (
 	"encoding/binary"
 	"encoding/hex"
+
 	"github.com/libsv/libsv/utils"
 )
 

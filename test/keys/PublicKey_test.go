@@ -1,8 +1,9 @@
 package keys
 
 import (
-	"github.com/libsv/libsv/keys"
 	"testing"
+
+	"github.com/libsv/libsv/keys"
 )
 
 func TestNewPublicKey(t *testing.T) {
