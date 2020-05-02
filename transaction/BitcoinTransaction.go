@@ -59,7 +59,7 @@ type BitcoinTransaction struct {
 	Locktime uint32
 }
 
-// NewFromString takes a h string representation of a bitcoin transaction
+// NewFromHexString takes a h string representation of a bitcoin transaction
 // and returns a BitcoinTransaction object.
 func NewFromString(str string) (*BitcoinTransaction, error) {
 	bytes, err := hex.DecodeString(str)
@@ -139,7 +139,7 @@ func (bt *BitcoinTransaction) AddInput(input *input.Input) {
 func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
 	i := &input.Input{
 		PreviousTxOutIndex: vout,
-		PreviousTxScript:   script.NewFromString(scriptSig),
+		PreviousTxScript:   script.NewFromHexString(scriptSig),
 		PreviousTxSatoshis: satoshis,
 	}
 

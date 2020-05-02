@@ -11,8 +11,8 @@ import (
 // Script type
 type Script []byte
 
-// NewFromString creates a new script from a hex encoded string.
-func NewFromString(s string) *Script {
+// NewFromHexString creates a new script from a hex encoded string.
+func NewFromHexString(s string) *Script {
 	b, _ := hex.DecodeString(s)
 	return NewFromBytes(b)
 }
