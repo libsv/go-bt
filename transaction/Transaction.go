@@ -103,7 +103,6 @@ func NewFromBytes(b []byte) *Transaction {
 }
 
 // AddInput adds a new input to the transaction.
-
 func (bt *Transaction) AddInput(input *input.Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
@@ -190,17 +189,18 @@ func (bt *Transaction) GetTxID() string {
 	return hex.EncodeToString(utils.ReverseBytes(crypto.Sha256d(bt.ToBytes())))
 }
 
+// ToHex encodes the transaction into a hex string.
 func (bt *Transaction) ToHex() string {
 	return hex.EncodeToString(bt.ToBytes())
 }
 
-// ToBytes encodes the transaction into a toBytesHelper byte array.
+// ToBytes encodes the transaction into a byte array.
 // See https://chainquery.com/bitcoin-cli/decoderawtransaction
 func (bt *Transaction) ToBytes() []byte {
 	return bt.toBytesHelper(0, nil)
 }
 
-// ToBytesWithClearedInputs encodes the transaction into a toBytesHelper byte array but clears its inputs first.
+// ToBytesWithClearedInputs encodes the transaction into a byte array but clears its inputs first.
 // This is used when signing transactions.
 func (bt *Transaction) ToBytesWithClearedInputs(index int, scriptPubKey []byte) []byte {
 	return bt.toBytesHelper(index, scriptPubKey)
@@ -235,6 +235,9 @@ func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
 	return h
 }
 
+// Sign is used to sign the transaction. It takes a Signed interface as a
+// parameter so that different signing implementations can be used to sign
+// the transaction - for example internal/local or external signing.
 func (bt *Transaction) Sign(s Signer) error {
 	signedTx, err := s.Sign(bt)
 	if err != nil {
