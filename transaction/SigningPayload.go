@@ -28,8 +28,8 @@ func NewSigningPayload() *SigningPayload {
 	return &p
 }
 
-// NewSigningPayloadFromTx creates a new SigningPayload from a BitcoinTransaction and a SIGHASH type.
-func NewSigningPayloadFromTx(bt *BitcoinTransaction, sigType uint32) (*SigningPayload, error) {
+// NewSigningPayloadFromTx creates a new SigningPayload from a Transaction and a SIGHASH type.
+func NewSigningPayloadFromTx(bt *Transaction, sigType uint32) (*SigningPayload, error) {
 	p := NewSigningPayload()
 	for idx, input := range bt.Inputs {
 		if input.PreviousTxSatoshis == 0 {
@@ -59,11 +59,11 @@ func (sp *SigningPayload) AddItem(publicKeyHash string, sigHash string) {
 }
 
 // GetSighashForInput function
-func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32) string {
+func GetSighashForInput(transaction *Transaction, sighashType uint32, inputNumber uint32) string {
 
 	input := transaction.Inputs[inputNumber]
 
-	getPrevoutHash := func(tx *BitcoinTransaction) []byte {
+	getPrevoutHash := func(tx *Transaction) []byte {
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
@@ -76,7 +76,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 		return crypto.Sha256d(buf)
 	}
 
-	getSequenceHash := func(tx *BitcoinTransaction) []byte {
+	getSequenceHash := func(tx *Transaction) []byte {
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
@@ -88,7 +88,7 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 		return crypto.Sha256d(buf)
 	}
 
-	getOutputsHash := func(tx *BitcoinTransaction, n int32) []byte {
+	getOutputsHash := func(tx *Transaction, n int32) []byte {
 		buf := make([]byte, 0)
 
 		if n == -1 {
@@ -175,11 +175,11 @@ func GetSighashForInput(transaction *BitcoinTransaction, sighashType uint32, inp
 }
 
 // GetSighashForInputValidation comment todo
-func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType uint32, inputNumber uint32, previousTxOutIndex uint32, previousTxSatoshis uint64, previousTxScript *script.Script) string {
+func GetSighashForInputValidation(transaction *Transaction, sighashType uint32, inputNumber uint32, previousTxOutIndex uint32, previousTxSatoshis uint64, previousTxScript *script.Script) string {
 
 	input := transaction.Inputs[inputNumber]
 
-	getPrevoutHash := func(tx *BitcoinTransaction) []byte {
+	getPrevoutHash := func(tx *Transaction) []byte {
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
@@ -192,7 +192,7 @@ func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 		return crypto.Sha256d(buf)
 	}
 
-	getSequenceHash := func(tx *BitcoinTransaction) []byte {
+	getSequenceHash := func(tx *Transaction) []byte {
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
@@ -204,7 +204,7 @@ func GetSighashForInputValidation(transaction *BitcoinTransaction, sighashType u
 		return crypto.Sha256d(buf)
 	}
 
-	getOutputsHash := func(tx *BitcoinTransaction, n int32) []byte {
+	getOutputsHash := func(tx *Transaction, n int32) []byte {
 		buf := make([]byte, 0)
 
 		if n == -1 {

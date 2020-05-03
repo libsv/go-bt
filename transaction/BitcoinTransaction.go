@@ -49,8 +49,8 @@ const (
 	SighashAllForkID    = 0x00000001 | 0x00000040
 )
 
-// A BitcoinTransaction wraps a bitcoin transaction
-type BitcoinTransaction struct {
+// A Transaction wraps a bitcoin transaction
+type Transaction struct {
 	Bytes    []byte
 	Version  uint32
 	Witness  bool
@@ -60,8 +60,8 @@ type BitcoinTransaction struct {
 }
 
 // NewFromHexString takes a h string representation of a bitcoin transaction
-// and returns a BitcoinTransaction object.
-func NewFromString(str string) (*BitcoinTransaction, error) {
+// and returns a Transaction object.
+func NewFromString(str string) (*Transaction, error) {
 	bytes, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
@@ -70,21 +70,21 @@ func NewFromString(str string) (*BitcoinTransaction, error) {
 	return NewFromBytes(bytes), nil
 }
 
-// NewFromBytes takes an array of bytes and constructs a BitcoinTransaction.
-func NewFromBytes(bytes []byte) *BitcoinTransaction {
+// NewFromBytes takes an array of bytes and constructs a Transaction.
+func NewFromBytes(bytes []byte) *Transaction {
 	bt, _ := NewFromBytesWithUsed(bytes)
 	return bt
 }
 
-// NewFromBytesWithUsed takes an array of bytes and constructs a BitcoinTransaction
+// NewFromBytesWithUsed takes an array of bytes and constructs a Transaction
 // and returns the offset (length of tx).
-func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
+func NewFromBytesWithUsed(bytes []byte) (*Transaction, int) {
 	if len(bytes) < 10 {
 		// Even an empty transaction has 10 bytes.
 		return nil, 0
 	}
 
-	bt := BitcoinTransaction{}
+	bt := Transaction{}
 
 	var offset = 0
 
@@ -126,17 +126,17 @@ func NewFromBytesWithUsed(bytes []byte) (*BitcoinTransaction, int) {
 }
 
 // HasWitnessData returns true if the optional Witness flag == 0001
-func (bt *BitcoinTransaction) HasWitnessData() bool {
+func (bt *Transaction) HasWitnessData() bool {
 	return bt.Witness
 }
 
 // AddInput adds a new input to the transaction.
-func (bt *BitcoinTransaction) AddInput(input *input.Input) {
+func (bt *Transaction) AddInput(input *input.Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
 
 // AddUTXO function
-func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
+func (bt *Transaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
 	i := &input.Input{
 		PreviousTxOutIndex: vout,
 		PreviousTxScript:   script.NewFromHexString(scriptSig),
@@ -155,22 +155,22 @@ func (bt *BitcoinTransaction) AddUTXO(txID string, vout uint32, scriptSig string
 }
 
 // InputCount returns the number of transaction inputs.
-func (bt *BitcoinTransaction) InputCount() int {
+func (bt *Transaction) InputCount() int {
 	return len(bt.Inputs)
 }
 
 // OutputCount returns the number of transaction inputs.
-func (bt *BitcoinTransaction) OutputCount() int {
+func (bt *Transaction) OutputCount() int {
 	return len(bt.Outputs)
 }
 
 // AddOutput adds a new output to the transaction.
-func (bt *BitcoinTransaction) AddOutput(output *output.Output) {
+func (bt *Transaction) AddOutput(output *output.Output) {
 	bt.Outputs = append(bt.Outputs, output)
 }
 
 // PayTo function
-func (bt *BitcoinTransaction) PayTo(addr string, satoshis uint64) error {
+func (bt *Transaction) PayTo(addr string, satoshis uint64) error {
 	o, err := output.NewP2PKHFromAddress(addr, satoshis)
 	if err != nil {
 		return err
@@ -182,7 +182,7 @@ func (bt *BitcoinTransaction) PayTo(addr string, satoshis uint64) error {
 
 // IsCoinbase determines if this transaction is a coinbase by
 // seeing if any of the inputs have no inputs.
-func (bt *BitcoinTransaction) IsCoinbase() bool {
+func (bt *Transaction) IsCoinbase() bool {
 	if len(bt.Inputs) != 1 {
 		return false
 	}
@@ -201,35 +201,35 @@ func (bt *BitcoinTransaction) IsCoinbase() bool {
 }
 
 // GetInputs returns an array of all inputs in the transaction.
-func (bt *BitcoinTransaction) GetInputs() []*input.Input {
+func (bt *Transaction) GetInputs() []*input.Input {
 	return bt.Inputs
 }
 
 // GetOutputs returns an array of all outputs in the transaction.
-func (bt *BitcoinTransaction) GetOutputs() []*output.Output {
+func (bt *Transaction) GetOutputs() []*output.Output {
 	return bt.Outputs
 }
 
 // GetTxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
-func (bt *BitcoinTransaction) GetTxID() string {
+func (bt *Transaction) GetTxID() string {
 	return hex.EncodeToString(utils.ReverseBytes(crypto.Sha256d(bt.Hex())))
 }
 
 // Hex encodes the transaction into a h byte array.
 // See https://chainquery.com/bitcoin-cli/decoderawtransaction
-func (bt *BitcoinTransaction) Hex() []byte {
+func (bt *Transaction) Hex() []byte {
 	return bt.h(0, nil)
 }
 
 // HexWithClearedInputs encodes the transaction into a h byte array but clears its inputs first.
 // This is used when signing transactions.
-func (bt *BitcoinTransaction) HexWithClearedInputs(index int, scriptPubKey []byte) []byte {
+func (bt *Transaction) HexWithClearedInputs(index int, scriptPubKey []byte) []byte {
 	return bt.h(index, scriptPubKey)
 }
 
 // GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
-func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) {
+func (bt *Transaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) {
 	signingPayload, err := NewSigningPayloadFromTx(bt, sigType)
 	if err != nil {
 		return nil, err
@@ -237,7 +237,7 @@ func (bt *BitcoinTransaction) GetSighashPayload(sigType uint32) (*SigningPayload
 	return signingPayload, nil
 }
 
-func (bt *BitcoinTransaction) h(index int, scriptPubKey []byte) []byte {
+func (bt *Transaction) h(index int, scriptPubKey []byte) []byte {
 	h := make([]byte, 0)
 
 	h = append(h, utils.GetLittleEndianBytes(bt.Version, 4)...)
@@ -275,7 +275,7 @@ func (bt *BitcoinTransaction) h(index int, scriptPubKey []byte) []byte {
 // The signing payload from the signing service should contain a signing item for each of the tx inputs.
 // If the TX input does not belong to us, its signature will be blank unless its owner has already signed it.
 // If the signing payload contains a signature for a given input, we apply that to the tx regardless of whether we own it or not.
-func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, sigType uint32) error {
+func (bt *Transaction) ApplySignatures(signingPayload *SigningPayload, sigType uint32) error {
 	if sigType == 0 {
 		sigType = SighashAllForkID
 	}
@@ -327,7 +327,7 @@ func (bt *BitcoinTransaction) ApplySignatures(signingPayload *SigningPayload, si
 
 // Sign the transaction
 // Normally we'd expect the signing service to do this, but we include this for testing purposes
-func (bt *BitcoinTransaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) error {
+func (bt *Transaction) Sign(privateKey *btcec.PrivateKey, sigType uint32) error {
 	if sigType == 0 {
 		sigType = SighashAllForkID
 	}
@@ -367,7 +367,7 @@ func submitToDummySigningService(payload *SigningPayload, privateKey *btcec.Priv
 
 // ApplySignaturesWithoutP2PKHCheck applies signatures without checking if the input previous script equals
 // to a P2PKH script matching the private key (see func SignWithoutP2PKHCheck below)
-func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *SigningPayload, sigType uint32) error {
+func (bt *Transaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *SigningPayload, sigType uint32) error {
 	if sigType == 0 {
 		sigType = SighashAllForkID
 	}
@@ -406,7 +406,7 @@ func (bt *BitcoinTransaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *S
 
 // SignWithoutP2PKHCheck signs the transaction without checking if the input previous script equals
 // to a P2PKH script matching the private key
-func (bt *BitcoinTransaction) SignWithoutP2PKHCheck(privateKey *btcec.PrivateKey, sigType uint32) error {
+func (bt *Transaction) SignWithoutP2PKHCheck(privateKey *btcec.PrivateKey, sigType uint32) error {
 	if sigType == 0 {
 		sigType = SighashAllForkID
 	}
