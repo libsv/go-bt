@@ -54,7 +54,7 @@ type Transaction struct {
 	Locktime uint32
 }
 
-// NewFromHexString takes a h string representation of a bitcoin transaction
+// NewFromHexString takes a bytesHelper string representation of a bitcoin transaction
 // and returns a Transaction object.
 func NewFromString(str string) (*Transaction, error) {
 	bytes, err := hex.DecodeString(str)
@@ -197,31 +197,26 @@ func (bt *Transaction) GetOutputs() []*output.Output {
 // GetTxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
 func (bt *Transaction) GetTxID() string {
-	return hex.EncodeToString(utils.ReverseBytes(crypto.Sha256d(bt.Hex())))
+	return hex.EncodeToString(utils.ReverseBytes(crypto.Sha256d(bt.ToBytes())))
 }
 
-// Hex encodes the transaction into a h byte array.
+func (bt *Transaction) ToHex() string {
+	return hex.EncodeToString(bt.ToBytes())
+}
+
+// ToBytes encodes the transaction into a bytesHelper byte array.
 // See https://chainquery.com/bitcoin-cli/decoderawtransaction
-func (bt *Transaction) Hex() []byte {
-	return bt.h(0, nil)
+func (bt *Transaction) ToBytes() []byte {
+	return bt.bytesHelper(0, nil)
 }
 
-// HexWithClearedInputs encodes the transaction into a h byte array but clears its inputs first.
+// ToBytesWithClearedInputs encodes the transaction into a bytesHelper byte array but clears its inputs first.
 // This is used when signing transactions.
-func (bt *Transaction) HexWithClearedInputs(index int, scriptPubKey []byte) []byte {
-	return bt.h(index, scriptPubKey)
+func (bt *Transaction) ToBytesWithClearedInputs(index int, scriptPubKey []byte) []byte {
+	return bt.bytesHelper(index, scriptPubKey)
 }
 
-// GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
-func (bt *Transaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) {
-	signingPayload, err := NewSigningPayloadFromTx(bt, sigType)
-	if err != nil {
-		return nil, err
-	}
-	return signingPayload, nil
-}
-
-func (bt *Transaction) h(index int, scriptPubKey []byte) []byte {
+func (bt *Transaction) bytesHelper(index int, scriptPubKey []byte) []byte {
 	h := make([]byte, 0)
 
 	h = append(h, utils.GetLittleEndianBytes(bt.Version, 4)...)
@@ -248,6 +243,15 @@ func (bt *Transaction) h(index int, scriptPubKey []byte) []byte {
 	h = append(h, lt...)
 
 	return h
+}
+
+// GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
+func (bt *Transaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) {
+	signingPayload, err := NewSigningPayloadFromTx(bt, sigType)
+	if err != nil {
+		return nil, err
+	}
+	return signingPayload, nil
 }
 
 // ApplySignatures applies the signatures passed in through SigningPayload parameter to the transaction inputs
