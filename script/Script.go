@@ -11,8 +11,8 @@ import (
 // Script type
 type Script []byte
 
-// NewFromString creates a new script from a hex encoded string.
-func NewFromString(s string) *Script {
+// NewFromHexString creates a new script from a hex encoded string.
+func NewFromHexString(s string) *Script {
 	b, _ := hex.DecodeString(s)
 	return NewFromBytes(b)
 }
@@ -21,6 +21,11 @@ func NewFromString(s string) *Script {
 func NewFromBytes(b []byte) *Script {
 	s := Script(b)
 	return &s
+}
+
+// NewFromASM creates a new script from a Bitcoin ASM formatted string.
+func NewFromASM(s string) (*Script, error) {
+	return &Script{}, nil // TODO:
 }
 
 // NewP2PKHFromPubKeyStr takes a public key hex string (in
