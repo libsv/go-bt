@@ -64,51 +64,44 @@ func NewFromString(str string) (*Transaction, error) {
 	return NewFromBytes(bytes), nil
 }
 
-// NewFromBytes takes an array of bytes and constructs a Transaction.
-func NewFromBytes(bytes []byte) *Transaction {
-	bt, _ := NewFromBytesWithUsed(bytes)
-	return bt
-}
-
-// NewFromBytesWithUsed takes an array of bytes and constructs a Transaction
-// and returns the offset (length of tx).
-func NewFromBytesWithUsed(b []byte) (*Transaction, int) {
+// NewFromBytes takes an array of bytes, constructs a Transaction and returns it.
+func NewFromBytes(b []byte) *Transaction {
 	if len(b) < 10 {
-		// Even an empty transaction has 10 bytes.
-		return nil, 0
+		return nil // Even an empty transaction has 10 bytes.
 	}
 
-	bt := Transaction{}
+	t := Transaction{}
 
 	var offset = 0
 
-	bt.Version = binary.LittleEndian.Uint32(b[offset:4])
+	t.Version = binary.LittleEndian.Uint32(b[offset:4])
 	offset += 4
 
 	inputCount, size := utils.DecodeVarInt(b[offset:])
 	offset += size
 
+	// create inputs
 	var i uint64
 	for ; i < inputCount; i++ {
 		i, size := input.NewFromBytes(b[offset:])
 		offset += size
 
-		bt.Inputs = append(bt.Inputs, i)
+		t.Inputs = append(t.Inputs, i)
 	}
 
+	// create outputs
 	outputCount, size := utils.DecodeVarInt(b[offset:])
 	offset += size
-
 	for i = 0; i < outputCount; i++ {
 		o, size := output.NewFromBytes(b[offset:])
 		offset += size
-		bt.Outputs = append(bt.Outputs, o)
+		t.Outputs = append(t.Outputs, o)
 	}
 
-	bt.Locktime = binary.LittleEndian.Uint32(b[offset:])
+	t.Locktime = binary.LittleEndian.Uint32(b[offset:])
 	offset += 4
 
-	return &bt, offset
+	return &t
 }
 
 // AddInput adds a new input to the transaction.
