@@ -21,6 +21,30 @@ func TestNewP2PKHScriptFromPubKeyStr(t *testing.T) {
 	}
 }
 
+func TestNewFromHexString(t *testing.T) {
+	s := script.NewFromHexString("76a914e2a623699e81b291c0327f408fea765d534baa2a88ac")
+
+	res := hex.EncodeToString(*s)
+	expected := "76a914e2a623699e81b291c0327f408fea765d534baa2a88ac"
+
+	if res != expected {
+		t.Errorf("Expected %q, got %q", expected, res)
+	}
+}
+func TestNewFromASM(t *testing.T) {
+	s, err := script.NewFromASM("OP_DUP OP_HASH160 e2a623699e81b291c0327f408fea765d534baa2a OP_EQUALVERIFY OP_CHECKSIG")
+	if err != nil {
+		t.Error(err)
+	}
+
+	res := hex.EncodeToString(*s)
+	expected := "76a914e2a623699e81b291c0327f408fea765d534baa2a88ac"
+
+	if res != expected {
+		t.Errorf("Expected %q, got %q", expected, res)
+	}
+}
+
 func TestIsPublicKeyHashOut(t *testing.T) {
 	b, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
 	scriptPub := script.NewFromBytes(b)

@@ -23,6 +23,11 @@ func NewFromBytes(b []byte) *Script {
 	return &s
 }
 
+// NewFromASM creates a new script from a Bitcoin ASM formatted string.
+func NewFromASM(s string) (*Script, error) {
+	return &Script{}, nil // TODO:
+}
+
 // NewP2PKHFromPubKeyStr takes a public key hex string (in
 // compressed format) and creates a P2PKH script from it.
 func NewP2PKHFromPubKeyStr(pubKey string) (*Script, error) {
