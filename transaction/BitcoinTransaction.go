@@ -21,8 +21,6 @@ Field            Description                                                    
 
 Version no	     currently 1	                                                             4 bytes
 
-Flag	           If present, always 0001, and indicates the presence of witness data       optional 2 byte array
-
 In-counter  	   positive integer VI = VarInt                                              1 - 9 bytes
 
 list of inputs	 the first input of the first transaction is also called "coinbase"        <in-counter>-many inputs
@@ -32,8 +30,6 @@ Out-counter    	 positive integer VI = VarInt                                   
 
 list of outputs  the outputs of the first transaction spend the mined                      <out-counter>-many outputs
 								 bitcoins for the block
-
-Witnesses        A list of witnesses, 1 for each input, omitted if flag above is missing	 variable, see Segregated_Witness
 
 lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height or        4 bytes
                  timestamp when transaction is final
@@ -53,7 +49,6 @@ const (
 type Transaction struct {
 	Bytes    []byte
 	Version  uint32
-	Witness  bool
 	Inputs   []*input.Input
 	Outputs  []*output.Output
 	Locktime uint32
@@ -91,12 +86,6 @@ func NewFromBytesWithUsed(bytes []byte) (*Transaction, int) {
 	bt.Version = binary.LittleEndian.Uint32(bytes[offset:4])
 	offset += 4
 
-	// There is an optional Flag of 2 bytes after the version. It is always "0001".
-	if bytes[4] == 0x00 && bytes[5] == 0x01 {
-		bt.Witness = true
-		offset += 2
-	}
-
 	inputCount, size := utils.DecodeVarInt(bytes[offset:])
 	offset += size
 
@@ -123,11 +112,6 @@ func NewFromBytesWithUsed(bytes []byte) (*Transaction, int) {
 	bt.Bytes = bytes[0:offset]
 
 	return &bt, offset
-}
-
-// HasWitnessData returns true if the optional Witness flag == 0001
-func (bt *Transaction) HasWitnessData() bool {
-	return bt.Witness
 }
 
 // AddInput adds a new input to the transaction.
@@ -241,11 +225,6 @@ func (bt *Transaction) h(index int, scriptPubKey []byte) []byte {
 	h := make([]byte, 0)
 
 	h = append(h, utils.GetLittleEndianBytes(bt.Version, 4)...)
-
-	if bt.Witness {
-		h = append(h, 0x00)
-		h = append(h, 0x01)
-	}
 
 	h = append(h, utils.VarInt(uint64(len(bt.GetInputs())))...)
 
