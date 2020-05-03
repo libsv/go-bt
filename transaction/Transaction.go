@@ -53,7 +53,7 @@ type Transaction struct {
 	Locktime uint32
 }
 
-// NewFromHexString takes a bytesHelper string representation of a bitcoin transaction
+// NewFromHexString takes a toBytesHelper string representation of a bitcoin transaction
 // and returns a Transaction object.
 func NewFromString(str string) (*Transaction, error) {
 	bytes, err := hex.DecodeString(str)
@@ -194,19 +194,19 @@ func (bt *Transaction) ToHex() string {
 	return hex.EncodeToString(bt.ToBytes())
 }
 
-// ToBytes encodes the transaction into a bytesHelper byte array.
+// ToBytes encodes the transaction into a toBytesHelper byte array.
 // See https://chainquery.com/bitcoin-cli/decoderawtransaction
 func (bt *Transaction) ToBytes() []byte {
-	return bt.bytesHelper(0, nil)
+	return bt.toBytesHelper(0, nil)
 }
 
-// ToBytesWithClearedInputs encodes the transaction into a bytesHelper byte array but clears its inputs first.
+// ToBytesWithClearedInputs encodes the transaction into a toBytesHelper byte array but clears its inputs first.
 // This is used when signing transactions.
 func (bt *Transaction) ToBytesWithClearedInputs(index int, scriptPubKey []byte) []byte {
-	return bt.bytesHelper(index, scriptPubKey)
+	return bt.toBytesHelper(index, scriptPubKey)
 }
 
-func (bt *Transaction) bytesHelper(index int, scriptPubKey []byte) []byte {
+func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
 	h := make([]byte, 0)
 
 	h = append(h, utils.GetLittleEndianBytes(bt.Version, 4)...)

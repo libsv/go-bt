@@ -33,6 +33,15 @@ func TestPrivateKeyToWif2(t *testing.T) {
 	}
 }
 
+func TestConvertXPriv(t *testing.T) {
+	const xprv = "xprv9s21ZrQH143K2beTKhLXFRWWFwH8jkwUssjk3SVTiApgmge7kNC3jhVc4NgHW8PhW2y7BCDErqnKpKuyQMjqSePPJooPJowAz5BVLThsv6c"
+	const expected = "5f86e4023a4e94f00463f81b70ff951f83f896a0a3e6ed89cf163c152f954f8b"
+
+	r, _ := keys.NewPrivateKey(xprv)
+
+	t.Logf("%x", r.PrivateKey)
+}
+
 // func TestValidateExternalMessage(t *testing.T) {
 // 	// privBytes := base58.Decode("L4PPagW8MXCuDRdNiuv8aWeftc1cpPfjMRiedqyzeerrCjh51eMR")
 
