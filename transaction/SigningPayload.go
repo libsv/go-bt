@@ -3,8 +3,6 @@ package transaction
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
-
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/utils"
@@ -26,26 +24,6 @@ func NewSigningPayload() *SigningPayload {
 	sp := make([]*SigningItem, 0)
 	p := SigningPayload(sp)
 	return &p
-}
-
-// NewSigningPayloadFromTx creates a new SigningPayload from a Transaction and a SIGHASH type.
-func NewSigningPayloadFromTx(bt *Transaction, sigType uint32) (*SigningPayload, error) {
-	p := NewSigningPayload()
-	for idx, input := range bt.Inputs {
-		if input.PreviousTxSatoshis == 0 {
-			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
-		}
-
-		if input.PreviousTxScript == nil {
-			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
-
-		}
-
-		sighash := GetSighashForInput(bt, sigType, uint32(idx))
-		pkh, _ := input.PreviousTxScript.GetPublicKeyHash() // if not P2PKH, pkh will just be nil
-		p.AddItem(hex.EncodeToString(pkh), sighash)         // and the SigningItem will have PublicKeyHash = ""
-	}
-	return p, nil
 }
 
 // AddItem appends a new SigningItem to the SigningPayload array.
