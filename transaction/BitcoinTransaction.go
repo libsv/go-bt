@@ -47,7 +47,6 @@ const (
 
 // A Transaction wraps a bitcoin transaction
 type Transaction struct {
-	Bytes    []byte
 	Version  uint32
 	Inputs   []*input.Input
 	Outputs  []*output.Output
@@ -73,8 +72,8 @@ func NewFromBytes(bytes []byte) *Transaction {
 
 // NewFromBytesWithUsed takes an array of bytes and constructs a Transaction
 // and returns the offset (length of tx).
-func NewFromBytesWithUsed(bytes []byte) (*Transaction, int) {
-	if len(bytes) < 10 {
+func NewFromBytesWithUsed(b []byte) (*Transaction, int) {
+	if len(b) < 10 {
 		// Even an empty transaction has 10 bytes.
 		return nil, 0
 	}
@@ -83,33 +82,31 @@ func NewFromBytesWithUsed(bytes []byte) (*Transaction, int) {
 
 	var offset = 0
 
-	bt.Version = binary.LittleEndian.Uint32(bytes[offset:4])
+	bt.Version = binary.LittleEndian.Uint32(b[offset:4])
 	offset += 4
 
-	inputCount, size := utils.DecodeVarInt(bytes[offset:])
+	inputCount, size := utils.DecodeVarInt(b[offset:])
 	offset += size
 
 	var i uint64
 	for ; i < inputCount; i++ {
-		i, size := input.NewFromBytes(bytes[offset:])
+		i, size := input.NewFromBytes(b[offset:])
 		offset += size
 
 		bt.Inputs = append(bt.Inputs, i)
 	}
 
-	outputCount, size := utils.DecodeVarInt(bytes[offset:])
+	outputCount, size := utils.DecodeVarInt(b[offset:])
 	offset += size
 
 	for i = 0; i < outputCount; i++ {
-		o, size := output.NewFromBytes(bytes[offset:])
+		o, size := output.NewFromBytes(b[offset:])
 		offset += size
 		bt.Outputs = append(bt.Outputs, o)
 	}
 
-	bt.Locktime = binary.LittleEndian.Uint32(bytes[offset:])
+	bt.Locktime = binary.LittleEndian.Uint32(b[offset:])
 	offset += 4
-
-	bt.Bytes = bytes[0:offset]
 
 	return &bt, offset
 }

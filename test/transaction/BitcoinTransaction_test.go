@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"reflect"
@@ -17,8 +18,8 @@ import (
 )
 
 func TestToBytes(t *testing.T) {
-	hex := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c0000000049483045022100c4df63202a9aa2bea5c24ebf4418d145e81712072ef744a4b108174f1ef59218022006eb54cf904707b51625f521f8ed2226f7d34b62492ebe4ddcb1c639caf16c3c41ffffffff0140420f00000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
-	bt, err := transaction.NewFromString(hex)
+	h := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c0000000049483045022100c4df63202a9aa2bea5c24ebf4418d145e81712072ef744a4b108174f1ef59218022006eb54cf904707b51625f521f8ed2226f7d34b62492ebe4ddcb1c639caf16c3c41ffffffff0140420f00000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
+	bt, err := transaction.NewFromString(h)
 	if err != nil {
 		t.Error(err)
 		return
@@ -26,20 +27,25 @@ func TestToBytes(t *testing.T) {
 
 	t.Logf("%s", bt.ToHex())
 	t.Logf("%x", bt.ToBytes())
-	t.Logf("%x", bt.Bytes)
 
 }
 
 func TestRegTestCoinbase(t *testing.T) {
-	hex := "02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0e5101010a2f4542323030302e302fffffffff0100f2052a01000000232103db233bb9fc387d78b133ec904069d46e95ff17da657671b44afa0bc64e89ac18ac00000000"
-	bt, err := transaction.NewFromString(hex)
+	h := "02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0e5101010a2f4542323030302e302fffffffff0100f2052a01000000232103db233bb9fc387d78b133ec904069d46e95ff17da657671b44afa0bc64e89ac18ac00000000"
+	bt, err := transaction.NewFromString(h)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-
-	t.Logf("Iscoinbase %t", bt.IsCoinbase())
-	t.Logf("input count %d", bt.InputCount())
+	// check if coinbase transaction
+	if !bt.IsCoinbase() {
+		t.Error("Transaction is not Coinbase transaction")
+	}
+	// check input count
+	expectedInputCount := bt.InputCount()
+	if expectedInputCount != 1 {
+		t.Errorf("Expcted input count to be %v, but got %v", 1, expectedInputCount)
+	}
 
 }
 
@@ -68,9 +74,8 @@ func TestConvertXPriv(t *testing.T) {
 
 func TestSignRedeemScript(t *testing.T) {
 	var redeemScript, _ = hex.DecodeString("524c53ff0488b21e000000000000000000362f7a9030543db8751401c387d6a71e870f1895b3a62569d455e8ee5f5f5e5f03036624c6df96984db6b4e625b6707c017eb0e0d137cd13a0c989bfa77a4473fd000000004c53ff0488b21e0000000000000000008b20425398995f3c866ea6ce5c1828a516b007379cf97b136bffbdc86f75df14036454bad23b019eae34f10aff8b8d6d8deb18cb31354e5a169ee09d8a4560e8250000000052ae")
-	const expected = "3044022041682b268531cf6209577deae34b92fdc83d9ef6e3abc190d4952e927761efd502201696256fba4dd6b05e44ed3871abbd1bc11356aea5ddc36816ca779f68cca6fa"
+	var expectedSignature, _ = hex.DecodeString("304402206d4db58f03ba3875a0f442b3f27b9035d281f851abb24d99ecd25ca6b4c528f30220465169db20a1f52345af3a7dda0a7aefa9415d5dc1403435bf08d4d180b7bc01")
 
-	const xprv = "xprv9s21ZrQH143K2beTKhLXFRWWFwH8jkwUssjk3SVTiApgmge7kNC3jhVc4NgHW8PhW2y7BCDErqnKpKuyQMjqSePPJooPJowAz5BVLThsv6c"
 	const privHex = "5f86e4023a4e94f00463f81b70ff951f83f896a0a3e6ed89cf163c152f954f8b"
 
 	pkBytes, err := hex.DecodeString(privHex)
@@ -89,11 +94,20 @@ func TestSignRedeemScript(t *testing.T) {
 	}
 
 	// Serialize and display the signature.
-	t.Logf("Serialized Signature: %x\n", signature.Serialize())
+	serializedSignature := signature.Serialize()
+
+	res := bytes.Compare(serializedSignature, expectedSignature)
+
+	if res != 0 {
+		t.Errorf("expected err to be %v, but got %v", expectedSignature, serializedSignature)
+	}
 
 	// Verify the signature for the message using the public key.
 	verified := signature.Verify(messageHash, pubKey)
-	t.Logf("Signature Verified? %v\n", verified)
+	if !verified {
+		t.Error("Signature is not verified")
+	}
+
 }
 
 func TestIsCoinbase(t *testing.T) {
@@ -126,10 +140,14 @@ func TestGetSighashPayload(t *testing.T) {
 	unsignedTx := "01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b0000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
 	// Previous txid 5b1a7dabe570741c2da71111d396e0be19778d8782c9f28b98d7c72d1b9b417e
+	if err != nil {
+		t.Fatal("Failed to create transaction")
+	}
 
 	// Add the UTXO amount and script.
-	tx.Inputs[0].PreviousTxSatoshis = 2000000000
-	tx.Inputs[0].PreviousTxScript = script.NewFromHexString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
+	firstInput := tx.Inputs[0]
+	firstInput.PreviousTxSatoshis = 2000000000
+	firstInput.PreviousTxScript = script.NewFromHexString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
 	// t.Logf("%x\n", tx.ToBytes())
 	// tx with input 01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88acffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000
 
@@ -203,7 +221,9 @@ func TestApplySignatures(t *testing.T) {
 func TestSignTx(t *testing.T) {
 	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
-
+	if err != nil {
+		t.Fatal("Failed to create transaction")
+	}
 	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 100000000
 	tx.Inputs[0].PreviousTxScript = script.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
@@ -220,10 +240,10 @@ func TestSignTx(t *testing.T) {
 	if hex.EncodeToString(tx.ToBytes()) != expectedSignedTx {
 		t.Errorf("Expecting %s\n, got %s\n", expectedSignedTx, hex.EncodeToString(tx.ToBytes()))
 	}
-
-	if unsignedTx == expectedSignedTx {
-		t.Errorf("Expected and signed TX strings in code identical")
-	}
+	//
+	//if unsignedTx == expectedSignedTx {
+	//	t.Errorf("Expected and signed TX strings in code identical")
+	//}
 }
 
 func TestTxID(t *testing.T) {
@@ -245,6 +265,9 @@ func TestTxID(t *testing.T) {
 func TestSignTxForced(t *testing.T) {
 	unsignedTx := "0100000001f59f8ee5745b020dd3e3a561a539defb626117befc554e168c3bfb88b56ab0f20000000000ffffffff01d0200000000000001976a91447862fe165e6121af80d5dde1ecb478ed170565b88ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
+	if err != nil {
+		t.Fatal("Failed to create transaction")
+	}
 
 	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 8519
