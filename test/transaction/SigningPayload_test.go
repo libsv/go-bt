@@ -57,6 +57,7 @@ func TestUnmarshall(t *testing.T) {
 
 // 	tx.Inputs[0].PreviousTxSatoshis = uint64(100000000)
 // 	tx.Inputs[1].PreviousTxSatoshis = uint64(100000000)
+
 // 	tx.Inputs[0].PreviousTxScript = NewFromHexString("76a914bcd0bdbf5fcde5ed957396752d4bd2e01d36870288ac")
 // 	tx.Inputs[1].PreviousTxScript = NewFromHexString("76a914bcd0bdbf5fcde5ed957396752d4bd2e01d36870288ac")
 
@@ -76,10 +77,11 @@ func TestGetSighashForInput(t *testing.T) {
 
 	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = uint64(100000000)
+
 	tx.Inputs[0].PreviousTxScript = script.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
 	expectedSigHash := "b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe"
-	actualSigHash := transaction.GetSighashForInput(tx, (transaction.SighashAll | transaction.SighashForkID), uint32(0))
+	actualSigHash := transaction.GetSighashForInput(tx, transaction.SighashAll|transaction.SighashForkID, uint32(0))
 	if err != nil {
 		t.Error(err)
 		return

@@ -3,6 +3,7 @@ package transaction
 import (
 	"encoding/binary"
 	"encoding/hex"
+
 	"github.com/libsv/libsv/transaction/input"
 	"github.com/libsv/libsv/transaction/output"
 	"reflect"
@@ -160,6 +161,7 @@ func TestGetSighashPayload(t *testing.T) {
 	}
 
 	// Add the UTXO amount and script.
+
 	firstInput := tx.Inputs[0]
 	firstInput.PreviousTxSatoshis = 2000000000
 	firstInput.PreviousTxScript = script.NewFromHexString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
@@ -236,6 +238,7 @@ func TestApplySignatures(t *testing.T) {
 func TestSignTx(t *testing.T) {
 	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
+
 	if err != nil {
 		t.Fatal("Failed to create transaction")
 	}
@@ -275,6 +278,7 @@ func TestSignTxForced(t *testing.T) {
 
 	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 8519
+
 	tx.Inputs[0].PreviousTxScript = script.NewFromHexString("a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac")
 
 	// Our private key.
@@ -332,6 +336,7 @@ func TestValidSignature(t *testing.T) {
 	}
 
 	var previousTxSatoshis uint64 = 15564838601
+
 	var previousTxScript = script.NewFromHexString("76a914c7c6987b6e2345a6b138e3384141520a0fbc18c588ac")
 	var prevIndex uint32 = 0
 	var outIndex uint32 = 0
@@ -377,6 +382,7 @@ func TestValidSignature2(t *testing.T) {
 	}
 
 	var previousTxSatoshis uint64 = 5000000000
+
 	var previousTxScript = script.NewFromHexString("76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac")
 	var prevIndex uint32 = 1
 	var outIndex uint32 = 0

@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/btcsuite/btcd/btcec"
-
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction/input"
@@ -52,7 +51,7 @@ type Transaction struct {
 	Locktime uint32
 }
 
-// NewFromHexString takes a toBytesHelper string representation of a bitcoin transaction
+// NewFromString takes a toBytesHelper string representation of a bitcoin transaction
 // and returns a Transaction object.
 func NewFromString(str string) (*Transaction, error) {
 	bytes, err := hex.DecodeString(str)
@@ -104,6 +103,7 @@ func NewFromBytes(b []byte) *Transaction {
 }
 
 // AddInput adds a new input to the transaction.
+
 func (bt *Transaction) AddInput(input *input.Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
@@ -139,6 +139,7 @@ func (bt *Transaction) OutputCount() int {
 
 // AddOutput adds a new output to the transaction.
 func (bt *Transaction) AddOutput(output *output.Output) {
+
 	bt.Outputs = append(bt.Outputs, output)
 }
 

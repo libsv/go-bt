@@ -100,6 +100,7 @@ func TestGetPublicKeyHash(t *testing.T) {
 }
 
 func TestGetPublicKeyHashAsString(t *testing.T) {
+
 	s := script.NewFromHexString("76a91404d03f746652cfcb6cb55119ab473a045137d26588ac")
 
 	pkh, err := s.GetPublicKeyHash()
