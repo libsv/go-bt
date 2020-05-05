@@ -2,14 +2,14 @@ package transaction
 
 import (
 	"encoding/hex"
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/libsv/utils"
 )
 
 // InternalSigner implements the Signer interface. It is used to sign a Transaction locally
 // given a PrivateKey and SIGHASH type.
 type InternalSigner struct {
-	PrivateKey *btcec.PrivateKey
+	PrivateKey *bsvec.PrivateKey
 	SigType    uint32
 }
 

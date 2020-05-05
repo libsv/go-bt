@@ -45,7 +45,7 @@ func TestConvertXPriv(t *testing.T) {
 // func TestValidateExternalMessage(t *testing.T) {
 // 	// privBytes := base58.Decode("L4PPagW8MXCuDRdNiuv8aWeftc1cpPfjMRiedqyzeerrCjh51eMR")
 
-// 	// priv, pub := btcec.PrivKeyFromBytes(btcec.S256(), privBytes)
+// 	// priv, pub := bsvec.PrivKeyFromBytes(bsvec.S256(), privBytes)
 
 // 	// t.Logf("%v, %v", priv, pub)
 // 	message := "Hello world"
@@ -67,7 +67,7 @@ func TestConvertXPriv(t *testing.T) {
 // 		return
 // 	}
 
-// 	pubKey, ok, err := btcec.RecoverCompact(btcec.S256(), sigBytes, addressDecoded)
+// 	pubKey, ok, err := bsvec.RecoverCompact(bsvec.S256(), sigBytes, addressDecoded)
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
@@ -75,7 +75,7 @@ func TestConvertXPriv(t *testing.T) {
 
 // 	t.Log(pubKey, ok)
 
-// 	signature, err := btcec.ParseDERSignature(sigBytes, btcec.S256())
+// 	signature, err := bsvec.ParseDERSignature(sigBytes, bsvec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return

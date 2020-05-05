@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/bitcoinsv/bsvutil/base58"
 	"github.com/libsv/libsv/crypto"
 )
 
@@ -89,10 +89,10 @@ func NewFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	return &a, nil
 }
 
-// NewFromPublicKey takes a btcec public key and returns an Address struct pointer.
+// NewFromPublicKey takes a bsvec public key and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func NewFromPublicKey(pubKey *btcec.PublicKey, mainnet bool) (*Address, error) {
+func NewFromPublicKey(pubKey *bsvec.PublicKey, mainnet bool) (*Address, error) {
 	hash := crypto.Hash160(pubKey.SerializeCompressed())
 
 	// regtest := 111
