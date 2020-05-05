@@ -117,8 +117,8 @@ func (bt *Transaction) AddInput(input *input.Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
 
-// AddUTXO function
-func (bt *Transaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
+// From adds a new input to the transaction from the specified UTXO fields.
+func (bt *Transaction) From(txID string, vout uint32, scriptSig string, satoshis uint64) error {
 	pts, err := script.NewFromHexString(scriptSig)
 	if err != nil {
 		return err
