@@ -51,6 +51,16 @@ type Transaction struct {
 	Locktime uint32
 }
 
+// New creates a new transaction object with default values.
+func New() *Transaction {
+	t := Transaction{}
+
+	t.Version = 2
+	t.Locktime = 0
+
+	return &t
+}
+
 // NewFromString takes a toBytesHelper string representation of a bitcoin transaction
 // and returns a Transaction object.
 func NewFromString(str string) (*Transaction, error) {

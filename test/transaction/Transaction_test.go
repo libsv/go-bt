@@ -3,11 +3,11 @@ package transaction
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"reflect"
+	"testing"
 
 	"github.com/libsv/libsv/transaction/input"
 	"github.com/libsv/libsv/transaction/output"
-	"reflect"
-	"testing"
 
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction"
@@ -17,6 +17,20 @@ import (
 	"github.com/btcsuite/btcutil"
 )
 
+func TestNew(t *testing.T) {
+	bt := transaction.New()
+
+	// check version
+	if bt.Version != 2 {
+		t.Errorf("Expcted version be %v, but got %v", 2, bt.Version)
+	}
+
+	//	check locktime
+	if bt.Locktime != 0 {
+		t.Errorf("Expcted locktime be %v, but got %v", 2, bt.Locktime)
+	}
+}
+
 func TestNewFromString(t *testing.T) {
 	h := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c000000004847304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041ffffffff01c0aff629010000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
 	bt, err := transaction.NewFromString(h)
@@ -24,6 +38,7 @@ func TestNewFromString(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
 	// check version
 	if bt.Version != 2 {
 		t.Errorf("Expcted version be %v, but got %v", 2, bt.Version)
