@@ -56,7 +56,7 @@ func TestNewFromString(t *testing.T) {
 	}
 
 	i := input.Input{}
-	i.PreviousTxId, _ = utils.Decode32Byte("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
+	i.PreviousTxID, _ = utils.Decode32Byte("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
 	i.PreviousTxOutIndex = 0
 	i.SequenceNumber = uint32(0xffffffff)
 	i.UnlockingScript, _ = script.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")

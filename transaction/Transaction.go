@@ -134,7 +134,7 @@ func (bt *Transaction) From(txID string, vout uint32, scriptSig string, satoshis
 	if err != nil {
 		return err
 	}
-	copy(i.PreviousTxId[:], h)
+	copy(i.PreviousTxID[:], h)
 
 	bt.AddInput(i)
 
@@ -175,7 +175,7 @@ func (bt *Transaction) IsCoinbase() bool {
 		return false
 	}
 
-	for _, v := range bt.Inputs[0].PreviousTxId {
+	for _, v := range bt.Inputs[0].PreviousTxID {
 		if v != 0x00 {
 			return false
 		}

@@ -23,7 +23,7 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 
 // Input is a representation of a transaction input
 type Input struct {
-	PreviousTxId       [32]byte
+	PreviousTxID       [32]byte
 	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *script.Script
@@ -46,7 +46,7 @@ func New() *Input {
 func NewFromBytes(bytes []byte) (*Input, int) {
 	i := Input{}
 
-	copy(i.PreviousTxId[:], utils.ReverseBytes(bytes[0:32]))
+	copy(i.PreviousTxID[:], utils.ReverseBytes(bytes[0:32]))
 
 	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
@@ -62,9 +62,9 @@ func NewFromBytes(bytes []byte) (*Input, int) {
 }
 
 // NewFromUTXO returns a transaction input from the UTXO fields provided.
-func NewFromUTXO(prevTxId string, prevTxIndex uint32, prevTxSats uint64, prevTxScript string, nSeq uint32) (*Input, error) {
+func NewFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64, prevTxScript string, nSeq uint32) (*Input, error) {
 	var b32 [32]byte
-	b, _ := hex.DecodeString(prevTxId)
+	b, _ := hex.DecodeString(prevTxID)
 	copy(b32[:], b[0:32])
 
 	pts, err := script.NewFromHexString(prevTxScript)
@@ -73,7 +73,7 @@ func NewFromUTXO(prevTxId string, prevTxIndex uint32, prevTxSats uint64, prevTxS
 	}
 
 	i := &Input{
-		PreviousTxId:       b32,
+		PreviousTxID:       b32,
 		PreviousTxOutIndex: prevTxIndex,
 		PreviousTxSatoshis: prevTxSats,
 		PreviousTxScript:   pts,
@@ -89,14 +89,14 @@ prevOutIndex: %d
 scriptLen:    %d
 script:       %x
 sequence:     %x
-`, i.PreviousTxId, i.PreviousTxOutIndex, len(*i.UnlockingScript), i.UnlockingScript, i.SequenceNumber)
+`, i.PreviousTxID, i.PreviousTxOutIndex, len(*i.UnlockingScript), i.UnlockingScript, i.SequenceNumber)
 }
 
 // Hex encodes the Input into a hex byte array.
 func (i *Input) Hex(clear bool) []byte {
 	hex := make([]byte, 0)
 
-	hex = append(hex, utils.ReverseBytes(i.PreviousTxId[:])...)
+	hex = append(hex, utils.ReverseBytes(i.PreviousTxID[:])...)
 	hex = append(hex, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		hex = append(hex, 0x00)

@@ -43,8 +43,8 @@ func TestNewFromUTXO(t *testing.T) {
 	var b32 [32]byte
 	b, _ := hex.DecodeString("a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5")
 	copy(b32[:], b[0:32])
-	if i.PreviousTxId != b32 {
-		t.Errorf("Expected a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5, got %x", i.PreviousTxId)
+	if i.PreviousTxID != b32 {
+		t.Errorf("Expected a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5, got %x", i.PreviousTxID)
 	}
 
 	if i.PreviousTxOutIndex != 4 {
