@@ -22,7 +22,7 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 
 // Input is a representation of a transaction input
 type Input struct {
-	PreviousTxHash     [32]byte
+	PreviousTxId       [32]byte
 	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *script.Script
@@ -45,7 +45,7 @@ func New() *Input {
 func NewFromBytes(bytes []byte) (*Input, int) {
 	i := Input{}
 
-	copy(i.PreviousTxHash[:], utils.ReverseBytes(bytes[0:32]))
+	copy(i.PreviousTxId[:], utils.ReverseBytes(bytes[0:32]))
 
 	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
@@ -66,14 +66,14 @@ prevOutIndex: %d
 scriptLen:    %d
 script:       %x
 sequence:     %x
-`, i.PreviousTxHash, i.PreviousTxOutIndex, len(*i.UnlockingScript), i.UnlockingScript, i.SequenceNumber)
+`, i.PreviousTxId, i.PreviousTxOutIndex, len(*i.UnlockingScript), i.UnlockingScript, i.SequenceNumber)
 }
 
 // Hex encodes the Input into a hex byte array.
 func (i *Input) Hex(clear bool) []byte {
 	hex := make([]byte, 0)
 
-	hex = append(hex, utils.ReverseBytes(i.PreviousTxHash[:])...)
+	hex = append(hex, utils.ReverseBytes(i.PreviousTxId[:])...)
 	hex = append(hex, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		hex = append(hex, 0x00)

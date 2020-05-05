@@ -22,7 +22,10 @@ func TestNewP2PKHScriptFromPubKeyStr(t *testing.T) {
 }
 
 func TestNewFromHexString(t *testing.T) {
-	s := script.NewFromHexString("76a914e2a623699e81b291c0327f408fea765d534baa2a88ac")
+	s, err := script.NewFromHexString("76a914e2a623699e81b291c0327f408fea765d534baa2a88ac")
+	if err != nil {
+		t.Error(err)
+	}
 
 	res := hex.EncodeToString(*s)
 	expected := "76a914e2a623699e81b291c0327f408fea765d534baa2a88ac"
@@ -101,7 +104,10 @@ func TestGetPublicKeyHash(t *testing.T) {
 
 func TestGetPublicKeyHashAsString(t *testing.T) {
 
-	s := script.NewFromHexString("76a91404d03f746652cfcb6cb55119ab473a045137d26588ac")
+	s, err := script.NewFromHexString("76a91404d03f746652cfcb6cb55119ab473a045137d26588ac")
+	if err != nil {
+		t.Error(err)
+	}
 
 	pkh, err := s.GetPublicKeyHash()
 	if err != nil {

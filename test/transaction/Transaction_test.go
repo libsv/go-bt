@@ -56,10 +56,10 @@ func TestNewFromString(t *testing.T) {
 	}
 
 	i := input.Input{}
-	i.PreviousTxHash, _ = utils.Decode32Byte("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
+	i.PreviousTxId, _ = utils.Decode32Byte("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
 	i.PreviousTxOutIndex = 0
 	i.SequenceNumber = uint32(0xffffffff)
-	i.UnlockingScript = script.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
+	i.UnlockingScript, _ = script.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
 	sameInput := reflect.DeepEqual(*bt.Inputs[0], i)
 	if !sameInput {
 		t.Errorf("Input did not match")
@@ -70,9 +70,10 @@ func TestNewFromString(t *testing.T) {
 	if outputLen != 1 {
 		t.Errorf("Expcted output be %v, but got %v", 1, outputLen)
 	}
+	ls, _ := script.NewFromHexString("76a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac")
 	o := output.Output{
 		Value:         4999000000,
-		LockingScript: script.NewFromHexString("76a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac"),
+		LockingScript: ls,
 	}
 	sameOutput := reflect.DeepEqual(*bt.Outputs[0], o)
 	if !sameOutput {
@@ -178,7 +179,7 @@ func TestGetSighashPayload(t *testing.T) {
 
 	firstInput := tx.Inputs[0]
 	firstInput.PreviousTxSatoshis = 2000000000
-	firstInput.PreviousTxScript = script.NewFromHexString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
+	firstInput.PreviousTxScript, _ = script.NewFromHexString("76a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac")
 	// t.Logf("%x\n", tx.ToBytes())
 	// tx with input 01000000017e419b1b2dc7d7988bf2c982878d7719bee096d31111a72d1c7470e5ab7d1a5b000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88acffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde47e976000000001976a9148fe80c75c9560e8b56ed64ea3c26e18d2c52211b88ac00000000
 
@@ -258,7 +259,7 @@ func TestSignTx(t *testing.T) {
 	}
 	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 100000000
-	tx.Inputs[0].PreviousTxScript = script.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+	tx.Inputs[0].PreviousTxScript, _ = script.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
 	// Our private key.
 	wif, err := btcutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
@@ -293,7 +294,7 @@ func TestSignTxForced(t *testing.T) {
 	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 8519
 
-	tx.Inputs[0].PreviousTxScript = script.NewFromHexString("a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac")
+	tx.Inputs[0].PreviousTxScript, _ = script.NewFromHexString("a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac")
 
 	// Our private key.
 	wif, err := btcutil.DecodeWIF("L31FJtAimeRhprhFEuXpnw1E1sKKuKVgPNUaQ7MjpW3dCWEVuV6R")
@@ -351,7 +352,7 @@ func TestValidSignature(t *testing.T) {
 
 	var previousTxSatoshis uint64 = 15564838601
 
-	var previousTxScript = script.NewFromHexString("76a914c7c6987b6e2345a6b138e3384141520a0fbc18c588ac")
+	var previousTxScript, _ = script.NewFromHexString("76a914c7c6987b6e2345a6b138e3384141520a0fbc18c588ac")
 	var prevIndex uint32 = 0
 	var outIndex uint32 = 0
 
@@ -397,7 +398,7 @@ func TestValidSignature2(t *testing.T) {
 
 	var previousTxSatoshis uint64 = 5000000000
 
-	var previousTxScript = script.NewFromHexString("76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac")
+	var previousTxScript, _ = script.NewFromHexString("76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac")
 	var prevIndex uint32 = 1
 	var outIndex uint32 = 0
 
@@ -469,7 +470,7 @@ func TestBareMultiSigValidation(t *testing.T) {
 	sigHashTypes[1] = uint32(sig1HashType)
 
 	var previousTxSatoshis uint64 = 99728
-	var previousTxScript = script.NewFromHexString("5221023ff15e2676e03b2c0af30fc17b7fb354bbfa9f549812da945194d3407dc0969b21039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a32103ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e53ae")
+	var previousTxScript, _ = script.NewFromHexString("5221023ff15e2676e03b2c0af30fc17b7fb354bbfa9f549812da945194d3407dc0969b21039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a32103ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e53ae")
 	var prevIndex uint32
 	var outIndex uint32
 
@@ -545,7 +546,7 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 	sigHashTypes[1] = uint32(sig1HashType)
 
 	var previousTxSatoshis uint64 = 8785040
-	var previousTxScript = script.NewFromHexString("5221021db57ae3de17143cb6c314fb206b56956e8ed45e2f1cbad3947411228b8d17f1210308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee419421030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd953ae")
+	var previousTxScript, _ = script.NewFromHexString("5221021db57ae3de17143cb6c314fb206b56956e8ed45e2f1cbad3947411228b8d17f1210308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee419421030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd953ae")
 	var prevIndex uint32 = 1
 	var outIndex uint32 = 0
 

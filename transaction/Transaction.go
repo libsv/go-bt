@@ -119,9 +119,14 @@ func (bt *Transaction) AddInput(input *input.Input) {
 
 // AddUTXO function
 func (bt *Transaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
+	pts, err := script.NewFromHexString(scriptSig)
+	if err != nil {
+		return err
+	}
+
 	i := &input.Input{
 		PreviousTxOutIndex: vout,
-		PreviousTxScript:   script.NewFromHexString(scriptSig),
+		PreviousTxScript:   pts,
 		PreviousTxSatoshis: satoshis,
 	}
 
@@ -129,7 +134,7 @@ func (bt *Transaction) AddUTXO(txID string, vout uint32, scriptSig string, satos
 	if err != nil {
 		return err
 	}
-	copy(i.PreviousTxHash[:], h)
+	copy(i.PreviousTxId[:], h)
 
 	bt.AddInput(i)
 
@@ -170,7 +175,7 @@ func (bt *Transaction) IsCoinbase() bool {
 		return false
 	}
 
-	for _, v := range bt.Inputs[0].PreviousTxHash {
+	for _, v := range bt.Inputs[0].PreviousTxId {
 		if v != 0x00 {
 			return false
 		}
