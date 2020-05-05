@@ -45,7 +45,7 @@ func GetSighashForInput(transaction *Transaction, sighashType uint32, inputNumbe
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
-			buf = append(buf, utils.ReverseBytes(in.PreviousTxHash[:])...)
+			buf = append(buf, utils.ReverseBytes(in.PreviousTxID[:])...)
 			oi := make([]byte, 4)
 			binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 			buf = append(buf, oi...)
@@ -116,7 +116,7 @@ func GetSighashForInput(transaction *Transaction, sighashType uint32, inputNumbe
 	buf = append(buf, hashSequence...)
 
 	//  outpoint (32-byte hash + 4-byte little endian)
-	buf = append(buf, utils.ReverseBytes(input.PreviousTxHash[:])...)
+	buf = append(buf, utils.ReverseBytes(input.PreviousTxID[:])...)
 	oi := make([]byte, 4)
 	binary.LittleEndian.PutUint32(oi, input.PreviousTxOutIndex)
 	buf = append(buf, oi...)
@@ -161,7 +161,7 @@ func GetSighashForInputValidation(transaction *Transaction, sighashType uint32, 
 		buf := make([]byte, 0)
 
 		for _, in := range tx.Inputs {
-			buf = append(buf, utils.ReverseBytes(in.PreviousTxHash[:])...)
+			buf = append(buf, utils.ReverseBytes(in.PreviousTxID[:])...)
 			oi := make([]byte, 4)
 			binary.LittleEndian.PutUint32(oi, previousTxOutIndex)
 			buf = append(buf, oi...)
@@ -232,7 +232,7 @@ func GetSighashForInputValidation(transaction *Transaction, sighashType uint32, 
 	buf = append(buf, hashSequence...)
 
 	//  outpoint (32-byte hash + 4-byte little endian)
-	buf = append(buf, utils.ReverseBytes(input.PreviousTxHash[:])...)
+	buf = append(buf, utils.ReverseBytes(input.PreviousTxID[:])...)
 	oi := make([]byte, 4)
 	binary.LittleEndian.PutUint32(oi, previousTxOutIndex)
 	buf = append(buf, oi...)

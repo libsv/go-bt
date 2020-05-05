@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"log"
 	"sort"
 )
@@ -86,4 +87,17 @@ func Equals(b1 []byte, b2 []byte) bool {
 		}
 	}
 	return true
+}
+
+// Decode32Byte decodes a hex string into a 32 byte array.
+func Decode32Byte(hexStr string) ([32]byte, error) {
+	var b32 [32]byte
+	b, err := hex.DecodeString(hexStr)
+	if err != nil {
+		return b32, err
+	}
+
+	copy(b32[:], b[0:32])
+
+	return b32, nil
 }

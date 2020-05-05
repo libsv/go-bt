@@ -51,6 +51,16 @@ type Transaction struct {
 	Locktime uint32
 }
 
+// New creates a new transaction object with default values.
+func New() *Transaction {
+	t := Transaction{}
+
+	t.Version = 2
+	t.Locktime = 0
+
+	return &t
+}
+
 // NewFromString takes a toBytesHelper string representation of a bitcoin transaction
 // and returns a Transaction object.
 func NewFromString(str string) (*Transaction, error) {
@@ -107,11 +117,16 @@ func (bt *Transaction) AddInput(input *input.Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
 
-// AddUTXO function
-func (bt *Transaction) AddUTXO(txID string, vout uint32, scriptSig string, satoshis uint64) error {
+// From adds a new input to the transaction from the specified UTXO fields.
+func (bt *Transaction) From(txID string, vout uint32, scriptSig string, satoshis uint64) error {
+	pts, err := script.NewFromHexString(scriptSig)
+	if err != nil {
+		return err
+	}
+
 	i := &input.Input{
 		PreviousTxOutIndex: vout,
-		PreviousTxScript:   script.NewFromHexString(scriptSig),
+		PreviousTxScript:   pts,
 		PreviousTxSatoshis: satoshis,
 	}
 
@@ -119,7 +134,7 @@ func (bt *Transaction) AddUTXO(txID string, vout uint32, scriptSig string, satos
 	if err != nil {
 		return err
 	}
-	copy(i.PreviousTxHash[:], h)
+	copy(i.PreviousTxID[:], h)
 
 	bt.AddInput(i)
 
@@ -160,7 +175,7 @@ func (bt *Transaction) IsCoinbase() bool {
 		return false
 	}
 
-	for _, v := range bt.Inputs[0].PreviousTxHash {
+	for _, v := range bt.Inputs[0].PreviousTxID {
 		if v != 0x00 {
 			return false
 		}
