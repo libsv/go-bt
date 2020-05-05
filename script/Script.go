@@ -12,9 +12,12 @@ import (
 type Script []byte
 
 // NewFromHexString creates a new script from a hex encoded string.
-func NewFromHexString(s string) *Script {
-	b, _ := hex.DecodeString(s)
-	return NewFromBytes(b)
+func NewFromHexString(s string) (*Script, error) {
+	b, err := hex.DecodeString(s)
+	if err != nil {
+		return nil, err
+	}
+	return NewFromBytes(b), nil
 }
 
 // NewFromBytes wraps a byte slice with the Script type.
