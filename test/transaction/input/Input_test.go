@@ -1,9 +1,11 @@
 package input
 
 import (
+	"bytes"
 	"encoding/hex"
 	"testing"
 
+	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction/input"
 )
 
@@ -32,21 +34,37 @@ func TestNew(t *testing.T) {
 	}
 }
 
-// func TestArbitraryText(t *testing.T) {
-// 	const coinbase = "0000000000000000000000000000000000000000000000000000000000000000ffffffff4303bfea07322f53696d6f6e204f726469736820616e642053747561727420467265656d616e206d61646520746869732068617070656e2f9a46434790f7dbdea3430000ffffffff018a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
-// 	// const coinbase = "0000000000000000000000000000000000000000000000000000000000000000ffffffff2003298b082f626d67706f6f6c2e636f6d2f31646b62ff0b02843058aa9d410000ffffffff018524834a000000001976a9148be87b3978d8ef936b30ddd4ed903f8da7abd27788ac00000000"
-// 	bytes, _ := hex.DecodeString(coinbase)
-// 	i, _ := New(bytes)
+func TestNewFromUTXO(t *testing.T) {
+	i, err := input.NewFromUTXO("a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", 4, 5064, "a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac", 0xffffffff)
+	if err != nil {
+		t.Error(err)
+	}
 
-// 	length, size := libsv.DecodeVarInt(*i.script)
-// 	heightPart := *i.script[size : size+int(length)]
-// 	var heightBytes [4]byte
-// 	copy(heightBytes[:], heightPart)
-// 	height := binary.LittleEndian.Uint32(heightBytes[:])
+	var b32 [32]byte
+	b, _ := hex.DecodeString("a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5")
+	copy(b32[:], b[0:32])
+	if i.PreviousTxId != b32 {
+		t.Errorf("Expected a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5, got %x", i.PreviousTxId)
+	}
 
-// 	// t.Errorf("\nHeight: %d\n%s\n\n%x\n", height, string(i.script[size+int(length):]), i.script[size+int(length):])
+	if i.PreviousTxOutIndex != 4 {
+		t.Errorf("Expected 4, got %d", i.PreviousTxOutIndex)
+	}
 
-// 	if height != 518847 {
-// 		t.Errorf("Expected 518847, got %d", height)
-// 	}
-// }
+	if i.PreviousTxSatoshis != 5064 {
+		t.Errorf("Expected 5064, got %d", i.PreviousTxSatoshis)
+	}
+
+	es, err := script.NewFromHexString("a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !bytes.Equal(*i.PreviousTxScript, *es) {
+		t.Errorf("Expected a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac, got %x", *i.PreviousTxScript)
+	}
+
+	if i.SequenceNumber != 0xFFFFFFFF {
+		t.Errorf("Expected 0xFFFFFFFF, got %x", i.SequenceNumber)
+	}
+}

@@ -2,6 +2,7 @@ package input
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/libsv/libsv/script"
@@ -58,6 +59,28 @@ func NewFromBytes(bytes []byte) (*Input, int) {
 	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 
 	return &i, offset + int(l) + 4
+}
+
+// NewFromUTXO returns a transaction input from the UTXO fields provided.
+func NewFromUTXO(prevTxId string, prevTxIndex uint32, prevTxSats uint64, prevTxScript string, nSeq uint32) (*Input, error) {
+	var b32 [32]byte
+	b, _ := hex.DecodeString(prevTxId)
+	copy(b32[:], b[0:32])
+
+	pts, err := script.NewFromHexString(prevTxScript)
+	if err != nil {
+		return nil, err
+	}
+
+	i := &Input{
+		PreviousTxId:       b32,
+		PreviousTxOutIndex: prevTxIndex,
+		PreviousTxSatoshis: prevTxSats,
+		PreviousTxScript:   pts,
+		SequenceNumber:     nSeq,
+	}
+
+	return i, nil
 }
 
 func (i *Input) String() string {
