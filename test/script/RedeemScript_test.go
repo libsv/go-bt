@@ -3,8 +3,8 @@ package script
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvd/chaincfg/chainhash"
+	"github.com/libsv/libsv/bsvsuite/bsvec"
 	"testing"
 
 	"github.com/libsv/libsv/crypto"

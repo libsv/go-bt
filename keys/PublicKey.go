@@ -12,8 +12,8 @@ import (
 
 	"github.com/libsv/libsv/crypto"
 
-	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvutil/base58"
+	"github.com/libsv/libsv/bsvsuite/bsvec"
 	"golang.org/x/crypto/ripemd160"
 )
 

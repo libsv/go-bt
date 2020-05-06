@@ -13,8 +13,8 @@ import (
 	"github.com/libsv/libsv/transaction"
 	"github.com/libsv/libsv/utils"
 
-	"github.com/bitcoinsv/bsvd/bsvec"
-	"github.com/bitcoinsv/bsvutil"
+	"github.com/libsv/libsv/bsvsuite/bsvec"
+	"github.com/libsv/libsv/bsvsuite/bsvutil"
 )
 
 func TestNew(t *testing.T) {

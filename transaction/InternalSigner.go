@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"encoding/hex"
-	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/libsv/libsv/bsvsuite/bsvec"
 	"github.com/libsv/libsv/utils"
 )
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/libsv/address"
+	"github.com/libsv/libsv/bsvsuite/bsvec"
 )
 
 func TestNewFromStringMainnet(t *testing.T) {

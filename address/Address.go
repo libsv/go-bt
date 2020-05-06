@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvutil/base58"
+	"github.com/libsv/libsv/bsvsuite/bsvec"
 	"github.com/libsv/libsv/crypto"
 )
 
