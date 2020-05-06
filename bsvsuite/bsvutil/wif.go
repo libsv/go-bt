@@ -10,8 +10,8 @@ import (
 
 	"github.com/bitcoinsv/bsvd/chaincfg"
 	"github.com/bitcoinsv/bsvd/chaincfg/chainhash"
-	"github.com/bitcoinsv/bsvutil/base58"
 	"github.com/libsv/libsv/bsvsuite/bsvec"
+	"github.com/libsv/libsv/bsvsuite/bsvutil/base58"
 )
 
 // ErrMalformedPrivateKey describes an error where a WIF-encoded private

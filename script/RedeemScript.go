@@ -10,7 +10,7 @@ import (
 	"github.com/libsv/libsv/keys"
 	"github.com/libsv/libsv/utils"
 
-	"github.com/bitcoinsv/bsvutil/base58"
+	"github.com/libsv/libsv/bsvsuite/bsvutil/base58"
 )
 
 // RedeemScript contains the metadata used when creating an unlocking script (SigScript) for a multisig output.
