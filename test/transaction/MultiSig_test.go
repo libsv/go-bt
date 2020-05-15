@@ -10,8 +10,8 @@ import (
 
 	"github.com/libsv/libsv/script"
 
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvd/chaincfg/chainhash"
-	"github.com/libsv/libsv/bsvsuite/bsvec"
 )
 
 // To disable log output during tests (see https://golangcode.com/disable-log-output-during-tests/)

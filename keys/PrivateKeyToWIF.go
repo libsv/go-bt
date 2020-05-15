@@ -1,7 +1,7 @@
 package keys
 
 import (
-	"github.com/libsv/libsv/bsvsuite/bsvutil/base58"
+	"github.com/bitcoinsv/bsvutil/base58"
 	"github.com/libsv/libsv/crypto"
 )
 

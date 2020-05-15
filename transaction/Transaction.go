@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"github.com/libsv/libsv/bsvsuite/bsvec"
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction/input"
