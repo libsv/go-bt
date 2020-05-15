@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/libsv/address"
 )
 
@@ -115,7 +115,7 @@ func TestNewFromPublicKey(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	pubKey, err := btcec.ParsePubKey(pubKeyBytes, btcec.S256())
+	pubKey, err := bsvec.ParsePubKey(pubKeyBytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return

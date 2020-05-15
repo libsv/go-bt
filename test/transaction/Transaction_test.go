@@ -13,8 +13,8 @@ import (
 	"github.com/libsv/libsv/transaction"
 	"github.com/libsv/libsv/utils"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil"
+	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/bitcoinsv/bsvutil"
 )
 
 func TestNew(t *testing.T) {
@@ -262,7 +262,7 @@ func TestSignTx(t *testing.T) {
 	tx.Inputs[0].PreviousTxScript, _ = script.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
 	// Our private key.
-	wif, err := btcutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
+	wif, err := bsvutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -297,7 +297,7 @@ func TestSignTxForced(t *testing.T) {
 	tx.Inputs[0].PreviousTxScript, _ = script.NewFromHexString("a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac")
 
 	// Our private key.
-	wif, err := btcutil.DecodeWIF("L31FJtAimeRhprhFEuXpnw1E1sKKuKVgPNUaQ7MjpW3dCWEVuV6R")
+	wif, err := bsvutil.DecodeWIF("L31FJtAimeRhprhFEuXpnw1E1sKKuKVgPNUaQ7MjpW3dCWEVuV6R")
 	if err != nil {
 		t.Error(err)
 		return
@@ -339,12 +339,12 @@ func TestValidSignature(t *testing.T) {
 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
 	sigHashType, _ := binary.Uvarint([]byte(*sigScript)[len(*sigScript)-35 : len(*sigScript)-34])
 
-	publicKey, err := btcec.ParsePubKey(publicKeyBytes, btcec.S256())
+	publicKey, err := bsvec.ParsePubKey(publicKeyBytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	sig, err := btcec.ParseDERSignature(sigBytes, btcec.S256())
+	sig, err := bsvec.ParseDERSignature(sigBytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
@@ -385,12 +385,12 @@ func TestValidSignature2(t *testing.T) {
 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
 	sigHashType, _ := binary.Uvarint([]byte(*sigScript)[len(*sigScript)-35 : len(*sigScript)-34])
 
-	publicKey, err := btcec.ParsePubKey(publicKeyBytes, btcec.S256())
+	publicKey, err := bsvec.ParsePubKey(publicKeyBytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	sig, err := btcec.ParseDERSignature(sigBytes, btcec.S256())
+	sig, err := bsvec.ParseDERSignature(sigBytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
@@ -425,9 +425,9 @@ func TestBareMultiSigValidation(t *testing.T) {
 	// txid := tx.GetTxID()
 	// fmt.Println(txid)
 
-	var sigs = make([]*btcec.Signature, 2)
+	var sigs = make([]*bsvec.Signature, 2)
 	var sigHashTypes = make([]uint32, 2)
-	var publicKeys = make([]*btcec.PublicKey, 3)
+	var publicKeys = make([]*bsvec.PublicKey, 3)
 
 	sigScript := tx.GetInputs()[0].UnlockingScript
 
@@ -440,28 +440,28 @@ func TestBareMultiSigValidation(t *testing.T) {
 	pk1, _ := hex.DecodeString("039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a3")
 	pk2, _ := hex.DecodeString("03ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e")
 
-	publicKeys[0], err = btcec.ParsePubKey(pk0, btcec.S256())
+	publicKeys[0], err = bsvec.ParsePubKey(pk0, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	publicKeys[1], err = btcec.ParsePubKey(pk1, btcec.S256())
+	publicKeys[1], err = bsvec.ParsePubKey(pk1, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	publicKeys[2], err = btcec.ParsePubKey(pk2, btcec.S256())
+	publicKeys[2], err = bsvec.ParsePubKey(pk2, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	sigs[0], err = btcec.ParseDERSignature(sig0Bytes, btcec.S256())
+	sigs[0], err = bsvec.ParseDERSignature(sig0Bytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	sigs[1], err = btcec.ParseDERSignature(sig1Bytes, btcec.S256())
+	sigs[1], err = bsvec.ParseDERSignature(sig1Bytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
@@ -501,9 +501,9 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 	// txid := tx.GetTxID()
 	// fmt.Println(txid)
 
-	var sigs = make([]*btcec.Signature, 2)
+	var sigs = make([]*bsvec.Signature, 2)
 	var sigHashTypes = make([]uint32, 2)
-	var publicKeys = make([]*btcec.PublicKey, 3)
+	var publicKeys = make([]*bsvec.PublicKey, 3)
 
 	sigScript := tx.GetInputs()[0].UnlockingScript
 
@@ -516,28 +516,28 @@ func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 	pk1, _ := hex.DecodeString("0308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee4194")
 	pk2, _ := hex.DecodeString("030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd9")
 
-	publicKeys[0], err = btcec.ParsePubKey(pk0, btcec.S256())
+	publicKeys[0], err = bsvec.ParsePubKey(pk0, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	publicKeys[1], err = btcec.ParsePubKey(pk1, btcec.S256())
+	publicKeys[1], err = bsvec.ParsePubKey(pk1, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	publicKeys[2], err = btcec.ParsePubKey(pk2, btcec.S256())
+	publicKeys[2], err = bsvec.ParsePubKey(pk2, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	sigs[0], err = btcec.ParseDERSignature(sig0Bytes, btcec.S256())
+	sigs[0], err = bsvec.ParseDERSignature(sig0Bytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	sigs[1], err = btcec.ParseDERSignature(sig1Bytes, btcec.S256())
+	sigs[1], err = bsvec.ParseDERSignature(sig1Bytes, bsvec.S256())
 	if err != nil {
 		t.Error(err)
 		return

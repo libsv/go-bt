@@ -3,8 +3,8 @@ package script
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/bitcoinsv/bsvd/chaincfg/chainhash"
 	"testing"
 
 	"github.com/libsv/libsv/crypto"
@@ -80,7 +80,7 @@ func TestSignRedeemScript(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+	privKey, pubKey := bsvec.PrivKeyFromBytes(bsvec.S256(), pkBytes)
 
 	// Sign a message using the private key.
 	messageHash := chainhash.DoubleHashB(redeemScript)

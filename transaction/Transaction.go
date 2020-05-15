@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction/input"
@@ -386,7 +386,7 @@ func (bt *Transaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *SigningP
 
 // SignWithoutP2PKHCheck signs the transaction without checking if the input previous script equals
 // to a P2PKH script matching the private key
-func (bt *Transaction) SignWithoutP2PKHCheck(privateKey *btcec.PrivateKey, sigType uint32) error {
+func (bt *Transaction) SignWithoutP2PKHCheck(privateKey *bsvec.PrivateKey, sigType uint32) error {
 	if sigType == 0 {
 		sigType = SighashAllForkID
 	}

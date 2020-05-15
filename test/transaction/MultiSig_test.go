@@ -10,8 +10,8 @@ import (
 
 	"github.com/libsv/libsv/script"
 
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/bitcoinsv/bsvd/chaincfg/chainhash"
 )
 
 // To disable log output during tests (see https://golangcode.com/disable-log-output-during-tests/)
@@ -41,7 +41,7 @@ func TestMultiSig(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+	privKey, pubKey := bsvec.PrivKeyFromBytes(bsvec.S256(), pkBytes)
 
 	// Sign a message using the private key.
 	messageHash := chainhash.DoubleHashB(redeemScript)
