@@ -81,21 +81,21 @@ func NewHashPuzzle(secret string, publicKeyHash string, satoshis uint64) (*Outpu
 
 	s := &script.Script{}
 
-	s.AppendOpCode(script.OpHASH160)
+	s.AppendOpCode(script.OP_HASH160)
 	secretBytesHash := crypto.Hash160([]byte(secret))
 	err = s.AppendPushData(secretBytesHash)
 	if err != nil {
 		return nil, err
 	}
-	s.AppendOpCode(script.OpEQUALVERIFY)
-	s.AppendOpCode(script.OpDUP)
-	s.AppendOpCode(script.OpHASH160)
+	s.AppendOpCode(script.OP_EQUALVERIFY)
+	s.AppendOpCode(script.OP_DUP)
+	s.AppendOpCode(script.OP_HASH160)
 	err = s.AppendPushData(publicKeyHashBytes)
 	if err != nil {
 		return nil, err
 	}
-	s.AppendOpCode(script.OpEQUALVERIFY)
-	s.AppendOpCode(script.OpCHECKSIG)
+	s.AppendOpCode(script.OP_EQUALVERIFY)
+	s.AppendOpCode(script.OP_CHECKSIG)
 
 	o.LockingScript = s
 	return &o, nil
@@ -126,8 +126,8 @@ func NewOpReturnPush(data [][]byte) (*Output, error) {
 func createOpReturnOutput(data [][]byte) (*Output, error) {
 	s := &script.Script{}
 
-	s.AppendOpCode(script.OpFALSE)
-	s.AppendOpCode(script.OpRETURN)
+	s.AppendOpCode(script.OP_FALSE)
+	s.AppendOpCode(script.OP_RETURN)
 	err := s.AppendPushDataArray(data)
 	if err != nil {
 		return nil, err
