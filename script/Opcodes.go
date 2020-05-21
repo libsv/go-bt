@@ -1,6 +1,6 @@
 package script
 
-// Bitcoin Script constants
+// BitCoin Script constants
 const (
 	Op0                   = 0x00 // 0
 	OpZERO                = 0x00 // 0

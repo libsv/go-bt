@@ -26,7 +26,7 @@ func NewFromBytes(b []byte) *Script {
 	return &s
 }
 
-// NewFromASM creates a new script from a Bitcoin ASM formatted string.
+// NewFromASM creates a new script from a BitCoin ASM formatted string.
 func NewFromASM(s string) (*Script, error) {
 	return &Script{}, nil // TODO:
 }

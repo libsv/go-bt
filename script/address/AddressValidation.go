@@ -49,7 +49,7 @@ func (a *a25) set58(s []byte) error {
 	return nil
 }
 
-// ValidateAddress checks if an address string is a valid Bitcoin address (ex. P2PKH, BIP276).
+// ValidateAddress checks if an address string is a valid BitCoin address (ex. P2PKH, BIP276).
 // Checks both mainnet and testnet.
 func ValidateAddress(address string) (bool, error) {
 	if strings.HasPrefix(address, "bitcoin-script:") {
