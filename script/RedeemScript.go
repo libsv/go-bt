@@ -3,14 +3,13 @@ package script
 import (
 	"encoding/binary"
 	"errors"
-	"log"
 
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/keys"
 	"github.com/libsv/libsv/script/address"
 	"github.com/libsv/libsv/utils"
 
 	"github.com/bitcoinsv/bsvutil/base58"
+	"github.com/bitcoinsv/bsvutil/hdkeychain"
 )
 
 // RedeemScript contains the metadata used when creating an unlocking script (SigScript) for a multisig output.
@@ -88,7 +87,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		}
 
 		// rs.AddPublicKey("", s)
-		publicKey, err := keys.NewPublicKey(xpub)
+		publicKey, err := hdkeychain.NewKeyFromString(xpub)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +101,12 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 			return nil, err
 		}
 
-		rs.PublicKeys = append(rs.PublicKeys, p.PublicKey)
+		ecpk, err := p.ECPubKey()
+		if err != nil {
+			return nil, err
+		}
+
+		rs.PublicKeys = append(rs.PublicKeys, ecpk.SerializeCompressed())
 	}
 
 	if len(rs.PublicKeys) != signatureCount {
@@ -116,10 +120,10 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error {
 
 	if len(derivationPath) != 2 {
-		return errors.New("We only support derivation paths with exactly 2 levels")
+		return errors.New("We only support derivation paths with exactly 2 levels") // TODO: why only 2?
 	}
 
-	pk, err := keys.NewPublicKey(pkey)
+	pk, err := hdkeychain.NewKeyFromString(pkey)
 	if err != nil {
 		return err
 	}
@@ -134,9 +138,12 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 		return err
 	}
 
-	log.Println(result2.PublicKeyStr)
+	ecpk, err := result2.ECPubKey()
+	if err != nil {
+		return err
+	}
 
-	rs.PublicKeys = append(rs.PublicKeys, result2.PublicKey)
+	rs.PublicKeys = append(rs.PublicKeys, ecpk.SerializeCompressed())
 
 	return nil
 }
