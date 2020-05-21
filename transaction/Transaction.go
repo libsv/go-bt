@@ -229,7 +229,7 @@ func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
 	h = append(h, utils.VarInt(uint64(len(bt.GetInputs())))...)
 
 	for i, in := range bt.GetInputs() {
-		s := in.Hex(scriptPubKey != nil)
+		s := in.ToBytes(scriptPubKey != nil)
 		if i == index && scriptPubKey != nil {
 			h = append(h, utils.VarInt(uint64(len(scriptPubKey)))...)
 			h = append(h, scriptPubKey...)
@@ -265,19 +265,19 @@ func (bt *Transaction) Sign(s Signer) error {
 // NewSigningPayloadFromTx creates a new SigningPayload from a Transaction and a SIGHASH type.
 func NewSigningPayloadFromTx(bt *Transaction, sigType uint32) (*SigningPayload, error) {
 	p := NewSigningPayload()
-	for idx, input := range bt.Inputs {
-		if input.PreviousTxSatoshis == 0 {
+	for idx, i := range bt.Inputs {
+		if i.PreviousTxSatoshis == 0 {
 			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
 		}
 
-		if input.PreviousTxScript == nil {
+		if i.PreviousTxScript == nil {
 			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
 
 		}
 
 		sighash := GetSighashForInput(bt, sigType, uint32(idx))
-		pkh, _ := input.PreviousTxScript.GetPublicKeyHash() // if not P2PKH, pkh will just be nil
-		p.AddItem(hex.EncodeToString(pkh), sighash)         // and the SigningItem will have PublicKeyHash = ""
+		pkh, _ := i.PreviousTxScript.GetPublicKeyHash() // if not P2PKH, pkh will just be nil
+		p.AddItem(hex.EncodeToString(pkh), sighash)     // and the SigningItem will have PublicKeyHash = ""
 	}
 	return p, nil
 }

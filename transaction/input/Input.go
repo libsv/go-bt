@@ -92,23 +92,23 @@ sequence:     %x
 `, i.PreviousTxID, i.PreviousTxOutIndex, len(*i.UnlockingScript), i.UnlockingScript, i.SequenceNumber)
 }
 
-// Hex encodes the Input into a hex byte array.
-func (i *Input) Hex(clear bool) []byte {
-	hex := make([]byte, 0)
+// ToBytes encodes the Input into a hex byte array.
+func (i *Input) ToBytes(clear bool) []byte {
+	h := make([]byte, 0)
 
-	hex = append(hex, utils.ReverseBytes(i.PreviousTxID[:])...)
-	hex = append(hex, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
+	h = append(h, utils.ReverseBytes(i.PreviousTxID[:])...)
+	h = append(h, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
-		hex = append(hex, 0x00)
+		h = append(h, 0x00)
 	} else {
 		if i.UnlockingScript == nil {
-			hex = append(hex, utils.VarInt(0)...)
+			h = append(h, utils.VarInt(0)...)
 		} else {
-			hex = append(hex, utils.VarInt(uint64(len(*i.UnlockingScript)))...)
-			hex = append(hex, *i.UnlockingScript...)
+			h = append(h, utils.VarInt(uint64(len(*i.UnlockingScript)))...)
+			h = append(h, *i.UnlockingScript...)
 		}
 	}
-	hex = append(hex, utils.GetLittleEndianBytes(i.SequenceNumber, 4)...)
+	h = append(h, utils.GetLittleEndianBytes(i.SequenceNumber, 4)...)
 
-	return hex
+	return h
 }

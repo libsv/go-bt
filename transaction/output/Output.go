@@ -150,7 +150,7 @@ script:    %x
 `, o.Value, len(*o.LockingScript), o.LockingScript)
 }
 
-// Hex encodes the Output into a byte array.
+// ToBytes encodes the Output into a byte array.
 func (o *Output) Hex() []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, o.Value)
