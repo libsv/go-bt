@@ -5,9 +5,9 @@ import (
 	"errors"
 	"log"
 
-	"github.com/libsv/libsv/address"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/keys"
+	"github.com/libsv/libsv/script/address"
 	"github.com/libsv/libsv/utils"
 
 	"github.com/bitcoinsv/bsvutil/base58"

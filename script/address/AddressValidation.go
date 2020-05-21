@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/utils"
 )
 
 type a25 [25]byte
@@ -54,7 +53,7 @@ func (a *a25) set58(s []byte) error {
 // Checks both mainnet and testnet.
 func ValidateAddress(address string) (bool, error) {
 	if strings.HasPrefix(address, "bitcoin-script:") {
-		_, _, _, _, err := utils.DecodeBIP276(address)
+		_, _, _, _, err := DecodeBIP276(address)
 
 		if err != nil {
 			return false, fmt.Errorf("bitcoin-script invalid [%+v]", err)

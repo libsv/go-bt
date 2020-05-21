@@ -3,7 +3,7 @@ package address_test
 import (
 	"testing"
 
-	"github.com/libsv/libsv/address"
+	"github.com/libsv/libsv/script/address"
 )
 
 func TestValidateAddressMainnetP2PKH(t *testing.T) {
