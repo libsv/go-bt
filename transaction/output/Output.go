@@ -151,7 +151,7 @@ script:    %x
 }
 
 // ToBytes encodes the Output into a byte array.
-func (o *Output) Hex() []byte {
+func (o *Output) ToBytes() []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, o.Value)
 

@@ -240,7 +240,7 @@ func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
 
 	h = append(h, utils.VarInt(uint64(len(bt.GetOutputs())))...)
 	for _, out := range bt.GetOutputs() {
-		h = append(h, out.Hex()...)
+		h = append(h, out.ToBytes()...)
 	}
 
 	lt := make([]byte, 4)
