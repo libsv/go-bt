@@ -1,14 +1,15 @@
-package script
+package script_test
 
 import (
 	"bytes"
 	"encoding/hex"
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvd/chaincfg/chainhash"
+	"github.com/libsv/libsv/script"
+
 	"testing"
 
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/script"
 )
 
 func TestGetRedeemScript(t *testing.T) {

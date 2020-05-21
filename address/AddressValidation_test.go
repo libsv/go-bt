@@ -1,4 +1,4 @@
-package address
+package address_test
 
 import (
 	"testing"

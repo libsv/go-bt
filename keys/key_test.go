@@ -1,4 +1,4 @@
-package keys
+package keys_test
 
 import (
 	"encoding/hex"
@@ -9,12 +9,12 @@ import (
 
 func TestPrivateKeyToWif1(t *testing.T) {
 	seed := "0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D"
-	hex, err := hex.DecodeString(seed)
+	h, err := hex.DecodeString(seed)
 	if err != nil {
 		t.Error(err)
 	}
 
-	wif := keys.PrivateKeyToWIF(hex)
+	wif := keys.PrivateKeyToWIF(h)
 	if wif != "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ" {
 		t.Errorf("PrivateKeyToWIF failed")
 	}
@@ -22,12 +22,12 @@ func TestPrivateKeyToWif1(t *testing.T) {
 
 func TestPrivateKeyToWif2(t *testing.T) {
 	seed := "f19c523315891e6e15ae0608a35eec2e00ebd6d1984cf167f46336dabd9b2de4"
-	hex, err := hex.DecodeString(seed)
+	h, err := hex.DecodeString(seed)
 	if err != nil {
 		t.Error(err)
 	}
 
-	wif := keys.PrivateKeyToWIF(hex)
+	wif := keys.PrivateKeyToWIF(h)
 	if wif != "5KehCbbxxMsPomgbYqJf2VXKtiD8UKVuaHStjaUyRsZ1X2KjmFZ" {
 		t.Errorf("PrivateKeyToWIF failed")
 	}

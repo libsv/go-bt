@@ -1,4 +1,4 @@
-package output
+package output_test
 
 import (
 	"encoding/hex"

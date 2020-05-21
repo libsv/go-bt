@@ -1,4 +1,4 @@
-package transaction
+package transaction_test
 
 import (
 	"encoding/binary"
@@ -6,11 +6,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/libsv/libsv/transaction"
 	"github.com/libsv/libsv/transaction/input"
 	"github.com/libsv/libsv/transaction/output"
 
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/transaction"
 	"github.com/libsv/libsv/utils"
 
 	"github.com/bitcoinsv/bsvd/bsvec"

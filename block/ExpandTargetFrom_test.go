@@ -1,4 +1,4 @@
-package block
+package block_test
 
 import (
 	"testing"
