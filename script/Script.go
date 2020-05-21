@@ -2,7 +2,9 @@ package script
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script/address"
@@ -27,8 +29,23 @@ func NewFromBytes(b []byte) *Script {
 }
 
 // NewFromASM creates a new script from a BitCoin ASM formatted string.
-func NewFromASM(s string) (*Script, error) {
-	return &Script{}, nil // TODO:
+func NewFromASM(str string) (*Script, error) {
+	sections := strings.Split(str, " ")
+
+	s := &Script{}
+
+	for _, section := range sections {
+		if val, ok := opCodeStrings[section]; ok {
+			s.AppendOpCode(val)
+		} else {
+			err := s.AppendPushDataHexString(section)
+			if err != nil {
+				return nil, errors.New("invalid opcode data")
+			}
+		}
+	}
+
+	return s, nil
 }
 
 // NewP2PKHFromPubKeyStr takes a public key hex string (in
@@ -117,10 +134,19 @@ func (s *Script) AppendPushData(d []byte) error {
 	return nil
 }
 
-// AppendPushDataString takes a string and appends them to the script with proper PUSHDATA prefixes
+// AppendPushDataHexString takes a hex string and appends them to the script with proper PUSHDATA prefixes
+func (s *Script) AppendPushDataHexString(str string) error {
+	h, err := hex.DecodeString(str)
+	if err != nil {
+		return err
+	}
+
+	return s.AppendPushData(h)
+}
+
+// AppendPushDataString takes a string and appends its UTF-8 encoding to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataString(str string) error {
-	err := s.AppendPushData([]byte(str))
-	return err
+	return s.AppendPushData([]byte(str))
 }
 
 // AppendPushDataArray takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
@@ -134,7 +160,7 @@ func (s *Script) AppendPushDataArray(d [][]byte) error {
 	return nil
 }
 
-// AppendPushDataStrings takes an array of strings and appends them to the script with proper PUSHDATA prefixes
+// AppendPushDataStrings takes an array of strings and appends their UTF-8 encoding to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataStrings(strs []string) error {
 	dataBytes := make([][]byte, 0)
 	for _, str := range strs {
@@ -142,8 +168,7 @@ func (s *Script) AppendPushDataStrings(strs []string) error {
 		dataBytes = append(dataBytes, strBytes)
 	}
 
-	err := s.AppendPushDataArray(dataBytes)
-	return err
+	return s.AppendPushDataArray(dataBytes)
 }
 
 // AppendOpCode appends an opcode type to the script
