@@ -119,8 +119,21 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 }
 
 // ToString returns hex string of script.
-func (s *Script) ToString() string {
+func (s *Script) ToString() string { // TODO: change to HexString?
 	return hex.EncodeToString(*s)
+}
+
+// ToASM returns the string ASM opcodes of the script.
+func (s *Script) ToASM() string {
+	var asmScript string
+	for _, b := range *s {
+		if val, ok := opCodeValues[b]; ok {
+			asmScript = asmScript + " " + val
+		} else {
+			// TODO: check op pushdata and then take next X bytes and encode to hex
+		}
+	}
+	return asmScript
 }
 
 // AppendPushData takes data bytes and appends them to the script with proper PUSHDATA prefixes
