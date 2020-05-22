@@ -399,7 +399,7 @@ func TestValidSignature2(t *testing.T) {
 
 	var previousTxScript, _ = script.NewFromHexString("76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac")
 	var prevIndex uint32 = 1
-	var outIndex uint32 = 0
+	var outIndex uint32
 
 	sighash := transaction.GetSighashForInputValidation(tx, uint32(sigHashType), outIndex, prevIndex, previousTxSatoshis, previousTxScript)
 
