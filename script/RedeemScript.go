@@ -47,7 +47,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		return nil, errors.New("There should be 5 parts in this redeemScript")
 	}
 
-	signaturesRequired := int(parts[0][0] - OP_BASE)
+	signaturesRequired := int(parts[0][0] - OpBASE)
 	if signaturesRequired < 2 {
 		return nil, errors.New("Must have 2 or more required signatures for multisig")
 	}
@@ -56,9 +56,9 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		return nil, errors.New("More than 15 signatures is not supported")
 	}
 
-	signatureCount := int(parts[len(parts)-2][0] - OP_BASE)
+	signatureCount := int(parts[len(parts)-2][0] - OpBASE)
 
-	if parts[len(parts)-1][0] != OP_CHECKMULTISIG {
+	if parts[len(parts)-1][0] != OpCHECKMULTISIG {
 		return nil, errors.New("Script must end with OP_CHECKMULTISIG")
 	}
 
@@ -164,16 +164,16 @@ func (rs *RedeemScript) getPublicKeys() [][]byte {
 func (rs *RedeemScript) GetRedeemScript() []byte {
 	var b []byte
 
-	b = append(b, OP_BASE+byte(rs.SignaturesRequired))
+	b = append(b, OpBASE+byte(rs.SignaturesRequired))
 	rs.PublicKeys = utils.SortByteArrays(rs.PublicKeys)
 	for _, pk := range rs.PublicKeys {
 		b = append(b, byte(len(pk)))
 		b = append(b, pk...)
 	}
 
-	b = append(b, OP_BASE+byte(len(rs.PublicKeys)))
+	b = append(b, OpBASE+byte(len(rs.PublicKeys)))
 
-	b = append(b, OP_CHECKMULTISIG)
+	b = append(b, OpCHECKMULTISIG)
 
 	return b
 }
@@ -188,10 +188,10 @@ func (rs *RedeemScript) getScriptPubKey() []byte {
 
 	h := rs.GetRedeemScriptHash()
 
-	b = append(b, OP_HASH160)
+	b = append(b, OpHASH160)
 	b = append(b, byte(len(h)))
 	b = append(b, h...)
-	b = append(b, OP_EQUAL)
+	b = append(b, OpEQUAL)
 
 	return b
 }

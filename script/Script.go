@@ -58,13 +58,13 @@ func NewP2PKHFromPubKeyStr(pubKey string) (*Script, error) {
 	hash := crypto.Hash160(pubKeyBytes)
 
 	b := []byte{
-		OP_DUP,
-		OP_HASH160,
+		OpDUP,
+		OpHASH160,
 		0x14,
 	}
 	b = append(b, hash...)
-	b = append(b, OP_EQUALVERIFY)
-	b = append(b, OP_CHECKSIG)
+	b = append(b, OpEQUALVERIFY)
+	b = append(b, OpCHECKSIG)
 
 	s := Script(b)
 	return &s, nil
@@ -79,13 +79,13 @@ func NewP2PKHFromPubKeyHashStr(pubKeyHash string) (*Script, error) {
 	}
 
 	b := []byte{
-		OP_DUP,
-		OP_HASH160,
+		OpDUP,
+		OpHASH160,
 		0x14,
 	}
 	b = append(b, hash...)
-	b = append(b, OP_EQUALVERIFY)
-	b = append(b, OP_CHECKSIG)
+	b = append(b, OpEQUALVERIFY)
+	b = append(b, OpCHECKSIG)
 
 	s := Script(b)
 	return &s, nil
@@ -106,14 +106,14 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 	}
 
 	s := &Script{}
-	s.AppendOpCode(OP_DUP)
-	s.AppendOpCode(OP_HASH160)
+	s.AppendOpCode(OpDUP)
+	s.AppendOpCode(OpHASH160)
 	err = s.AppendPushData(publicKeyHashBytes)
 	if err != nil {
 		return nil, err
 	}
-	s.AppendOpCode(OP_EQUALVERIFY)
-	s.AppendOpCode(OP_CHECKSIG)
+	s.AppendOpCode(OpEQUALVERIFY)
+	s.AppendOpCode(OpCHECKSIG)
 
 	return s, nil
 }
@@ -180,11 +180,11 @@ func (s *Script) AppendOpCode(o uint8) {
 func (s *Script) IsPublicKeyHashOut() bool {
 	b := []byte(*s)
 	return len(b) == 25 &&
-		b[0] == OP_DUP &&
-		b[1] == OP_HASH160 &&
+		b[0] == OpDUP &&
+		b[1] == OpHASH160 &&
 		b[2] == 0x14 &&
-		b[23] == OP_EQUALVERIFY &&
-		b[24] == OP_CHECKSIG
+		b[23] == OpEQUALVERIFY &&
+		b[24] == OpCHECKSIG
 }
 
 // IsPublicKeyOut returns true if this is a public key output script.
@@ -196,7 +196,7 @@ func (s *Script) IsPublicKeyOut() bool {
 
 	if len(parts) == 2 &&
 		len(parts[0]) > 0 &&
-		parts[1][0] == OP_CHECKSIG {
+		parts[1][0] == OpCHECKSIG {
 
 		pubkey := parts[0]
 		version := pubkey[0]
@@ -215,9 +215,9 @@ func (s *Script) IsScriptHashOut() bool {
 	b := []byte(*s)
 
 	return len(b) == 23 &&
-		b[0] == OP_HASH160 &&
+		b[0] == OpHASH160 &&
 		b[1] == 0x14 &&
-		b[22] == OP_EQUAL
+		b[22] == OpEQUAL
 }
 
 // IsMultisigOut returns true if this is a multisig output script.
@@ -242,11 +242,11 @@ func (s *Script) IsMultisigOut() bool {
 	}
 
 	return isSmallIntOp(parts[len(parts)-2][0]) &&
-		parts[len(parts)-1][0] == OP_CHECKMULTISIG
+		parts[len(parts)-1][0] == OpCHECKMULTISIG
 }
 
 func isSmallIntOp(opcode byte) bool {
-	return opcode == OP_ZERO || (opcode >= OP_ONE && opcode <= OP_16)
+	return opcode == OpZERO || (opcode >= OpONE && opcode <= Op16)
 }
 
 // GetPublicKeyHash returns a public key hash byte array if the script is a P2PKH script

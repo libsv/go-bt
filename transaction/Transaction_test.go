@@ -353,8 +353,7 @@ func TestValidSignature(t *testing.T) {
 	var previousTxSatoshis uint64 = 15564838601
 
 	var previousTxScript, _ = script.NewFromHexString("76a914c7c6987b6e2345a6b138e3384141520a0fbc18c588ac")
-	var prevIndex uint32 = 0
-	var outIndex uint32 = 0
+	var prevIndex, outIndex uint32
 
 	sighash := transaction.GetSighashForInputValidation(tx, uint32(sigHashType), outIndex, prevIndex, previousTxSatoshis, previousTxScript)
 
