@@ -1,5 +1,5 @@
 
-# Contributor Covenant Code of Conduct
+# Lib Code of Conduct
 
 ## Our Pledge
 
