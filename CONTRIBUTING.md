@@ -1,5 +1,5 @@
 
-# Lib Code of Conduct
+# Libsv Code of Conduct
 
 ## Our Pledge
 
