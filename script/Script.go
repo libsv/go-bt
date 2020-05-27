@@ -125,6 +125,9 @@ func (s *Script) ToString() string { // TODO: change to HexString?
 
 // ToASM returns the string ASM opcodes of the script.
 func (s *Script) ToASM() string {
+	// TODO: decodeparts and then loop through parts and if opcode byte return
+	// string and if not hex.encode to string the long part
+
 	var asmScript string
 	for _, b := range *s {
 		if val, ok := opCodeValues[b]; ok {

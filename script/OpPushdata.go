@@ -6,7 +6,12 @@ import (
 	"fmt"
 )
 
-// EncodeParts takes a slice of slices and returns a single slice with the appropriate OP_PUSH commands embedded.
+// EncodeParts takes an array of byte slices and returns a single byte
+// slice with the appropriate OP_PUSH commands embedded. The output
+// can be encoded to a hex string and viewed as a BitCoin script hex
+// string.
+// For example '76a9140d6cf2ef7bc915d109f77357a71b64fc25e2e11488ac' is
+// the hex string of a P2PKH output script.
 func EncodeParts(parts [][]byte) ([]byte, error) {
 	b := make([]byte, 0)
 
@@ -44,7 +49,9 @@ func EncodeParts(parts [][]byte) ([]byte, error) {
 	return b, nil
 }
 
-// DecodeStringParts calls DecodeParts.
+// DecodeStringParts takes a hex string and decodes the opcodes in it
+// returning an array of opcode parts (which could be opcodes or data
+// pushed to the stack).
 func DecodeStringParts(s string) ([][]byte, error) {
 	b, err := hex.DecodeString(s)
 	if err != nil {
@@ -53,7 +60,9 @@ func DecodeStringParts(s string) ([][]byte, error) {
 	return DecodeParts(b)
 }
 
-// DecodeParts returns an array of strings...
+// DecodeParts takes bytes and decodes the opcodes in it
+// returning an array of opcode parts (which could be opcodes or data
+// pushed to the stack).
 func DecodeParts(b []byte) ([][]byte, error) {
 	var r [][]byte
 	for len(b) > 0 {
