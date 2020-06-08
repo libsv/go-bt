@@ -34,7 +34,25 @@ func TestNewFromHexString(t *testing.T) {
 		t.Errorf("Expected %q, got %q", expected, res)
 	}
 }
+
 func TestNewFromASM(t *testing.T) {
+	s, err := script.NewFromHexString("76a914e2a623699e81b291c0327f408fea765d534baa2a88ac")
+	if err != nil {
+		t.Error(err)
+	}
+
+	res, err := s.ToASM()
+	if err != nil {
+		t.Error(err)
+	}
+	expected := "OP_DUP OP_HASH160 e2a623699e81b291c0327f408fea765d534baa2a OP_EQUALVERIFY OP_CHECKSIG"
+
+	if res != expected {
+		t.Errorf("Expected %q, got %q", expected, res)
+	}
+}
+
+func TestToASM(t *testing.T) {
 	s, err := script.NewFromASM("OP_DUP OP_HASH160 e2a623699e81b291c0327f408fea765d534baa2a OP_EQUALVERIFY OP_CHECKSIG")
 	if err != nil {
 		t.Error(err)
@@ -52,36 +70,44 @@ func TestIsPublicKeyHashOut(t *testing.T) {
 	b, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
 	scriptPub := script.NewFromBytes(b)
 
-	ret := scriptPub.IsPublicKeyHashOut()
+	res := scriptPub.IsPublicKeyHashOut()
 
-	t.Log(ret)
+	if !res {
+		t.Errorf("Expected %t, got %t", true, res)
+	}
 }
 
 func TestIsPublicKeyOut(t *testing.T) {
 	b, _ := hex.DecodeString("2102f0d97c290e79bf2a8660c406aa56b6f189ff79f2245cc5aff82808b58131b4d5ac")
 	scriptPub := script.NewFromBytes(b)
 
-	ret := scriptPub.IsPublicKeyOut()
+	res := scriptPub.IsPublicKeyOut()
 
-	t.Log(ret)
+	if !res {
+		t.Errorf("Expected %t, got %t", true, res)
+	}
 }
 
 func TestIsScriptHashOut(t *testing.T) {
 	b, _ := hex.DecodeString("a9149de5aeaff9c48431ba4dd6e8af73d51f38e451cb87")
 	scriptPub := script.NewFromBytes(b)
 
-	ret := scriptPub.IsScriptHashOut()
+	res := scriptPub.IsScriptHashOut()
 
-	t.Log(ret)
+	if !res {
+		t.Errorf("Expected %t, got %t", true, res)
+	}
 }
 
-func TestIsMultisigOut(t *testing.T) {
+func TestIsMultisigOut(t *testing.T) { // TODO: check this
 	b, _ := hex.DecodeString("5201110122013353ae")
 	scriptPub := script.NewFromBytes(b)
 
-	ret := scriptPub.IsMultisigOut()
+	res := scriptPub.IsMultisigOut()
 
-	t.Log(ret)
+	if !res {
+		t.Errorf("Expected %t, got %t", true, res)
+	}
 }
 
 func TestGetPublicKeyHash(t *testing.T) {
@@ -92,13 +118,13 @@ func TestGetPublicKeyHash(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	res := hex.EncodeToString(pkh)
 
 	expected := "04d03f746652cfcb6cb55119ab473a045137d265"
 
-	if hex.EncodeToString(pkh) != expected {
-		t.Fail()
+	if res != expected {
+		t.Errorf("Expected %q, got %q", res, expected)
 	}
-	// t.Logf("%x\n", pkh)
 }
 
 func TestGetPublicKeyHashAsString(t *testing.T) {
@@ -112,13 +138,13 @@ func TestGetPublicKeyHashAsString(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+	res := hex.EncodeToString(pkh)
 
 	expected := "04d03f746652cfcb6cb55119ab473a045137d265"
 
-	if hex.EncodeToString(pkh) != expected {
-		t.Fail()
+	if res != expected {
+		t.Errorf("Expected %q, got %q", res, expected)
 	}
-	// t.Logf("%x\n", pkh)
 }
 
 func TestGetPublicKeyHashEmptyScript(t *testing.T) {

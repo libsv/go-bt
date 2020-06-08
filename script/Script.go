@@ -124,19 +124,22 @@ func (s *Script) ToString() string { // TODO: change to HexString?
 }
 
 // ToASM returns the string ASM opcodes of the script.
-func (s *Script) ToASM() string {
-	// TODO: decodeparts and then loop through parts and if opcode byte return
-	// string and if not hex.encode to string the long part
+func (s *Script) ToASM() (string, error) {
+	parts, err := DecodeParts(*s)
+	if err != nil {
+		return "", err
+	}
 
 	var asmScript string
-	for _, b := range *s {
-		if val, ok := opCodeValues[b]; ok {
-			asmScript = asmScript + " " + val
+	for _, p := range parts {
+		if len(p) == 1 {
+			asmScript = asmScript + " " + opCodeValues[p[0]]
 		} else {
-			// TODO: check op pushdata and then take next X bytes and encode to hex
+			asmScript = asmScript + " " + hex.EncodeToString(p)
 		}
 	}
-	return asmScript
+
+	return strings.TrimSpace(asmScript), nil
 }
 
 // AppendPushData takes data bytes and appends them to the script with proper PUSHDATA prefixes
