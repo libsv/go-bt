@@ -17,7 +17,6 @@ func TestDecodePartsSimple(t *testing.T) {
 	if len(parts) != 3 {
 		t.Errorf("Expected 3 parts, got %d", len(parts))
 	}
-	// t.Logf("%+v", parts)
 }
 
 func TestDecodePartsSimpleAndEncode(t *testing.T) {
@@ -42,7 +41,6 @@ func TestDecodePartsSimpleAndEncode(t *testing.T) {
 	if h != expected {
 		t.Errorf("Expected %q, got %q", expected, h)
 	}
-	// t.Logf("%x", p)
 }
 
 func TestDecodePartsEmpty(t *testing.T) {
@@ -67,6 +65,4 @@ func TestDecodePartsComplex(t *testing.T) {
 	if len(parts) != 5 {
 		t.Errorf("Expected 5 parts, got %d", len(parts))
 	}
-
-	t.Logf("%+v", parts)
 }
