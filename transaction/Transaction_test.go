@@ -56,7 +56,7 @@ func TestNewFromString(t *testing.T) {
 	}
 
 	i := input.Input{}
-	i.PreviousTxID, _ = utils.Decode32Byte("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
+	i.PreviousTxID = "9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c"
 	i.PreviousTxOutIndex = 0
 	i.SequenceNumber = uint32(0xffffffff)
 	i.UnlockingScript, _ = script.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
@@ -284,7 +284,7 @@ func TestSignTx(t *testing.T) {
 
 // this test was used to try signing a hash puzzle transaction that
 // needed to append the pre-image of the hash to the sigScript
-func TestSignTxForced(t *testing.T) {
+func TestSignTxForced(t *testing.T) { // TODO: check/fix
 	unsignedTx := "0100000001f59f8ee5745b020dd3e3a561a539defb626117befc554e168c3bfb88b56ab0f20000000000ffffffff01d0200000000000001976a91447862fe165e6121af80d5dde1ecb478ed170565b88ac00000000"
 	tx, err := transaction.NewFromString(unsignedTx)
 	if err != nil {

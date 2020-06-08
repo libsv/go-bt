@@ -130,11 +130,7 @@ func (bt *Transaction) From(txID string, vout uint32, scriptSig string, satoshis
 		PreviousTxSatoshis: satoshis,
 	}
 
-	h, err := hex.DecodeString(txID)
-	if err != nil {
-		return err
-	}
-	copy(i.PreviousTxID[:], h)
+	i.PreviousTxID = txID
 
 	bt.AddInput(i)
 
@@ -169,16 +165,14 @@ func (bt *Transaction) PayTo(addr string, satoshis uint64) error {
 }
 
 // IsCoinbase determines if this transaction is a coinbase by
-// seeing if any of the inputs have no inputs.
+// checking if the tx input is a standard coinbase input.
 func (bt *Transaction) IsCoinbase() bool {
 	if len(bt.Inputs) != 1 {
 		return false
 	}
 
-	for _, v := range bt.Inputs[0].PreviousTxID {
-		if v != 0x00 {
-			return false
-		}
+	if bt.Inputs[0].PreviousTxID != "0000000000000000000000000000000000000000000000000000000000000000" {
+		return false
 	}
 
 	if bt.Inputs[0].PreviousTxOutIndex == 0xFFFFFFFF || bt.Inputs[0].SequenceNumber == 0xFFFFFFFF {

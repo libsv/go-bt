@@ -23,7 +23,7 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 
 // Input is a representation of a transaction input
 type Input struct {
-	PreviousTxID       [32]byte
+	PreviousTxID       string
 	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *script.Script
@@ -46,7 +46,7 @@ func New() *Input {
 func NewFromBytes(bytes []byte) (*Input, int) {
 	i := Input{}
 
-	copy(i.PreviousTxID[:], utils.ReverseBytes(bytes[0:32]))
+	i.PreviousTxID = hex.EncodeToString(utils.ReverseBytes(bytes[0:32]))
 
 	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
@@ -63,9 +63,9 @@ func NewFromBytes(bytes []byte) (*Input, int) {
 
 // NewFromUTXO returns a transaction input from the UTXO fields provided.
 func NewFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64, prevTxScript string, nSeq uint32) (*Input, error) {
-	var b32 [32]byte
-	b, _ := hex.DecodeString(prevTxID)
-	copy(b32[:], b[0:32])
+	// var b32 [32]byte
+	// b, _ := hex.DecodeString(prevTxID)
+	// copy(b32[:], b[0:32])
 
 	pts, err := script.NewFromHexString(prevTxScript)
 	if err != nil {
@@ -73,7 +73,7 @@ func NewFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64, prevTxS
 	}
 
 	i := &Input{
-		PreviousTxID:       b32,
+		PreviousTxID:       prevTxID,
 		PreviousTxOutIndex: prevTxIndex,
 		PreviousTxSatoshis: prevTxSats,
 		PreviousTxScript:   pts,
@@ -96,7 +96,9 @@ sequence:     %x
 func (i *Input) ToBytes(clear bool) []byte {
 	h := make([]byte, 0)
 
-	h = append(h, utils.ReverseBytes(i.PreviousTxID[:])...)
+	pid, _ := hex.DecodeString(i.PreviousTxID)
+
+	h = append(h, utils.ReverseBytes(pid)...)
 	h = append(h, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		h = append(h, 0x00)
