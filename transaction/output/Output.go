@@ -112,9 +112,9 @@ func NewOpReturn(data []byte) (*Output, error) {
 	return o, nil
 }
 
-// NewOpReturnPush creates a new Output with OP_FALSE OP_RETURN and then
+// NewOpReturnParts creates a new Output with OP_FALSE OP_RETURN and then
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
-func NewOpReturnPush(data [][]byte) (*Output, error) {
+func NewOpReturnParts(data [][]byte) (*Output, error) {
 	o, err := createOpReturnOutput(data)
 	if err != nil {
 		return nil, err

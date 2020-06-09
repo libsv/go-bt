@@ -87,7 +87,7 @@ func TestNewOutputOpReturnPush(t *testing.T) {
 	data3 := "are"
 	data4 := "you"
 	dataBytes := [][]byte{[]byte(data1), []byte(data2), []byte(data3), []byte(data4)}
-	o, err := output.NewOpReturnPush(dataBytes)
+	o, err := output.NewOpReturnParts(dataBytes)
 	if err != nil {
 		t.Error(err)
 		return
