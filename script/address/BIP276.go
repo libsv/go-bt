@@ -1,4 +1,4 @@
-package utils
+package address
 
 import (
 	"encoding/hex"
@@ -30,8 +30,6 @@ const NetworkMainnet = 1
 // NetworkTestnet specifies that the data is only
 // valid for use on the test network.
 const NetworkTestnet = 2
-
-// TODO: consider moving to script or utils
 
 // EncodeBIP276 is used to encode specific (non-standard) scripts in BIP276 format.
 // See https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki

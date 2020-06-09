@@ -1,4 +1,4 @@
-package address
+package address_test
 
 import (
 	"encoding/hex"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitcoinsv/bsvd/bsvec"
-	"github.com/libsv/libsv/address"
+	"github.com/libsv/libsv/script/address"
 )
 
 func TestNewFromStringMainnet(t *testing.T) {

@@ -23,7 +23,7 @@ Txout-script / scriptPubKey   Script                                      <out-s
 
 // Output is a representation of a transaction output
 type Output struct {
-	Value         uint64
+	Satoshis      uint64
 	LockingScript *script.Script
 }
 
@@ -31,7 +31,7 @@ type Output struct {
 func NewFromBytes(bytes []byte) (*Output, int) {
 	o := Output{}
 
-	o.Value = binary.LittleEndian.Uint64(bytes[0:8])
+	o.Satoshis = binary.LittleEndian.Uint64(bytes[0:8])
 
 	offset := 8
 	i, size := utils.DecodeVarInt(bytes[offset:])
@@ -51,7 +51,7 @@ func NewP2PkhFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Output, err
 	}
 
 	return &Output{
-		Value:         satoshis,
+		Satoshis:      satoshis,
 		LockingScript: s,
 	}, nil
 }
@@ -64,7 +64,7 @@ func NewP2PKHFromAddress(addr string, satoshis uint64) (*Output, error) {
 	}
 
 	return &Output{
-		Value:         satoshis,
+		Satoshis:      satoshis,
 		LockingScript: s,
 	}, nil
 }
@@ -72,7 +72,7 @@ func NewP2PKHFromAddress(addr string, satoshis uint64) (*Output, error) {
 // NewHashPuzzle makes an output to a hash puzzle + PKH with a value.
 func NewHashPuzzle(secret string, publicKeyHash string, satoshis uint64) (*Output, error) {
 	o := Output{}
-	o.Value = satoshis
+	o.Satoshis = satoshis
 
 	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
 	if err != nil {
@@ -112,9 +112,9 @@ func NewOpReturn(data []byte) (*Output, error) {
 	return o, nil
 }
 
-// NewOpReturnPush creates a new Output with OP_FALSE OP_RETURN and then
+// NewOpReturnParts creates a new Output with OP_FALSE OP_RETURN and then
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
-func NewOpReturnPush(data [][]byte) (*Output, error) {
+func NewOpReturnParts(data [][]byte) (*Output, error) {
 	o, err := createOpReturnOutput(data)
 	if err != nil {
 		return nil, err
@@ -147,13 +147,13 @@ func (o *Output) String() string {
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d
 script:    %x
-`, o.Value, len(*o.LockingScript), o.LockingScript)
+`, o.Satoshis, len(*o.LockingScript), o.LockingScript)
 }
 
-// Hex encodes the Output into a byte array.
-func (o *Output) Hex() []byte {
+// ToBytes encodes the Output into a byte array.
+func (o *Output) ToBytes() []byte {
 	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, o.Value)
+	binary.LittleEndian.PutUint64(b, o.Satoshis)
 
 	h := make([]byte, 0)
 	h = append(h, b...)
@@ -169,7 +169,7 @@ func (o *Output) GetBytesForSigHash() []byte {
 	buf := make([]byte, 0)
 
 	satoshis := make([]byte, 8)
-	binary.LittleEndian.PutUint64(satoshis, o.Value)
+	binary.LittleEndian.PutUint64(satoshis, o.Satoshis)
 	buf = append(buf, satoshis...)
 
 	buf = append(buf, utils.VarInt(uint64(len(*o.LockingScript)))...)

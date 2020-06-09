@@ -1,9 +1,9 @@
-package utils
+package address_test
 
 import (
 	"testing"
 
-	"github.com/libsv/libsv/utils"
+	"github.com/libsv/libsv/script/address"
 )
 
 // TestEncode comment
@@ -11,7 +11,7 @@ func TestEncode(t *testing.T) {
 	fakeScript := "fake script"
 	fakeScriptBytes := []byte(fakeScript)
 
-	s := utils.EncodeBIP276(utils.PrefixScript, utils.NetworkMainnet, utils.CurrentVersion, fakeScriptBytes)
+	s := address.EncodeBIP276(address.PrefixScript, address.NetworkMainnet, address.CurrentVersion, fakeScriptBytes)
 
 	expected := "bitcoin-script:010166616b65207363726970746f0cd86a"
 
@@ -25,7 +25,7 @@ func TestEncode(t *testing.T) {
 func TestDecode(t *testing.T) {
 	testScript := "bitcoin-script:010166616b65207363726970746f0cd86a"
 
-	prefix, network, version, data, err := utils.DecodeBIP276(testScript)
+	prefix, network, version, data, err := address.DecodeBIP276(testScript)
 	if err != nil {
 		t.Errorf("Error decoding bip276 string: %+v", err)
 	} else {

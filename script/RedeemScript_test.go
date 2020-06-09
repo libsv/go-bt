@@ -1,14 +1,16 @@
-package script
+package script_test
 
 import (
 	"bytes"
 	"encoding/hex"
+
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvd/chaincfg/chainhash"
+	"github.com/libsv/libsv/script"
+
 	"testing"
 
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/script"
 )
 
 func TestGetRedeemScript(t *testing.T) {
@@ -17,8 +19,14 @@ func TestGetRedeemScript(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	rs.AddPublicKey("xpub661MyMwAqRbcFvmkwJ82wpjkNmjMWb8n4Pp9Gz3dJjPZMh4uW7z9CpSsTNjEcH3KW5Tibn77qDM9X7gJyjxySEgzBmoQ9LGxSrgHMXTMqx6", []uint32{0, 0})
-	rs.AddPublicKey("xpub661MyMwAqRbcF5ivRisXcZTEoy7d9DfLF6fLqpu5GWMfeUyGHuWJHVp5uexDqXTWoySh8pNx3ELW7qymwPNg3UEYHjwh1tpdm3P9J2j4g32", []uint32{0, 0})
+	err = rs.AddPublicKey("xpub661MyMwAqRbcFvmkwJ82wpjkNmjMWb8n4Pp9Gz3dJjPZMh4uW7z9CpSsTNjEcH3KW5Tibn77qDM9X7gJyjxySEgzBmoQ9LGxSrgHMXTMqx6", []uint32{0, 0})
+	if err != nil {
+		t.Error(err)
+	}
+	err = rs.AddPublicKey("xpub661MyMwAqRbcF5ivRisXcZTEoy7d9DfLF6fLqpu5GWMfeUyGHuWJHVp5uexDqXTWoySh8pNx3ELW7qymwPNg3UEYHjwh1tpdm3P9J2j4g32", []uint32{0, 0})
+	if err != nil {
+		t.Error(err)
+	}
 
 	if rs.GetAddress() != expected {
 		t.Errorf("Expected %q, got %q", expected, rs.GetAddress())
@@ -41,15 +49,18 @@ func TestGetRedeemScript2(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	rs.AddPublicKey("xpub661MyMwAqRbcF5ivRisXcZTEoy7d9DfLF6fLqpu5GWMfeUyGHuWJHVp5uexDqXTWoySh8pNx3ELW7qymwPNg3UEYHjwh1tpdm3P9J2j4g32", []uint32{0, 0})
-	rs.AddPublicKey("xpub661MyMwAqRbcFvmkwJ82wpjkNmjMWb8n4Pp9Gz3dJjPZMh4uW7z9CpSsTNjEcH3KW5Tibn77qDM9X7gJyjxySEgzBmoQ9LGxSrgHMXTMqx6", []uint32{0, 0})
+	err = rs.AddPublicKey("xpub661MyMwAqRbcF5ivRisXcZTEoy7d9DfLF6fLqpu5GWMfeUyGHuWJHVp5uexDqXTWoySh8pNx3ELW7qymwPNg3UEYHjwh1tpdm3P9J2j4g32", []uint32{0, 0})
+	if err != nil {
+		t.Error(err)
+	}
+	err = rs.AddPublicKey("xpub661MyMwAqRbcFvmkwJ82wpjkNmjMWb8n4Pp9Gz3dJjPZMh4uW7z9CpSsTNjEcH3KW5Tibn77qDM9X7gJyjxySEgzBmoQ9LGxSrgHMXTMqx6", []uint32{0, 0})
+	if err != nil {
+		t.Error(err)
+	}
 
 	if rs.GetAddress() != expected {
 		t.Errorf("Expected Address %q, got %q", expected, rs.GetAddress())
 	}
-
-	t.Logf("%x", rs.GetRedeemScript())
-	// t.Logf("%+v", rs)
 }
 
 func TestGetRedeemScriptFromElectrumRedeemScript(t *testing.T) {
@@ -64,9 +75,6 @@ func TestGetRedeemScriptFromElectrumRedeemScript(t *testing.T) {
 	if rs.GetAddress() != expected {
 		t.Errorf("Expected Address %q, got %q", expected, rs.GetAddress())
 	}
-
-	t.Logf("%+v", rs)
-
 }
 
 func TestSignRedeemScript(t *testing.T) {

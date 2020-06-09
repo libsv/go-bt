@@ -130,11 +130,7 @@ func (bt *Transaction) From(txID string, vout uint32, scriptSig string, satoshis
 		PreviousTxSatoshis: satoshis,
 	}
 
-	h, err := hex.DecodeString(txID)
-	if err != nil {
-		return err
-	}
-	copy(i.PreviousTxID[:], h)
+	i.PreviousTxID = txID
 
 	bt.AddInput(i)
 
@@ -169,16 +165,14 @@ func (bt *Transaction) PayTo(addr string, satoshis uint64) error {
 }
 
 // IsCoinbase determines if this transaction is a coinbase by
-// seeing if any of the inputs have no inputs.
+// checking if the tx input is a standard coinbase input.
 func (bt *Transaction) IsCoinbase() bool {
 	if len(bt.Inputs) != 1 {
 		return false
 	}
 
-	for _, v := range bt.Inputs[0].PreviousTxID {
-		if v != 0x00 {
-			return false
-		}
+	if bt.Inputs[0].PreviousTxID != "0000000000000000000000000000000000000000000000000000000000000000" {
+		return false
 	}
 
 	if bt.Inputs[0].PreviousTxOutIndex == 0xFFFFFFFF || bt.Inputs[0].SequenceNumber == 0xFFFFFFFF {
@@ -229,7 +223,7 @@ func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
 	h = append(h, utils.VarInt(uint64(len(bt.GetInputs())))...)
 
 	for i, in := range bt.GetInputs() {
-		s := in.Hex(scriptPubKey != nil)
+		s := in.ToBytes(scriptPubKey != nil)
 		if i == index && scriptPubKey != nil {
 			h = append(h, utils.VarInt(uint64(len(scriptPubKey)))...)
 			h = append(h, scriptPubKey...)
@@ -240,7 +234,7 @@ func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
 
 	h = append(h, utils.VarInt(uint64(len(bt.GetOutputs())))...)
 	for _, out := range bt.GetOutputs() {
-		h = append(h, out.Hex()...)
+		h = append(h, out.ToBytes()...)
 	}
 
 	lt := make([]byte, 4)
@@ -265,19 +259,19 @@ func (bt *Transaction) Sign(s Signer) error {
 // NewSigningPayloadFromTx creates a new SigningPayload from a Transaction and a SIGHASH type.
 func NewSigningPayloadFromTx(bt *Transaction, sigType uint32) (*SigningPayload, error) {
 	p := NewSigningPayload()
-	for idx, input := range bt.Inputs {
-		if input.PreviousTxSatoshis == 0 {
+	for idx, i := range bt.Inputs {
+		if i.PreviousTxSatoshis == 0 {
 			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
 		}
 
-		if input.PreviousTxScript == nil {
+		if i.PreviousTxScript == nil {
 			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
 
 		}
 
 		sighash := GetSighashForInput(bt, sigType, uint32(idx))
-		pkh, _ := input.PreviousTxScript.GetPublicKeyHash() // if not P2PKH, pkh will just be nil
-		p.AddItem(hex.EncodeToString(pkh), sighash)         // and the SigningItem will have PublicKeyHash = ""
+		pkh, _ := i.PreviousTxScript.GetPublicKeyHash() // if not P2PKH, pkh will just be nil
+		p.AddItem(hex.EncodeToString(pkh), sighash)     // and the SigningItem will have PublicKeyHash = ""
 	}
 	return p, nil
 }

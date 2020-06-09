@@ -1,11 +1,11 @@
-package output
+package output_test
 
 import (
 	"encoding/hex"
 	"fmt"
 	"testing"
 
-	"github.com/libsv/libsv/address"
+	"github.com/libsv/libsv/script/address"
 	"github.com/libsv/libsv/transaction/output"
 	"github.com/libsv/libsv/utils"
 )
@@ -21,8 +21,8 @@ func TestNewOutput(t *testing.T) {
 		t.Errorf("Expected 25, got %d", s)
 	}
 
-	if o.Value != 1252788362 {
-		t.Errorf("Expected 1252788362, got %d", o.Value)
+	if o.Satoshis != 1252788362 {
+		t.Errorf("Expected 1252788362, got %d", o.Satoshis)
 	}
 
 	if len(*o.LockingScript) != 25 {
@@ -87,7 +87,7 @@ func TestNewOutputOpReturnPush(t *testing.T) {
 	data3 := "are"
 	data4 := "you"
 	dataBytes := [][]byte{[]byte(data1), []byte(data2), []byte(data3), []byte(data4)}
-	o, err := output.NewOpReturnPush(dataBytes)
+	o, err := output.NewOpReturnParts(dataBytes)
 	if err != nil {
 		t.Error(err)
 		return

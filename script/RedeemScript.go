@@ -3,14 +3,13 @@ package script
 import (
 	"encoding/binary"
 	"errors"
-	"log"
 
-	"github.com/libsv/libsv/address"
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/keys"
+	"github.com/libsv/libsv/script/address"
 	"github.com/libsv/libsv/utils"
 
 	"github.com/bitcoinsv/bsvutil/base58"
+	"github.com/bitcoinsv/bsvutil/hdkeychain"
 )
 
 // RedeemScript contains the metadata used when creating an unlocking script (SigScript) for a multisig output.
@@ -48,7 +47,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		return nil, errors.New("There should be 5 parts in this redeemScript")
 	}
 
-	signaturesRequired := int(parts[0][0]) - OpBASE
+	signaturesRequired := int(parts[0][0] - OpBASE)
 	if signaturesRequired < 2 {
 		return nil, errors.New("Must have 2 or more required signatures for multisig")
 	}
@@ -57,7 +56,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		return nil, errors.New("More than 15 signatures is not supported")
 	}
 
-	signatureCount := int(parts[len(parts)-2][0]) - OpBASE
+	signatureCount := int(parts[len(parts)-2][0] - OpBASE)
 
 	if parts[len(parts)-1][0] != OpCHECKMULTISIG {
 		return nil, errors.New("Script must end with OP_CHECKMULTISIG")
@@ -88,7 +87,7 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 		}
 
 		// rs.AddPublicKey("", s)
-		publicKey, err := keys.NewPublicKey(xpub)
+		publicKey, err := hdkeychain.NewKeyFromString(xpub)
 		if err != nil {
 			return nil, err
 		}
@@ -102,7 +101,12 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 			return nil, err
 		}
 
-		rs.PublicKeys = append(rs.PublicKeys, p.PublicKey)
+		ecpk, err := p.ECPubKey()
+		if err != nil {
+			return nil, err
+		}
+
+		rs.PublicKeys = append(rs.PublicKeys, ecpk.SerializeCompressed())
 	}
 
 	if len(rs.PublicKeys) != signatureCount {
@@ -116,10 +120,10 @@ func NewRedeemScriptFromElectrum(script string) (*RedeemScript, error) {
 func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error {
 
 	if len(derivationPath) != 2 {
-		return errors.New("We only support derivation paths with exactly 2 levels")
+		return errors.New("We only support derivation paths with exactly 2 levels") // TODO: why only 2?
 	}
 
-	pk, err := keys.NewPublicKey(pkey)
+	pk, err := hdkeychain.NewKeyFromString(pkey)
 	if err != nil {
 		return err
 	}
@@ -134,9 +138,12 @@ func (rs *RedeemScript) AddPublicKey(pkey string, derivationPath []uint32) error
 		return err
 	}
 
-	log.Println(result2.PublicKeyStr)
+	ecpk, err := result2.ECPubKey()
+	if err != nil {
+		return err
+	}
 
-	rs.PublicKeys = append(rs.PublicKeys, result2.PublicKey)
+	rs.PublicKeys = append(rs.PublicKeys, ecpk.SerializeCompressed())
 
 	return nil
 }
@@ -157,14 +164,14 @@ func (rs *RedeemScript) getPublicKeys() [][]byte {
 func (rs *RedeemScript) GetRedeemScript() []byte {
 	var b []byte
 
-	b = append(b, byte(OpBASE+rs.SignaturesRequired))
+	b = append(b, OpBASE+byte(rs.SignaturesRequired))
 	rs.PublicKeys = utils.SortByteArrays(rs.PublicKeys)
 	for _, pk := range rs.PublicKeys {
 		b = append(b, byte(len(pk)))
 		b = append(b, pk...)
 	}
 
-	b = append(b, byte(OpBASE+len(rs.PublicKeys)))
+	b = append(b, OpBASE+byte(len(rs.PublicKeys)))
 
 	b = append(b, OpCHECKMULTISIG)
 

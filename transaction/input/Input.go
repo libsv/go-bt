@@ -23,7 +23,7 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 
 // Input is a representation of a transaction input
 type Input struct {
-	PreviousTxID       [32]byte
+	PreviousTxID       string
 	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *script.Script
@@ -46,7 +46,7 @@ func New() *Input {
 func NewFromBytes(bytes []byte) (*Input, int) {
 	i := Input{}
 
-	copy(i.PreviousTxID[:], utils.ReverseBytes(bytes[0:32]))
+	i.PreviousTxID = hex.EncodeToString(utils.ReverseBytes(bytes[0:32]))
 
 	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
@@ -63,17 +63,13 @@ func NewFromBytes(bytes []byte) (*Input, int) {
 
 // NewFromUTXO returns a transaction input from the UTXO fields provided.
 func NewFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64, prevTxScript string, nSeq uint32) (*Input, error) {
-	var b32 [32]byte
-	b, _ := hex.DecodeString(prevTxID)
-	copy(b32[:], b[0:32])
-
 	pts, err := script.NewFromHexString(prevTxScript)
 	if err != nil {
 		return nil, err
 	}
 
 	i := &Input{
-		PreviousTxID:       b32,
+		PreviousTxID:       prevTxID,
 		PreviousTxOutIndex: prevTxIndex,
 		PreviousTxSatoshis: prevTxSats,
 		PreviousTxScript:   pts,
@@ -92,23 +88,25 @@ sequence:     %x
 `, i.PreviousTxID, i.PreviousTxOutIndex, len(*i.UnlockingScript), i.UnlockingScript, i.SequenceNumber)
 }
 
-// Hex encodes the Input into a hex byte array.
-func (i *Input) Hex(clear bool) []byte {
-	hex := make([]byte, 0)
+// ToBytes encodes the Input into a hex byte array.
+func (i *Input) ToBytes(clear bool) []byte {
+	h := make([]byte, 0)
 
-	hex = append(hex, utils.ReverseBytes(i.PreviousTxID[:])...)
-	hex = append(hex, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
+	pid, _ := hex.DecodeString(i.PreviousTxID)
+
+	h = append(h, utils.ReverseBytes(pid)...)
+	h = append(h, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
-		hex = append(hex, 0x00)
+		h = append(h, 0x00)
 	} else {
 		if i.UnlockingScript == nil {
-			hex = append(hex, utils.VarInt(0)...)
+			h = append(h, utils.VarInt(0)...)
 		} else {
-			hex = append(hex, utils.VarInt(uint64(len(*i.UnlockingScript)))...)
-			hex = append(hex, *i.UnlockingScript...)
+			h = append(h, utils.VarInt(uint64(len(*i.UnlockingScript)))...)
+			h = append(h, *i.UnlockingScript...)
 		}
 	}
-	hex = append(hex, utils.GetLittleEndianBytes(i.SequenceNumber, 4)...)
+	h = append(h, utils.GetLittleEndianBytes(i.SequenceNumber, 4)...)
 
-	return hex
+	return h
 }
