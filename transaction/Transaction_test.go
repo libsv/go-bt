@@ -72,7 +72,7 @@ func TestNewFromString(t *testing.T) {
 	}
 	ls, _ := script.NewFromHexString("76a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac")
 	o := output.Output{
-		Value:         4999000000,
+		Satoshis:      4999000000,
 		LockingScript: ls,
 	}
 	sameOutput := reflect.DeepEqual(*bt.Outputs[0], o)

@@ -21,8 +21,8 @@ func TestNewOutput(t *testing.T) {
 		t.Errorf("Expected 25, got %d", s)
 	}
 
-	if o.Value != 1252788362 {
-		t.Errorf("Expected 1252788362, got %d", o.Value)
+	if o.Satoshis != 1252788362 {
+		t.Errorf("Expected 1252788362, got %d", o.Satoshis)
 	}
 
 	if len(*o.LockingScript) != 25 {

@@ -23,7 +23,7 @@ Txout-script / scriptPubKey   Script                                      <out-s
 
 // Output is a representation of a transaction output
 type Output struct {
-	Value         uint64
+	Satoshis      uint64
 	LockingScript *script.Script
 }
 
@@ -31,7 +31,7 @@ type Output struct {
 func NewFromBytes(bytes []byte) (*Output, int) {
 	o := Output{}
 
-	o.Value = binary.LittleEndian.Uint64(bytes[0:8])
+	o.Satoshis = binary.LittleEndian.Uint64(bytes[0:8])
 
 	offset := 8
 	i, size := utils.DecodeVarInt(bytes[offset:])
@@ -51,7 +51,7 @@ func NewP2PkhFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Output, err
 	}
 
 	return &Output{
-		Value:         satoshis,
+		Satoshis:      satoshis,
 		LockingScript: s,
 	}, nil
 }
@@ -64,7 +64,7 @@ func NewP2PKHFromAddress(addr string, satoshis uint64) (*Output, error) {
 	}
 
 	return &Output{
-		Value:         satoshis,
+		Satoshis:      satoshis,
 		LockingScript: s,
 	}, nil
 }
@@ -72,7 +72,7 @@ func NewP2PKHFromAddress(addr string, satoshis uint64) (*Output, error) {
 // NewHashPuzzle makes an output to a hash puzzle + PKH with a value.
 func NewHashPuzzle(secret string, publicKeyHash string, satoshis uint64) (*Output, error) {
 	o := Output{}
-	o.Value = satoshis
+	o.Satoshis = satoshis
 
 	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
 	if err != nil {
@@ -147,13 +147,13 @@ func (o *Output) String() string {
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d
 script:    %x
-`, o.Value, len(*o.LockingScript), o.LockingScript)
+`, o.Satoshis, len(*o.LockingScript), o.LockingScript)
 }
 
 // ToBytes encodes the Output into a byte array.
 func (o *Output) ToBytes() []byte {
 	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, o.Value)
+	binary.LittleEndian.PutUint64(b, o.Satoshis)
 
 	h := make([]byte, 0)
 	h = append(h, b...)
@@ -169,7 +169,7 @@ func (o *Output) GetBytesForSigHash() []byte {
 	buf := make([]byte, 0)
 
 	satoshis := make([]byte, 8)
-	binary.LittleEndian.PutUint64(satoshis, o.Value)
+	binary.LittleEndian.PutUint64(satoshis, o.Satoshis)
 	buf = append(buf, satoshis...)
 
 	buf = append(buf, utils.VarInt(uint64(len(*o.LockingScript)))...)
