@@ -63,10 +63,6 @@ func NewFromBytes(bytes []byte) (*Input, int) {
 
 // NewFromUTXO returns a transaction input from the UTXO fields provided.
 func NewFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64, prevTxScript string, nSeq uint32) (*Input, error) {
-	// var b32 [32]byte
-	// b, _ := hex.DecodeString(prevTxID)
-	// copy(b32[:], b[0:32])
-
 	pts, err := script.NewFromHexString(prevTxScript)
 	if err != nil {
 		return nil, err
