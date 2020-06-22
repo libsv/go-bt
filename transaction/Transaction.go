@@ -198,8 +198,8 @@ func (bt *Transaction) GetTxID() string {
 	return hex.EncodeToString(utils.ReverseBytes(crypto.Sha256d(bt.ToBytes())))
 }
 
-// ToHex encodes the transaction into a hex string.
-func (bt *Transaction) ToHex() string {
+// ToString encodes the transaction into a hex string.
+func (bt *Transaction) ToString() string {
 	return hex.EncodeToString(bt.ToBytes())
 }
 
