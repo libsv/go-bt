@@ -128,6 +128,7 @@ func (bt *Transaction) From(txID string, vout uint32, scriptSig string, satoshis
 		PreviousTxOutIndex: vout,
 		PreviousTxScript:   pts,
 		PreviousTxSatoshis: satoshis,
+		SequenceNumber:     0xffffffff,
 	}
 
 	i.PreviousTxID = txID
