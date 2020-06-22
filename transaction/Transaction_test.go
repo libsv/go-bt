@@ -21,8 +21,8 @@ func TestNew(t *testing.T) {
 	bt := transaction.New()
 
 	// check version
-	if bt.Version != 2 {
-		t.Errorf("Expcted version be %v, but got %v", 2, bt.Version)
+	if bt.Version != 1 {
+		t.Errorf("Expcted version be %v, but got %v", 1, bt.Version)
 	}
 
 	//	check locktime
@@ -89,7 +89,7 @@ func TestToBytes(t *testing.T) {
 		return
 	}
 
-	t.Logf("%s", bt.ToHex())
+	t.Logf("%s", bt.ToString())
 	t.Logf("%x", bt.ToBytes())
 
 }
