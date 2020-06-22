@@ -55,7 +55,7 @@ type Transaction struct {
 func New() *Transaction {
 	t := Transaction{}
 
-	t.Version = 2
+	t.Version = 1
 	t.Locktime = 0
 
 	return &t
