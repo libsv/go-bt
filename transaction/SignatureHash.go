@@ -22,15 +22,19 @@ const (
 	SigHashSingle       SigHashType = 0x3
 	SigHashAnyOneCanPay SigHashType = 0x80
 
+	// Currently all BitCoin (SV) transactions require an additional SIGHASH flag (after UAHF)
+	SigHashAllForkID          SigHashType = 0x1 | 0x00000040
+	SigHashNoneForkID         SigHashType = 0x2 | 0x00000040
+	SigHashSingleForkID       SigHashType = 0x3 | 0x00000040
+	SigHashAnyOneCanPayForkID SigHashType = 0x80 | 0x00000040
+
 	// SigHashForkID is the replay protected signature hash flag
 	// used by the Uahf hardfork.
 	SigHashForkID SigHashType = 0x40
 
-	/* TODO: remove?
 	// sigHashMask defines the number of bits of the hash type which is used
 	// to identify which outputs are signed.
 	sigHashMask = 0x1f
-	*/
 )
 
 // GetInputSignatureHash serializes the transaction based on the sig TODO:
