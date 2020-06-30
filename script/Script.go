@@ -55,6 +55,13 @@ func NewP2PKHFromPubKeyStr(pubKey string) (*Script, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return NewP2PKHFromPubKeyBytes(pubKeyBytes)
+}
+
+// NewP2PKHFromPubKeyBytes takes public key bytes (in
+// compressed format) and creates a P2PKH script from it.
+func NewP2PKHFromPubKeyBytes(pubKeyBytes []byte) (*Script, error) {
 	hash := crypto.Hash160(pubKeyBytes)
 
 	b := []byte{
