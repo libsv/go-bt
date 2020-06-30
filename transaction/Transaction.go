@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
@@ -191,6 +192,16 @@ func (bt *Transaction) GetInputs() []*input.Input {
 // GetOutputs returns an array of all outputs in the transaction.
 func (bt *Transaction) GetOutputs() []*output.Output {
 	return bt.Outputs
+}
+
+// GetTotalOutputSatoshis returns an array of all outputs in the transaction.
+func (bt *Transaction) GetTotalOutputSatoshis() uint64 {
+	var total uint64
+	for _, o := range bt.GetOutputs() {
+		total += o.Satoshis
+	}
+
+	return total
 }
 
 // GetTxID returns the transaction ID of the transaction

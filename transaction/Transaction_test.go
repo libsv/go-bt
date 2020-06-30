@@ -98,13 +98,27 @@ func TestTxID(t *testing.T) {
 	tx, err := transaction.NewFromString("010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000")
 	if err != nil {
 		t.Error(err)
-	} else {
-		id := tx.GetTxID()
-		expected := "19dcf16ecc9286c3734fdae3d45d4fc4eb6b25f841131e06460f4939bba0026e"
+	}
 
-		if expected != id {
-			t.Errorf("Bad TXID")
-		}
+	id := tx.GetTxID()
+	expected := "19dcf16ecc9286c3734fdae3d45d4fc4eb6b25f841131e06460f4939bba0026e"
+
+	if expected != id {
+		t.Errorf("Bad TXID")
+	}
+}
+
+func TestGetTotalOutputSatoshis(t *testing.T) {
+	tx, err := transaction.NewFromString("020000000180f1ada3ad8e861441d9ceab40b68ed98f13695b185cc516226a46697cc01f80010000006b483045022100fa3a0f8fa9fbf09c372b7a318fa6175d022c1d782f7b8bc5949a7c8f59ce3f35022005e0e84c26f26d892b484ff738d803a57626679389c8b302939460dab29a5308412103e46b62eea5db5898fb65f7dc840e8a1dbd8f08a19781a23f1f55914f9bedcd49feffffff02dec537b2000000001976a914ba11bcc46ecf8d88e0828ddbe87997bf759ca85988ac00943577000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac6e000000")
+	if err != nil {
+		t.Error(err)
+	}
+
+	total := tx.GetTotalOutputSatoshis()
+	expected := (29.89999582 + 20.00) * 1e8
+
+	if uint64(expected) != total {
+		t.Errorf("Expected %d, got %d", uint64(expected), total)
 	}
 }
 
