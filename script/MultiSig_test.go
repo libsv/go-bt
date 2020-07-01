@@ -1,4 +1,4 @@
-package signature_test
+package script_test
 
 import (
 	"encoding/hex"
@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/libsv/libsv/script"
-
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvd/chaincfg/chainhash"
+
+	"github.com/libsv/libsv/script"
 )
 
 // To disable log output during tests (see https://golangcode.com/disable-log-output-during-tests/)
@@ -21,7 +21,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestMultiSig(t *testing.T) {
-
 	// Create 2of2 redeem script
 	rs, err := script.NewRedeemScript(2)
 	if err != nil {
