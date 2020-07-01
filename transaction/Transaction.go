@@ -272,6 +272,8 @@ func (bt *Transaction) SignAuto(s Signer) error {
 	return nil
 }
 
+// ApplyUnlockingScript applies a script to the transaction at a specific index in
+// unlocking script field.
 func (bt *Transaction) ApplyUnlockingScript(index uint32, s *script.Script) error {
 	if bt.Inputs[index] != nil {
 		bt.Inputs[index].UnlockingScript = s
