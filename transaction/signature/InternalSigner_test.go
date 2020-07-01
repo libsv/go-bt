@@ -36,7 +36,8 @@ func TestSignAuto(t *testing.T) {
 	if hex.EncodeToString(tx.ToBytes()) != expectedSignedTx {
 		t.Errorf("Expecting %s\n, got %s\n", expectedSignedTx, hex.EncodeToString(tx.ToBytes()))
 	}
-	//
+
+	// TODO: what is this for?
 	//if unsignedTx == expectedSignedTx {
 	//	t.Errorf("Expected and signed TX strings in code identical")
 	//}
