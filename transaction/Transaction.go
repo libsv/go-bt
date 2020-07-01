@@ -3,7 +3,7 @@ package transaction
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
+	"fmt"
 
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
@@ -32,16 +32,6 @@ list of outputs  the outputs of the first transaction spend the mined           
 lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height or        4 bytes
                  timestamp when transaction is final
 */
-
-// Signature constants
-const (
-	SighashAll          = 0x00000001
-	SighashNone         = 0x00000002
-	SighashSingle       = 0x00000003
-	SighashForkID       = 0x00000040
-	SighashAnyoneCanPay = 0x00000080
-	SighashAllForkID    = 0x00000001 | 0x00000040
-)
 
 // A Transaction wraps a bitcoin transaction
 type Transaction struct {
@@ -255,11 +245,12 @@ func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
 	return h
 }
 
-// Sign is used to sign the transaction. It takes a Signed interface as a
-// parameter so that different signing implementations can be used to sign
-// the transaction - for example internal/local or external signing.
-func (bt *Transaction) Sign(s Signer) error {
-	signedTx, err := s.Sign(bt)
+// Sign is used to sign the transaction at a specific input index.
+// It takes a Signed interface as a parameter so that different
+// signing implementations can be used to sign the transaction -
+// for example internal/local or external signing.
+func (bt *Transaction) Sign(index uint32, s Signer) error {
+	signedTx, err := s.Sign(index, bt)
 	if err != nil {
 		return err
 	}
@@ -267,124 +258,25 @@ func (bt *Transaction) Sign(s Signer) error {
 	return nil
 }
 
-// NewSigningPayloadFromTx creates a new SigningPayload from a Transaction and a SIGHASH type.
-func NewSigningPayloadFromTx(bt *Transaction, sigType uint32) (*SigningPayload, error) { // TODO: repalced with signaturehash - remove
-	p := NewSigningPayload()
-	for idx, i := range bt.Inputs {
-		if i.PreviousTxSatoshis == 0 {
-			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousTxSatoshis set to be signable")
-		}
-
-		if i.PreviousTxScript == nil {
-			return nil, errors.New("signing service error - error getting sighashes - Inputs need to have a PreviousScript to be signable")
-
-		}
-
-		sighash := GetSighashForInput(bt, sigType, uint32(idx))
-		pkh, _ := i.PreviousTxScript.GetPublicKeyHash() // if not P2PKH, pkh will just be nil
-		p.AddItem(hex.EncodeToString(pkh), sighash)     // and the SigningItem will have PublicKeyHash = ""
-	}
-	return p, nil
-}
-
-// ApplySignatures applies the signatures passed in through SigningPayload parameter to the transaction inputs
-// The signing payload from the signing service should contain a signing item for each of the tx inputs.
-// If the TX input does not belong to us, its signature will be blank unless its owner has already signed it.
-// If the signing payload contains a signature for a given input, we apply that to the tx regardless of whether we own it or not.
-func (bt *Transaction) ApplySignatures(signingPayload *SigningPayload, sigType uint32) error {
-	if sigType == 0 {
-		sigType = SighashAllForkID
-	}
-
-	if len(*signingPayload) != len(bt.GetInputs()) {
-		return errors.New("error - signing payload number of items does not equal number of inputs")
-	}
-
-	sigsApplied := 0
-
-	for index, signingItem := range *signingPayload {
-		// Only use the items which have a pub key and signature in the payload
-		if signingItem.Signature != "" && signingItem.PublicKey != "" {
-			// If our tx input has a script, check it against our payload pubkeyhash for safety.
-			// Note that this is not a complete check as we will probably have the same sighash multiple times in our payload but different sigs.
-			// So the order is critical - payload items have a one to one mapping to inputs.
-			if bt.Inputs[index].PreviousTxScript != nil {
-				txPubKeyHash, err := bt.Inputs[index].PreviousTxScript.GetPublicKeyHash()
-				if err != nil {
-					return err
-				}
-				if hex.EncodeToString(txPubKeyHash) != signingItem.PublicKeyHash {
-					return errors.New("error public key hash from signing payload does not match tx")
-				}
-			}
-
-			sigBytes, err := hex.DecodeString(signingItem.Signature)
-			pubKeyBytes, err := hex.DecodeString(signingItem.PublicKey)
-			if err != nil {
-				return err
-			}
-
-			const sigTypeLength = 1 // Include sighash all fork id hash type when we count length of signature.
-			buf := make([]byte, 0)
-			buf = append(buf, utils.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
-			buf = append(buf, sigBytes...)
-			buf = append(buf, SighashAll|SighashForkID)
-			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
-			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].UnlockingScript = script.NewFromBytes(buf)
-			sigsApplied++
-		}
-	}
-	if sigsApplied == 0 {
-		return errors.New("error - libsv found no signatures in signingPayload to apply to this tx")
-	}
-	return nil
-}
-
-// GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
-func (bt *Transaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) { // TODO: repalced with signaturehash - remove
-	signingPayload, err := NewSigningPayloadFromTx(bt, sigType)
+// SignAuto is used to automatically check which P2PKH inputs are
+// able to be signed (match the public key) and then sign them.
+// It takes a Signed interface as a parameter so that different
+// signing implementations can be used to sign the transaction -
+// for example internal/local or external signing.
+func (bt *Transaction) SignAuto(s Signer) error {
+	signedTx, err := s.SignAuto(bt)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return signingPayload, nil
+	*bt = *signedTx
+	return nil
 }
 
-// ApplySignaturesWithoutP2PKHCheck applies signatures without checking if the input previous script equals
-// to a P2PKH script matching the private key (see func SignWithoutP2PKHCheck below)
-func (bt *Transaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *SigningPayload, sigType uint32) error {
-	if sigType == 0 {
-		sigType = SighashAllForkID
+func (bt *Transaction) ApplyUnlockingScript(index uint32, s *script.Script) error {
+	if bt.Inputs[index] != nil {
+		bt.Inputs[index].UnlockingScript = s
+		return nil
 	}
 
-	if len(*signingPayload) != len(bt.GetInputs()) {
-		return errors.New("error - signing payload number of items does not equal number of inputs")
-	}
-
-	sigsApplied := 0
-
-	for index, signingItem := range *signingPayload {
-		// Only use the items which have a pub key and signature in the payload
-		if signingItem.Signature != "" && signingItem.PublicKey != "" {
-			sigBytes, err := hex.DecodeString(signingItem.Signature)
-			pubKeyBytes, err := hex.DecodeString(signingItem.PublicKey)
-			if err != nil {
-				return err
-			}
-
-			const sigTypeLength = 1 // Include sighash all fork id hash type when we count length of signature.
-			buf := make([]byte, 0)
-			buf = append(buf, utils.VarInt(uint64(len(sigBytes)+sigTypeLength))...)
-			buf = append(buf, sigBytes...)
-			buf = append(buf, SighashAll|SighashForkID)
-			buf = append(buf, utils.VarInt(uint64(len(signingItem.PublicKey)/2))...)
-			buf = append(buf, pubKeyBytes...)
-			bt.Inputs[index].UnlockingScript = script.NewFromBytes(buf)
-			sigsApplied++
-		}
-	}
-	if sigsApplied == 0 {
-		return errors.New("error - libsv found no signatures in signingPayload to apply to this tx")
-	}
-	return nil
+	return fmt.Errorf("no input at index %d", index)
 }

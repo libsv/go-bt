@@ -4,5 +4,6 @@ package transaction
 // Implement the Sign function as shown in InternalSigner, for example.
 // Sign function takes an unsigned Transaction and returns a signed Transaction.
 type Signer interface {
-	Sign(unsignedTx *Transaction) (*Transaction, error)
+	Sign(index uint32, unsignedTx *Transaction) (*Transaction, error)
+	SignAuto(unsignedTx *Transaction) (*Transaction, error)
 }

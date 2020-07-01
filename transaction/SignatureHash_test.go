@@ -6,6 +6,7 @@ import (
 
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction"
+	"github.com/libsv/libsv/transaction/signature/sighash"
 )
 
 var testVector = []struct {
@@ -14,7 +15,7 @@ var testVector = []struct {
 	index              uint32
 	previousTxSatoshis uint64
 	previousTxScript   string
-	sigHashType        transaction.SigHashType
+	sigHashType        sighash.Flag
 	expectedSigHash    string
 }{
 	{
@@ -23,7 +24,7 @@ var testVector = []struct {
 		0,
 		100000000,
 		"76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac",
-		transaction.SigHashAllForkID,
+		sighash.AllForkID,
 		"b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe",
 	},
 	{
@@ -32,7 +33,7 @@ var testVector = []struct {
 		0,
 		2000000000,
 		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-		transaction.SigHashAllForkID,
+		sighash.AllForkID,
 		"4c19a3288e2385767006c8438b0e63e029185d7b79195e4827e7d5b6cfee158b",
 	},
 	{
@@ -41,7 +42,7 @@ var testVector = []struct {
 		1,
 		2000000000,
 		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-		transaction.SigHashAllForkID,
+		sighash.AllForkID,
 		"dbba819f30c3cfbfe5d207bfb4eab0992079ee5ebd7fd939504a71a255c3727b",
 	},
 	// TODO: add different SIGHASH flags
@@ -62,7 +63,7 @@ func TestSignatureHashes(t *testing.T) {
 			tx.Inputs[test.index].PreviousTxSatoshis = test.previousTxSatoshis
 			tx.Inputs[test.index].PreviousTxScript, _ = script.NewFromHexString(test.previousTxScript)
 
-			actualSigHash, err := tx.GetInputSignatureHash(test.index, transaction.SigHashAll|transaction.SigHashForkID)
+			actualSigHash, err := tx.GetInputSignatureHash(test.index, sighash.All|sighash.ForkID)
 			if err != nil {
 				t.Error(err)
 				return

@@ -7,38 +7,13 @@ import (
 
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
+	"github.com/libsv/libsv/transaction/signature/sighash"
 	"github.com/libsv/libsv/utils"
 )
 
-// SigHashType represents hash type bits at the end of a signature.
-type SigHashType uint32
-
-// SIGHASH type bits from the end of a signature.
-// see: https://wiki.bitcoinsv.io/index.php/SIGHASH_flags
-const (
-	SigHashOld          SigHashType = 0x0
-	SigHashAll          SigHashType = 0x1
-	SigHashNone         SigHashType = 0x2
-	SigHashSingle       SigHashType = 0x3
-	SigHashAnyOneCanPay SigHashType = 0x80
-
-	// Currently all BitCoin (SV) transactions require an additional SIGHASH flag (after UAHF)
-	SigHashAllForkID          SigHashType = 0x1 | 0x00000040
-	SigHashNoneForkID         SigHashType = 0x2 | 0x00000040
-	SigHashSingleForkID       SigHashType = 0x3 | 0x00000040
-	SigHashAnyOneCanPayForkID SigHashType = 0x80 | 0x00000040
-
-	// SigHashForkID is the replay protected signature hash flag
-	// used by the Uahf hardfork.
-	SigHashForkID SigHashType = 0x40
-
-	// sigHashMask defines the number of bits of the hash type which is used
-	// to identify which outputs are signed.
-	sigHashMask = 0x1f
-)
-
-// GetInputSignatureHash serializes the transaction based on the sig TODO:
-func (bt *Transaction) GetInputSignatureHash(inputNumber uint32, sigHashType SigHashType) ([]byte, error) {
+// GetInputSignatureHash serializes the transaction based on the input index and the SIGHASH flag
+// see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
+func (bt *Transaction) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 	in := bt.Inputs[inputNumber]
 
 	if bt.IsCoinbase() { // TODO: make sure coinbase txs don't cause any issues
@@ -97,22 +72,22 @@ func (bt *Transaction) GetInputSignatureHash(inputNumber uint32, sigHashType Sig
 	hashSequence := make([]byte, 32)
 	hashOutputs := make([]byte, 32)
 
-	if sigHashType&SigHashAnyOneCanPay == 0 {
+	if sigHashFlag&sighash.AnyOneCanPay == 0 {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashPrevouts = getPrevoutHash(bt)
 	}
 
-	if sigHashType&SigHashAnyOneCanPay == 0 &&
-		(sigHashType&31) != SighashSingle &&
-		(sigHashType&31) != SighashNone {
+	if sigHashFlag&sighash.AnyOneCanPay == 0 &&
+		(sigHashFlag&31) != sighash.Single &&
+		(sigHashFlag&31) != sighash.None {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashSequence = getSequenceHash(bt)
 	}
 
-	if (sigHashType&31) != SighashSingle && (sigHashType&31) != SighashNone {
+	if (sigHashFlag&31) != sighash.Single && (sigHashFlag&31) != sighash.None {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashOutputs = getOutputsHash(bt, -1)
-	} else if (sigHashType&31) == SighashSingle && inputNumber < uint32(len(bt.Outputs)) {
+	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(len(bt.Outputs)) {
 		// This will *not* be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashOutputs = getOutputsHash(bt, int32(inputNumber))
 	}
@@ -160,8 +135,9 @@ func (bt *Transaction) GetInputSignatureHash(inputNumber uint32, sigHashType Sig
 	// sighashType
 	// writer.writeUInt32LE(sighashType >>> 0)
 	st := make([]byte, 4)
-	binary.LittleEndian.PutUint32(st, uint32(sigHashType)>>0)
+	binary.LittleEndian.PutUint32(st, uint32(sigHashFlag)>>0)
 	buf = append(buf, st...)
+
 	ret := crypto.Sha256d(buf)
 	return utils.ReverseBytes(ret), nil
 }

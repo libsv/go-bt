@@ -125,30 +125,6 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 	return s, nil
 }
 
-// ToString returns hex string of script.
-func (s *Script) ToString() string { // TODO: change to HexString?
-	return hex.EncodeToString(*s)
-}
-
-// ToASM returns the string ASM opcodes of the script.
-func (s *Script) ToASM() (string, error) {
-	parts, err := DecodeParts(*s)
-	if err != nil {
-		return "", err
-	}
-
-	var asmScript string
-	for _, p := range parts {
-		if len(p) == 1 {
-			asmScript = asmScript + " " + opCodeValues[p[0]]
-		} else {
-			asmScript = asmScript + " " + hex.EncodeToString(p)
-		}
-	}
-
-	return strings.TrimSpace(asmScript), nil
-}
-
 // AppendPushData takes data bytes and appends them to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushData(d []byte) error {
 	p, err := EncodeParts([][]byte{d})
@@ -202,8 +178,32 @@ func (s *Script) AppendOpCode(o uint8) {
 	*s = append(*s, o)
 }
 
-// IsPublicKeyHashOut returns true if this is a pay to pubkey hash output script.
-func (s *Script) IsPublicKeyHashOut() bool {
+// ToString returns hex string of script.
+func (s *Script) ToString() string { // TODO: change to HexString?
+	return hex.EncodeToString(*s)
+}
+
+// ToASM returns the string ASM opcodes of the script.
+func (s *Script) ToASM() (string, error) {
+	parts, err := DecodeParts(*s)
+	if err != nil {
+		return "", err
+	}
+
+	var asmScript string
+	for _, p := range parts {
+		if len(p) == 1 {
+			asmScript = asmScript + " " + opCodeValues[p[0]]
+		} else {
+			asmScript = asmScript + " " + hex.EncodeToString(p)
+		}
+	}
+
+	return strings.TrimSpace(asmScript), nil
+}
+
+// IsP2PKH returns true if this is a pay to pubkey hash output script.
+func (s *Script) IsP2PKH() bool {
 	b := []byte(*s)
 	return len(b) == 25 &&
 		b[0] == OpDUP &&
@@ -213,8 +213,8 @@ func (s *Script) IsPublicKeyHashOut() bool {
 		b[24] == OpCHECKSIG
 }
 
-// IsPublicKeyOut returns true if this is a public key output script.
-func (s *Script) IsPublicKeyOut() bool {
+// IsP2PK returns true if this is a public key output script.
+func (s *Script) IsP2PK() bool {
 	parts, err := DecodeParts(*s)
 	if err != nil {
 		return false
@@ -236,8 +236,8 @@ func (s *Script) IsPublicKeyOut() bool {
 	return false
 }
 
-// IsScriptHashOut returns true if this is a p2sh output script.
-func (s *Script) IsScriptHashOut() bool {
+// IsP2SH returns true if this is a p2sh output script.
+func (s *Script) IsP2SH() bool {
 	b := []byte(*s)
 
 	return len(b) == 23 &&
