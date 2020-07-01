@@ -56,30 +56,14 @@ func (is *InternalSigner) SignAuto(unsignedTx *transaction.Transaction) (*transa
 
 	for i, in := range unsignedTx.Inputs {
 
-		// doesn't matter if returns error (not p2pkh)
-		pubKeyHash, _ := in.PreviousTxScript.GetPublicKeyHash()
+		pubKeyHash, _ := in.PreviousTxScript.GetPublicKeyHash() // doesn't matter if returns error (not p2pkh)
 		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
 
 		pubKeyHashStrFromPriv := hex.EncodeToString(crypto.Hash160(is.PrivateKey.PubKey().SerializeCompressed()))
 
 		// check if able to sign (public key matches pubKeyHash in script)
 		if pubKeyHashStr == pubKeyHashStrFromPriv {
-			sh, err := unsignedTx.GetInputSignatureHash(uint32(i), is.SigHashFlag)
-			if err != nil {
-				return nil, err
-			}
-
-			sig, err := is.PrivateKey.Sign(utils.ReverseBytes(sh))
-			if err != nil {
-				return nil, err
-			}
-
-			s, err := script.NewUnlockingScriptForP2PKHBytes(is.PrivateKey.PubKey().SerializeCompressed(), sig.Serialize(), is.SigHashFlag)
-
-			err = unsignedTx.ApplyUnlockingScript(uint32(i), s)
-			if err != nil {
-				return nil, err
-			}
+			is.Sign(uint32(i), unsignedTx)
 		}
 	}
 
