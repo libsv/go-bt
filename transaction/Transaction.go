@@ -144,7 +144,8 @@ func (bt *Transaction) AddOutput(output *output.Output) {
 	bt.Outputs = append(bt.Outputs, output)
 }
 
-// PayTo function
+// PayTo creates a new P2PKH output from a BitCoin address (base58)
+// and the satoshis amount and adds thats to the transaction.
 func (bt *Transaction) PayTo(addr string, satoshis uint64) error {
 	o, err := output.NewP2PKHFromAddress(addr, satoshis)
 	if err != nil {
