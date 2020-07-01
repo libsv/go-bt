@@ -296,46 +296,6 @@ func TestSignTx(t *testing.T) {
 	//}
 }
 
-// this test was used to try signing a hash puzzle transaction that
-// needed to append the pre-image of the hash to the sigScript
-func TestSignTxForced(t *testing.T) { // TODO: check/fix
-	unsignedTx := "0100000001f59f8ee5745b020dd3e3a561a539defb626117befc554e168c3bfb88b56ab0f20000000000ffffffff01d0200000000000001976a91447862fe165e6121af80d5dde1ecb478ed170565b88ac00000000"
-	tx, err := transaction.NewFromString(unsignedTx)
-	if err != nil {
-		t.Fatal("Failed to create transaction")
-	}
-
-	// Add the UTXO amount and script.
-	tx.Inputs[0].PreviousTxSatoshis = 8519
-
-	tx.Inputs[0].PreviousTxScript, _ = script.NewFromHexString("a914d3f9e3d971764be5838307b175ee4e08ba427b908876a914c28f832c3d539933e0c719297340b34eee0f4c3488ac")
-
-	// Our private key.
-	wif, err := bsvutil.DecodeWIF("L31FJtAimeRhprhFEuXpnw1E1sKKuKVgPNUaQ7MjpW3dCWEVuV6R")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	err = tx.SignWithoutP2PKHCheck(wif.PrivKey, 0)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	secret := "secret1"
-	tx.GetInputs()[0].UnlockingScript.AppendPushDataString(secret)
-
-	expectedSignedTx := "0100000001f59f8ee5745b020dd3e3a561a539defb626117befc554e168c3bfb88b56ab0f20000000073483045022100b30ce9d7e143c3d48a9202b82cf8a32cbe1ee1d9c2a36976bf78a65e71c2255b02203b6152deb3c041179856cc85874a599f2ac41fdbefff28745cafb551630762f9412102adbf278425824e49c1b9f09679451f8754b609544ff72512190ed21881d1ca510773656372657431ffffffff01d0200000000000001976a91447862fe165e6121af80d5dde1ecb478ed170565b88ac00000000"
-
-	if hex.EncodeToString(tx.ToBytes()) != expectedSignedTx {
-		t.Errorf("Expecting %s\n, got %s\n", expectedSignedTx, hex.EncodeToString(tx.ToBytes()))
-	}
-
-	if unsignedTx == expectedSignedTx {
-		t.Errorf("Expected and signed TX strings in code identical")
-	}
-}
-
 func TestValidSignature(t *testing.T) {
 	txHex := "02000000011dd7ad77d93879f00dcfeee50ef258775ab13fe0bcfb8f51994ec6f2d295be45000000006a47304402204dbf87fe0bbf435170eea32ed9fa573cf41214b9a7146ca4101eed5738d03e3b02204d86617d7c2bba34874e4a00d3471ff5846d504ece7c67ae0623e2ca516fd0fd412103f4563d1b75b914dfba48fec433b35f56307504ec9fdaa568725619bbae26adf8ffffffff0298ad5a16000000001976a91442f9682260509ac80722b1963aec8a896593d16688ac4de86189030000001976a914c36538e91213a8100dcb2aed456ade363de8483f88ac00000000"
 	tx, err := transaction.NewFromString(txHex)

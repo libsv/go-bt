@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/transaction/input"
@@ -269,7 +268,7 @@ func (bt *Transaction) Sign(s Signer) error {
 }
 
 // NewSigningPayloadFromTx creates a new SigningPayload from a Transaction and a SIGHASH type.
-func NewSigningPayloadFromTx(bt *Transaction, sigType uint32) (*SigningPayload, error) {
+func NewSigningPayloadFromTx(bt *Transaction, sigType uint32) (*SigningPayload, error) { // TODO: repalced with signaturehash - remove
 	p := NewSigningPayload()
 	for idx, i := range bt.Inputs {
 		if i.PreviousTxSatoshis == 0 {
@@ -343,7 +342,7 @@ func (bt *Transaction) ApplySignatures(signingPayload *SigningPayload, sigType u
 }
 
 // GetSighashPayload assembles a payload of sighases for this TX, to be submitted to signing service.
-func (bt *Transaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) {
+func (bt *Transaction) GetSighashPayload(sigType uint32) (*SigningPayload, error) { // TODO: repalced with signaturehash - remove
 	signingPayload, err := NewSigningPayloadFromTx(bt, sigType)
 	if err != nil {
 		return nil, err
@@ -386,41 +385,6 @@ func (bt *Transaction) ApplySignaturesWithoutP2PKHCheck(signingPayload *SigningP
 	}
 	if sigsApplied == 0 {
 		return errors.New("error - libsv found no signatures in signingPayload to apply to this tx")
-	}
-	return nil
-}
-
-// SignWithoutP2PKHCheck signs the transaction without checking if the input previous script equals
-// to a P2PKH script matching the private key
-func (bt *Transaction) SignWithoutP2PKHCheck(privateKey *bsvec.PrivateKey, sigType uint32) error {
-	if sigType == 0 {
-		sigType = SighashAllForkID
-	}
-
-	payload, err := bt.GetSighashPayload(sigType)
-	if err != nil {
-		return err
-	}
-
-	// todo abstract into separate function. used in InternalSigner.
-	// loops through signing items for each input and signs accordingly
-	for _, signingItem := range *payload {
-		h, err := hex.DecodeString(signingItem.SigHash)
-		if err != nil {
-			return err
-		}
-		sig, err := privateKey.Sign(utils.ReverseBytes(h))
-		if err != nil {
-			return err
-		}
-		pubkey := privateKey.PubKey().SerializeCompressed()
-		signingItem.PublicKey = hex.EncodeToString(pubkey)
-		signingItem.Signature = hex.EncodeToString(sig.Serialize())
-	}
-
-	err = bt.ApplySignaturesWithoutP2PKHCheck(payload, sigType)
-	if err != nil {
-		return err
 	}
 	return nil
 }

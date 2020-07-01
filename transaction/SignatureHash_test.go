@@ -49,11 +49,14 @@ var testVector = []struct {
 	// sighash for some reason.. check later..
 }
 
-func TestFlagParser(t *testing.T) {
+func TestSignatureHashes(t *testing.T) {
 
 	for _, test := range testVector {
 		t.Run(test.name, func(t *testing.T) {
 			tx, err := transaction.NewFromString(test.unsignedTx)
+			if err != nil {
+				t.Error(err)
+			}
 
 			// Add the UTXO amount and script (PreviousTxScript already in unsiged tx)
 			tx.Inputs[test.index].PreviousTxSatoshis = test.previousTxSatoshis

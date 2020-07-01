@@ -41,7 +41,7 @@ const (
 func (bt *Transaction) GetInputSignatureHash(inputNumber uint32, sigHashType SigHashType) ([]byte, error) {
 	in := bt.Inputs[inputNumber]
 
-	if bt.IsCoinbase() {
+	if bt.IsCoinbase() { // TODO: make sure coinbase txs don't cause any issues
 		bt.Inputs[inputNumber].PreviousTxScript = &script.Script{}
 
 	} else {
