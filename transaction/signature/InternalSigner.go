@@ -36,7 +36,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *transaction.Transaction
 		return nil, err
 	}
 
-	s, err := script.NewUnlockingScriptForP2PKHBytes(is.PrivateKey.PubKey().SerializeCompressed(), sig.Serialize(), is.SigHashFlag)
+	s, err := script.NewP2PKHUnlockingScript(is.PrivateKey.PubKey().SerializeCompressed(), sig.Serialize(), is.SigHashFlag)
 
 	err = unsignedTx.ApplyUnlockingScript(index, s)
 	if err != nil {
