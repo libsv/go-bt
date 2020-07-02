@@ -6,7 +6,7 @@ import "github.com/libsv/libsv/transaction/signature/sighash"
 // a SIGHASH flag.
 func NewP2PKHUnlockingScript(pubKey []byte, sig []byte, sigHashFlag sighash.Flag) (*Script, error) {
 	// append SIGHASH to DER sig
-	sigBuf := make([]byte, 0)
+	sigBuf := []byte{}
 	sigBuf = append(sigBuf, sig...)
 	sigBuf = append(sigBuf, uint8(sigHashFlag))
 
