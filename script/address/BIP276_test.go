@@ -6,7 +6,6 @@ import (
 	"github.com/libsv/libsv/script/address"
 )
 
-// TestEncode comment
 func TestEncode(t *testing.T) {
 	fakeScript := "fake script"
 	fakeScriptBytes := []byte(fakeScript)
@@ -21,7 +20,6 @@ func TestEncode(t *testing.T) {
 
 }
 
-// TestDecode comment
 func TestDecode(t *testing.T) {
 	testScript := "bitcoin-script:010166616b65207363726970746f0cd86a"
 

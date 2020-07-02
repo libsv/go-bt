@@ -70,7 +70,7 @@ func TestIsPublicKeyHashOut(t *testing.T) {
 	b, _ := hex.DecodeString("76a91403ececf2d12a7f614aef4c82ecf13c303bd9975d88ac")
 	scriptPub := script.NewFromBytes(b)
 
-	res := scriptPub.IsPublicKeyHashOut()
+	res := scriptPub.IsP2PKH()
 
 	if !res {
 		t.Errorf("Expected %t, got %t", true, res)
@@ -81,7 +81,7 @@ func TestIsPublicKeyOut(t *testing.T) {
 	b, _ := hex.DecodeString("2102f0d97c290e79bf2a8660c406aa56b6f189ff79f2245cc5aff82808b58131b4d5ac")
 	scriptPub := script.NewFromBytes(b)
 
-	res := scriptPub.IsPublicKeyOut()
+	res := scriptPub.IsP2PK()
 
 	if !res {
 		t.Errorf("Expected %t, got %t", true, res)
@@ -92,7 +92,7 @@ func TestIsScriptHashOut(t *testing.T) {
 	b, _ := hex.DecodeString("a9149de5aeaff9c48431ba4dd6e8af73d51f38e451cb87")
 	scriptPub := script.NewFromBytes(b)
 
-	res := scriptPub.IsScriptHashOut()
+	res := scriptPub.IsP2SH()
 
 	if !res {
 		t.Errorf("Expected %t, got %t", true, res)

@@ -22,7 +22,7 @@ var hashTests = []struct {
 	{"Test Sha256 String", "this is the data I want to hash", "f88eec7ecabf88f9a64c4100cac1e0c0c4581100492137d1b656ea626cad63e3", Sha256},
 }
 
-func TestFlagParser(t *testing.T) {
+func TestHashFunctions(t *testing.T) {
 
 	for _, hashTest := range hashTests {
 		t.Run(hashTest.testName, func(t *testing.T) {
