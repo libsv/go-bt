@@ -4,7 +4,6 @@ The go-to Bitcoin GoLang library.
 
 ## Installation
 
-
 **Install with [go](https://formulae.brew.sh/formula/go)**
 
 ```console
@@ -22,7 +21,7 @@ $ make test
 
 ### Create a transaction
 
-##### Regular P2PKH
+#### Regular P2PKH
 ```go
 	tx := transaction.New()
 
@@ -50,7 +49,7 @@ prints:
 01000000019d81a1815050f3a7bf8392e077481151af50a011a10708d4fc480a8ead76b411000000006b483045022100dda18196d5217ecfe01390a7ec9c0bd577e7d97ed88f92b7c4a2bf8cb94a493b0220465f9ab035ae584d45c0fbb41363c1cd862b8439619b3b42decb1e9f556dd142412102798913bc057b344de675dac34faafe3dc2f312c758cd9068209f810877306d66ffffffff01e8030000000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788ac00000000
 ```
 
-##### Regular P2PKH + OP_RETURN output
+#### Regular P2PKH + OP_RETURN output
 ```go
 	tx := transaction.New()
 
