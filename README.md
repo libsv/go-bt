@@ -2,6 +2,10 @@
 
 The go-to Bitcoin GoLang library.
 
+## Documentation
+
+Check the [GoDoc](https://pkg.go.dev/mod/github.com/libsv/libsv) documentation.
+
 ## Installation
 
 **Install with [go](https://formulae.brew.sh/formula/go)**
