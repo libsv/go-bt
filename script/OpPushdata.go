@@ -3,6 +3,7 @@ package script
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 )
 
@@ -86,29 +87,50 @@ func DecodeParts(b []byte) ([][]byte, error) {
 		// Handle OP codes
 		switch b[0] {
 		case OpPUSHDATA1:
-			length := b[1]
-			part := b[2 : 2+length]
+			if len(b) < 2 {
+				return r, errors.New("Not enough data")
+			}
+			l := uint64(b[1])
+			if len(b) < int(2+l) {
+				return r, errors.New("Not enough data")
+			}
+			part := b[2 : 2+l]
 			r = append(r, part)
-			b = b[2+length:]
+			b = b[2+l:]
 
 		case OpPUSHDATA2:
-			length := binary.LittleEndian.Uint16(b[1:])
-			part := b[3 : 3+length]
+			if len(b) < 3 {
+				return r, errors.New("Not enough data")
+			}
+			l := binary.LittleEndian.Uint16(b[1:])
+			if len(b) < int(3+l) {
+				return r, errors.New("Not enough data")
+			}
+			part := b[3 : 3+l]
 			r = append(r, part)
-			b = b[3+length:]
+			b = b[3+l:]
 
 		case OpPUSHDATA4:
-			length := binary.LittleEndian.Uint32(b[1:])
-			part := b[5 : 5+length]
+			if len(b) < 5 {
+				return r, errors.New("Not enough data")
+			}
+			l := binary.LittleEndian.Uint32(b[1:])
+			if len(b) < int(5+l) {
+				return r, errors.New("Not enough data")
+			}
+			part := b[5 : 5+l]
 			r = append(r, part)
-			b = b[5+length:]
+			b = b[5+l:]
 
 		default:
 			if b[0] >= 0x01 && b[0] <= 0x4e {
-				length := b[0]
-				part := b[1 : length+1]
+				l := uint8(b[0])
+				if len(b) < int(1+l) {
+					return r, errors.New("Not enough data")
+				}
+				part := b[1 : l+1]
 				r = append(r, part)
-				b = b[1+length:]
+				b = b[1+l:]
 			} else {
 				r = append(r, []byte{b[0]})
 				b = b[1:]
