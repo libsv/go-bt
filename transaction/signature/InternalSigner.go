@@ -31,7 +31,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *transaction.Transaction
 		return nil, err
 	}
 
-	sig, err := is.PrivateKey.Sign(utils.ReverseBytes(sh))
+	sig, err := is.PrivateKey.Sign(utils.ReverseBytes(sh)) // little endian sign
 	if err != nil {
 		return nil, err
 	}
