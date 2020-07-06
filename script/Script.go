@@ -246,6 +246,15 @@ func (s *Script) IsP2SH() bool {
 		b[22] == OpEQUAL
 }
 
+// IsData returns true if this is a data output script. This
+// means the script starts with OP_RETURN or OP_FALSE OP_RETURN.
+func (s *Script) IsData() bool {
+	b := []byte(*s)
+
+	return b[0] == 0x6a ||
+		b[0] == 0x00 && b[1] == 0x6a
+}
+
 // IsMultisigOut returns true if this is a multisig output script.
 func (s *Script) IsMultisigOut() bool {
 	parts, err := DecodeParts(*s)
