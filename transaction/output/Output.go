@@ -28,19 +28,29 @@ type Output struct {
 }
 
 // NewFromBytes returns a transaction Output from the bytes provided
-func NewFromBytes(bytes []byte) (*Output, int) {
+func NewFromBytes(bytes []byte) (*Output, int, error) {
+	if len(bytes) < 8 {
+		return nil, 0, fmt.Errorf("output length too short < 8")
+	}
+
 	o := Output{}
 
 	o.Satoshis = binary.LittleEndian.Uint64(bytes[0:8])
 
 	offset := 8
-	i, size := utils.DecodeVarInt(bytes[offset:])
+	l, size := utils.DecodeVarInt(bytes[offset:])
 	offset += size
 
-	s := script.Script(bytes[offset : offset+int(i)])
+	totalLength := offset + int(l)
+
+	if len(bytes) < totalLength {
+		return nil, 0, fmt.Errorf("output length too short < 8 + script")
+	}
+
+	s := script.Script(bytes[offset:totalLength])
 	o.LockingScript = &s
 
-	return &o, offset + int(i)
+	return &o, totalLength, nil
 }
 
 // NewP2PkhFromPubKeyHash makes an output to a PKH with a value.

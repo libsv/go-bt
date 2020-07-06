@@ -43,7 +43,11 @@ func New() *Input {
 }
 
 // NewFromBytes returns a transaction input from the bytes provided.
-func NewFromBytes(bytes []byte) (*Input, int) {
+func NewFromBytes(bytes []byte) (*Input, int, error) {
+	if len(bytes) < 36 {
+		return nil, 0, fmt.Errorf("input length too short < 36")
+	}
+
 	i := Input{}
 
 	i.PreviousTxID = hex.EncodeToString(utils.ReverseBytes(bytes[0:32]))
@@ -54,11 +58,17 @@ func NewFromBytes(bytes []byte) (*Input, int) {
 	l, size := utils.DecodeVarInt(bytes[offset:])
 	offset += size
 
+	totalLength := offset + int(l) + 4 // 4 bytes for nSeq
+
+	if len(bytes) < totalLength {
+		return nil, 0, fmt.Errorf("input length too short < 36 + script + 4")
+	}
+
 	i.UnlockingScript = script.NewFromBytes(bytes[offset : offset+int(l)])
 
 	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 
-	return &i, offset + int(l) + 4
+	return &i, totalLength, nil
 }
 
 // NewFromUTXO returns a transaction input from the UTXO fields provided.

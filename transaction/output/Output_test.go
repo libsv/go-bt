@@ -14,7 +14,10 @@ const outputHexStr = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d
 
 func TestNewOutput(t *testing.T) {
 	bytes, _ := hex.DecodeString(outputHexStr)
-	o, s := output.NewFromBytes(bytes)
+	o, s, err := output.NewFromBytes(bytes)
+	if err != nil {
+		t.Errorf("Invalid outputHexStr")
+	}
 
 	// t.Errorf("\n%s\n", o)
 	if s != 34 {

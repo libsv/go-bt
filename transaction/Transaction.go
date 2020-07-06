@@ -59,13 +59,13 @@ func NewFromString(str string) (*Transaction, error) {
 		return nil, err
 	}
 
-	return NewFromBytes(bytes), nil
+	return NewFromBytes(bytes)
 }
 
 // NewFromBytes takes an array of bytes, constructs a Transaction and returns it.
-func NewFromBytes(b []byte) *Transaction {
+func NewFromBytes(b []byte) (*Transaction, error) {
 	if len(b) < 10 {
-		return nil // Even an empty transaction has 10 bytes.
+		return nil, fmt.Errorf("too short to be a tx - even and empty tx has 10 bytes")
 	}
 
 	t := Transaction{}
@@ -81,7 +81,10 @@ func NewFromBytes(b []byte) *Transaction {
 	// create inputs
 	var i uint64
 	for ; i < inputCount; i++ {
-		i, size := input.NewFromBytes(b[offset:])
+		i, size, err := input.NewFromBytes(b[offset:])
+		if err != nil {
+			return nil, err
+		}
 		offset += size
 
 		t.Inputs = append(t.Inputs, i)
@@ -91,7 +94,10 @@ func NewFromBytes(b []byte) *Transaction {
 	outputCount, size := utils.DecodeVarInt(b[offset:])
 	offset += size
 	for i = 0; i < outputCount; i++ {
-		o, size := output.NewFromBytes(b[offset:])
+		o, size, err := output.NewFromBytes(b[offset:])
+		if err != nil {
+			return nil, err
+		}
 		offset += size
 		t.Outputs = append(t.Outputs, o)
 	}
@@ -99,7 +105,7 @@ func NewFromBytes(b []byte) *Transaction {
 	t.Locktime = binary.LittleEndian.Uint32(b[offset:])
 	offset += 4
 
-	return &t
+	return &t, nil
 }
 
 // AddInput adds a new input to the transaction.

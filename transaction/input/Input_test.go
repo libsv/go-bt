@@ -13,8 +13,10 @@ const inputHexStr = "4c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305
 
 func TestNew(t *testing.T) {
 	b, _ := hex.DecodeString(inputHexStr)
-	i, s := input.NewFromBytes(b)
-
+	i, s, err := input.NewFromBytes(b)
+	if err != nil {
+		t.Errorf("Invalid inputHexStr")
+	}
 	// t.Errorf("\n%s\n", i)
 
 	if s != 148 {
