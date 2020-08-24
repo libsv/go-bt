@@ -65,7 +65,7 @@ func NewFromString(str string) (*Transaction, error) {
 // NewFromBytes takes an array of bytes, constructs a Transaction and returns it.
 func NewFromBytes(b []byte) (*Transaction, error) {
 	if len(b) < 10 {
-		return nil, fmt.Errorf("too short to be a tx - even and empty tx has 10 bytes")
+		return nil, fmt.Errorf("too short to be a tx - even an empty tx has 10 bytes")
 	}
 
 	t := Transaction{}
@@ -100,6 +100,12 @@ func NewFromBytes(b []byte) (*Transaction, error) {
 		}
 		offset += size
 		t.Outputs = append(t.Outputs, o)
+	}
+
+	nLT := b[offset:]
+
+	if len(nLT) != 4 {
+		return nil, fmt.Errorf("nLockTime length must be 4 bytes long")
 	}
 
 	t.Locktime = binary.LittleEndian.Uint32(b[offset:])
