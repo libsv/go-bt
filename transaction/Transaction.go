@@ -120,8 +120,8 @@ func (bt *Transaction) AddInput(input *input.Input) {
 }
 
 // From adds a new input to the transaction from the specified UTXO fields.
-func (bt *Transaction) From(txID string, vout uint32, scriptSig string, satoshis uint64) error {
-	pts, err := script.NewFromHexString(scriptSig)
+func (bt *Transaction) From(txID string, vout uint32, previousTxScriptHex string, satoshis uint64) error {
+	pts, err := script.NewFromHexString(previousTxScriptHex)
 	if err != nil {
 		return err
 	}
@@ -225,11 +225,11 @@ func (bt *Transaction) ToBytes() []byte {
 
 // ToBytesWithClearedInputs encodes the transaction into a byte array but clears its inputs first.
 // This is used when signing transactions.
-func (bt *Transaction) ToBytesWithClearedInputs(index int, scriptPubKey []byte) []byte {
-	return bt.toBytesHelper(index, scriptPubKey)
+func (bt *Transaction) ToBytesWithClearedInputs(index int, lockingScript []byte) []byte {
+	return bt.toBytesHelper(index, lockingScript)
 }
 
-func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
+func (bt *Transaction) toBytesHelper(index int, lockingScript []byte) []byte {
 	h := make([]byte, 0)
 
 	h = append(h, utils.GetLittleEndianBytes(bt.Version, 4)...)
@@ -237,10 +237,10 @@ func (bt *Transaction) toBytesHelper(index int, scriptPubKey []byte) []byte {
 	h = append(h, utils.VarInt(uint64(len(bt.GetInputs())))...)
 
 	for i, in := range bt.GetInputs() {
-		s := in.ToBytes(scriptPubKey != nil)
-		if i == index && scriptPubKey != nil {
-			h = append(h, utils.VarInt(uint64(len(scriptPubKey)))...)
-			h = append(h, scriptPubKey...)
+		s := in.ToBytes(lockingScript != nil)
+		if i == index && lockingScript != nil {
+			h = append(h, utils.VarInt(uint64(len(lockingScript)))...)
+			h = append(h, lockingScript...)
 		} else {
 			h = append(h, s...)
 		}
