@@ -1,6 +1,8 @@
 # LiBSV
 
-The go-to Bitcoin GoLang library.
+The go-to Bitcoin GoLang library.  
+
+For more information around the technical aspects of Bitcoin, please see the updated [Bitcoin Wiki](https://wiki.bitcoinsv.io/index.php/Main_Page).
 
 ## Documentation
 
