@@ -120,8 +120,8 @@ func (bt *Transaction) AddInput(input *input.Input) {
 }
 
 // From adds a new input to the transaction from the specified UTXO fields.
-func (bt *Transaction) From(txID string, vout uint32, previousTxScriptHex string, satoshis uint64) error {
-	pts, err := script.NewFromHexString(previousTxScriptHex)
+func (bt *Transaction) From(txID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
+	pts, err := script.NewFromHexString(prevTxLockingScript)
 	if err != nil {
 		return err
 	}
