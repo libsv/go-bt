@@ -1,12 +1,12 @@
-package txn_test
+package bt_test
 
 import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/libsv/libsv/bt"
+	"github.com/libsv/libsv/bt/sig/sighash"
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/txn"
-	"github.com/libsv/libsv/txn/sig/sighash"
 )
 
 var testVector = []struct {
@@ -54,7 +54,7 @@ func TestSignatureHashes(t *testing.T) {
 
 	for _, test := range testVector {
 		t.Run(test.name, func(t *testing.T) {
-			tx, err := txn.NewFromString(test.unsignedTx)
+			tx, err := bt.NewFromString(test.unsignedTx)
 			if err != nil {
 				t.Error(err)
 			}

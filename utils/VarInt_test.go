@@ -7,8 +7,8 @@ import (
 )
 
 var varIntTests = []struct {
-	testName string
-	input    uint64
+	testName    string
+	input       uint64
 	expectedLen int
 }{
 	{"VarInt 1 byte Lower", 0, 1},

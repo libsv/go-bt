@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/libsv/libsv/bt/output"
 	"github.com/libsv/libsv/script/address"
-	"github.com/libsv/libsv/txn/output"
 	"github.com/libsv/libsv/utils"
 )
 

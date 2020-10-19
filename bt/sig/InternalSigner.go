@@ -5,14 +5,14 @@ import (
 
 	"github.com/bitcoinsv/bsvd/bsvec"
 
+	"github.com/libsv/libsv/bt"
+	"github.com/libsv/libsv/bt/sig/sighash"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/txn"
-	"github.com/libsv/libsv/txn/sig/sighash"
 	"github.com/libsv/libsv/utils"
 )
 
-// InternalSigner implements the Signer interface. It is used to sign a Transaction locally
+// InternalSigner implements the Signer interface. It is used to sign a Tx locally
 // given a PrivateKey and SIGHASH type.
 type InternalSigner struct {
 	PrivateKey  *bsvec.PrivateKey
@@ -21,7 +21,7 @@ type InternalSigner struct {
 
 // Sign a transaction at a given input index using the PrivateKey passed in through the
 // InternalSigner struct.
-func (is *InternalSigner) Sign(index uint32, unsignedTx *txn.Transaction) (*txn.Transaction, error) {
+func (is *InternalSigner) Sign(index uint32, unsignedTx *bt.Tx) (*bt.Tx, error) {
 	if is.SigHashFlag == 0 {
 		is.SigHashFlag = sighash.AllForkID
 	}
@@ -49,7 +49,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *txn.Transaction) (*txn.
 // SignAuto goes through each input of the transaction and automatically
 // signs the P2PKH inputs that it is able to sign using the specific
 // PrivateKey passed in through the InternalSigner struct.
-func (is *InternalSigner) SignAuto(unsignedTx *txn.Transaction) (*txn.Transaction, error) {
+func (is *InternalSigner) SignAuto(unsignedTx *bt.Tx) (*bt.Tx, error) {
 	if is.SigHashFlag == 0 {
 		is.SigHashFlag = sighash.AllForkID
 	}

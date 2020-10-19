@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/bitcoinsv/bsvutil"
+	"github.com/libsv/libsv/bt"
+	"github.com/libsv/libsv/bt/sig"
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/txn"
-	"github.com/libsv/libsv/txn/sig"
 )
 
 func TestSignAuto(t *testing.T) {
 	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
-	tx, err := txn.NewFromString(unsignedTx)
+	tx, err := bt.NewFromString(unsignedTx)
 
 	if err != nil {
 		t.Fatal("Failed to create transaction")

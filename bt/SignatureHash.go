@@ -1,12 +1,12 @@
-package txn
+package bt
 
 import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
 
+	"github.com/libsv/libsv/bt/sig/sighash"
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/txn/sig/sighash"
 	"github.com/libsv/libsv/utils"
 )
 
@@ -14,7 +14,7 @@ import (
 
 // GetInputSignatureHash serializes the transaction based on the input index and the SIGHASH flag
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
-func (bt *Transaction) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
+func (bt *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 	in := bt.Inputs[inputNumber]
 
 	if in.PreviousTxID == "" {
@@ -98,7 +98,7 @@ func (bt *Transaction) GetInputSignatureHash(inputNumber uint32, sigHashFlag sig
 	return utils.ReverseBytes(ret), nil
 }
 
-func (bt *Transaction) getPrevoutHash() []byte {
+func (bt *Tx) getPrevoutHash() []byte {
 	buf := make([]byte, 0)
 
 	for _, in := range bt.Inputs {
@@ -112,7 +112,7 @@ func (bt *Transaction) getPrevoutHash() []byte {
 	return crypto.Sha256d(buf)
 }
 
-func (bt *Transaction) getSequenceHash() []byte {
+func (bt *Tx) getSequenceHash() []byte {
 	buf := make([]byte, 0)
 
 	for _, in := range bt.Inputs {
@@ -124,7 +124,7 @@ func (bt *Transaction) getSequenceHash() []byte {
 	return crypto.Sha256d(buf)
 }
 
-func (bt *Transaction) getOutputsHash(n int32) []byte {
+func (bt *Tx) getOutputsHash(n int32) []byte {
 	buf := make([]byte, 0)
 
 	if n == -1 {

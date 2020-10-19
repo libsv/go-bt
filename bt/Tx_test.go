@@ -1,18 +1,18 @@
-package txn_test
+package bt_test
 
 import (
 	"reflect"
 	"testing"
 
-	"github.com/libsv/libsv/txn"
-	"github.com/libsv/libsv/txn/input"
-	"github.com/libsv/libsv/txn/output"
+	"github.com/libsv/libsv/bt"
+	"github.com/libsv/libsv/bt/input"
+	"github.com/libsv/libsv/bt/output"
 
 	"github.com/libsv/libsv/script"
 )
 
 func TestNew(t *testing.T) {
-	bt := txn.New()
+	bt := bt.New()
 
 	// check version
 	if bt.Version != 1 {
@@ -27,7 +27,7 @@ func TestNew(t *testing.T) {
 
 func TestNewFromString(t *testing.T) {
 	h := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c000000004847304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041ffffffff01c0aff629010000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
-	bt, err := txn.NewFromString(h)
+	bt, err := bt.NewFromString(h)
 	if err != nil {
 		t.Error(err)
 		return
@@ -77,7 +77,7 @@ func TestNewFromString(t *testing.T) {
 }
 func TestToBytes(t *testing.T) {
 	h := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c0000000049483045022100c4df63202a9aa2bea5c24ebf4418d145e81712072ef744a4b108174f1ef59218022006eb54cf904707b51625f521f8ed2226f7d34b62492ebe4ddcb1c639caf16c3c41ffffffff0140420f00000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
-	bt, err := txn.NewFromString(h)
+	bt, err := bt.NewFromString(h)
 	if err != nil {
 		t.Error(err)
 		return
@@ -89,7 +89,7 @@ func TestToBytes(t *testing.T) {
 }
 
 func TestTxID(t *testing.T) {
-	tx, err := txn.NewFromString("010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000")
+	tx, err := bt.NewFromString("010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000")
 	if err != nil {
 		t.Error(err)
 	}
@@ -103,7 +103,7 @@ func TestTxID(t *testing.T) {
 }
 
 func TestGetTotalOutputSatoshis(t *testing.T) {
-	tx, err := txn.NewFromString("020000000180f1ada3ad8e861441d9ceab40b68ed98f13695b185cc516226a46697cc01f80010000006b483045022100fa3a0f8fa9fbf09c372b7a318fa6175d022c1d782f7b8bc5949a7c8f59ce3f35022005e0e84c26f26d892b484ff738d803a57626679389c8b302939460dab29a5308412103e46b62eea5db5898fb65f7dc840e8a1dbd8f08a19781a23f1f55914f9bedcd49feffffff02dec537b2000000001976a914ba11bcc46ecf8d88e0828ddbe87997bf759ca85988ac00943577000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac6e000000")
+	tx, err := bt.NewFromString("020000000180f1ada3ad8e861441d9ceab40b68ed98f13695b185cc516226a46697cc01f80010000006b483045022100fa3a0f8fa9fbf09c372b7a318fa6175d022c1d782f7b8bc5949a7c8f59ce3f35022005e0e84c26f26d892b484ff738d803a57626679389c8b302939460dab29a5308412103e46b62eea5db5898fb65f7dc840e8a1dbd8f08a19781a23f1f55914f9bedcd49feffffff02dec537b2000000001976a914ba11bcc46ecf8d88e0828ddbe87997bf759ca85988ac00943577000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac6e000000")
 	if err != nil {
 		t.Error(err)
 	}
@@ -118,14 +118,14 @@ func TestGetTotalOutputSatoshis(t *testing.T) {
 
 func TestRegTestCoinbase(t *testing.T) {
 	h := "02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0e5101010a2f4542323030302e302fffffffff0100f2052a01000000232103db233bb9fc387d78b133ec904069d46e95ff17da657671b44afa0bc64e89ac18ac00000000"
-	bt, err := txn.NewFromString(h)
+	bt, err := bt.NewFromString(h)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	// check if coinbase transaction
 	if !bt.IsCoinbase() {
-		t.Error("Transaction is not Coinbase transaction")
+		t.Error("Tx is not Coinbase transaction")
 	}
 	// check input count
 	expectedInputCount := bt.InputCount()
@@ -137,7 +137,7 @@ func TestRegTestCoinbase(t *testing.T) {
 
 func TestGetVersion(t *testing.T) {
 	const tx = "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
-	bt, err := txn.NewFromString(tx)
+	bt, err := bt.NewFromString(tx)
 	if err != nil {
 		t.Error(err)
 		return
@@ -151,7 +151,7 @@ func TestGetVersion(t *testing.T) {
 
 func TestIsCoinbase(t *testing.T) {
 	const coinbase = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4303bfea07322f53696d6f6e204f726469736820616e642053747561727420467265656d616e206d61646520746869732068617070656e2f9a46434790f7dbdea3430000ffffffff018a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
-	bt1, err := txn.NewFromString(coinbase)
+	bt1, err := bt.NewFromString(coinbase)
 	if err != nil {
 		t.Error(err)
 		return
@@ -163,7 +163,7 @@ func TestIsCoinbase(t *testing.T) {
 	}
 
 	const tx = "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
-	bt2, err := txn.NewFromString(tx)
+	bt2, err := bt.NewFromString(tx)
 	if err != nil {
 		t.Error(err)
 		return
