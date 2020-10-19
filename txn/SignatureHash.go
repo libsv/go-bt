@@ -1,4 +1,4 @@
-package transaction
+package txn
 
 import (
 	"encoding/binary"
@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/transaction/signature/sighash"
+	"github.com/libsv/libsv/txn/signature/sighash"
 	"github.com/libsv/libsv/utils"
 )
 

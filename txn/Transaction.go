@@ -1,4 +1,4 @@
-package transaction
+package txn
 
 import (
 	"encoding/binary"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/transaction/input"
-	"github.com/libsv/libsv/transaction/output"
+	"github.com/libsv/libsv/txn/input"
+	"github.com/libsv/libsv/txn/output"
 	"github.com/libsv/libsv/utils"
 )
 

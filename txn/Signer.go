@@ -1,4 +1,4 @@
-package transaction
+package txn
 
 // Signer interface to allow custom implementations of different signing mechanisms.
 // Implement the Sign function as shown in InternalSigner, for example.

@@ -7,8 +7,8 @@ import (
 
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/transaction"
-	"github.com/libsv/libsv/transaction/signature/sighash"
+	"github.com/libsv/libsv/txn"
+	"github.com/libsv/libsv/txn/signature/sighash"
 	"github.com/libsv/libsv/utils"
 )
 
@@ -21,7 +21,7 @@ type InternalSigner struct {
 
 // Sign a transaction at a given input index using the PrivateKey passed in through the
 // InternalSigner struct.
-func (is *InternalSigner) Sign(index uint32, unsignedTx *transaction.Transaction) (*transaction.Transaction, error) {
+func (is *InternalSigner) Sign(index uint32, unsignedTx *txn.Transaction) (*txn.Transaction, error) {
 	if is.SigHashFlag == 0 {
 		is.SigHashFlag = sighash.AllForkID
 	}
@@ -49,7 +49,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *transaction.Transaction
 // SignAuto goes through each input of the transaction and automatically
 // signs the P2PKH inputs that it is able to sign using the specific
 // PrivateKey passed in through the InternalSigner struct.
-func (is *InternalSigner) SignAuto(unsignedTx *transaction.Transaction) (*transaction.Transaction, error) {
+func (is *InternalSigner) SignAuto(unsignedTx *txn.Transaction) (*txn.Transaction, error) {
 	if is.SigHashFlag == 0 {
 		is.SigHashFlag = sighash.AllForkID
 	}

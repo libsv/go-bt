@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/libsv/libsv/script/address"
-	"github.com/libsv/libsv/transaction/output"
+	"github.com/libsv/libsv/txn/output"
 	"github.com/libsv/libsv/utils"
 )
 

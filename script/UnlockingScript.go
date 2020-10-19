@@ -1,6 +1,6 @@
 package script
 
-import "github.com/libsv/libsv/transaction/signature/sighash"
+import "github.com/libsv/libsv/txn/signature/sighash"
 
 // NewP2PKHUnlockingScript creates a new unlocking script which spends a P2PKH locking script from a public key, a signature, and
 // a SIGHASH flag.

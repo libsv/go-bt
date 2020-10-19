@@ -1,12 +1,12 @@
-package transaction_test
+package txn_test
 
 import (
 	"encoding/hex"
 	"testing"
 
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/transaction"
-	"github.com/libsv/libsv/transaction/signature/sighash"
+	"github.com/libsv/libsv/txn"
+	"github.com/libsv/libsv/txn/signature/sighash"
 )
 
 var testVector = []struct {
@@ -54,7 +54,7 @@ func TestSignatureHashes(t *testing.T) {
 
 	for _, test := range testVector {
 		t.Run(test.name, func(t *testing.T) {
-			tx, err := transaction.NewFromString(test.unsignedTx)
+			tx, err := txn.NewFromString(test.unsignedTx)
 			if err != nil {
 				t.Error(err)
 			}
