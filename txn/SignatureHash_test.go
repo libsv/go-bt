@@ -6,7 +6,7 @@ import (
 
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/txn"
-	"github.com/libsv/libsv/txn/signature/sighash"
+	"github.com/libsv/libsv/txn/sig/sighash"
 )
 
 var testVector = []struct {

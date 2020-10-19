@@ -1,4 +1,4 @@
-package signature
+package sig
 
 import (
 	"encoding/hex"
@@ -8,7 +8,7 @@ import (
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/txn"
-	"github.com/libsv/libsv/txn/signature/sighash"
+	"github.com/libsv/libsv/txn/sig/sighash"
 	"github.com/libsv/libsv/utils"
 )
 

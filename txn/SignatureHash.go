@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/txn/signature/sighash"
+	"github.com/libsv/libsv/txn/sig/sighash"
 	"github.com/libsv/libsv/utils"
 )
 
