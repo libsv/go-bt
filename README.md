@@ -29,7 +29,7 @@ $ make test
 
 #### Regular P2PKH
 ```go
-	tx := transaction.New()
+	tx := bt.New()
 
 	tx.From(
 		"11b476ad8e0a48fcd40807a111a050af51114877e09283bfa7f3505081a1819d",
@@ -41,7 +41,7 @@ $ make test
 
 	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	signer := signature.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
   err := tx.SignAuto(&signer)
   if err != nil {
 		fmt.Errorf(err.Error())
@@ -57,7 +57,7 @@ prints:
 
 #### Regular P2PKH + OP_RETURN output
 ```go
-	tx := transaction.New()
+	tx := bt.New()
 
 	err := tx.From(
 		"b7b0650a7c3a1bd4716369783876348b59f5404784970192cec1996e86950576",
@@ -76,7 +76,7 @@ prints:
 
 	wif, _ := bsvutil.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
 
-	signer := signature.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
 	err = tx.SignAuto(&signer)
 	if err != nil {
 		fmt.Println(err.Error())
