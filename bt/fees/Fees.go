@@ -1,6 +1,8 @@
 package fees
 
 import (
+	"errors"
+
 	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
 )
 
@@ -42,4 +44,26 @@ func Default() (f []*mapi.Fee) {
 	f = append(f, DefaultStandard())
 	f = append(f, DefaultData())
 	return
+}
+
+// GetStandardFee returns the standard fee in the fees array supplied.
+func GetStandardFee(fees []*mapi.Fee) (*mapi.Fee, error) {
+	for _, f := range fees {
+		if f.FeeType == "standard" {
+			return f, nil
+		}
+	}
+
+	return nil, errors.New("no standard fee supplied")
+}
+
+// GetDataFee returns the data fee in the fees array supplied.
+func GetDataFee(fees []*mapi.Fee) (*mapi.Fee, error) {
+	for _, f := range fees {
+		if f.FeeType == "data" {
+			return f, nil
+		}
+	}
+
+	return nil, errors.New("no data fee supplied")
 }
