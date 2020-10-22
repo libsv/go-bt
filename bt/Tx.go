@@ -3,8 +3,11 @@ package bt
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
+	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
+	"github.com/libsv/libsv/bt/fees"
 	"github.com/libsv/libsv/bt/input"
 	"github.com/libsv/libsv/bt/output"
 	"github.com/libsv/libsv/crypto"
@@ -35,6 +38,7 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 
 // A Tx wraps a bitcoin transaction
 type Tx struct {
+	// TODO: make variables private?
 	Version  uint32
 	Inputs   []*input.Input
 	Outputs  []*output.Output
@@ -168,6 +172,152 @@ func (bt *Tx) PayTo(addr string, satoshis uint64) error {
 	return nil
 }
 
+// ChangeToAddress calculates the amount of fees needed to cover the transaction
+//  and adds the left over change in a new P2PKH output using the address provided.
+func (bt *Tx) ChangeToAddress(addr string, f []*mapi.Fee) error {
+	s, err := script.NewP2PKHFromAddress(addr)
+	if err != nil {
+		return err
+	}
+
+	return bt.Change(s, f)
+}
+
+// Change calculates the amount of fees needed to cover the transaction
+//  and adds the left over change in a new output using the script provided.
+func (bt *Tx) Change(s *script.Script, f []*mapi.Fee) error {
+
+	inputAmount := bt.GetTotalInputSatoshis()
+	outputAmount := bt.GetTotalOutputSatoshis()
+
+	if inputAmount < outputAmount {
+		return errors.New("satoshis inputted to the tx are less than the outputted satoshis")
+	}
+
+	available := inputAmount - outputAmount
+
+	stdFees, err := fees.GetStandardFee(f)
+	if err != nil {
+		return err
+	}
+
+	if !bt.canAddChange(available, stdFees) {
+		return nil
+	}
+
+	o := output.Output{
+		Satoshis:      0,
+		LockingScript: s,
+	}
+	bt.AddOutput(&o)
+
+	presignedFeeRequired, err := bt.getPresignedFeeRequired(f)
+	if err != nil {
+		return err
+	}
+
+	expectedUnlockingScriptFees, err := bt.getExpectedUnlockingScriptFees(f)
+	if err != nil {
+		return err
+	}
+
+	available -= (presignedFeeRequired + expectedUnlockingScriptFees)
+
+	// add rest of available sats to the change output
+	bt.Outputs[len(bt.GetOutputs())-1].Satoshis = available
+
+	return nil
+}
+
+func (bt *Tx) canAddChange(available uint64, stdFees *mapi.Fee) bool {
+
+	outputLen := bt.OutputCount()
+	viuli := utils.VarIntUpperLimitInc(uint64(outputLen))
+
+	if viuli == -1 {
+		return false // upper limit of outputs in one tx reached
+	}
+
+	changeOutputFee := uint64(viuli)
+
+	changeP2pkhByteLen := 8 + 25 // 8 bytes for satoshi value + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
+	changeOutputFee += uint64(changeP2pkhByteLen * stdFees.MiningFee.Satoshis / stdFees.MiningFee.Bytes)
+
+	if available < changeOutputFee {
+		return false // not enough change to add a whole change output so don't add anything and return
+	}
+
+	return true
+}
+
+func (bt *Tx) getPresignedFeeRequired(f []*mapi.Fee) (feeRequired uint64, err error) {
+
+	stdBytes, dataBytes := bt.getStandardAndDataBytes()
+
+	stdFee, err := fees.GetStandardFee(f)
+	if err != nil {
+		return 0, err
+	}
+
+	fr := stdBytes * stdFee.MiningFee.Satoshis / stdFee.MiningFee.Bytes
+
+	dataFee, err := fees.GetDataFee(f)
+	if err != nil {
+		return 0, err
+	}
+
+	fr += dataBytes * dataFee.MiningFee.Satoshis / dataFee.MiningFee.Bytes
+
+	return uint64(fr), nil
+
+}
+
+func (bt *Tx) getExpectedUnlockingScriptFees(f []*mapi.Fee) (feeRequired uint64, err error) {
+
+	stdFee, err := fees.GetStandardFee(f)
+	if err != nil {
+		return 0, err
+	}
+
+	var expectedBytes int
+
+	for _, in := range bt.GetInputs() {
+		if !in.PreviousTxScript.IsP2PKH() {
+			return 0, errors.New("non-P2PKH input used in the tx - unsupported")
+		}
+		expectedBytes += 109 // = 1 oppushdata + 70-73 sig + 1 sighash + 1 oppushdata + 33 public key
+	}
+
+	fr := expectedBytes * stdFee.MiningFee.Satoshis / stdFee.MiningFee.Bytes
+
+	return uint64(fr), nil
+}
+
+func (bt *Tx) getStandardAndDataBytes() (stdBytes int, dataBytes int) {
+	// Subtract the value of each output as well as keeping track of data outputs
+	for _, out := range bt.GetOutputs() {
+		if out.LockingScript.IsData() && len(*out.LockingScript) > 0 {
+			dataBytes += len(*out.LockingScript)
+		}
+	}
+
+	stdBytes = len(bt.ToBytes()) - dataBytes
+
+	return
+}
+
+// HasDataOutputs returns true if the transaction has
+// at least one data (OP_RETURN) output in it.
+func (bt *Tx) HasDataOutputs() (hasDataOutputs bool) {
+	for _, out := range bt.GetOutputs() {
+		if out.LockingScript.IsData() {
+			return true
+		}
+	}
+
+	return false
+}
+
 // IsCoinbase determines if this transaction is a coinbase by
 // checking if the tx input is a standard coinbase input.
 func (bt *Tx) IsCoinbase() bool {
@@ -191,12 +341,22 @@ func (bt *Tx) GetInputs() []*input.Input {
 	return bt.Inputs
 }
 
+// GetTotalInputSatoshis returns the total Satoshis inputted to the transaction.
+func (bt *Tx) GetTotalInputSatoshis() uint64 {
+	var total uint64
+	for _, in := range bt.GetInputs() {
+		total += in.PreviousTxSatoshis
+	}
+
+	return total
+}
+
 // GetOutputs returns an array of all outputs in the transaction.
 func (bt *Tx) GetOutputs() []*output.Output {
 	return bt.Outputs
 }
 
-// GetTotalOutputSatoshis returns an array of all outputs in the transaction.
+// GetTotalOutputSatoshis returns the total Satoshis outputted from the transaction.
 func (bt *Tx) GetTotalOutputSatoshis() uint64 {
 	var total uint64
 	for _, o := range bt.GetOutputs() {

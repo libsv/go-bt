@@ -1,12 +1,16 @@
 package bt_test
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/bitcoinsv/bsvutil"
 	"github.com/libsv/libsv/bt"
+	"github.com/libsv/libsv/bt/fees"
 	"github.com/libsv/libsv/bt/input"
 	"github.com/libsv/libsv/bt/output"
+	"github.com/libsv/libsv/bt/sig"
 
 	"github.com/libsv/libsv/script"
 )
@@ -173,4 +177,53 @@ func TestIsCoinbase(t *testing.T) {
 	if cb2 == true {
 		t.Errorf("Expecting false, got %t", cb2)
 	}
+}
+
+func TestCreateTx(t *testing.T) {
+	tx := bt.New()
+
+	tx.From(
+		"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+		0,
+		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+		2000000)
+
+	tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+
+	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+
+	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	err := tx.SignAuto(&signer)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	fmt.Println(tx.ToString())
+}
+
+func TestChange(t *testing.T) {
+	expectedTx, _ := bt.NewFromString("01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a473044022049ee0c0f26c00e6a6b3af5990fc8296c66eab3e3e42ab075069b89b1be6fefec02206079e49dd8c9e1117ef06fbe99714d822620b1f0f5d19f32a1128f5d29b7c3c4412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff01a0083d00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000")
+
+	tx := bt.New()
+
+	tx.From(
+		"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+		0,
+		"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+		4000000)
+
+	tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fees.Default())
+
+	wif, _ := bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+
+	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	err := tx.SignAuto(&signer)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	if tx.ToString() != expectedTx.ToString() {
+		t.Errorf("Expected %s, got %s", tx.ToString(), expectedTx.ToString())
+	}
+
 }
