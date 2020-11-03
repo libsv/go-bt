@@ -173,7 +173,7 @@ func (bt *Tx) PayTo(addr string, satoshis uint64) error {
 }
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
-//  and adds the left over change in a new P2PKH output using the address provided.
+// and adds the left over change in a new P2PKH output using the address provided.
 func (bt *Tx) ChangeToAddress(addr string, f []*mapi.Fee) error {
 	s, err := script.NewP2PKHFromAddress(addr)
 	if err != nil {
