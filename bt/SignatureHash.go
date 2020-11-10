@@ -7,7 +7,6 @@ import (
 
 	"github.com/libsv/libsv/bt/sighash"
 	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/utils"
 )
 
 // TODO: change to "serialise tx"
@@ -67,7 +66,7 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 	buf = append(buf, oi...)
 
 	// scriptCode of the input (serialized as scripts inside CTxOuts)
-	buf = append(buf, utils.VarInt(uint64(len(*in.PreviousTxScript)))...)
+	buf = append(buf, VarInt(uint64(len(*in.PreviousTxScript)))...)
 	buf = append(buf, *in.PreviousTxScript...)
 
 	// value of the output spent by this input (8-byte little endian)

@@ -77,7 +77,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	t.Version = binary.LittleEndian.Uint32(b[offset:4])
 	offset += 4
 
-	inputCount, size := utils.DecodeVarInt(b[offset:])
+	inputCount, size := DecodeVarInt(b[offset:])
 	offset += size
 
 	// create inputs
@@ -93,7 +93,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	}
 
 	// create outputs
-	outputCount, size := utils.DecodeVarInt(b[offset:])
+	outputCount, size := DecodeVarInt(b[offset:])
 	offset += size
 	for i = 0; i < outputCount; i++ {
 		o, size, err := NewOutputFromBytes(b[offset:])
@@ -230,7 +230,7 @@ func (tx *Tx) Change(s *script.Script, f []*mapi.Fee) error {
 func (tx *Tx) canAddChange(available uint64, stdFees *mapi.Fee) bool {
 
 	outputLen := tx.OutputCount()
-	viuli := utils.VarIntUpperLimitInc(uint64(outputLen))
+	viuli := VarIntUpperLimitInc(uint64(outputLen))
 
 	if viuli == -1 {
 		return false // upper limit of outputs in one tx reached
@@ -392,19 +392,19 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 
 	h = append(h, utils.GetLittleEndianBytes(tx.Version, 4)...)
 
-	h = append(h, utils.VarInt(uint64(len(tx.GetInputs())))...)
+	h = append(h, VarInt(uint64(len(tx.GetInputs())))...)
 
 	for i, in := range tx.GetInputs() {
 		s := in.ToBytes(lockingScript != nil)
 		if i == index && lockingScript != nil {
-			h = append(h, utils.VarInt(uint64(len(lockingScript)))...)
+			h = append(h, VarInt(uint64(len(lockingScript)))...)
 			h = append(h, lockingScript...)
 		} else {
 			h = append(h, s...)
 		}
 	}
 
-	h = append(h, utils.VarInt(uint64(len(tx.GetOutputs())))...)
+	h = append(h, VarInt(uint64(len(tx.GetOutputs())))...)
 	for _, out := range tx.GetOutputs() {
 		h = append(h, out.ToBytes()...)
 	}

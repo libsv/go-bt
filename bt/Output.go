@@ -7,7 +7,6 @@ import (
 
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/utils"
 )
 
 /*
@@ -39,7 +38,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	o.Satoshis = binary.LittleEndian.Uint64(bytes[0:8])
 
 	offset := 8
-	l, size := utils.DecodeVarInt(bytes[offset:])
+	l, size := DecodeVarInt(bytes[offset:])
 	offset += size
 
 	totalLength := offset + int(l)
@@ -168,7 +167,7 @@ func (o *Output) ToBytes() []byte {
 
 	h := make([]byte, 0)
 	h = append(h, b...)
-	h = append(h, utils.VarInt(uint64(len(*o.LockingScript)))...)
+	h = append(h, VarInt(uint64(len(*o.LockingScript)))...)
 	h = append(h, *o.LockingScript...)
 
 	return h
@@ -183,7 +182,7 @@ func (o *Output) GetBytesForSigHash() []byte {
 	binary.LittleEndian.PutUint64(satoshis, o.Satoshis)
 	buf = append(buf, satoshis...)
 
-	buf = append(buf, utils.VarInt(uint64(len(*o.LockingScript)))...)
+	buf = append(buf, VarInt(uint64(len(*o.LockingScript)))...)
 	buf = append(buf, *o.LockingScript...)
 
 	return buf

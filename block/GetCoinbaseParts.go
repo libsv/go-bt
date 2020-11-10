@@ -42,7 +42,6 @@ import (
 	"log"
 
 	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/utils"
 )
 
 // BuildCoinbase recombines the different parts of the coinbase transaction.
@@ -75,11 +74,11 @@ func GetCoinbaseParts(height uint32, coinbaseValue uint64, defaultWitnessCommitm
 }
 
 func makeCoinbaseInputTransaction(coinbaseData []byte) []byte {
-	buf := make([]byte, 32)                                       // 32 bytes - All bits are zero: Not a transaction hash reference
-	buf = append(buf, []byte{0xff, 0xff, 0xff, 0xff}...)          // 4 bytes - All bits are ones: 0xFFFFFFFF
-	buf = append(buf, utils.VarInt(uint64(len(coinbaseData)))...) // Length of the coinbase data, from 2 to 100 bytes
-	buf = append(buf, coinbaseData...)                            // Arbitrary data used for extra nonce and mining tags. In v2 blocks; must begin with block height
-	buf = append(buf, []byte{0xff, 0xff, 0xff, 0xff}...)          //  4 bytes = Set to 0xFFFFFFFF
+	buf := make([]byte, 32)                                    // 32 bytes - All bits are zero: Not a transaction hash reference
+	buf = append(buf, []byte{0xff, 0xff, 0xff, 0xff}...)       // 4 bytes - All bits are ones: 0xFFFFFFFF
+	buf = append(buf, bt.VarInt(uint64(len(coinbaseData)))...) // Length of the coinbase data, from 2 to 100 bytes
+	buf = append(buf, coinbaseData...)                         // Arbitrary data used for extra nonce and mining tags. In v2 blocks; must begin with block height
+	buf = append(buf, []byte{0xff, 0xff, 0xff, 0xff}...)       //  4 bytes = Set to 0xFFFFFFFF
 	return buf
 }
 
@@ -93,7 +92,7 @@ func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitme
 
 	binary.LittleEndian.PutUint64(buf[0:], coinbaseValue)
 
-	buf = append(buf, utils.VarInt(uint64(len(*o.LockingScript)))...)
+	buf = append(buf, bt.VarInt(uint64(len(*o.LockingScript)))...)
 	buf = append(buf, *o.LockingScript...)
 
 	numberOfTransactions := 1
@@ -106,7 +105,7 @@ func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitme
 			log.Printf("Error decoding witness commitment: %+v", err)
 			return nil, err
 		}
-		wcl := utils.VarInt(uint64(len(wc)))
+		wcl := bt.VarInt(uint64(len(wc)))
 		buf = append(buf, wcl...)
 		buf = append(buf, wc...)
 	}
@@ -116,11 +115,11 @@ func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitme
 
 		byteArr := make([]byte, 8) // 8 bytes of 0 = 0 satoshis.
 		buf = append(buf, byteArr...)
-		buf = append(buf, utils.VarInt(uint64(len(minerIDBytes)))...)
+		buf = append(buf, bt.VarInt(uint64(len(minerIDBytes)))...)
 		buf = append(buf, minerIDBytes...)
 	}
 
-	buf = append(utils.VarInt(uint64(numberOfTransactions)), buf...)
+	buf = append(bt.VarInt(uint64(numberOfTransactions)), buf...)
 	return buf, nil
 }
 
@@ -147,7 +146,7 @@ func makeCoinbase1(height uint32, coinbaseText string) []byte {
 	buf = append(buf, make([]byte, 32)...)               // Transaction hash - 4 bytes all bits are zero
 	buf = append(buf, []byte{0xff, 0xff, 0xff, 0xff}...) // Coinbase data size - 4 bytes - All bits are ones: 0xFFFFFFFF (ffffffff)
 
-	buf = append(buf, utils.VarInt(uint64(len(arbitraryData)+spaceForExtraNonce))...) // Length of the coinbase data, from 2 to 100 bytes
+	buf = append(buf, bt.VarInt(uint64(len(arbitraryData)+spaceForExtraNonce))...) // Length of the coinbase data, from 2 to 100 bytes
 	buf = append(buf, arbitraryData...)
 
 	return buf

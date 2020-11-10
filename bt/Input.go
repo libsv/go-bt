@@ -55,7 +55,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
 	offset := 36
-	l, size := utils.DecodeVarInt(bytes[offset:])
+	l, size := DecodeVarInt(bytes[offset:])
 	offset += size
 
 	totalLength := offset + int(l) + 4 // 4 bytes for nSeq
@@ -110,9 +110,9 @@ func (i *Input) ToBytes(clear bool) []byte {
 		h = append(h, 0x00)
 	} else {
 		if i.UnlockingScript == nil {
-			h = append(h, utils.VarInt(0)...)
+			h = append(h, VarInt(0)...)
 		} else {
-			h = append(h, utils.VarInt(uint64(len(*i.UnlockingScript)))...)
+			h = append(h, VarInt(uint64(len(*i.UnlockingScript)))...)
 			h = append(h, *i.UnlockingScript...)
 		}
 	}

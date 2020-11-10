@@ -1,9 +1,9 @@
-package utils_test
+package bt_test
 
 import (
 	"testing"
 
-	"github.com/libsv/libsv/utils"
+	"github.com/libsv/libsv/bt"
 )
 
 var varIntTests = []struct {
@@ -29,7 +29,7 @@ func TestHashFunctions(t *testing.T) {
 	for _, varIntTest := range varIntTests {
 		t.Run(varIntTest.testName, func(t *testing.T) {
 
-			b := utils.VarInt(varIntTest.input)
+			b := bt.VarInt(varIntTest.input)
 
 			if len(b) != varIntTest.expectedLen {
 				t.Errorf("Expected length to be '%+v', got %+v", varIntTest.expectedLen, len(b))

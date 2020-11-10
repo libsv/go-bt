@@ -7,7 +7,6 @@ import (
 
 	"github.com/libsv/libsv/bt"
 	"github.com/libsv/libsv/script/address"
-	"github.com/libsv/libsv/utils"
 )
 
 const outputHexStr = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
@@ -75,7 +74,7 @@ func TestNewOutputOpReturn(t *testing.T) {
 	}
 	dataHexStr := hex.EncodeToString(dataBytes)
 	script := o.GetLockingScriptHexString()
-	dataLength := utils.VarInt(uint64(len(dataBytes)))
+	dataLength := bt.VarInt(uint64(len(dataBytes)))
 	fmt.Printf("%x", dataLength)
 	expectedScript := "006a4d2201" + dataHexStr
 
