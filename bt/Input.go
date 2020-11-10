@@ -50,7 +50,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 
 	i := Input{}
 
-	i.PreviousTxID = hex.EncodeToString(utils.ReverseBytes(bytes[0:32]))
+	i.PreviousTxID = hex.EncodeToString(ReverseBytes(bytes[0:32]))
 
 	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(bytes[32:36])
 
@@ -104,7 +104,7 @@ func (i *Input) ToBytes(clear bool) []byte {
 
 	pid, _ := hex.DecodeString(i.PreviousTxID)
 
-	h = append(h, utils.ReverseBytes(pid)...)
+	h = append(h, ReverseBytes(pid)...)
 	h = append(h, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		h = append(h, 0x00)

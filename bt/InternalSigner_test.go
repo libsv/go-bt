@@ -84,7 +84,7 @@ func TestSignAuto(t *testing.T) {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	valid := sig.Verify(utils.ReverseBytes(h), publicKey)
+// 	valid := sig.Verify(ReverseBytes(h), publicKey)
 // 	t.Logf("%v\n", valid)
 //
 // }
@@ -130,7 +130,7 @@ func TestSignAuto(t *testing.T) {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	valid := sig.Verify(utils.ReverseBytes(h), publicKey)
+// 	valid := sig.Verify(ReverseBytes(h), publicKey)
 // 	t.Logf("%v\n", valid)
 //
 // }
@@ -203,7 +203,7 @@ func TestSignAuto(t *testing.T) {
 // 			return
 // 		}
 // 		for j, pk := range publicKeys {
-// 			valid := sig.Verify(utils.ReverseBytes(h), pk)
+// 			valid := sig.Verify(ReverseBytes(h), pk)
 // 			t.Logf("signature %d against pulbic key %d => %v\n", i, j, valid)
 // 		}
 //
@@ -279,7 +279,7 @@ func TestSignAuto(t *testing.T) {
 // 			return
 // 		}
 // 		for j, pk := range publicKeys {
-// 			valid := sig.Verify(utils.ReverseBytes(h), pk)
+// 			valid := sig.Verify(ReverseBytes(h), pk)
 // 			t.Logf("signature %d against pulbic key %d => %v\n", i, j, valid)
 // 		}
 //

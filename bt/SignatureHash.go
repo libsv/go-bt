@@ -61,7 +61,7 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 
 	//  outpoint (32-byte hash + 4-byte little endian)
 	txid, _ := hex.DecodeString(in.PreviousTxID[:])
-	buf = append(buf, utils.ReverseBytes(txid)...)
+	buf = append(buf, ReverseBytes(txid)...)
 	oi := make([]byte, 4)
 	binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 	buf = append(buf, oi...)
@@ -95,7 +95,7 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 	buf = append(buf, st...)
 
 	ret := crypto.Sha256d(buf)
-	return utils.ReverseBytes(ret), nil
+	return ReverseBytes(ret), nil
 }
 
 func (tx *Tx) getPrevoutHash() []byte {
@@ -103,7 +103,7 @@ func (tx *Tx) getPrevoutHash() []byte {
 
 	for _, in := range tx.Inputs {
 		txid, _ := hex.DecodeString(in.PreviousTxID[:])
-		buf = append(buf, utils.ReverseBytes(txid)...)
+		buf = append(buf, ReverseBytes(txid)...)
 		oi := make([]byte, 4)
 		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 		buf = append(buf, oi...)

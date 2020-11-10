@@ -68,7 +68,6 @@ func ReverseHexString(hex string) string {
 
 // GetLittleEndianBytes returns a byte array in little endian from an unsigned integer of 32 bytes.
 func GetLittleEndianBytes(v uint32, l uint32) []byte {
-	// TODO: is v hex encoded?
 	buf := make([]byte, l)
 
 	binary.LittleEndian.PutUint32(buf, v)

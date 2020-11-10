@@ -367,7 +367,7 @@ func (tx *Tx) GetTotalOutputSatoshis() uint64 {
 // GetTxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
 func (tx *Tx) GetTxID() string {
-	return hex.EncodeToString(utils.ReverseBytes(crypto.Sha256d(tx.ToBytes())))
+	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.ToBytes())))
 }
 
 // ToString encodes the transaction into a hex string.

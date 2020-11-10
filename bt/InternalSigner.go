@@ -8,7 +8,6 @@ import (
 	"github.com/libsv/libsv/bt/sighash"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/utils"
 )
 
 // InternalSigner implements the Signer interface. It is used to sign a Tx locally
@@ -30,7 +29,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (*Tx, error) {
 		return nil, err
 	}
 
-	sig, err := is.PrivateKey.Sign(utils.ReverseBytes(sh)) // little endian sign
+	sig, err := is.PrivateKey.Sign(ReverseBytes(sh)) // little endian sign
 	if err != nil {
 		return nil, err
 	}
