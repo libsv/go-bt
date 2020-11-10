@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/script/address"
+	"github.com/libsv/go-bt"
+	"github.com/libsv/go-bt/script/address"
 )
 
 const outputHexStr = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"

@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/libsv/script"
+	"github.com/libsv/go-bt/script"
 )
 
 /*

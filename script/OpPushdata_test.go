@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/libsv/script"
+	"github.com/libsv/go-bt/script"
 )
 
 func TestDecodePartsSimple(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bitcoinsv/bsvd/bsvec"
-	"github.com/libsv/libsv/script/address"
+	"github.com/libsv/go-bt/script/address"
 )
 
 func TestNewFromStringMainnet(t *testing.T) {

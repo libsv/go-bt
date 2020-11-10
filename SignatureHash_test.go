@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/bt/sighash"
-	"github.com/libsv/libsv/script"
+	"github.com/libsv/go-bt"
+	"github.com/libsv/go-bt/script"
+	"github.com/libsv/go-bt/sighash"
 )
 
 var testVector = []struct {

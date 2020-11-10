@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/script"
+	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bt/script"
 )
 
 /*

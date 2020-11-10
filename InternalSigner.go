@@ -5,9 +5,9 @@ import (
 
 	"github.com/bitcoinsv/bsvd/bsvec"
 
-	"github.com/libsv/libsv/bt/sighash"
-	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/script"
+	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bt/script"
+	"github.com/libsv/go-bt/sighash"
 )
 
 // InternalSigner implements the Signer interface. It is used to sign a Tx locally

@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/go-bt"
+	"github.com/libsv/go-bt/crypto"
 )
 
 func TestGenesisHash(t *testing.T) {

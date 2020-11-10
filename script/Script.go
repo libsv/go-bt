@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/script/address"
+	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bt/script/address"
 )
 
 // Script type

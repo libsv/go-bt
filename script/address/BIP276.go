@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/go-bt/crypto"
 )
 
 // PrefixScript is the prefix in the BIP276 standard which

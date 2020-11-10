@@ -8,8 +8,8 @@ import (
 
 	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
 
-	"github.com/libsv/libsv/crypto"
-	"github.com/libsv/libsv/script"
+	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bt/script"
 )
 
 /*

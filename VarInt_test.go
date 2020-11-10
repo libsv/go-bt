@@ -3,7 +3,7 @@ package bt_test
 import (
 	"testing"
 
-	"github.com/libsv/libsv/bt"
+	"github.com/libsv/go-bt"
 )
 
 var varIntTests = []struct {

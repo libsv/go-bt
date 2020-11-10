@@ -6,7 +6,7 @@ import (
 
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvutil/base58"
-	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/go-bt/crypto"
 )
 
 // An Address struct contains the address string as well as the hash160 hexstring of the public key.

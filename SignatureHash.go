@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/libsv/libsv/bt/sighash"
-	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bt/sighash"
 )
 
 // TODO: change to "serialise tx"
