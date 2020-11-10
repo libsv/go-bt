@@ -12,7 +12,7 @@ import (
 
 func TestSignAuto(t *testing.T) {
 	unsignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
-	tx, err := bt.NewFromString(unsignedTx)
+	tx, err := bt.NewTxFromString(unsignedTx)
 
 	if err != nil {
 		t.Fatal("Failed to create transaction")
@@ -46,7 +46,7 @@ func TestSignAuto(t *testing.T) {
 // TODO: fix/ update to use internal signer
 // func TestValidSignature(t *testing.T) {
 // 	txHex := "02000000011dd7ad77d93879f00dcfeee50ef258775ab13fe0bcfb8f51994ec6f2d295be45000000006a47304402204dbf87fe0bbf435170eea32ed9fa573cf41214b9a7146ca4101eed5738d03e3b02204d86617d7c2bba34874e4a00d3471ff5846d504ece7c67ae0623e2ca516fd0fd412103f4563d1b75b914dfba48fec433b35f56307504ec9fdaa568725619bbae26adf8ffffffff0298ad5a16000000001976a91442f9682260509ac80722b1963aec8a896593d16688ac4de86189030000001976a914c36538e91213a8100dcb2aed456ade363de8483f88ac00000000"
-// 	tx, err := transaction.NewFromString(txHex)
+// 	tx, err := transaction.NewTxFromString(txHex)
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
@@ -91,7 +91,7 @@ func TestSignAuto(t *testing.T) {
 //
 // func TestValidSignature2(t *testing.T) {
 // 	txHex := "0200000001483116c62abe84c0431f6701d1c543b08c50ed7d8cfad882afadcbe3a2eafa64010000006a4730440220665740bdf8cf402f0a3cfeb9a7b82645132190e3c3bd605e0811b79c9dd675e002207929a958673cebe60a6af9fa1fa89e7f3fc397727df5798500d58906c3886a44412103401136395f6c679c6176cdf499ff54720acfb56c07028feaafdce68d79463a45feffffff0200562183000000001976a9140108b364bbbddb222e2d0fac1ad4f6f86b10317688ac9697e4a6000000001976a9143ac52294c730e7a4e9671abe3e7093d8834126ed88ac6f640800"
-// 	tx, err := transaction.NewFromString(txHex)
+// 	tx, err := transaction.NewTxFromString(txHex)
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
@@ -137,7 +137,7 @@ func TestSignAuto(t *testing.T) {
 //
 // func TestBareMultiSigValidation(t *testing.T) {
 // 	txHex := "0100000001cfb38c76cadeb5b96c3863d9e298fe96e24e594b75f69c37aa709f45b76d1b25000000009200483045022100d83dc84d3ea3fb36b006f6887e1e16811c59fe9a9b79b84142874a90d5b834160220052967be98c26270de0082b0fecab5a40d5bc48d5034b6cdfc2b8e47210e1469414730440220099ffa89363f9a05f23a4fa318ddbefeeeec4b41f6abde7083a3be6696ed904902201722110a488df3780a260ba09b7de6363bfce7f6beec9819e9b9f47f6e978d8141ffffffff01a8840100000000001976a91432b996f742e774b0241be9007f831558ba06d20b88ac00000000"
-// 	tx, err := transaction.NewFromString(txHex)
+// 	tx, err := transaction.NewTxFromString(txHex)
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
@@ -213,7 +213,7 @@ func TestSignAuto(t *testing.T) {
 //
 // func TestP2SHMultiSigValidation(t *testing.T) { // NOT working properly!
 // 	txHex := "0100000001d0219010e1f74ec8dd264a63ef01b5c72aab49a74c9bffd464c7f7f2b193b34700000000fdfd0000483045022100c2ffae14c7cfae5c1b45776f4b2d497b0d10a9e3be55b1386c555f90acd022af022025d5d1d33429fabd60c41763f9cda5c4b64adbddbd90023febc005be431b97b641473044022013f65e41abd6be856e7c7dd7527edc65231e027c42e8db7358759fc9ccd77b7d02206e024137ee54d2fac9f1dce858a85cb03fb7ba93b8e015d82e8a959b631f91ac414c695221021db57ae3de17143cb6c314fb206b56956e8ed45e2f1cbad3947411228b8d17f1210308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee419421030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd953aefeffffff01b70f0000000000001976a91415067448220971206e6b4d90733d70fe9610631688ac56750900"
-// 	tx, err := transaction.NewFromString(txHex)
+// 	tx, err := transaction.NewTxFromString(txHex)
 // 	if err != nil {
 // 		t.Error(err)
 // 		return

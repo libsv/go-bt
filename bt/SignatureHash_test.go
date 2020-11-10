@@ -54,7 +54,7 @@ func TestSignatureHashes(t *testing.T) {
 
 	for _, test := range testVector {
 		t.Run(test.name, func(t *testing.T) {
-			tx, err := bt.NewFromString(test.unsignedTx)
+			tx, err := bt.NewTxFromString(test.unsignedTx)
 			if err != nil {
 				t.Error(err)
 			}
