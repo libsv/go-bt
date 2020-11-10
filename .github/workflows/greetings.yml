@@ -1,0 +1,12 @@
+name: Greetings
+
+on: [pull_request, issues]
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        pr-message: 'Congrats, you just opened your first pull request on libsv/libsv! Thank you for contributing!'
