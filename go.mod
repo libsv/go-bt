@@ -1,4 +1,4 @@
-module github.com/libsv/libsv
+module github.com/libsv/go-bt
 
 go 1.13
 
