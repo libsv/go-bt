@@ -14,8 +14,8 @@ import (
 
 // GetInputSignatureHash serializes the transaction based on the input index and the SIGHASH flag
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
-func (bt *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
-	in := bt.Inputs[inputNumber]
+func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
+	in := tx.Inputs[inputNumber]
 
 	if in.PreviousTxID == "" {
 		return nil, errors.New("'PreviousTxID' not supplied")
@@ -30,29 +30,29 @@ func (bt *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 
 	if sigHashFlag&sighash.AnyOneCanPay == 0 {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashPrevouts = bt.getPrevoutHash()
+		hashPrevouts = tx.getPrevoutHash()
 	}
 
 	if sigHashFlag&sighash.AnyOneCanPay == 0 &&
 		(sigHashFlag&31) != sighash.Single &&
 		(sigHashFlag&31) != sighash.None {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashSequence = bt.getSequenceHash()
+		hashSequence = tx.getSequenceHash()
 	}
 
 	if (sigHashFlag&31) != sighash.Single && (sigHashFlag&31) != sighash.None {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashOutputs = bt.getOutputsHash(-1)
-	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(len(bt.Outputs)) {
+		hashOutputs = tx.getOutputsHash(-1)
+	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(len(tx.Outputs)) {
 		// This will *not* be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashOutputs = bt.getOutputsHash(int32(inputNumber))
+		hashOutputs = tx.getOutputsHash(int32(inputNumber))
 	}
 
 	buf := make([]byte, 0)
 
 	// Version
 	v := make([]byte, 4)
-	binary.LittleEndian.PutUint32(v, bt.Version)
+	binary.LittleEndian.PutUint32(v, tx.Version)
 	buf = append(buf, v...)
 
 	// Input prevouts/nSequence (none/all, depending on flags)
@@ -85,7 +85,7 @@ func (bt *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 
 	// Locktime
 	lt := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lt, bt.Locktime)
+	binary.LittleEndian.PutUint32(lt, tx.Locktime)
 	buf = append(buf, lt...)
 
 	// sighashType
@@ -98,10 +98,10 @@ func (bt *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 	return utils.ReverseBytes(ret), nil
 }
 
-func (bt *Tx) getPrevoutHash() []byte {
+func (tx *Tx) getPrevoutHash() []byte {
 	buf := make([]byte, 0)
 
-	for _, in := range bt.Inputs {
+	for _, in := range tx.Inputs {
 		txid, _ := hex.DecodeString(in.PreviousTxID[:])
 		buf = append(buf, utils.ReverseBytes(txid)...)
 		oi := make([]byte, 4)
@@ -112,10 +112,10 @@ func (bt *Tx) getPrevoutHash() []byte {
 	return crypto.Sha256d(buf)
 }
 
-func (bt *Tx) getSequenceHash() []byte {
+func (tx *Tx) getSequenceHash() []byte {
 	buf := make([]byte, 0)
 
-	for _, in := range bt.Inputs {
+	for _, in := range tx.Inputs {
 		oi := make([]byte, 4)
 		binary.LittleEndian.PutUint32(oi, in.SequenceNumber)
 		buf = append(buf, oi...)
@@ -124,15 +124,15 @@ func (bt *Tx) getSequenceHash() []byte {
 	return crypto.Sha256d(buf)
 }
 
-func (bt *Tx) getOutputsHash(n int32) []byte {
+func (tx *Tx) getOutputsHash(n int32) []byte {
 	buf := make([]byte, 0)
 
 	if n == -1 {
-		for _, out := range bt.Outputs {
+		for _, out := range tx.Outputs {
 			buf = append(buf, out.GetBytesForSigHash()...)
 		}
 	} else {
-		buf = append(buf, bt.Outputs[n].GetBytesForSigHash()...)
+		buf = append(buf, tx.Outputs[n].GetBytesForSigHash()...)
 	}
 
 	return crypto.Sha256d(buf)
