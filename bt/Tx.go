@@ -8,7 +8,6 @@ import (
 
 	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
 
-	"github.com/libsv/libsv/bt/output"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/utils"
@@ -40,7 +39,7 @@ type Tx struct {
 	// TODO: make variables private?
 	Version  uint32
 	Inputs   []*Input
-	Outputs  []*output.Output
+	Outputs  []*Output
 	Locktime uint32
 }
 
@@ -97,7 +96,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	outputCount, size := utils.DecodeVarInt(b[offset:])
 	offset += size
 	for i = 0; i < outputCount; i++ {
-		o, size, err := output.NewOutputFromBytes(b[offset:])
+		o, size, err := NewOutputFromBytes(b[offset:])
 		if err != nil {
 			return nil, err
 		}
@@ -154,7 +153,7 @@ func (tx *Tx) OutputCount() int {
 }
 
 // AddOutput adds a new output to the transaction.
-func (tx *Tx) AddOutput(output *output.Output) {
+func (tx *Tx) AddOutput(output *Output) {
 
 	tx.Outputs = append(tx.Outputs, output)
 }
@@ -162,7 +161,7 @@ func (tx *Tx) AddOutput(output *output.Output) {
 // PayTo creates a new P2PKH output from a BitCoin address (base58)
 // and the satoshis amount and adds thats to the transaction.
 func (tx *Tx) PayTo(addr string, satoshis uint64) error {
-	o, err := output.NewP2PKHOutputFromAddress(addr, satoshis)
+	o, err := NewP2PKHOutputFromAddress(addr, satoshis)
 	if err != nil {
 		return err
 	}
@@ -204,7 +203,7 @@ func (tx *Tx) Change(s *script.Script, f []*mapi.Fee) error {
 		return nil
 	}
 
-	o := output.Output{
+	o := Output{
 		Satoshis:      0,
 		LockingScript: s,
 	}
@@ -351,7 +350,7 @@ func (tx *Tx) GetTotalInputSatoshis() uint64 {
 }
 
 // GetOutputs returns an array of all outputs in the transaction.
-func (tx *Tx) GetOutputs() []*output.Output {
+func (tx *Tx) GetOutputs() []*Output {
 	return tx.Outputs
 }
 

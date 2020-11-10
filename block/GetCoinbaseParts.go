@@ -41,7 +41,7 @@ import (
 	"encoding/hex"
 	"log"
 
-	"github.com/libsv/libsv/bt/output"
+	"github.com/libsv/libsv/bt"
 	"github.com/libsv/libsv/utils"
 )
 
@@ -84,7 +84,7 @@ func makeCoinbaseInputTransaction(coinbaseData []byte) []byte {
 }
 
 func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitment string, wallet string, minerIDBytes []byte) ([]byte, error) {
-	o, err := output.NewP2PKHOutputFromAddress(wallet, coinbaseValue)
+	o, err := bt.NewP2PKHOutputFromAddress(wallet, coinbaseValue)
 	if err != nil {
 		return nil, err
 	}

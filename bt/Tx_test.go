@@ -8,7 +8,6 @@ import (
 	"github.com/bitcoinsv/bsvutil"
 
 	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/bt/output"
 	"github.com/libsv/libsv/bt/sig"
 
 	"github.com/libsv/libsv/script"
@@ -68,7 +67,7 @@ func TestNewFromString(t *testing.T) {
 		t.Errorf("Expcted output be %v, but got %v", 1, outputLen)
 	}
 	ls, _ := script.NewFromHexString("76a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac")
-	o := output.Output{
+	o := bt.Output{
 		Satoshis:      4999000000,
 		LockingScript: ls,
 	}
