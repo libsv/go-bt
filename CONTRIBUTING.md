@@ -1,13 +1,13 @@
-## How to contribute to Libsv
+## How to contribute to go-bt
 
 #### **Did you find a bug?**
 
 * **Do not open up a GitHub issue if the bug is a security vulnerability
-  in libsv**, and instead to refer to our [security policy](https://github.com/libsv/libsv/blob/master/SECURITY.md).
+  in go-bt**, and instead to refer to our [security policy](https://github.com/libsv/libsv/blob/master/SECURITY.md).
 
-* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/libsv/libsv/issues).
+* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/libsv/go-bt/issues).
 
-* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/libsv/libsv/issues/new/choose). Be sure to to follow our issues template as much as possible.
+* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/libsv/go-bt/issues/new/choose). Be sure to to follow our issues template as much as possible.
 
 #### **Did you write a patch that fixes a bug?**
 
@@ -19,9 +19,9 @@
 
 #### **Do you have questions about the source code?**
 
-* Ask any question about how to use Libsv on [stackoverflow](https://stackoverflow.com) using the `libsv` tag. We try to be as responsive as possible.
+* Ask any question about how to use LiBSV/go-bt on [stackoverflow](https://stackoverflow.com) using the `libsv` or `go-bt` tag. We try to be as responsive as possible.
 
-Libsv is a volunteer effort. We encourage you to pitch in and interact with the project!
+LiBSV/go-bt is a volunteer effort. We encourage you to pitch in and interact with the project!
 
 Thanks! :heart:
 
