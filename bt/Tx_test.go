@@ -8,8 +8,6 @@ import (
 	"github.com/bitcoinsv/bsvutil"
 
 	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/bt/sig"
-
 	"github.com/libsv/libsv/script"
 )
 
@@ -190,7 +188,7 @@ func TestCreateTx(t *testing.T) {
 
 	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
 	err := tx.SignAuto(&signer)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -214,7 +212,7 @@ func TestChange(t *testing.T) {
 
 	wif, _ := bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 
-	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
 	err := tx.SignAuto(&signer)
 	if err != nil {
 		t.Errorf(err.Error())

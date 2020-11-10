@@ -1,12 +1,12 @@
-package sig_test
+package bt_test
 
 import (
 	"encoding/hex"
 	"testing"
 
 	"github.com/bitcoinsv/bsvutil"
+
 	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/bt/sig"
 	"github.com/libsv/libsv/script"
 )
 
@@ -26,7 +26,7 @@ func TestSignAuto(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
 	err = tx.SignAuto(&signer)
 	if err != nil {
 		t.Fatal(err)
