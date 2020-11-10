@@ -1,11 +1,11 @@
-package input_test
+package bt_test
 
 import (
 	"bytes"
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/libsv/bt/input"
+	"github.com/libsv/libsv/bt"
 	"github.com/libsv/libsv/script"
 )
 
@@ -13,7 +13,7 @@ const inputHexStr = "4c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305
 
 func TestNewInput(t *testing.T) {
 	b, _ := hex.DecodeString(inputHexStr)
-	i, s, err := input.NewInputFromBytes(b)
+	i, s, err := bt.NewInputFromBytes(b)
 	if err != nil {
 		t.Errorf("Invalid inputHexStr")
 	}
@@ -37,7 +37,7 @@ func TestNewInput(t *testing.T) {
 }
 
 func TestNewInputFromUTXO(t *testing.T) {
-	i, err := input.NewInputFromUTXO("a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", 4, 5064, "a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac", 0xffffffff)
+	i, err := bt.NewInputFromUTXO("a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", 4, 5064, "a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac", 0xffffffff)
 	if err != nil {
 		t.Error(err)
 	}

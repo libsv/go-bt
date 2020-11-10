@@ -8,7 +8,6 @@ import (
 
 	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
 
-	"github.com/libsv/libsv/bt/input"
 	"github.com/libsv/libsv/bt/output"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
@@ -40,7 +39,7 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 type Tx struct {
 	// TODO: make variables private?
 	Version  uint32
-	Inputs   []*input.Input
+	Inputs   []*Input
 	Outputs  []*output.Output
 	Locktime uint32
 }
@@ -85,7 +84,7 @@ func NewFromBytes(b []byte) (*Tx, error) {
 	// create inputs
 	var i uint64
 	for ; i < inputCount; i++ {
-		i, size, err := input.NewInputFromBytes(b[offset:])
+		i, size, err := NewInputFromBytes(b[offset:])
 		if err != nil {
 			return nil, err
 		}
@@ -119,7 +118,7 @@ func NewFromBytes(b []byte) (*Tx, error) {
 }
 
 // AddInput adds a new input to the transaction.
-func (bt *Tx) AddInput(input *input.Input) {
+func (bt *Tx) AddInput(input *Input) {
 	bt.Inputs = append(bt.Inputs, input)
 }
 
@@ -130,7 +129,7 @@ func (bt *Tx) From(txID string, vout uint32, prevTxLockingScript string, satoshi
 		return err
 	}
 
-	i := &input.Input{
+	i := &Input{
 		PreviousTxOutIndex: vout,
 		PreviousTxScript:   pts,
 		PreviousTxSatoshis: satoshis,
@@ -337,7 +336,7 @@ func (bt *Tx) IsCoinbase() bool {
 }
 
 // GetInputs returns an array of all inputs in the transaction.
-func (bt *Tx) GetInputs() []*input.Input {
+func (bt *Tx) GetInputs() []*Input {
 	return bt.Inputs
 }
 

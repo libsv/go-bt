@@ -8,7 +8,6 @@ import (
 	"github.com/bitcoinsv/bsvutil"
 
 	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/bt/input"
 	"github.com/libsv/libsv/bt/output"
 	"github.com/libsv/libsv/bt/sig"
 
@@ -16,55 +15,55 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	bt := bt.New()
+	tx := bt.New()
 
 	// check version
-	if bt.Version != 1 {
-		t.Errorf("Expcted version be %v, but got %v", 1, bt.Version)
+	if tx.Version != 1 {
+		t.Errorf("Expcted version be %v, but got %v", 1, tx.Version)
 	}
 
 	//	check locktime
-	if bt.Locktime != 0 {
-		t.Errorf("Expcted locktime be %v, but got %v", 2, bt.Locktime)
+	if tx.Locktime != 0 {
+		t.Errorf("Expcted locktime be %v, but got %v", 2, tx.Locktime)
 	}
 }
 
 func TestNewFromString(t *testing.T) {
 	h := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c000000004847304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041ffffffff01c0aff629010000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
-	bt, err := bt.NewFromString(h)
+	tx, err := bt.NewFromString(h)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	// check version
-	if bt.Version != 2 {
-		t.Errorf("Expcted version be %v, but got %v", 2, bt.Version)
+	if tx.Version != 2 {
+		t.Errorf("Expcted version be %v, but got %v", 2, tx.Version)
 	}
 
 	//	check locktime
-	if bt.Locktime != 0 {
-		t.Errorf("Expcted locktime be %v, but got %v", 2, bt.Locktime)
+	if tx.Locktime != 0 {
+		t.Errorf("Expcted locktime be %v, but got %v", 2, tx.Locktime)
 	}
 
 	//	 check input
-	inputLen := len(bt.Inputs)
+	inputLen := len(tx.Inputs)
 	if inputLen != 1 {
 		t.Errorf("Expcted input be %v, but got %v", 1, inputLen)
 	}
 
-	i := input.Input{}
+	i := bt.Input{}
 	i.PreviousTxID = "9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c"
 	i.PreviousTxOutIndex = 0
 	i.SequenceNumber = uint32(0xffffffff)
 	i.UnlockingScript, _ = script.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
-	sameInput := reflect.DeepEqual(*bt.Inputs[0], i)
+	sameInput := reflect.DeepEqual(*tx.Inputs[0], i)
 	if !sameInput {
 		t.Errorf("Input did not match")
 	}
 
 	//	 check output
-	outputLen := len(bt.Outputs)
+	outputLen := len(tx.Outputs)
 	if outputLen != 1 {
 		t.Errorf("Expcted output be %v, but got %v", 1, outputLen)
 	}
@@ -73,7 +72,7 @@ func TestNewFromString(t *testing.T) {
 		Satoshis:      4999000000,
 		LockingScript: ls,
 	}
-	sameOutput := reflect.DeepEqual(*bt.Outputs[0], o)
+	sameOutput := reflect.DeepEqual(*tx.Outputs[0], o)
 	if !sameOutput {
 		t.Errorf("Output did not match")
 	}
