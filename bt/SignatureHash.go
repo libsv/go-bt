@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/libsv/libsv/bt/sig/sighash"
+	"github.com/libsv/libsv/bt/sighash"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/utils"
 )

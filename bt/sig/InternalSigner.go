@@ -6,7 +6,7 @@ import (
 	"github.com/bitcoinsv/bsvd/bsvec"
 
 	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/bt/sig/sighash"
+	"github.com/libsv/libsv/bt/sighash"
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
 	"github.com/libsv/libsv/utils"
