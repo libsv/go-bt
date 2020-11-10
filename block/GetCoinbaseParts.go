@@ -84,7 +84,7 @@ func makeCoinbaseInputTransaction(coinbaseData []byte) []byte {
 }
 
 func makeCoinbaseOutputTransactions(coinbaseValue uint64, defaultWitnessCommitment string, wallet string, minerIDBytes []byte) ([]byte, error) {
-	o, err := output.NewP2PKHFromAddress(wallet, coinbaseValue)
+	o, err := output.NewP2PKHOutputFromAddress(wallet, coinbaseValue)
 	if err != nil {
 		return nil, err
 	}

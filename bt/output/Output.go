@@ -28,8 +28,8 @@ type Output struct {
 	LockingScript *script.Script
 }
 
-// NewFromBytes returns a transaction Output from the bytes provided
-func NewFromBytes(bytes []byte) (*Output, int, error) {
+// NewOutputFromBytes returns a transaction Output from the bytes provided
+func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	if len(bytes) < 8 {
 		return nil, 0, fmt.Errorf("output length too short < 8")
 	}
@@ -54,8 +54,8 @@ func NewFromBytes(bytes []byte) (*Output, int, error) {
 	return &o, totalLength, nil
 }
 
-// NewP2PkhFromPubKeyHash makes an output to a PKH with a value.
-func NewP2PkhFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Output, error) {
+// NewP2PKHOutputFromPubKeyHash makes an output to a PKH with a value.
+func NewP2PKHOutputFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Output, error) {
 	s, err := script.NewP2PKHFromPubKeyHashStr(publicKeyHash)
 	if err != nil {
 		return nil, err
@@ -67,8 +67,8 @@ func NewP2PkhFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Output, err
 	}, nil
 }
 
-// NewP2PKHFromAddress makes an output to a PKH with a value.
-func NewP2PKHFromAddress(addr string, satoshis uint64) (*Output, error) {
+// NewP2PKHOutputFromAddress makes an output to a PKH with a value.
+func NewP2PKHOutputFromAddress(addr string, satoshis uint64) (*Output, error) {
 	s, err := script.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return nil, err
@@ -80,8 +80,8 @@ func NewP2PKHFromAddress(addr string, satoshis uint64) (*Output, error) {
 	}, nil
 }
 
-// NewHashPuzzle makes an output to a hash puzzle + PKH with a value.
-func NewHashPuzzle(secret string, publicKeyHash string, satoshis uint64) (*Output, error) {
+// NewHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
+func NewHashPuzzleOutput(secret string, publicKeyHash string, satoshis uint64) (*Output, error) {
 	o := Output{}
 	o.Satoshis = satoshis
 
@@ -112,9 +112,9 @@ func NewHashPuzzle(secret string, publicKeyHash string, satoshis uint64) (*Outpu
 	return &o, nil
 }
 
-// NewOpReturn creates a new Output with OP_FALSE OP_RETURN and then the data
+// NewOpReturnOuput creates a new Output with OP_FALSE OP_RETURN and then the data
 // passed in encoded as hex.
-func NewOpReturn(data []byte) (*Output, error) {
+func NewOpReturnOuput(data []byte) (*Output, error) {
 	o, err := createOpReturnOutput([][]byte{data})
 	if err != nil {
 		return nil, err
@@ -123,9 +123,9 @@ func NewOpReturn(data []byte) (*Output, error) {
 	return o, nil
 }
 
-// NewOpReturnParts creates a new Output with OP_FALSE OP_RETURN and then
+// NewOpReturnPartsOutput creates a new Output with OP_FALSE OP_RETURN and then
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
-func NewOpReturnParts(data [][]byte) (*Output, error) {
+func NewOpReturnPartsOutput(data [][]byte) (*Output, error) {
 	o, err := createOpReturnOutput(data)
 	if err != nil {
 		return nil, err

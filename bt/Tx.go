@@ -98,7 +98,7 @@ func NewFromBytes(b []byte) (*Tx, error) {
 	outputCount, size := utils.DecodeVarInt(b[offset:])
 	offset += size
 	for i = 0; i < outputCount; i++ {
-		o, size, err := output.NewFromBytes(b[offset:])
+		o, size, err := output.NewOutputFromBytes(b[offset:])
 		if err != nil {
 			return nil, err
 		}
@@ -163,7 +163,7 @@ func (bt *Tx) AddOutput(output *output.Output) {
 // PayTo creates a new P2PKH output from a BitCoin address (base58)
 // and the satoshis amount and adds thats to the transaction.
 func (bt *Tx) PayTo(addr string, satoshis uint64) error {
-	o, err := output.NewP2PKHFromAddress(addr, satoshis)
+	o, err := output.NewP2PKHOutputFromAddress(addr, satoshis)
 	if err != nil {
 		return err
 	}

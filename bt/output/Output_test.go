@@ -14,7 +14,7 @@ const outputHexStr = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d
 
 func TestNewOutput(t *testing.T) {
 	bytes, _ := hex.DecodeString(outputHexStr)
-	o, s, err := output.NewFromBytes(bytes)
+	o, s, err := output.NewOutputFromBytes(bytes)
 	if err != nil {
 		t.Errorf("Invalid outputHexStr")
 	}
@@ -41,7 +41,7 @@ func TestNewOutput(t *testing.T) {
 func TestNewOutputForPublicKeyHash(t *testing.T) {
 	publicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b" // This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
 	value := uint64(5000)
-	o, err := output.NewP2PkhFromPubKeyHash(publicKeyhash, value)
+	o, err := output.NewP2PKHOutputFromPubKeyHash(publicKeyhash, value)
 	if err != nil {
 		t.Error("Error")
 	}
@@ -55,7 +55,7 @@ func TestNewOutputForHashPuzzle(t *testing.T) {
 	secret := "secret1"
 	addr, _ := address.NewFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
 	value := uint64(5000)
-	o, err := output.NewHashPuzzle(secret, addr.PublicKeyHash, value)
+	o, err := output.NewHashPuzzleOutput(secret, addr.PublicKeyHash, value)
 	if err != nil {
 		t.Error("Error")
 	}
@@ -68,7 +68,7 @@ func TestNewOutputForHashPuzzle(t *testing.T) {
 func TestNewOutputOpReturn(t *testing.T) {
 	data := "On February 4th, 2020 The Return to Genesis was activated to restore the Satoshi Vision for Bitcoin. It is locked in irrevocably by this transaction. Bitcoin can finally be Bitcoin again and the miners can continue to write the Chronicle of everything. Thank you and goodnight from team SV."
 	dataBytes := []byte(data)
-	o, err := output.NewOpReturn(dataBytes)
+	o, err := output.NewOpReturnOuput(dataBytes)
 	if err != nil {
 		t.Error(err)
 		return
@@ -90,7 +90,7 @@ func TestNewOutputOpReturnPush(t *testing.T) {
 	data3 := "are"
 	data4 := "you"
 	dataBytes := [][]byte{[]byte(data1), []byte(data2), []byte(data3), []byte(data4)}
-	o, err := output.NewOpReturnParts(dataBytes)
+	o, err := output.NewOpReturnPartsOutput(dataBytes)
 	if err != nil {
 		t.Error(err)
 		return
