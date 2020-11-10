@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/go-bt/script"
+	"github.com/libsv/go-bt/bscript"
 )
 
 /*
@@ -25,15 +25,15 @@ type Input struct {
 	PreviousTxID       string
 	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
-	PreviousTxScript   *script.Script
-	UnlockingScript    *script.Script
+	PreviousTxScript   *bscript.Script
+	UnlockingScript    *bscript.Script
 	SequenceNumber     uint32
 }
 
 // NewInput creates a new empty Input object with a finalised sequence number.
 func NewInput() *Input {
 	b := make([]byte, 0)
-	s := script.NewFromBytes(b)
+	s := bscript.NewFromBytes(b)
 
 	return &Input{
 		UnlockingScript: s,
@@ -63,7 +63,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 		return nil, 0, fmt.Errorf("input length too short < 36 + script + 4")
 	}
 
-	i.UnlockingScript = script.NewFromBytes(bytes[offset : offset+int(l)])
+	i.UnlockingScript = bscript.NewFromBytes(bytes[offset : offset+int(l)])
 
 	i.SequenceNumber = binary.LittleEndian.Uint32(bytes[offset+int(l):])
 
@@ -72,7 +72,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 
 // NewInputFromUTXO returns a transaction input from the UTXO fields provided.
 func NewInputFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64, prevTxScript string, nSeq uint32) (*Input, error) {
-	pts, err := script.NewFromHexString(prevTxScript)
+	pts, err := bscript.NewFromHexString(prevTxScript)
 	if err != nil {
 		return nil, err
 	}

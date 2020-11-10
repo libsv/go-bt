@@ -1,4 +1,4 @@
-package script
+package bscript
 
 import (
 	"encoding/binary"

@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
-	"github.com/libsv/go-bt/script"
 )
 
 /*
@@ -24,7 +24,7 @@ Txout-script / scriptPubKey   Script                                      <out-s
 // Output is a representation of a transaction output
 type Output struct {
 	Satoshis      uint64
-	LockingScript *script.Script
+	LockingScript *bscript.Script
 }
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
@@ -47,7 +47,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 		return nil, 0, fmt.Errorf("output length too short < 8 + script")
 	}
 
-	s := script.Script(bytes[offset:totalLength])
+	s := bscript.Script(bytes[offset:totalLength])
 	o.LockingScript = &s
 
 	return &o, totalLength, nil
@@ -55,7 +55,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 
 // NewP2PKHOutputFromPubKeyHash makes an output to a PKH with a value.
 func NewP2PKHOutputFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Output, error) {
-	s, err := script.NewP2PKHFromPubKeyHashStr(publicKeyHash)
+	s, err := bscript.NewP2PKHFromPubKeyHashStr(publicKeyHash)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func NewP2PKHOutputFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Outpu
 
 // NewP2PKHOutputFromAddress makes an output to a PKH with a value.
 func NewP2PKHOutputFromAddress(addr string, satoshis uint64) (*Output, error) {
-	s, err := script.NewP2PKHFromAddress(addr)
+	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -89,23 +89,23 @@ func NewHashPuzzleOutput(secret string, publicKeyHash string, satoshis uint64) (
 		return nil, err
 	}
 
-	s := &script.Script{}
+	s := &bscript.Script{}
 
-	s.AppendOpCode(script.OpHASH160)
+	s.AppendOpCode(bscript.OpHASH160)
 	secretBytesHash := crypto.Hash160([]byte(secret))
 	err = s.AppendPushData(secretBytesHash)
 	if err != nil {
 		return nil, err
 	}
-	s.AppendOpCode(script.OpEQUALVERIFY)
-	s.AppendOpCode(script.OpDUP)
-	s.AppendOpCode(script.OpHASH160)
+	s.AppendOpCode(bscript.OpEQUALVERIFY)
+	s.AppendOpCode(bscript.OpDUP)
+	s.AppendOpCode(bscript.OpHASH160)
 	err = s.AppendPushData(publicKeyHashBytes)
 	if err != nil {
 		return nil, err
 	}
-	s.AppendOpCode(script.OpEQUALVERIFY)
-	s.AppendOpCode(script.OpCHECKSIG)
+	s.AppendOpCode(bscript.OpEQUALVERIFY)
+	s.AppendOpCode(bscript.OpCHECKSIG)
 
 	o.LockingScript = s
 	return &o, nil
@@ -134,10 +134,10 @@ func NewOpReturnPartsOutput(data [][]byte) (*Output, error) {
 }
 
 func createOpReturnOutput(data [][]byte) (*Output, error) {
-	s := &script.Script{}
+	s := &bscript.Script{}
 
-	s.AppendOpCode(script.OpFALSE)
-	s.AppendOpCode(script.OpRETURN)
+	s.AppendOpCode(bscript.OpFALSE)
+	s.AppendOpCode(bscript.OpRETURN)
 	err := s.AppendPushDataArray(data)
 	if err != nil {
 		return nil, err

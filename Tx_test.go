@@ -8,7 +8,7 @@ import (
 	"github.com/bitcoinsv/bsvutil"
 
 	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/script"
+	"github.com/libsv/go-bt/bscript"
 )
 
 func TestNew(t *testing.T) {
@@ -53,7 +53,7 @@ func TestNewFromString(t *testing.T) {
 	i.PreviousTxID = "9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c"
 	i.PreviousTxOutIndex = 0
 	i.SequenceNumber = uint32(0xffffffff)
-	i.UnlockingScript, _ = script.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
+	i.UnlockingScript, _ = bscript.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
 	sameInput := reflect.DeepEqual(*tx.Inputs[0], i)
 	if !sameInput {
 		t.Errorf("Input did not match")
@@ -64,7 +64,7 @@ func TestNewFromString(t *testing.T) {
 	if outputLen != 1 {
 		t.Errorf("Expcted output be %v, but got %v", 1, outputLen)
 	}
-	ls, _ := script.NewFromHexString("76a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac")
+	ls, _ := bscript.NewFromHexString("76a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac")
 	o := bt.Output{
 		Satoshis:      4999000000,
 		LockingScript: ls,

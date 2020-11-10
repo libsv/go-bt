@@ -1,4 +1,4 @@
-package address
+package bscript
 
 import (
 	"encoding/hex"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvutil/base58"
+
 	"github.com/libsv/go-bt/crypto"
 )
 
@@ -17,9 +18,9 @@ type Address struct {
 	PublicKeyHash string
 }
 
-// NewFromString takes a string address (P2PKH) and returns a pointer to an Address
+// NewAddressFromString takes a string address (P2PKH) and returns a pointer to an Address
 // which contains the address string as well as the public key hash string.
-func NewFromString(addr string) (*Address, error) {
+func NewAddressFromString(addr string) (*Address, error) {
 	pkh, err := addressToPubKeyHashStr(addr)
 	if err != nil {
 		return nil, err
@@ -55,21 +56,21 @@ func addressToPubKeyHashStr(address string) (string, error) {
 	}
 }
 
-// NewFromPublicKeyString takes a public key string and returns an Address struct pointer.
+// NewAddressFromPublicKeyString takes a public key string and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func NewFromPublicKeyString(pubKey string, mainnet bool) (*Address, error) {
+func NewAddressFromPublicKeyString(pubKey string, mainnet bool) (*Address, error) {
 	pubKeyBytes, err := hex.DecodeString(pubKey)
 	if err != nil {
 		return nil, err
 	}
-	return NewFromPublicKeyHash(crypto.Hash160(pubKeyBytes), mainnet)
+	return NewAddressFromPublicKeyHash(crypto.Hash160(pubKeyBytes), mainnet)
 }
 
-// NewFromPublicKeyHash takes a public key hash in bytes and returns an Address struct pointer.
+// NewAddressFromPublicKeyHash takes a public key hash in bytes and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func NewFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
+func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 
 	// regtest := 111
 	// mainnet: 0
@@ -89,10 +90,10 @@ func NewFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	return &a, nil
 }
 
-// NewFromPublicKey takes a bsvec public key and returns an Address struct pointer.
+// NewAddressFromPublicKey takes a bsvec public key and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func NewFromPublicKey(pubKey *bsvec.PublicKey, mainnet bool) (*Address, error) {
+func NewAddressFromPublicKey(pubKey *bsvec.PublicKey, mainnet bool) (*Address, error) {
 	hash := crypto.Hash160(pubKey.SerializeCompressed())
 
 	// regtest := 111

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/script"
+	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/sighash"
 )
 
@@ -61,7 +61,7 @@ func TestSignatureHashes(t *testing.T) {
 
 			// Add the UTXO amount and script (PreviousTxScript already in unsiged tx)
 			tx.Inputs[test.index].PreviousTxSatoshis = test.previousTxSatoshis
-			tx.Inputs[test.index].PreviousTxScript, _ = script.NewFromHexString(test.previousTxScript)
+			tx.Inputs[test.index].PreviousTxScript, _ = bscript.NewFromHexString(test.previousTxScript)
 
 			actualSigHash, err := tx.GetInputSignatureHash(test.index, sighash.All|sighash.ForkID)
 			if err != nil {

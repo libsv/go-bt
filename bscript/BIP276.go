@@ -1,4 +1,4 @@
-package address
+package bscript
 
 import (
 	"encoding/hex"

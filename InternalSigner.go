@@ -5,8 +5,8 @@ import (
 
 	"github.com/bitcoinsv/bsvd/bsvec"
 
+	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
-	"github.com/libsv/go-bt/script"
 	"github.com/libsv/go-bt/sighash"
 )
 
@@ -34,7 +34,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (*Tx, error) {
 		return nil, err
 	}
 
-	s, err := script.NewP2PKHUnlockingScript(is.PrivateKey.PubKey().SerializeCompressed(), sig.Serialize(), is.SigHashFlag)
+	s, err := bscript.NewP2PKHUnlockingScript(is.PrivateKey.PubKey().SerializeCompressed(), sig.Serialize(), is.SigHashFlag)
 
 	err = unsignedTx.ApplyUnlockingScript(index, s)
 	if err != nil {

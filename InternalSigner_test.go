@@ -7,7 +7,7 @@ import (
 	"github.com/bitcoinsv/bsvutil"
 
 	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/script"
+	"github.com/libsv/go-bt/bscript"
 )
 
 func TestSignAuto(t *testing.T) {
@@ -19,7 +19,7 @@ func TestSignAuto(t *testing.T) {
 	}
 	// Add the UTXO amount and script.
 	tx.Inputs[0].PreviousTxSatoshis = 100000000
-	tx.Inputs[0].PreviousTxScript, _ = script.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+	tx.Inputs[0].PreviousTxScript, _ = bscript.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 
 	// Our private key.
 	wif, err := bsvutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
@@ -74,7 +74,7 @@ func TestSignAuto(t *testing.T) {
 //
 // 	var previousTxSatoshis uint64 = 15564838601
 //
-// 	var previousTxScript, _ = script.NewFromHexString("76a914c7c6987b6e2345a6b138e3384141520a0fbc18c588ac")
+// 	var previousTxScript, _ = bscript.NewFromHexString("76a914c7c6987b6e2345a6b138e3384141520a0fbc18c588ac")
 // 	var prevIndex, outIndex uint32
 //
 // 	sighash := signature.GetSighashForInputValidation(tx, uint32(sigHashType), outIndex, prevIndex, previousTxSatoshis, previousTxScript)
@@ -119,7 +119,7 @@ func TestSignAuto(t *testing.T) {
 //
 // 	var previousTxSatoshis uint64 = 5000000000
 //
-// 	var previousTxScript, _ = script.NewFromHexString("76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac")
+// 	var previousTxScript, _ = bscript.NewFromHexString("76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac")
 // 	var prevIndex uint32 = 1
 // 	var outIndex uint32
 //
@@ -191,7 +191,7 @@ func TestSignAuto(t *testing.T) {
 // 	sigHashTypes[1] = uint32(sig1HashType)
 //
 // 	var previousTxSatoshis uint64 = 99728
-// 	var previousTxScript, _ = script.NewFromHexString("5221023ff15e2676e03b2c0af30fc17b7fb354bbfa9f549812da945194d3407dc0969b21039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a32103ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e53ae")
+// 	var previousTxScript, _ = bbscript.NewFromHexString("5221023ff15e2676e03b2c0af30fc17b7fb354bbfa9f549812da945194d3407dc0969b21039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a32103ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e53ae")
 // 	var prevIndex uint32
 // 	var outIndex uint32
 //
@@ -267,7 +267,7 @@ func TestSignAuto(t *testing.T) {
 // 	sigHashTypes[1] = uint32(sig1HashType)
 //
 // 	var previousTxSatoshis uint64 = 8785040
-// 	var previousTxScript, _ = script.NewFromHexString("5221021db57ae3de17143cb6c314fb206b56956e8ed45e2f1cbad3947411228b8d17f1210308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee419421030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd953ae")
+// 	var previousTxScript, _ = bscript.NewFromHexString("5221021db57ae3de17143cb6c314fb206b56956e8ed45e2f1cbad3947411228b8d17f1210308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee419421030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd953ae")
 // 	var prevIndex uint32 = 1
 // 	var outIndex uint32 = 0
 //

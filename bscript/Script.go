@@ -1,4 +1,4 @@
-package script
+package bscript
 
 import (
 	"encoding/hex"
@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/libsv/go-bt/crypto"
-	"github.com/libsv/go-bt/script/address"
 )
 
 // Script type
@@ -102,7 +101,7 @@ func NewP2PKHFromPubKeyHashStr(pubKeyHash string) (*Script, error) {
 // and creates a P2PKH script from it.
 func NewP2PKHFromAddress(addr string) (*Script, error) {
 
-	a, err := address.NewFromString(addr)
+	a, err := NewAddressFromString(addr)
 	if err != nil {
 		return nil, err
 	}

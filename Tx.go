@@ -8,8 +8,8 @@ import (
 
 	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
 
+	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
-	"github.com/libsv/go-bt/script"
 )
 
 /*
@@ -122,7 +122,7 @@ func (tx *Tx) AddInput(input *Input) {
 
 // From adds a new input to the transaction from the specified UTXO fields.
 func (tx *Tx) From(txID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
-	pts, err := script.NewFromHexString(prevTxLockingScript)
+	pts, err := bscript.NewFromHexString(prevTxLockingScript)
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func (tx *Tx) PayTo(addr string, satoshis uint64) error {
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new P2PKH output using the address provided.
 func (tx *Tx) ChangeToAddress(addr string, f []*mapi.Fee) error {
-	s, err := script.NewP2PKHFromAddress(addr)
+	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (tx *Tx) ChangeToAddress(addr string, f []*mapi.Fee) error {
 
 // Change calculates the amount of fees needed to cover the transaction
 //  and adds the left over change in a new output using the script provided.
-func (tx *Tx) Change(s *script.Script, f []*mapi.Fee) error {
+func (tx *Tx) Change(s *bscript.Script, f []*mapi.Fee) error {
 
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
@@ -444,7 +444,7 @@ func (tx *Tx) SignAuto(s Signer) error {
 
 // ApplyUnlockingScript applies a script to the transaction at a specific index in
 // unlocking script field.
-func (tx *Tx) ApplyUnlockingScript(index uint32, s *script.Script) error {
+func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
 	if tx.Inputs[index] != nil {
 		tx.Inputs[index].UnlockingScript = s
 		return nil
