@@ -1,19 +1,19 @@
-# LiBSV
+# go-bt
 
-The go-to Bitcoin GoLang library.  
+> The go-to Bitcoin Transaction (BT) GoLang library.  
 
 For more information around the technical aspects of Bitcoin, please see the updated [Bitcoin Wiki](https://wiki.bitcoinsv.io/index.php/Main_Page).
 
 ## Documentation
 
-Check the [GoDoc](https://pkg.go.dev/mod/github.com/libsv/libsv) documentation.
+Check the [GoDoc](https://pkg.go.dev/mod/github.com/libsv/go-bt) documentation.
 
 ## Installation
 
 **Install with [go](https://formulae.brew.sh/formula/go)**
 
 ```console
-$ go get github.com/libsv/libsv
+$ go get github.com/libsv/go-bt
 ```
 
 ## Tests
@@ -29,7 +29,7 @@ $ make test
 
 #### Regular P2PKH
 ```go
-	tx := bt.New()
+	tx := bt.NewTx()
 
 	tx.From(
 		"11b476ad8e0a48fcd40807a111a050af51114877e09283bfa7f3505081a1819d",
@@ -41,9 +41,9 @@ $ make test
 
 	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
-  err := tx.SignAuto(&signer)
-  if err != nil {
+	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	err := tx.SignAuto(&signer)
+	if err != nil {
 		fmt.Errorf(err.Error())
 	}
 
@@ -57,7 +57,7 @@ prints:
 
 #### Regular P2PKH + OP_RETURN output
 ```go
-	tx := bt.New()
+	tx := bt.NewTx()
 
 	err := tx.From(
 		"b7b0650a7c3a1bd4716369783876348b59f5404784970192cec1996e86950576",
@@ -67,7 +67,7 @@ prints:
 
 	tx.PayTo("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 900)
 
-	o, err := output.NewOpReturn([]byte("You are using LiBSV!"))
+	o, err := bt.NewOpReturnOuput([]byte("You are using LiBSV!"))
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -76,7 +76,7 @@ prints:
 
 	wif, _ := bsvutil.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
 
-	signer := sig.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
 	err = tx.SignAuto(&signer)
 	if err != nil {
 		fmt.Println(err.Error())
