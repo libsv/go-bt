@@ -10,7 +10,6 @@ import (
 
 	"github.com/libsv/libsv/crypto"
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/utils"
 )
 
 /*
@@ -390,7 +389,7 @@ func (tx *Tx) ToBytesWithClearedInputs(index int, lockingScript []byte) []byte {
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 	h := make([]byte, 0)
 
-	h = append(h, utils.GetLittleEndianBytes(tx.Version, 4)...)
+	h = append(h, GetLittleEndianBytes(tx.Version, 4)...)
 
 	h = append(h, VarInt(uint64(len(tx.GetInputs())))...)
 

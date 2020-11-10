@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/libsv/libsv/script"
-	"github.com/libsv/libsv/utils"
 )
 
 /*
@@ -105,7 +104,7 @@ func (i *Input) ToBytes(clear bool) []byte {
 	pid, _ := hex.DecodeString(i.PreviousTxID)
 
 	h = append(h, ReverseBytes(pid)...)
-	h = append(h, utils.GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
+	h = append(h, GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		h = append(h, 0x00)
 	} else {
@@ -116,7 +115,7 @@ func (i *Input) ToBytes(clear bool) []byte {
 			h = append(h, *i.UnlockingScript...)
 		}
 	}
-	h = append(h, utils.GetLittleEndianBytes(i.SequenceNumber, 4)...)
+	h = append(h, GetLittleEndianBytes(i.SequenceNumber, 4)...)
 
 	return h
 }
