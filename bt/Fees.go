@@ -1,4 +1,4 @@
-package fees
+package bt
 
 import (
 	"errors"

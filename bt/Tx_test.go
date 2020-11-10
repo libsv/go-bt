@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/bitcoinsv/bsvutil"
+
 	"github.com/libsv/libsv/bt"
-	"github.com/libsv/libsv/bt/fees"
 	"github.com/libsv/libsv/bt/input"
 	"github.com/libsv/libsv/bt/output"
 	"github.com/libsv/libsv/bt/sig"
@@ -212,7 +212,7 @@ func TestChange(t *testing.T) {
 		"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 		4000000)
 
-	tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fees.Default())
+	tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.Default())
 
 	wif, _ := bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 

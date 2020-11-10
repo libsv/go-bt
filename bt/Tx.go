@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
-	"github.com/libsv/libsv/bt/fees"
+
 	"github.com/libsv/libsv/bt/input"
 	"github.com/libsv/libsv/bt/output"
 	"github.com/libsv/libsv/crypto"
@@ -85,7 +85,7 @@ func NewFromBytes(b []byte) (*Tx, error) {
 	// create inputs
 	var i uint64
 	for ; i < inputCount; i++ {
-		i, size, err := input.NewFromBytes(b[offset:])
+		i, size, err := input.NewInputFromBytes(b[offset:])
 		if err != nil {
 			return nil, err
 		}
@@ -196,7 +196,7 @@ func (bt *Tx) Change(s *script.Script, f []*mapi.Fee) error {
 
 	available := inputAmount - outputAmount
 
-	stdFees, err := fees.GetStandardFee(f)
+	stdFees, err := GetStandardFee(f)
 	if err != nil {
 		return err
 	}
@@ -254,14 +254,14 @@ func (bt *Tx) getPresignedFeeRequired(f []*mapi.Fee) (feeRequired uint64, err er
 
 	stdBytes, dataBytes := bt.getStandardAndDataBytes()
 
-	stdFee, err := fees.GetStandardFee(f)
+	stdFee, err := GetStandardFee(f)
 	if err != nil {
 		return 0, err
 	}
 
 	fr := stdBytes * stdFee.MiningFee.Satoshis / stdFee.MiningFee.Bytes
 
-	dataFee, err := fees.GetDataFee(f)
+	dataFee, err := GetDataFee(f)
 	if err != nil {
 		return 0, err
 	}
@@ -274,7 +274,7 @@ func (bt *Tx) getPresignedFeeRequired(f []*mapi.Fee) (feeRequired uint64, err er
 
 func (bt *Tx) getExpectedUnlockingScriptFees(f []*mapi.Fee) (feeRequired uint64, err error) {
 
-	stdFee, err := fees.GetStandardFee(f)
+	stdFee, err := GetStandardFee(f)
 	if err != nil {
 		return 0, err
 	}
