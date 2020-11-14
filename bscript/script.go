@@ -124,7 +124,8 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 	return s, nil
 }
 
-// AppendPushData takes data bytes and appends them to the script with proper PUSHDATA prefixes
+// AppendPushData takes data bytes and appends them to the script
+// with proper PUSHDATA prefixes
 func (s *Script) AppendPushData(d []byte) error {
 	p, err := EncodeParts([][]byte{d})
 	if err != nil {
@@ -135,7 +136,8 @@ func (s *Script) AppendPushData(d []byte) error {
 	return nil
 }
 
-// AppendPushDataHexString takes a hex string and appends them to the script with proper PUSHDATA prefixes
+// AppendPushDataHexString takes a hex string and appends them to the
+// script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataHexString(str string) error {
 	h, err := hex.DecodeString(str)
 	if err != nil {
@@ -145,12 +147,14 @@ func (s *Script) AppendPushDataHexString(str string) error {
 	return s.AppendPushData(h)
 }
 
-// AppendPushDataString takes a string and appends its UTF-8 encoding to the script with proper PUSHDATA prefixes
+// AppendPushDataString takes a string and appends its UTF-8 encoding
+// to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataString(str string) error {
 	return s.AppendPushData([]byte(str))
 }
 
-// AppendPushDataArray takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
+// AppendPushDataArray takes an array of data bytes and appends them
+// to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataArray(d [][]byte) error {
 	p, err := EncodeParts(d)
 	if err != nil {
@@ -161,7 +165,8 @@ func (s *Script) AppendPushDataArray(d [][]byte) error {
 	return nil
 }
 
-// AppendPushDataStrings takes an array of strings and appends their UTF-8 encoding to the script with proper PUSHDATA prefixes
+// AppendPushDataStrings takes an array of strings and appends their
+// UTF-8 encoding to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataStrings(strs []string) error {
 	dataBytes := make([][]byte, 0)
 	for _, str := range strs {
