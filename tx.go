@@ -32,12 +32,15 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
                  timestamp when transaction is final
 */
 
-// A Tx wraps a bitcoin transaction
+// Tx wraps a bitcoin transaction
+//
+// DO NOT CHANGE ORDER - Optimized memory via malign
+//
 type Tx struct {
 	// TODO: make variables private?
-	Version  uint32
 	Inputs   []*Input
 	Outputs  []*Output
+	Version  uint32
 	Locktime uint32
 }
 
