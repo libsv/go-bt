@@ -22,7 +22,7 @@ func Sha256d(b []byte) []byte {
 // Ripemd160 hashes with RIPEMD160
 func Ripemd160(b []byte) []byte {
 	ripe := ripemd160.New()
-	ripe.Write(b[:])
+	_, _ = ripe.Write(b[:])
 	return ripe.Sum(nil)
 }
 
