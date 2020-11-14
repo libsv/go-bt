@@ -173,7 +173,7 @@ func (o *Output) ToBytes() []byte {
 	return h
 }
 
-// GetBytesForSigHash returns the proper serialisation
+// GetBytesForSigHash returns the proper serialization
 // of an output to be hashed and signed (sighash).
 func (o *Output) GetBytesForSigHash() []byte {
 	buf := make([]byte, 0)

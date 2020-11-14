@@ -33,7 +33,7 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
-// NewInput creates a new empty Input object with a finalised sequence number.
+// NewInput creates a new empty Input object with a finalized sequence number.
 func NewInput() *Input {
 	b := make([]byte, 0)
 	s := bscript.NewFromBytes(b)

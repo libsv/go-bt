@@ -9,7 +9,7 @@ import (
 	"github.com/libsv/go-bt/sighash"
 )
 
-// TODO: change to "serialise tx"
+// TODO: change to "serialize tx"
 
 // GetInputSignatureHash serializes the transaction based on the input index and the SIGHASH flag
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
