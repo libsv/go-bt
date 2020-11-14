@@ -71,7 +71,7 @@ prints:
 
 	tx.PayTo("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 900)
 
-	o, err := bt.NewOpReturnOuput([]byte("You are using LiBSV!"))
+	o, err := bt.NewOpReturnOutput([]byte("You are using LiBSV!"))
 	if err != nil {
 		fmt.Println(err.Error())
 	}

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
+	"github.com/bitcoin-sv/merchantapi-reference/utils"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
 )
@@ -160,12 +160,11 @@ func (tx *Tx) OutputCount() int {
 
 // AddOutput adds a new output to the transaction.
 func (tx *Tx) AddOutput(output *Output) {
-
 	tx.Outputs = append(tx.Outputs, output)
 }
 
 // PayTo creates a new P2PKH output from a BitCoin address (base58)
-// and the satoshis amount and adds thats to the transaction.
+// and the satoshis amount and adds that to the transaction.
 func (tx *Tx) PayTo(addr string, satoshis uint64) error {
 	o, err := NewP2PKHOutputFromAddress(addr, satoshis)
 	if err != nil {
@@ -178,7 +177,7 @@ func (tx *Tx) PayTo(addr string, satoshis uint64) error {
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new P2PKH output using the address provided.
-func (tx *Tx) ChangeToAddress(addr string, f []*mapi.Fee) error {
+func (tx *Tx) ChangeToAddress(addr string, f []*utils.Fee) error {
 	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return err
@@ -189,7 +188,7 @@ func (tx *Tx) ChangeToAddress(addr string, f []*mapi.Fee) error {
 
 // Change calculates the amount of fees needed to cover the transaction
 //  and adds the left over change in a new output using the script provided.
-func (tx *Tx) Change(s *bscript.Script, f []*mapi.Fee) error {
+func (tx *Tx) Change(s *bscript.Script, f []*utils.Fee) error {
 
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
@@ -209,23 +208,22 @@ func (tx *Tx) Change(s *bscript.Script, f []*mapi.Fee) error {
 		return nil
 	}
 
-	o := Output{
+	tx.AddOutput(&Output{
 		Satoshis:      0,
 		LockingScript: s,
-	}
-	tx.AddOutput(&o)
+	})
 
-	presignedFeeRequired, err := tx.getPresignedFeeRequired(f)
-	if err != nil {
+	var preSignedFeeRequired uint64
+	if preSignedFeeRequired, err = tx.getPresignedFeeRequired(f); err != nil {
 		return err
 	}
 
-	expectedUnlockingScriptFees, err := tx.getExpectedUnlockingScriptFees(f)
-	if err != nil {
+	var expectedUnlockingScriptFees uint64
+	if expectedUnlockingScriptFees, err = tx.getExpectedUnlockingScriptFees(f); err != nil {
 		return err
 	}
 
-	available -= (presignedFeeRequired + expectedUnlockingScriptFees)
+	available -= preSignedFeeRequired + expectedUnlockingScriptFees
 
 	// add rest of available sats to the change output
 	tx.Outputs[len(tx.GetOutputs())-1].Satoshis = available
@@ -233,16 +231,16 @@ func (tx *Tx) Change(s *bscript.Script, f []*mapi.Fee) error {
 	return nil
 }
 
-func (tx *Tx) canAddChange(available uint64, stdFees *mapi.Fee) bool {
+func (tx *Tx) canAddChange(available uint64, stdFees *utils.Fee) bool {
 
 	outputLen := tx.OutputCount()
-	viuli := VarIntUpperLimitInc(uint64(outputLen))
+	varIntUpper := VarIntUpperLimitInc(uint64(outputLen))
 
-	if viuli == -1 {
+	if varIntUpper == -1 {
 		return false // upper limit of outputs in one tx reached
 	}
 
-	changeOutputFee := uint64(viuli)
+	changeOutputFee := uint64(varIntUpper)
 
 	changeP2pkhByteLen := 8 + 25 // 8 bytes for satoshi value + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
 	changeOutputFee += uint64(changeP2pkhByteLen * stdFees.MiningFee.Satoshis / stdFees.MiningFee.Bytes)
@@ -251,7 +249,7 @@ func (tx *Tx) canAddChange(available uint64, stdFees *mapi.Fee) bool {
 	return available >= changeOutputFee
 }
 
-func (tx *Tx) getPresignedFeeRequired(f []*mapi.Fee) (feeRequired uint64, err error) {
+func (tx *Tx) getPresignedFeeRequired(f []*utils.Fee) (uint64, error) {
 
 	stdBytes, dataBytes := tx.getStandardAndDataBytes()
 
@@ -262,18 +260,17 @@ func (tx *Tx) getPresignedFeeRequired(f []*mapi.Fee) (feeRequired uint64, err er
 
 	fr := stdBytes * stdFee.MiningFee.Satoshis / stdFee.MiningFee.Bytes
 
-	dataFee, err := GetDataFee(f)
-	if err != nil {
+	var dataFee *utils.Fee
+	if dataFee, err = GetDataFee(f); err != nil {
 		return 0, err
 	}
 
 	fr += dataBytes * dataFee.MiningFee.Satoshis / dataFee.MiningFee.Bytes
 
 	return uint64(fr), nil
-
 }
 
-func (tx *Tx) getExpectedUnlockingScriptFees(f []*mapi.Fee) (feeRequired uint64, err error) {
+func (tx *Tx) getExpectedUnlockingScriptFees(f []*utils.Fee) (uint64, error) {
 
 	stdFee, err := GetStandardFee(f)
 	if err != nil {
@@ -289,13 +286,11 @@ func (tx *Tx) getExpectedUnlockingScriptFees(f []*mapi.Fee) (feeRequired uint64,
 		expectedBytes += 109 // = 1 oppushdata + 70-73 sig + 1 sighash + 1 oppushdata + 33 public key
 	}
 
-	fr := expectedBytes * stdFee.MiningFee.Satoshis / stdFee.MiningFee.Bytes
-
-	return uint64(fr), nil
+	return uint64(expectedBytes * stdFee.MiningFee.Satoshis / stdFee.MiningFee.Bytes), nil
 }
 
-func (tx *Tx) getStandardAndDataBytes() (stdBytes int, dataBytes int) {
-	// Sutxract the value of each output as well as keeping track of data outputs
+func (tx *Tx) getStandardAndDataBytes() (stdBytes, dataBytes int) {
+	// Subtract the value of each output as well as keeping track of data outputs
 	for _, out := range tx.GetOutputs() {
 		if out.LockingScript.IsData() && len(*out.LockingScript) > 0 {
 			dataBytes += len(*out.LockingScript)
@@ -309,7 +304,7 @@ func (tx *Tx) getStandardAndDataBytes() (stdBytes int, dataBytes int) {
 
 // HasDataOutputs returns true if the transaction has
 // at least one data (OP_RETURN) output in it.
-func (tx *Tx) HasDataOutputs() (hasDataOutputs bool) {
+func (tx *Tx) HasDataOutputs() bool {
 	for _, out := range tx.GetOutputs() {
 		if out.LockingScript.IsData() {
 			return true
@@ -326,6 +321,7 @@ func (tx *Tx) IsCoinbase() bool {
 		return false
 	}
 
+	// todo: make constant(s)?
 	if tx.Inputs[0].PreviousTxID != "0000000000000000000000000000000000000000000000000000000000000000" {
 		return false
 	}
@@ -343,13 +339,11 @@ func (tx *Tx) GetInputs() []*Input {
 }
 
 // GetTotalInputSatoshis returns the total Satoshis inputted to the transaction.
-func (tx *Tx) GetTotalInputSatoshis() uint64 {
-	var total uint64
+func (tx *Tx) GetTotalInputSatoshis() (total uint64) {
 	for _, in := range tx.GetInputs() {
 		total += in.PreviousTxSatoshis
 	}
-
-	return total
+	return
 }
 
 // GetOutputs returns an array of all outputs in the transaction.
@@ -358,13 +352,11 @@ func (tx *Tx) GetOutputs() []*Output {
 }
 
 // GetTotalOutputSatoshis returns the total Satoshis outputted from the transaction.
-func (tx *Tx) GetTotalOutputSatoshis() uint64 {
-	var total uint64
+func (tx *Tx) GetTotalOutputSatoshis() (total uint64) {
 	for _, o := range tx.GetOutputs() {
 		total += o.Satoshis
 	}
-
-	return total
+	return
 }
 
 // GetTxID returns the transaction ID of the transaction

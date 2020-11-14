@@ -67,7 +67,7 @@ func TestNewOutputForHashPuzzle(t *testing.T) {
 func TestNewOutputOpReturn(t *testing.T) {
 	data := "On February 4th, 2020 The Return to Genesis was activated to restore the Satoshi Vision for Bitcoin. It is locked in irrevocably by this transaction. Bitcoin can finally be Bitcoin again and the miners can continue to write the Chronicle of everything. Thank you and goodnight from team SV."
 	dataBytes := []byte(data)
-	o, err := bt.NewOpReturnOuput(dataBytes)
+	o, err := bt.NewOpReturnOutput(dataBytes)
 	if err != nil {
 		t.Error(err)
 		return

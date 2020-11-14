@@ -80,7 +80,7 @@ func NewP2PKHOutputFromAddress(addr string, satoshis uint64) (*Output, error) {
 }
 
 // NewHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
-func NewHashPuzzleOutput(secret string, publicKeyHash string, satoshis uint64) (*Output, error) {
+func NewHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) (*Output, error) {
 	o := Output{}
 	o.Satoshis = satoshis
 
@@ -111,26 +111,16 @@ func NewHashPuzzleOutput(secret string, publicKeyHash string, satoshis uint64) (
 	return &o, nil
 }
 
-// NewOpReturnOuput creates a new Output with OP_FALSE OP_RETURN and then the data
+// NewOpReturnOutput creates a new Output with OP_FALSE OP_RETURN and then the data
 // passed in encoded as hex.
-func NewOpReturnOuput(data []byte) (*Output, error) {
-	o, err := createOpReturnOutput([][]byte{data})
-	if err != nil {
-		return nil, err
-	}
-
-	return o, nil
+func NewOpReturnOutput(data []byte) (*Output, error) {
+	return createOpReturnOutput([][]byte{data})
 }
 
 // NewOpReturnPartsOutput creates a new Output with OP_FALSE OP_RETURN and then
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
 func NewOpReturnPartsOutput(data [][]byte) (*Output, error) {
-	o, err := createOpReturnOutput(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return o, nil
+	return createOpReturnOutput(data)
 }
 
 func createOpReturnOutput(data [][]byte) (*Output, error) {
