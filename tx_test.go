@@ -16,8 +16,6 @@ func TestNewTx(t *testing.T) {
 
 	tx := bt.NewTx()
 	assert.NotNil(t, tx)
-
-	// check version
 	assert.Equal(t, uint32(1), tx.Version)
 	assert.Equal(t, uint32(0), tx.Locktime)
 }
@@ -92,21 +90,6 @@ func TestTx_GetTotalOutputSatoshis(t *testing.T) {
 	assert.Equal(t, uint64((29.89999582+20.00)*1e8), tx.GetTotalOutputSatoshis())
 }
 
-func TestRegTestCoinbase(t *testing.T) {
-	t.Parallel()
-
-	rawTx := "02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0e5101010a2f4542323030302e302fffffffff0100f2052a01000000232103db233bb9fc387d78b133ec904069d46e95ff17da657671b44afa0bc64e89ac18ac00000000"
-	tx, err := bt.NewTxFromString(rawTx)
-	assert.NoError(t, err)
-	assert.NotNil(t, tx)
-
-	// Check if coinbase transaction
-	assert.Equal(t, true, tx.IsCoinbase())
-
-	// Check input count
-	assert.Equal(t, 1, tx.InputCount())
-}
-
 func TestGetVersion(t *testing.T) {
 	t.Parallel()
 
@@ -117,27 +100,37 @@ func TestGetVersion(t *testing.T) {
 	assert.Equal(t, uint32(1), tx.Version)
 }
 
-func TestIsCoinbase(t *testing.T) {
+func TestTx_IsCoinbase(t *testing.T) {
 	t.Parallel()
 
-	const coinbase = "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4303bfea07322f53696d6f6e204f726469736820616e642053747561727420467265656d616e206d61646520746869732068617070656e2f9a46434790f7dbdea3430000ffffffff018a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
-	bt1, err := bt.NewTxFromString(coinbase)
-	assert.NoError(t, err)
-	assert.NotNil(t, bt1)
+	t.Run("valid coinbase tx, 1 input", func(t *testing.T) {
+		rawTx := "02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0e5101010a2f4542323030302e302fffffffff0100f2052a01000000232103db233bb9fc387d78b133ec904069d46e95ff17da657671b44afa0bc64e89ac18ac00000000"
+		tx, err := bt.NewTxFromString(rawTx)
+		assert.NoError(t, err)
+		assert.NotNil(t, tx)
 
-	assert.Equal(t, true, bt1.IsCoinbase())
+		assert.Equal(t, true, tx.IsCoinbase())
+		assert.Equal(t, 1, tx.InputCount())
+	})
 
-	const tx = "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
+	t.Run("valid coinbase tx", func(t *testing.T) {
+		coinbaseTx := "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff4303bfea07322f53696d6f6e204f726469736820616e642053747561727420467265656d616e206d61646520746869732068617070656e2f9a46434790f7dbdea3430000ffffffff018a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
+		tx, err := bt.NewTxFromString(coinbaseTx)
+		assert.NoError(t, err)
+		assert.NotNil(t, tx)
+		assert.Equal(t, true, tx.IsCoinbase())
+	})
 
-	var bt2 *bt.Tx
-	bt2, err = bt.NewTxFromString(tx)
-	assert.NoError(t, err)
-	assert.NotNil(t, bt2)
-
-	assert.Equal(t, false, bt2.IsCoinbase())
+	t.Run("tx is not a coinbase tx", func(t *testing.T) {
+		coinbaseTx := "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
+		tx, err := bt.NewTxFromString(coinbaseTx)
+		assert.NoError(t, err)
+		assert.NotNil(t, tx)
+		assert.Equal(t, false, tx.IsCoinbase())
+	})
 }
 
-func TestCreateTx(t *testing.T) {
+func TestTx_CreateTx(t *testing.T) {
 	t.Parallel()
 
 	tx := bt.NewTx()
@@ -163,7 +156,7 @@ func TestCreateTx(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestChange(t *testing.T) {
+func TestTx_Change(t *testing.T) {
 	t.Parallel()
 
 	expectedTx, err := bt.NewTxFromString("01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a473044022049ee0c0f26c00e6a6b3af5990fc8296c66eab3e3e42ab075069b89b1be6fefec02206079e49dd8c9e1117ef06fbe99714d822620b1f0f5d19f32a1128f5d29b7c3c4412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff01a0083d00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000")
