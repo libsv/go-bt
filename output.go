@@ -33,10 +33,6 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 		return nil, 0, fmt.Errorf("output length too short < 8")
 	}
 
-	o := Output{}
-
-	o.Satoshis = binary.LittleEndian.Uint64(bytes[0:8])
-
 	offset := 8
 	l, size := DecodeVarInt(bytes[offset:])
 	offset += size
@@ -48,9 +44,11 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	}
 
 	s := bscript.Script(bytes[offset:totalLength])
-	o.LockingScript = &s
 
-	return &o, totalLength, nil
+	return &Output{
+		Satoshis:      binary.LittleEndian.Uint64(bytes[0:8]),
+		LockingScript: &s,
+	}, totalLength, nil
 }
 
 // NewP2PKHOutputFromPubKeyHash makes an output to a PKH with a value.
@@ -81,8 +79,6 @@ func NewP2PKHOutputFromAddress(addr string, satoshis uint64) (*Output, error) {
 
 // NewHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
 func NewHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) (*Output, error) {
-	o := Output{}
-	o.Satoshis = satoshis
 
 	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
 	if err != nil {
@@ -93,22 +89,24 @@ func NewHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) (*Output
 
 	s.AppendOpCode(bscript.OpHASH160)
 	secretBytesHash := crypto.Hash160([]byte(secret))
-	err = s.AppendPushData(secretBytesHash)
-	if err != nil {
+
+	if err = s.AppendPushData(secretBytesHash); err != nil {
 		return nil, err
 	}
 	s.AppendOpCode(bscript.OpEQUALVERIFY)
 	s.AppendOpCode(bscript.OpDUP)
 	s.AppendOpCode(bscript.OpHASH160)
-	err = s.AppendPushData(publicKeyHashBytes)
-	if err != nil {
+
+	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
 		return nil, err
 	}
 	s.AppendOpCode(bscript.OpEQUALVERIFY)
 	s.AppendOpCode(bscript.OpCHECKSIG)
 
-	o.LockingScript = s
-	return &o, nil
+	return &Output{
+		Satoshis:      satoshis,
+		LockingScript: s,
+	}, nil
 }
 
 // NewOpReturnOutput creates a new Output with OP_FALSE OP_RETURN and then the data
@@ -132,9 +130,8 @@ func createOpReturnOutput(data [][]byte) (*Output, error) {
 	if err != nil {
 		return nil, err
 	}
-	o := Output{}
-	o.LockingScript = s
-	return &o, nil
+
+	return &Output{LockingScript: s}, nil
 }
 
 // GetLockingScriptHexString returns the locking script
