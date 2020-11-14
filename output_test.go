@@ -12,7 +12,7 @@ import (
 
 const outputHexStr = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
 
-func TestNewOutput(t *testing.T) {
+func TestNewOutputFromBytes(t *testing.T) {
 	t.Parallel()
 
 	bytes, err := hex.DecodeString(outputHexStr)
@@ -30,7 +30,7 @@ func TestNewOutput(t *testing.T) {
 	assert.Equal(t, "76a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac", o.GetLockingScriptHexString())
 }
 
-func TestNewOutputForPublicKeyHash(t *testing.T) {
+func TestNewP2PKHOutputFromPubKeyHash(t *testing.T) {
 	t.Parallel()
 
 	// This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
@@ -46,7 +46,7 @@ func TestNewOutputForPublicKeyHash(t *testing.T) {
 	)
 }
 
-func TestNewOutputForHashPuzzle(t *testing.T) {
+func TestNewHashPuzzleOutput(t *testing.T) {
 	t.Parallel()
 
 	addr, err := bscript.NewAddressFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
@@ -63,7 +63,7 @@ func TestNewOutputForHashPuzzle(t *testing.T) {
 	)
 }
 
-func TestNewOutputOpReturn(t *testing.T) {
+func TestNewOpReturnOutput(t *testing.T) {
 	t.Parallel()
 
 	data := "On February 4th, 2020 The Return to Genesis was activated to restore the Satoshi Vision for Bitcoin. " +
@@ -81,7 +81,7 @@ func TestNewOutputOpReturn(t *testing.T) {
 	assert.Equal(t, "fd2201", fmt.Sprintf("%x", dataLength))
 }
 
-func TestNewOutputOpReturnPush(t *testing.T) {
+func TestNewOpReturnPartsOutput(t *testing.T) {
 	t.Parallel()
 
 	dataBytes := [][]byte{[]byte("hi"), []byte("how"), []byte("are"), []byte("you")}

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEncode(t *testing.T) {
+func TestEncodeBIP276(t *testing.T) {
 	t.Parallel()
 
 	s := bscript.EncodeBIP276(
@@ -21,7 +21,7 @@ func TestEncode(t *testing.T) {
 	assert.Equal(t, "bitcoin-script:010166616b65207363726970746f0cd86a", s)
 }
 
-func TestDecode(t *testing.T) {
+func TestDecodeBIP276(t *testing.T) {
 	t.Parallel()
 
 	prefix, network, version, data, err := bscript.DecodeBIP276("bitcoin-script:010166616b65207363726970746f0cd86a")

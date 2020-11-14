@@ -11,81 +11,78 @@ import (
 
 const testPublicKeyHash = "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"
 
-func TestNewFromStringMainnet(t *testing.T) {
+func TestNewAddressFromString(t *testing.T) {
 	t.Parallel()
 
-	addressMain := "1E7ucTTWRTahCyViPhxSMor2pj4VGQdFMr"
-	expectedPublicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
+	t.Run("mainnet", func(t *testing.T) {
+		addressMain := "1E7ucTTWRTahCyViPhxSMor2pj4VGQdFMr"
 
-	addr, err := bscript.NewAddressFromString(addressMain)
-	assert.NoError(t, err)
-	assert.NotNil(t, addr)
+		addr, err := bscript.NewAddressFromString(addressMain)
+		assert.NoError(t, err)
+		assert.NotNil(t, addr)
 
-	assert.Equal(t, expectedPublicKeyhash, addr.PublicKeyHash, addressMain)
-	assert.Equal(t, addressMain, addr.AddressString)
+		assert.Equal(t, "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b", addr.PublicKeyHash, addressMain)
+		assert.Equal(t, addressMain, addr.AddressString)
+	})
+
+	t.Run("testnet", func(t *testing.T) {
+		addressTestnet := "mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd"
+
+		addr, err := bscript.NewAddressFromString(addressTestnet)
+		assert.NoError(t, err)
+		assert.NotNil(t, addr)
+
+		assert.Equal(t, "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b", addr.PublicKeyHash, addressTestnet)
+		assert.Equal(t, addressTestnet, addr.AddressString)
+	})
+
+	t.Run("short address", func(t *testing.T) {
+		shortAddress := "ADD8E55"
+		addr, err := bscript.NewAddressFromString(shortAddress)
+		assert.Error(t, err)
+		assert.Nil(t, addr)
+		assert.EqualError(t, err, "invalid address length for '"+shortAddress+"'")
+	})
+
+	t.Run("unsupported address", func(t *testing.T) {
+		unsupportedAddress := "27BvY7rFguYQvEL872Y7Fo77Y3EBApC2EK"
+		addr, err := bscript.NewAddressFromString(unsupportedAddress)
+		assert.Error(t, err)
+		assert.Nil(t, addr)
+		assert.EqualError(t, err, "address "+unsupportedAddress+" is not supported")
+	})
+
 }
 
-func TestNewFromStringTestnet(t *testing.T) {
+func TestNewAddressFromPublicKeyString(t *testing.T) {
 	t.Parallel()
 
-	addressTestnet := "mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd"
-	expectedPublicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
+	t.Run("mainnet", func(t *testing.T) {
+		addr, err := bscript.NewAddressFromPublicKeyString(
+			"026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce",
+			true,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, addr)
 
-	addr, err := bscript.NewAddressFromString(addressTestnet)
-	assert.NoError(t, err)
-	assert.NotNil(t, addr)
+		assert.Equal(t, testPublicKeyHash, addr.PublicKeyHash)
+		assert.Equal(t, "114ZWApV4EEU8frr7zygqQcB1V2BodGZuS", addr.AddressString)
+	})
 
-	assert.Equal(t, expectedPublicKeyhash, addr.PublicKeyHash, addressTestnet)
-	assert.Equal(t, addressTestnet, addr.AddressString)
+	t.Run("testnet", func(t *testing.T) {
+		addr, err := bscript.NewAddressFromPublicKeyString(
+			"026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce",
+			false,
+		)
+		assert.NoError(t, err)
+		assert.NotNil(t, addr)
+
+		assert.Equal(t, testPublicKeyHash, addr.PublicKeyHash)
+		assert.Equal(t, "mfaWoDuTsFfiunLTqZx4fKpVsUctiDV9jk", addr.AddressString)
+	})
 }
 
-func TestNewFromStringShortAddress(t *testing.T) {
-	t.Parallel()
-
-	addr, err := bscript.NewAddressFromString("ADD8E55")
-	assert.Error(t, err)
-	assert.Nil(t, addr)
-	assert.EqualError(t, err, "invalid address length for 'ADD8E55'")
-}
-
-func TestNewFromStringUnsupportedAddress(t *testing.T) {
-	t.Parallel()
-
-	addr, err := bscript.NewAddressFromString("27BvY7rFguYQvEL872Y7Fo77Y3EBApC2EK")
-	assert.Error(t, err)
-	assert.Nil(t, addr)
-	assert.EqualError(t, err, "address 27BvY7rFguYQvEL872Y7Fo77Y3EBApC2EK is not supported")
-}
-
-func TestNewFromPublicKeyStringMainnet(t *testing.T) {
-	t.Parallel()
-
-	addr, err := bscript.NewAddressFromPublicKeyString(
-		"026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce",
-		true,
-	)
-	assert.NoError(t, err)
-	assert.NotNil(t, addr)
-
-	assert.Equal(t, testPublicKeyHash, addr.PublicKeyHash)
-	assert.Equal(t, "114ZWApV4EEU8frr7zygqQcB1V2BodGZuS", addr.AddressString)
-}
-
-func TestNewFromPublicKeyStringTestnet(t *testing.T) {
-	t.Parallel()
-
-	addr, err := bscript.NewAddressFromPublicKeyString(
-		"026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce",
-		false,
-	)
-	assert.NoError(t, err)
-	assert.NotNil(t, addr)
-
-	assert.Equal(t, testPublicKeyHash, addr.PublicKeyHash)
-	assert.Equal(t, "mfaWoDuTsFfiunLTqZx4fKpVsUctiDV9jk", addr.AddressString)
-}
-
-func TestNewFromPublicKey(t *testing.T) {
+func TestNewAddressFromPublicKey(t *testing.T) {
 	t.Parallel()
 
 	pubKeyBytes, err := hex.DecodeString("026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce")

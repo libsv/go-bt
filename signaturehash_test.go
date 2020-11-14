@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSignatureHashes(t *testing.T) {
+func TestTx_GetInputSignatureHash(t *testing.T) {
 	t.Parallel()
 
 	var testVector = []struct {
