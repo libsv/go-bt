@@ -214,7 +214,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*utils.Fee) error {
 	})
 
 	var preSignedFeeRequired uint64
-	if preSignedFeeRequired, err = tx.getPresignedFeeRequired(f); err != nil {
+	if preSignedFeeRequired, err = tx.getPreSignedFeeRequired(f); err != nil {
 		return err
 	}
 
@@ -249,7 +249,7 @@ func (tx *Tx) canAddChange(available uint64, stdFees *utils.Fee) bool {
 	return available >= changeOutputFee
 }
 
-func (tx *Tx) getPresignedFeeRequired(f []*utils.Fee) (uint64, error) {
+func (tx *Tx) getPreSignedFeeRequired(f []*utils.Fee) (uint64, error) {
 
 	stdBytes, dataBytes := tx.getStandardAndDataBytes()
 
