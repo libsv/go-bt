@@ -11,7 +11,7 @@ import (
 func TestEncodeBIP276(t *testing.T) {
 	t.Parallel()
 
-	t.Run("valid encode", func(t *testing.T) {
+	t.Run("valid encode (mainnet)", func(t *testing.T) {
 		s := bscript.EncodeBIP276(
 			bscript.PrefixScript,
 			bscript.NetworkMainnet,
@@ -20,6 +20,17 @@ func TestEncodeBIP276(t *testing.T) {
 		)
 
 		assert.Equal(t, "bitcoin-script:010166616b65207363726970746f0cd86a", s)
+	})
+
+	t.Run("valid encode (testnet)", func(t *testing.T) {
+		s := bscript.EncodeBIP276(
+			bscript.PrefixScript,
+			bscript.NetworkTestnet,
+			bscript.CurrentVersion,
+			[]byte("fake script"),
+		)
+
+		assert.Equal(t, "bitcoin-script:020166616b65207363726970742577a444", s)
 	})
 
 	t.Run("invalid version = 0", func(t *testing.T) {
@@ -75,6 +86,17 @@ func TestEncodeBIP276(t *testing.T) {
 		)
 
 		assert.Equal(t, "different-prefix:010166616b6520736372697074effdb090", s)
+	})
+
+	t.Run("template prefix", func(t *testing.T) {
+		s := bscript.EncodeBIP276(
+			bscript.PrefixTemplate,
+			bscript.NetworkMainnet,
+			bscript.CurrentVersion,
+			[]byte("fake script"),
+		)
+
+		assert.Equal(t, "bitcoin-template:010166616b65207363726970749e31aa72", s)
 	})
 }
 
