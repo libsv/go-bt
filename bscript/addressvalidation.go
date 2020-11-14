@@ -56,7 +56,7 @@ func ValidateAddress(address string) (bool, error) {
 		_, _, _, _, err := DecodeBIP276(address)
 
 		if err != nil {
-			return false, fmt.Errorf("bitcoin-script invalid [%+v]", err)
+			return false, fmt.Errorf("bitcoin-script invalid [%w]", err)
 		}
 		return true, nil
 	}

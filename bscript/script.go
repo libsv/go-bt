@@ -270,7 +270,7 @@ func (s *Script) IsMultisigOut() bool {
 		return false
 	}
 
-	if isSmallIntOp(parts[0][0]) == false {
+	if !isSmallIntOp(parts[0][0]) {
 		return false
 	}
 

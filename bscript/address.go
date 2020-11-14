@@ -75,7 +75,7 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	// mainnet: 0
 
 	bb := make([]byte, 1)
-	if mainnet == false {
+	if !mainnet {
 		bb[0] = 111
 	}
 
@@ -99,7 +99,7 @@ func NewAddressFromPublicKey(pubKey *bsvec.PublicKey, mainnet bool) (*Address, e
 	// mainnet: 0
 
 	bb := make([]byte, 1)
-	if mainnet == false {
+	if !mainnet {
 		bb[0] = 111
 	}
 

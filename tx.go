@@ -247,11 +247,8 @@ func (tx *Tx) canAddChange(available uint64, stdFees *mapi.Fee) bool {
 	changeP2pkhByteLen := 8 + 25 // 8 bytes for satoshi value + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
 	changeOutputFee += uint64(changeP2pkhByteLen * stdFees.MiningFee.Satoshis / stdFees.MiningFee.Bytes)
 
-	if available < changeOutputFee {
-		return false // not enough change to add a whole change output so don't add anything and return
-	}
-
-	return true
+	// not enough change to add a whole change output so don't add anything and return
+	return available >= changeOutputFee
 }
 
 func (tx *Tx) getPresignedFeeRequired(f []*mapi.Fee) (feeRequired uint64, err error) {
