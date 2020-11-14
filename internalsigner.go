@@ -28,12 +28,21 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (*Tx, error) {
 		return nil, err
 	}
 
-	sig, err := is.PrivateKey.Sign(ReverseBytes(sh)) // little endian sign
+	var sig *bsvec.Signature
+	sig, err = is.PrivateKey.Sign(ReverseBytes(sh)) // little endian sign
 	if err != nil {
 		return nil, err
 	}
 
-	s, err := bscript.NewP2PKHUnlockingScript(is.PrivateKey.PubKey().SerializeCompressed(), sig.Serialize(), is.SigHashFlag)
+	var s *bscript.Script
+	s, err = bscript.NewP2PKHUnlockingScript(
+		is.PrivateKey.PubKey().SerializeCompressed(),
+		sig.Serialize(),
+		is.SigHashFlag,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	err = unsignedTx.ApplyUnlockingScript(index, s)
 	if err != nil {
