@@ -326,7 +326,7 @@ func (tx *Tx) IsCoinbase() bool {
 		return false
 	}
 
-	if tx.Inputs[0].PreviousTxOutIndex == 0xFFFFFFFF || tx.Inputs[0].SequenceNumber == 0xFFFFFFFF {
+	if tx.Inputs[0].PreviousTxOutIndex == DefaultSequenceNumber || tx.Inputs[0].SequenceNumber == DefaultSequenceNumber {
 		return true
 	}
 

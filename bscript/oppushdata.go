@@ -54,7 +54,7 @@ func GetPushDataPrefix(data []byte) ([]byte, error) {
 		binary.LittleEndian.PutUint16(lenBuf, uint16(len(data)))
 		b = append(b, lenBuf...)
 
-	} else if l <= 0xFFFFFFFF {
+	} else if l <= 0xFFFFFFFF { // bt.DefaultSequenceNumber
 		b = append(b, 0x4e) // OP_PUSHDATA4
 		lenBuf := make([]byte, 4)
 		binary.LittleEndian.PutUint32(lenBuf, uint32(len(data)))

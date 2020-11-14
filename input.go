@@ -33,6 +33,9 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
+// DefaultSequenceNumber is the default starting sequence number
+const DefaultSequenceNumber uint32 = 0xFFFFFFFF
+
 // NewInput creates a new empty Input object with a finalized sequence number.
 func NewInput() *Input {
 	b := make([]byte, 0)
@@ -40,7 +43,7 @@ func NewInput() *Input {
 
 	return &Input{
 		UnlockingScript: s,
-		SequenceNumber:  0xFFFFFFFF,
+		SequenceNumber:  DefaultSequenceNumber,
 	}
 }
 
