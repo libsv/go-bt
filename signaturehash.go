@@ -14,6 +14,9 @@ import (
 // GetInputSignatureHash serializes the transaction based on the input index and the SIGHASH flag
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
+
+	// todo: test if input exists (return error)
+
 	in := tx.Inputs[inputNumber]
 
 	if in.PreviousTxID == "" {
