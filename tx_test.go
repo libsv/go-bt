@@ -173,7 +173,7 @@ func TestTx_Change(t *testing.T) {
 		4000000)
 	assert.NoError(t, err)
 
-	err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.Default())
+	err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
 	assert.NoError(t, err)
 
 	var wif *bsvutil.WIF
