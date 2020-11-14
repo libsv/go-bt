@@ -7,7 +7,6 @@ import (
 	"fmt"
 
 	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
-
 	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
 )
@@ -81,26 +80,30 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 
 	// create inputs
 	var i uint64
+	var err error
+	var input *Input
 	for ; i < inputCount; i++ {
-		i, size, err := NewInputFromBytes(b[offset:])
+		input, size, err = NewInputFromBytes(b[offset:])
 		if err != nil {
 			return nil, err
 		}
 		offset += size
 
-		t.Inputs = append(t.Inputs, i)
+		t.Inputs = append(t.Inputs, input)
 	}
 
 	// create outputs
-	outputCount, size := DecodeVarInt(b[offset:])
+	var outputCount uint64
+	var output *Output
+	outputCount, size = DecodeVarInt(b[offset:])
 	offset += size
 	for i = 0; i < outputCount; i++ {
-		o, size, err := NewOutputFromBytes(b[offset:])
+		output, size, err = NewOutputFromBytes(b[offset:])
 		if err != nil {
 			return nil, err
 		}
 		offset += size
-		t.Outputs = append(t.Outputs, o)
+		t.Outputs = append(t.Outputs, output)
 	}
 
 	nLT := b[offset:]
@@ -110,7 +113,8 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	}
 
 	t.Locktime = binary.LittleEndian.Uint32(b[offset:])
-	offset += 4
+
+	// offset += 4 // @mrz I commented this out, as it was ineffectual
 
 	return &t, nil
 }
