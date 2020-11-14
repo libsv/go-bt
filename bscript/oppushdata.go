@@ -124,7 +124,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 
 		default:
 			if b[0] >= 0x01 && b[0] <= 0x4e {
-				l := uint8(b[0])
+				l := b[0]
 				if len(b) < int(1+l) {
 					return r, errors.New("Not enough data")
 				}
