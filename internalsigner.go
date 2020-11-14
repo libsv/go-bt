@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 
 	"github.com/bitcoinsv/bsvd/bsvec"
-
 	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
 	"github.com/libsv/go-bt/sighash"
@@ -61,7 +60,11 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (*Tx, error) {
 
 		// check if able to sign (public key matches pubKeyHash in script)
 		if pubKeyHashStr == pubKeyHashStrFromPriv {
-			is.Sign(uint32(i), unsignedTx)
+			// todo: not sure if the tx value should be used or not? @mrz
+			_, err := is.Sign(uint32(i), unsignedTx)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
