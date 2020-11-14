@@ -11,6 +11,7 @@ import (
 )
 
 func TestSignatureHashes(t *testing.T) {
+	t.Parallel()
 
 	var testVector = []struct {
 		name               string

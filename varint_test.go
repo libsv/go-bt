@@ -7,7 +7,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHashFunctions(t *testing.T) {
+func TestDecodeVarInt(t *testing.T) {
+	// todo: create test(s)
+}
+
+func TestVarIntUpperLimitInc(t *testing.T) {
+	// todo: create test(s)
+}
+
+func TestVarInt(t *testing.T) {
+	t.Parallel()
 
 	var varIntTests = []struct {
 		testName    string

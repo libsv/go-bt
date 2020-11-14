@@ -9,6 +9,7 @@ import (
 )
 
 func TestHashFunctions(t *testing.T) {
+	t.Parallel()
 
 	var hashTests = []struct {
 		testName string

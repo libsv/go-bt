@@ -9,6 +9,8 @@ import (
 )
 
 func TestEncode(t *testing.T) {
+	t.Parallel()
+
 	s := bscript.EncodeBIP276(
 		bscript.PrefixScript,
 		bscript.NetworkMainnet,
@@ -20,6 +22,8 @@ func TestEncode(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
+	t.Parallel()
+
 	prefix, network, version, data, err := bscript.DecodeBIP276("bitcoin-script:010166616b65207363726970746f0cd86a")
 	assert.NoError(t, err)
 	assert.Equal(t, `"bitcoin-script"`, fmt.Sprintf("%q", prefix))

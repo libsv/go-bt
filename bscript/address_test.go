@@ -12,6 +12,8 @@ import (
 const testPublicKeyHash = "00ac6144c4db7b5790f343cf0477a65fb8a02eb7"
 
 func TestNewFromStringMainnet(t *testing.T) {
+	t.Parallel()
+
 	addressMain := "1E7ucTTWRTahCyViPhxSMor2pj4VGQdFMr"
 	expectedPublicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
 
@@ -24,6 +26,8 @@ func TestNewFromStringMainnet(t *testing.T) {
 }
 
 func TestNewFromStringTestnet(t *testing.T) {
+	t.Parallel()
+
 	addressTestnet := "mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd"
 	expectedPublicKeyhash := "8fe80c75c9560e8b56ed64ea3c26e18d2c52211b"
 
@@ -36,6 +40,8 @@ func TestNewFromStringTestnet(t *testing.T) {
 }
 
 func TestNewFromStringShortAddress(t *testing.T) {
+	t.Parallel()
+
 	addr, err := bscript.NewAddressFromString("ADD8E55")
 	assert.Error(t, err)
 	assert.Nil(t, addr)
@@ -43,6 +49,8 @@ func TestNewFromStringShortAddress(t *testing.T) {
 }
 
 func TestNewFromStringUnsupportedAddress(t *testing.T) {
+	t.Parallel()
+
 	addr, err := bscript.NewAddressFromString("27BvY7rFguYQvEL872Y7Fo77Y3EBApC2EK")
 	assert.Error(t, err)
 	assert.Nil(t, addr)
@@ -50,6 +58,8 @@ func TestNewFromStringUnsupportedAddress(t *testing.T) {
 }
 
 func TestNewFromPublicKeyStringMainnet(t *testing.T) {
+	t.Parallel()
+
 	addr, err := bscript.NewAddressFromPublicKeyString(
 		"026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce",
 		true,
@@ -62,6 +72,8 @@ func TestNewFromPublicKeyStringMainnet(t *testing.T) {
 }
 
 func TestNewFromPublicKeyStringTestnet(t *testing.T) {
+	t.Parallel()
+
 	addr, err := bscript.NewAddressFromPublicKeyString(
 		"026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce",
 		false,
@@ -74,6 +86,8 @@ func TestNewFromPublicKeyStringTestnet(t *testing.T) {
 }
 
 func TestNewFromPublicKey(t *testing.T) {
+	t.Parallel()
+
 	pubKeyBytes, err := hex.DecodeString("026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce")
 	assert.NoError(t, err)
 
@@ -92,6 +106,8 @@ func TestNewFromPublicKey(t *testing.T) {
 }
 
 func TestBase58EncodeMissingChecksum(t *testing.T) {
+	t.Parallel()
+
 	input, err := hex.DecodeString("0488b21e000000000000000000362f7a9030543db8751401c387d6a71e870f1895b3a62569d455e8ee5f5f5e5f03036624c6df96984db6b4e625b6707c017eb0e0d137cd13a0c989bfa77a4473fd")
 	assert.NoError(t, err)
 

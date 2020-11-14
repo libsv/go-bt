@@ -13,6 +13,8 @@ import (
 const outputHexStr = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
 
 func TestNewOutput(t *testing.T) {
+	t.Parallel()
+
 	bytes, err := hex.DecodeString(outputHexStr)
 	assert.NoError(t, err)
 
@@ -29,6 +31,8 @@ func TestNewOutput(t *testing.T) {
 }
 
 func TestNewOutputForPublicKeyHash(t *testing.T) {
+	t.Parallel()
+
 	// This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
 	o, err := bt.NewP2PKHOutputFromPubKeyHash(
 		"8fe80c75c9560e8b56ed64ea3c26e18d2c52211b",
@@ -43,6 +47,8 @@ func TestNewOutputForPublicKeyHash(t *testing.T) {
 }
 
 func TestNewOutputForHashPuzzle(t *testing.T) {
+	t.Parallel()
+
 	addr, err := bscript.NewAddressFromString("myFhJggmsaA2S8Qe6ZQDEcVCwC4wLkvC4e")
 	assert.NoError(t, err)
 	assert.NotNil(t, addr)
@@ -58,6 +64,8 @@ func TestNewOutputForHashPuzzle(t *testing.T) {
 }
 
 func TestNewOutputOpReturn(t *testing.T) {
+	t.Parallel()
+
 	data := "On February 4th, 2020 The Return to Genesis was activated to restore the Satoshi Vision for Bitcoin. " +
 		"It is locked in irrevocably by this transaction. Bitcoin can finally be Bitcoin again and the miners can " +
 		"continue to write the Chronicle of everything. Thank you and goodnight from team SV."
@@ -74,6 +82,8 @@ func TestNewOutputOpReturn(t *testing.T) {
 }
 
 func TestNewOutputOpReturnPush(t *testing.T) {
+	t.Parallel()
+
 	dataBytes := [][]byte{[]byte("hi"), []byte("how"), []byte("are"), []byte("you")}
 	o, err := bt.NewOpReturnPartsOutput(dataBytes)
 	assert.NoError(t, err)
