@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/bitcoinsv/bsvutil"
-
 	"github.com/libsv/go-bt"
 	"github.com/libsv/go-bt/bscript"
 )
@@ -77,14 +76,14 @@ func TestNewFromString(t *testing.T) {
 }
 func TestToBytes(t *testing.T) {
 	h := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c0000000049483045022100c4df63202a9aa2bea5c24ebf4418d145e81712072ef744a4b108174f1ef59218022006eb54cf904707b51625f521f8ed2226f7d34b62492ebe4ddcb1c639caf16c3c41ffffffff0140420f00000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
-	bt, err := bt.NewTxFromString(h)
+	tx, err := bt.NewTxFromString(h)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	t.Logf("%s", bt.ToString())
-	t.Logf("%x", bt.ToBytes())
+	t.Logf("%s", tx.ToString())
+	t.Logf("%x", tx.ToBytes())
 
 }
 
@@ -117,18 +116,18 @@ func TestGetTotalOutputSatoshis(t *testing.T) {
 }
 
 func TestRegTestCoinbase(t *testing.T) {
-	h := "02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0e5101010a2f4542323030302e302fffffffff0100f2052a01000000232103db233bb9fc387d78b133ec904069d46e95ff17da657671b44afa0bc64e89ac18ac00000000"
-	bt, err := bt.NewTxFromString(h)
+	rawTx := "02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0e5101010a2f4542323030302e302fffffffff0100f2052a01000000232103db233bb9fc387d78b133ec904069d46e95ff17da657671b44afa0bc64e89ac18ac00000000"
+	tx, err := bt.NewTxFromString(rawTx)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	// check if coinbase transaction
-	if !bt.IsCoinbase() {
+	if !tx.IsCoinbase() {
 		t.Error("Tx is not Coinbase transaction")
 	}
 	// check input count
-	expectedInputCount := bt.InputCount()
+	expectedInputCount := tx.InputCount()
 	if expectedInputCount != 1 {
 		t.Errorf("Expcted input count to be %v, but got %v", 1, expectedInputCount)
 	}
@@ -136,14 +135,14 @@ func TestRegTestCoinbase(t *testing.T) {
 }
 
 func TestGetVersion(t *testing.T) {
-	const tx = "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
-	bt, err := bt.NewTxFromString(tx)
+	const rawTx = "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
+	tx, err := bt.NewTxFromString(rawTx)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	res := bt.Version
+	res := tx.Version
 	if res != 1 {
 		t.Errorf("Expecting 1, got %d", res)
 	}
@@ -178,18 +177,24 @@ func TestIsCoinbase(t *testing.T) {
 func TestCreateTx(t *testing.T) {
 	tx := bt.NewTx()
 
-	tx.From(
+	err := tx.From(
 		"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 		0,
 		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 		2000000)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+	err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
 	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
-	err := tx.SignAuto(&signer)
+	err = tx.SignAuto(&signer)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -202,18 +207,28 @@ func TestChange(t *testing.T) {
 
 	tx := bt.NewTx()
 
-	tx.From(
+	err := tx.From(
 		"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 		0,
 		"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 		4000000)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.Default())
+	err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.Default())
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	wif, _ := bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+	var wif *bsvutil.WIF
+	wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
-	err := tx.SignAuto(&signer)
+	err = tx.SignAuto(&signer)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
