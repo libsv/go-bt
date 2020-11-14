@@ -6,7 +6,6 @@ import (
 
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvutil/base58"
-
 	"github.com/libsv/go-bt/crypto"
 )
 
