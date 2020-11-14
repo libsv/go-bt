@@ -35,7 +35,7 @@ func TestHashFunctions(t *testing.T) {
 			}
 
 			hashResult := hashTest.hashFunc(inputBytes)
-			if bytes.Compare(hashResult, expectedBytes) != 0 {
+			if !bytes.Equal(hashResult, expectedBytes) {
 				t.Errorf("got %q, want %q", hashResult, hashTest.expected)
 			}
 		})
