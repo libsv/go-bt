@@ -37,8 +37,7 @@ func NewFromASM(str string) (*Script, error) {
 		if val, ok := opCodeStrings[section]; ok {
 			s.AppendOpCode(val)
 		} else {
-			err := s.AppendPushDataHexString(section)
-			if err != nil {
+			if err := s.AppendPushDataHexString(section); err != nil {
 				return nil, errors.New("invalid opcode data")
 			}
 		}
@@ -106,16 +105,15 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 		return nil, err
 	}
 
-	publicKeyHashBytes, err := hex.DecodeString(a.PublicKeyHash)
-	if err != nil {
+	var publicKeyHashBytes []byte
+	if publicKeyHashBytes, err = hex.DecodeString(a.PublicKeyHash); err != nil {
 		return nil, err
 	}
 
 	s := &Script{}
 	s.AppendOpCode(OpDUP)
 	s.AppendOpCode(OpHASH160)
-	err = s.AppendPushData(publicKeyHashBytes)
-	if err != nil {
+	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
 		return nil, err
 	}
 	s.AppendOpCode(OpEQUALVERIFY)
@@ -291,11 +289,11 @@ func isSmallIntOp(opcode byte) bool {
 // GetPublicKeyHash returns a public key hash byte array if the script is a P2PKH script
 func (s *Script) GetPublicKeyHash() ([]byte, error) {
 	if s == nil || len(*s) == 0 {
-		return nil, fmt.Errorf("Script is empty")
+		return nil, fmt.Errorf("script is empty")
 	}
 
 	if (*s)[0] != 0x76 || (*s)[1] != 0xa9 {
-		return nil, fmt.Errorf("Not a P2PKH")
+		return nil, fmt.Errorf("not a P2PKH")
 	}
 
 	parts, err := DecodeParts((*s)[2:])

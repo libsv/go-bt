@@ -88,11 +88,11 @@ func DecodeParts(b []byte) ([][]byte, error) {
 		switch b[0] {
 		case OpPUSHDATA1:
 			if len(b) < 2 {
-				return r, errors.New("Not enough data")
+				return r, errors.New("not enough data")
 			}
 			l := uint64(b[1])
 			if len(b) < int(2+l) {
-				return r, errors.New("Not enough data")
+				return r, errors.New("not enough data")
 			}
 			part := b[2 : 2+l]
 			r = append(r, part)
@@ -100,11 +100,11 @@ func DecodeParts(b []byte) ([][]byte, error) {
 
 		case OpPUSHDATA2:
 			if len(b) < 3 {
-				return r, errors.New("Not enough data")
+				return r, errors.New("not enough data")
 			}
 			l := binary.LittleEndian.Uint16(b[1:])
 			if len(b) < int(3+l) {
-				return r, errors.New("Not enough data")
+				return r, errors.New("not enough data")
 			}
 			part := b[3 : 3+l]
 			r = append(r, part)
@@ -116,7 +116,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			}
 			l := binary.LittleEndian.Uint32(b[1:])
 			if len(b) < int(5+l) {
-				return r, errors.New("Not enough data")
+				return r, errors.New("not enough data")
 			}
 			part := b[5 : 5+l]
 			r = append(r, part)
@@ -126,7 +126,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			if b[0] >= 0x01 && b[0] <= 0x4e {
 				l := b[0]
 				if len(b) < int(1+l) {
-					return r, errors.New("Not enough data")
+					return r, errors.New("not enough data")
 				}
 				part := b[1 : l+1]
 				r = append(r, part)

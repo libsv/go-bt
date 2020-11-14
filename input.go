@@ -81,15 +81,13 @@ func NewInputFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64,
 		return nil, err
 	}
 
-	i := &Input{
+	return &Input{
 		PreviousTxID:       prevTxID,
 		PreviousTxOutIndex: prevTxIndex,
 		PreviousTxSatoshis: prevTxSats,
 		PreviousTxScript:   pts,
 		SequenceNumber:     nSeq,
-	}
-
-	return i, nil
+	}, nil
 }
 
 func (i *Input) String() string {
@@ -105,6 +103,7 @@ sequence:     %x
 func (i *Input) ToBytes(clear bool) []byte {
 	h := make([]byte, 0)
 
+	// todo: not checking error
 	pid, _ := hex.DecodeString(i.PreviousTxID)
 
 	h = append(h, ReverseBytes(pid)...)

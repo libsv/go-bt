@@ -15,8 +15,7 @@ func Sha256(b []byte) []byte {
 // Sha256d calculates hash(hash(b)) and returns the resulting bytes.
 func Sha256d(b []byte) []byte {
 	first := Sha256(b)
-	second := Sha256(first[:])
-	return second
+	return Sha256(first[:])
 }
 
 // Ripemd160 hashes with RIPEMD160

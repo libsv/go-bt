@@ -73,9 +73,7 @@ func validA58(a58 []byte) (bool, error) {
 		return false, errors.New("not version 0 or 6f")
 	}
 
-	checksumOK := a.embeddedChecksum() == a.computeChecksum()
-
-	if !checksumOK {
+	if a.embeddedChecksum() != a.computeChecksum() {
 		return false, errors.New("checksum failed")
 	}
 

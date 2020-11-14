@@ -35,17 +35,15 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (*Tx, error) {
 	}
 
 	var s *bscript.Script
-	s, err = bscript.NewP2PKHUnlockingScript(
+	if s, err = bscript.NewP2PKHUnlockingScript(
 		is.PrivateKey.PubKey().SerializeCompressed(),
 		sig.Serialize(),
 		is.SigHashFlag,
-	)
-	if err != nil {
+	); err != nil {
 		return nil, err
 	}
 
-	err = unsignedTx.ApplyUnlockingScript(index, s)
-	if err != nil {
+	if err = unsignedTx.ApplyUnlockingScript(index, s); err != nil {
 		return nil, err
 	}
 
@@ -62,6 +60,7 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (*Tx, error) {
 
 	for i, in := range unsignedTx.Inputs {
 
+		// todo: error is not being checked
 		pubKeyHash, _ := in.PreviousTxScript.GetPublicKeyHash() // doesn't matter if returns error (not p2pkh)
 		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
 
@@ -69,9 +68,9 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (*Tx, error) {
 
 		// check if able to sign (public key matches pubKeyHash in script)
 		if pubKeyHashStr == pubKeyHashStrFromPriv {
+
 			// todo: not sure if the tx value should be used or not? @mrz
-			_, err := is.Sign(uint32(i), unsignedTx)
-			if err != nil {
+			if _, err := is.Sign(uint32(i), unsignedTx); err != nil {
 				return nil, err
 			}
 		}
