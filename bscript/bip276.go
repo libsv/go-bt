@@ -31,6 +31,8 @@ const NetworkMainnet = 1
 // valid for use on the test network.
 const NetworkTestnet = 2
 
+var validBIP276 = regexp.MustCompile(`^(.+?):(\d{2})(\d{2})([0-9A-Fa-f]+)([0-9A-Fa-f]{8})$`)
+
 // EncodeBIP276 is used to encode specific (non-standard) scripts in BIP276 format.
 // See https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki
 func EncodeBIP276(prefix string, network, version int, data []byte) string {
@@ -51,8 +53,8 @@ func createBIP276(prefix string, network, version int, data []byte) (string, str
 // DecodeBIP276 is used to decode BIP276 formatted data into specific (non-standard) scripts.
 // See https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki
 func DecodeBIP276(text string) (prefix string, version, network int, data []byte, err error) {
-	validBIP276 := regexp.MustCompile(`^(.+?):(\d{2})(\d{2})([0-9A-Fa-f]+)([0-9A-Fa-f]{8})$`)
 
+	// Determine if regex match
 	res := validBIP276.FindStringSubmatch(text)
 
 	prefix = res[1]
@@ -69,8 +71,7 @@ func DecodeBIP276(text string) (prefix string, version, network int, data []byte
 		return
 	}
 
-	_, checkSum := createBIP276(prefix, network, version, data)
-	if res[5] != checkSum {
+	if _, checkSum := createBIP276(prefix, network, version, data); res[5] != checkSum {
 		err = errors.New("invalid checksum")
 	}
 
