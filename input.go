@@ -21,12 +21,15 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 */
 
 // Input is a representation of a transaction input
+//
+// DO NOT CHANGE ORDER - Optimized for memory via maligned
+//
 type Input struct {
 	PreviousTxID       string
-	PreviousTxOutIndex uint32
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *bscript.Script
 	UnlockingScript    *bscript.Script
+	PreviousTxOutIndex uint32
 	SequenceNumber     uint32
 }
 
@@ -71,7 +74,8 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 }
 
 // NewInputFromUTXO returns a transaction input from the UTXO fields provided.
-func NewInputFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64, prevTxScript string, nSeq uint32) (*Input, error) {
+func NewInputFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64,
+	prevTxScript string, nSeq uint32) (*Input, error) {
 	pts, err := bscript.NewFromHexString(prevTxScript)
 	if err != nil {
 		return nil, err
