@@ -151,39 +151,121 @@ func TestTx_CreateTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, wif)
 
-	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
-	err = tx.SignAuto(&signer)
+	err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
 	assert.NoError(t, err)
 }
 
 func TestTx_Change(t *testing.T) {
 	t.Parallel()
 
-	expectedTx, err := bt.NewTxFromString("01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a473044022049ee0c0f26c00e6a6b3af5990fc8296c66eab3e3e42ab075069b89b1be6fefec02206079e49dd8c9e1117ef06fbe99714d822620b1f0f5d19f32a1128f5d29b7c3c4412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff01a0083d00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000")
-	assert.NoError(t, err)
-	assert.NotNil(t, expectedTx)
+	t.Run("valid change tx (basic)", func(t *testing.T) {
+		expectedTx, err := bt.NewTxFromString("01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a473044022049ee0c0f26c00e6a6b3af5990fc8296c66eab3e3e42ab075069b89b1be6fefec02206079e49dd8c9e1117ef06fbe99714d822620b1f0f5d19f32a1128f5d29b7c3c4412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff01a0083d00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000")
+		assert.NoError(t, err)
+		assert.NotNil(t, expectedTx)
 
-	tx := bt.NewTx()
-	assert.NotNil(t, tx)
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
 
-	err = tx.From(
-		"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-		0,
-		"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-		4000000)
-	assert.NoError(t, err)
+		err = tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
 
-	err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
-	assert.NoError(t, err)
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		assert.NoError(t, err)
 
-	var wif *bsvutil.WIF
-	wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
-	assert.NoError(t, err)
-	assert.NotNil(t, wif)
+		var wif *bsvutil.WIF
+		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		assert.NoError(t, err)
+		assert.NotNil(t, wif)
 
-	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
-	err = tx.SignAuto(&signer)
-	assert.NoError(t, err)
+		err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+		assert.NoError(t, err)
 
-	assert.Equal(t, expectedTx.ToString(), tx.ToString())
+		assert.Equal(t, expectedTx.ToString(), tx.ToString())
+	})
+
+	t.Run("change output is added correctly - fee removed", func(t *testing.T) {
+
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		assert.NoError(t, err)
+
+		var wif *bsvutil.WIF
+		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		assert.NoError(t, err)
+		assert.NotNil(t, wif)
+
+		err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+		assert.NoError(t, err)
+
+		// Correct fee for the tx
+		assert.Equal(t, uint64(3999904), tx.Outputs[0].Satoshis)
+
+		// Correct script hex string
+		assert.Equal(t,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			tx.Outputs[0].GetLockingScriptHexString(),
+		)
+	})
+
+	t.Run("determine fees are correct, correct change given", func(t *testing.T) {
+
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		// utxo
+		err := tx.From(
+			"b7b0650a7c3a1bd4716369783876348b59f5404784970192cec1996e86950576",
+			0,
+			"76a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac",
+			1000)
+		assert.NoError(t, err)
+
+		// pay to
+		err = tx.PayTo("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 500)
+		assert.NoError(t, err)
+
+		// add some op return
+		var outPut *bt.Output
+		outPut, err = bt.NewOpReturnPartsOutput([][]byte{[]byte("hi"), []byte("how"), []byte("are"), []byte("you")})
+		assert.NoError(t, err)
+		assert.NotNil(t, outPut)
+		tx.AddOutput(outPut)
+
+		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", bt.DefaultFees())
+		assert.NoError(t, err)
+
+		var wif *bsvutil.WIF
+		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		assert.NoError(t, err)
+		assert.NotNil(t, wif)
+
+		err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+		assert.NoError(t, err)
+
+		assert.Equal(t,
+			"0100000001760595866e99c1ce920197844740f5598b34763878696371d41b3a7c0a65b0b70000000000ffffffff03f4010000000000001976a9147a1980655efbfec416b2b0c663a7b3ac0b6a25d288ac000000000000000011006a02686903686f770361726503796f757a010000000000001976a91484e50b300b009833b297dc671817c79b5459da1d88ac00000000",
+			tx.ToString(),
+		)
+
+		// todo: this tx produces the WRONG fee/change
+		/*
+			Size 145 B
+			Fee Paid 0.00000122 BSV
+			(0.00001 BSV - 0.00000878 BSV)
+			Fee Rate 0.8414 sat/B
+		*/
+	})
 }

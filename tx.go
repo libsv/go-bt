@@ -199,10 +199,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*utils.Fee) error {
 		return nil
 	}
 
-	tx.AddOutput(&Output{
-		Satoshis:      0,
-		LockingScript: s,
-	})
+	tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
 
 	var preSignedFeeRequired uint64
 	if preSignedFeeRequired, err = tx.getPreSignedFeeRequired(f); err != nil {
