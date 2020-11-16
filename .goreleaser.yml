@@ -1,0 +1,27 @@
+# Make sure to check the documentation at http://goreleaser.com
+# ---------------------------
+# GENERAL
+# ---------------------------
+before:
+  hooks:
+    - make all
+snapshot:
+  name_template: "{{ .Tag }}"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^.github:'
+      - '^test:'
+
+# ---------------------------
+# BUILDER
+# ---------------------------
+build:
+  skip: true
+# ---------------------------
+# Github Release
+# ---------------------------
+release:
+  prerelease: true
+  name_template: "Release v{{.Version}}"

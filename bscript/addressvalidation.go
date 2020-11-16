@@ -56,7 +56,7 @@ func ValidateAddress(address string) (bool, error) {
 		_, _, _, _, err := DecodeBIP276(address)
 
 		if err != nil {
-			return false, fmt.Errorf("bitcoin-script invalid [%+v]", err)
+			return false, fmt.Errorf("bitcoin-script invalid [%w]", err)
 		}
 		return true, nil
 	}
@@ -73,9 +73,7 @@ func validA58(a58 []byte) (bool, error) {
 		return false, errors.New("not version 0 or 6f")
 	}
 
-	checksumOK := a.embeddedChecksum() == a.computeChecksum()
-
-	if !checksumOK {
+	if a.embeddedChecksum() != a.computeChecksum() {
 		return false, errors.New("checksum failed")
 	}
 

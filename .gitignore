@@ -1,4 +1,17 @@
+# IDE and os files
 .history
 .idea/*
 .vscode/*
 .DS_Store
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Notes
+todo.md
+
+# Distribution directory for releases
+dist
+
+# Converage
+coverage.txt
