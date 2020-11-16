@@ -31,25 +31,38 @@ make test
 #### Regular P2PKH
 
 ```go
-tx := bt.NewTx()
+package main
 
-tx.From(
-	"11b476ad8e0a48fcd40807a111a050af51114877e09283bfa7f3505081a1819d",
-	0,
-	"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac6a0568656c6c6f",
-	1500)
+import (
+	"fmt"
 
-tx.PayTo("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
+	"github.com/bitcoinsv/bsvutil"
+	"github.com/libsv/go-bt"
+)
 
-wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+func main() {
 
-signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
-err := tx.SignAuto(&signer)
-if err != nil {
-	fmt.Errorf(err.Error())
+	tx := bt.NewTx()
+
+	tx.From(
+		"11b476ad8e0a48fcd40807a111a050af51114877e09283bfa7f3505081a1819d",
+		0,
+		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac6a0568656c6c6f",
+		1500)
+
+	tx.PayTo("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
+
+	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+
+	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	err := tx.SignAuto(&signer)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	fmt.Println(tx.ToString())
 }
 
-fmt.Println(tx.ToString())
 ```
 
 prints:
@@ -61,6 +74,17 @@ prints:
 #### Regular P2PKH + OP_RETURN output
 
 ```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/bitcoinsv/bsvutil"
+	"github.com/libsv/go-bt"
+)
+
+func main() {
+
 	tx := bt.NewTx()
 
 	err := tx.From(
@@ -87,6 +111,7 @@ prints:
 	}
 
 	fmt.Println(tx.ToString())
+}
 ```
 
 prints:
