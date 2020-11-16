@@ -37,8 +37,7 @@ func NewFromASM(str string) (*Script, error) {
 		if val, ok := opCodeStrings[section]; ok {
 			s.AppendOpCode(val)
 		} else {
-			err := s.AppendPushDataHexString(section)
-			if err != nil {
+			if err := s.AppendPushDataHexString(section); err != nil {
 				return nil, errors.New("invalid opcode data")
 			}
 		}
@@ -106,16 +105,15 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 		return nil, err
 	}
 
-	publicKeyHashBytes, err := hex.DecodeString(a.PublicKeyHash)
-	if err != nil {
+	var publicKeyHashBytes []byte
+	if publicKeyHashBytes, err = hex.DecodeString(a.PublicKeyHash); err != nil {
 		return nil, err
 	}
 
 	s := &Script{}
 	s.AppendOpCode(OpDUP)
 	s.AppendOpCode(OpHASH160)
-	err = s.AppendPushData(publicKeyHashBytes)
-	if err != nil {
+	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
 		return nil, err
 	}
 	s.AppendOpCode(OpEQUALVERIFY)
@@ -124,7 +122,8 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 	return s, nil
 }
 
-// AppendPushData takes data bytes and appends them to the script with proper PUSHDATA prefixes
+// AppendPushData takes data bytes and appends them to the script
+// with proper PUSHDATA prefixes
 func (s *Script) AppendPushData(d []byte) error {
 	p, err := EncodeParts([][]byte{d})
 	if err != nil {
@@ -135,7 +134,8 @@ func (s *Script) AppendPushData(d []byte) error {
 	return nil
 }
 
-// AppendPushDataHexString takes a hex string and appends them to the script with proper PUSHDATA prefixes
+// AppendPushDataHexString takes a hex string and appends them to the
+// script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataHexString(str string) error {
 	h, err := hex.DecodeString(str)
 	if err != nil {
@@ -145,12 +145,14 @@ func (s *Script) AppendPushDataHexString(str string) error {
 	return s.AppendPushData(h)
 }
 
-// AppendPushDataString takes a string and appends its UTF-8 encoding to the script with proper PUSHDATA prefixes
+// AppendPushDataString takes a string and appends its UTF-8 encoding
+// to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataString(str string) error {
 	return s.AppendPushData([]byte(str))
 }
 
-// AppendPushDataArray takes an array of data bytes and appends them to the script with proper PUSHDATA prefixes
+// AppendPushDataArray takes an array of data bytes and appends them
+// to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataArray(d [][]byte) error {
 	p, err := EncodeParts(d)
 	if err != nil {
@@ -161,7 +163,8 @@ func (s *Script) AppendPushDataArray(d [][]byte) error {
 	return nil
 }
 
-// AppendPushDataStrings takes an array of strings and appends their UTF-8 encoding to the script with proper PUSHDATA prefixes
+// AppendPushDataStrings takes an array of strings and appends their
+// UTF-8 encoding to the script with proper PUSHDATA prefixes
 func (s *Script) AppendPushDataStrings(strs []string) error {
 	dataBytes := make([][]byte, 0)
 	for _, str := range strs {
@@ -265,7 +268,7 @@ func (s *Script) IsMultisigOut() bool {
 		return false
 	}
 
-	if isSmallIntOp(parts[0][0]) == false {
+	if !isSmallIntOp(parts[0][0]) {
 		return false
 	}
 
@@ -286,11 +289,11 @@ func isSmallIntOp(opcode byte) bool {
 // GetPublicKeyHash returns a public key hash byte array if the script is a P2PKH script
 func (s *Script) GetPublicKeyHash() ([]byte, error) {
 	if s == nil || len(*s) == 0 {
-		return nil, fmt.Errorf("Script is empty")
+		return nil, fmt.Errorf("script is empty")
 	}
 
 	if (*s)[0] != 0x76 || (*s)[1] != 0xa9 {
-		return nil, fmt.Errorf("Not a P2PKH")
+		return nil, fmt.Errorf("not a P2PKH")
 	}
 
 	parts, err := DecodeParts((*s)[2:])

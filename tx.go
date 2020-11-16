@@ -6,8 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
-
+	"github.com/bitcoin-sv/merchantapi-reference/utils"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
 )
@@ -33,23 +32,21 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
                  timestamp when transaction is final
 */
 
-// A Tx wraps a bitcoin transaction
+// Tx wraps a bitcoin transaction
+//
+// DO NOT CHANGE ORDER - Optimized memory via malign
+//
 type Tx struct {
 	// TODO: make variables private?
-	Version  uint32
 	Inputs   []*Input
 	Outputs  []*Output
+	Version  uint32
 	Locktime uint32
 }
 
 // NewTx creates a new transaction object with default values.
 func NewTx() *Tx {
-	t := Tx{}
-
-	t.Version = 1
-	t.Locktime = 0
-
-	return &t
+	return &Tx{Version: 1, Locktime: 0}
 }
 
 // NewTxFromString takes a toBytesHelper string representation of a bitcoin transaction
@@ -69,11 +66,10 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 		return nil, fmt.Errorf("too short to be a tx - even an empty tx has 10 bytes")
 	}
 
-	t := Tx{}
-
 	var offset = 0
-
-	t.Version = binary.LittleEndian.Uint32(b[offset:4])
+	t := Tx{
+		Version: binary.LittleEndian.Uint32(b[offset:4]),
+	}
 	offset += 4
 
 	inputCount, size := DecodeVarInt(b[offset:])
@@ -81,26 +77,30 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 
 	// create inputs
 	var i uint64
+	var err error
+	var input *Input
 	for ; i < inputCount; i++ {
-		i, size, err := NewInputFromBytes(b[offset:])
+		input, size, err = NewInputFromBytes(b[offset:])
 		if err != nil {
 			return nil, err
 		}
 		offset += size
 
-		t.Inputs = append(t.Inputs, i)
+		t.Inputs = append(t.Inputs, input)
 	}
 
 	// create outputs
-	outputCount, size := DecodeVarInt(b[offset:])
+	var outputCount uint64
+	var output *Output
+	outputCount, size = DecodeVarInt(b[offset:])
 	offset += size
 	for i = 0; i < outputCount; i++ {
-		o, size, err := NewOutputFromBytes(b[offset:])
+		output, size, err = NewOutputFromBytes(b[offset:])
 		if err != nil {
 			return nil, err
 		}
 		offset += size
-		t.Outputs = append(t.Outputs, o)
+		t.Outputs = append(t.Outputs, output)
 	}
 
 	nLT := b[offset:]
@@ -110,7 +110,8 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	}
 
 	t.Locktime = binary.LittleEndian.Uint32(b[offset:])
-	offset += 4
+
+	// offset += 4 // @mrz I commented this out, as it was ineffectual
 
 	return &t, nil
 }
@@ -127,16 +128,13 @@ func (tx *Tx) From(txID string, vout uint32, prevTxLockingScript string, satoshi
 		return err
 	}
 
-	i := &Input{
+	tx.AddInput(&Input{
+		PreviousTxID:       txID,
 		PreviousTxOutIndex: vout,
-		PreviousTxScript:   pts,
 		PreviousTxSatoshis: satoshis,
+		PreviousTxScript:   pts,
 		SequenceNumber:     0xffffffff,
-	}
-
-	i.PreviousTxID = txID
-
-	tx.AddInput(i)
+	})
 
 	return nil
 }
@@ -153,12 +151,11 @@ func (tx *Tx) OutputCount() int {
 
 // AddOutput adds a new output to the transaction.
 func (tx *Tx) AddOutput(output *Output) {
-
 	tx.Outputs = append(tx.Outputs, output)
 }
 
 // PayTo creates a new P2PKH output from a BitCoin address (base58)
-// and the satoshis amount and adds thats to the transaction.
+// and the satoshis amount and adds that to the transaction.
 func (tx *Tx) PayTo(addr string, satoshis uint64) error {
 	o, err := NewP2PKHOutputFromAddress(addr, satoshis)
 	if err != nil {
@@ -171,7 +168,7 @@ func (tx *Tx) PayTo(addr string, satoshis uint64) error {
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new P2PKH output using the address provided.
-func (tx *Tx) ChangeToAddress(addr string, f []*mapi.Fee) error {
+func (tx *Tx) ChangeToAddress(addr string, f []*utils.Fee) error {
 	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return err
@@ -182,7 +179,7 @@ func (tx *Tx) ChangeToAddress(addr string, f []*mapi.Fee) error {
 
 // Change calculates the amount of fees needed to cover the transaction
 //  and adds the left over change in a new output using the script provided.
-func (tx *Tx) Change(s *bscript.Script, f []*mapi.Fee) error {
+func (tx *Tx) Change(s *bscript.Script, f []*utils.Fee) error {
 
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
@@ -193,32 +190,28 @@ func (tx *Tx) Change(s *bscript.Script, f []*mapi.Fee) error {
 
 	available := inputAmount - outputAmount
 
-	stdFees, err := GetStandardFee(f)
+	standardFees, err := GetStandardFee(f)
 	if err != nil {
 		return err
 	}
 
-	if !tx.canAddChange(available, stdFees) {
+	if !tx.canAddChange(available, standardFees) {
 		return nil
 	}
 
-	o := Output{
-		Satoshis:      0,
-		LockingScript: s,
-	}
-	tx.AddOutput(&o)
+	tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
 
-	presignedFeeRequired, err := tx.getPresignedFeeRequired(f)
-	if err != nil {
+	var preSignedFeeRequired uint64
+	if preSignedFeeRequired, err = tx.getPreSignedFeeRequired(f); err != nil {
 		return err
 	}
 
-	expectedUnlockingScriptFees, err := tx.getExpectedUnlockingScriptFees(f)
-	if err != nil {
+	var expectedUnlockingScriptFees uint64
+	if expectedUnlockingScriptFees, err = tx.getExpectedUnlockingScriptFees(f); err != nil {
 		return err
 	}
 
-	available -= (presignedFeeRequired + expectedUnlockingScriptFees)
+	available -= preSignedFeeRequired + expectedUnlockingScriptFees
 
 	// add rest of available sats to the change output
 	tx.Outputs[len(tx.GetOutputs())-1].Satoshis = available
@@ -226,52 +219,46 @@ func (tx *Tx) Change(s *bscript.Script, f []*mapi.Fee) error {
 	return nil
 }
 
-func (tx *Tx) canAddChange(available uint64, stdFees *mapi.Fee) bool {
+func (tx *Tx) canAddChange(available uint64, standardFees *utils.Fee) bool {
 
-	outputLen := tx.OutputCount()
-	viuli := VarIntUpperLimitInc(uint64(outputLen))
-
-	if viuli == -1 {
+	varIntUpper := VarIntUpperLimitInc(uint64(tx.OutputCount()))
+	if varIntUpper == -1 {
 		return false // upper limit of outputs in one tx reached
 	}
 
-	changeOutputFee := uint64(viuli)
+	changeOutputFee := uint64(varIntUpper)
 
 	changeP2pkhByteLen := 8 + 25 // 8 bytes for satoshi value + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
-	changeOutputFee += uint64(changeP2pkhByteLen * stdFees.MiningFee.Satoshis / stdFees.MiningFee.Bytes)
+	changeOutputFee += uint64(changeP2pkhByteLen * standardFees.MiningFee.Satoshis / standardFees.MiningFee.Bytes)
 
-	if available < changeOutputFee {
-		return false // not enough change to add a whole change output so don't add anything and return
-	}
-
-	return true
+	// not enough change to add a whole change output so don't add anything and return
+	return available >= changeOutputFee
 }
 
-func (tx *Tx) getPresignedFeeRequired(f []*mapi.Fee) (feeRequired uint64, err error) {
+func (tx *Tx) getPreSignedFeeRequired(f []*utils.Fee) (uint64, error) {
 
-	stdBytes, dataBytes := tx.getStandardAndDataBytes()
+	standardBytes, dataBytes := tx.getStandardAndDataBytes()
 
-	stdFee, err := GetStandardFee(f)
+	standardFee, err := GetStandardFee(f)
 	if err != nil {
 		return 0, err
 	}
 
-	fr := stdBytes * stdFee.MiningFee.Satoshis / stdFee.MiningFee.Bytes
+	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
 
-	dataFee, err := GetDataFee(f)
-	if err != nil {
+	var dataFee *utils.Fee
+	if dataFee, err = GetDataFee(f); err != nil {
 		return 0, err
 	}
 
 	fr += dataBytes * dataFee.MiningFee.Satoshis / dataFee.MiningFee.Bytes
 
 	return uint64(fr), nil
-
 }
 
-func (tx *Tx) getExpectedUnlockingScriptFees(f []*mapi.Fee) (feeRequired uint64, err error) {
+func (tx *Tx) getExpectedUnlockingScriptFees(f []*utils.Fee) (uint64, error) {
 
-	stdFee, err := GetStandardFee(f)
+	standardFee, err := GetStandardFee(f)
 	if err != nil {
 		return 0, err
 	}
@@ -285,33 +272,29 @@ func (tx *Tx) getExpectedUnlockingScriptFees(f []*mapi.Fee) (feeRequired uint64,
 		expectedBytes += 109 // = 1 oppushdata + 70-73 sig + 1 sighash + 1 oppushdata + 33 public key
 	}
 
-	fr := expectedBytes * stdFee.MiningFee.Satoshis / stdFee.MiningFee.Bytes
-
-	return uint64(fr), nil
+	return uint64(expectedBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes), nil
 }
 
-func (tx *Tx) getStandardAndDataBytes() (stdBytes int, dataBytes int) {
-	// Sutxract the value of each output as well as keeping track of data outputs
+func (tx *Tx) getStandardAndDataBytes() (standardBytes, dataBytes int) {
+	// Subtract the value of each output as well as keeping track of data outputs
 	for _, out := range tx.GetOutputs() {
 		if out.LockingScript.IsData() && len(*out.LockingScript) > 0 {
 			dataBytes += len(*out.LockingScript)
 		}
 	}
 
-	stdBytes = len(tx.ToBytes()) - dataBytes
-
+	standardBytes = len(tx.ToBytes()) - dataBytes
 	return
 }
 
 // HasDataOutputs returns true if the transaction has
 // at least one data (OP_RETURN) output in it.
-func (tx *Tx) HasDataOutputs() (hasDataOutputs bool) {
+func (tx *Tx) HasDataOutputs() bool {
 	for _, out := range tx.GetOutputs() {
 		if out.LockingScript.IsData() {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -322,11 +305,12 @@ func (tx *Tx) IsCoinbase() bool {
 		return false
 	}
 
+	// todo: make constant(s)?
 	if tx.Inputs[0].PreviousTxID != "0000000000000000000000000000000000000000000000000000000000000000" {
 		return false
 	}
 
-	if tx.Inputs[0].PreviousTxOutIndex == 0xFFFFFFFF || tx.Inputs[0].SequenceNumber == 0xFFFFFFFF {
+	if tx.Inputs[0].PreviousTxOutIndex == DefaultSequenceNumber || tx.Inputs[0].SequenceNumber == DefaultSequenceNumber {
 		return true
 	}
 
@@ -339,13 +323,11 @@ func (tx *Tx) GetInputs() []*Input {
 }
 
 // GetTotalInputSatoshis returns the total Satoshis inputted to the transaction.
-func (tx *Tx) GetTotalInputSatoshis() uint64 {
-	var total uint64
+func (tx *Tx) GetTotalInputSatoshis() (total uint64) {
 	for _, in := range tx.GetInputs() {
 		total += in.PreviousTxSatoshis
 	}
-
-	return total
+	return
 }
 
 // GetOutputs returns an array of all outputs in the transaction.
@@ -354,13 +336,11 @@ func (tx *Tx) GetOutputs() []*Output {
 }
 
 // GetTotalOutputSatoshis returns the total Satoshis outputted from the transaction.
-func (tx *Tx) GetTotalOutputSatoshis() uint64 {
-	var total uint64
+func (tx *Tx) GetTotalOutputSatoshis() (total uint64) {
 	for _, o := range tx.GetOutputs() {
 		total += o.Satoshis
 	}
-
-	return total
+	return
 }
 
 // GetTxID returns the transaction ID of the transaction
@@ -410,9 +390,8 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 
 	lt := make([]byte, 4)
 	binary.LittleEndian.PutUint32(lt, tx.Locktime)
-	h = append(h, lt...)
 
-	return h
+	return append(h, lt...)
 }
 
 // Sign is used to sign the transaction at a specific input index.

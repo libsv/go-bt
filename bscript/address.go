@@ -6,7 +6,6 @@ import (
 
 	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/bitcoinsv/bsvutil/base58"
-
 	"github.com/libsv/go-bt/crypto"
 )
 
@@ -25,11 +24,10 @@ func NewAddressFromString(addr string) (*Address, error) {
 	if err != nil {
 		return nil, err
 	}
-	a := Address{
+	return &Address{
 		AddressString: addr,
 		PublicKeyHash: pkh,
-	}
-	return &a, nil
+	}, nil
 }
 
 func addressToPubKeyHashStr(address string) (string, error) {
@@ -52,7 +50,7 @@ func addressToPubKeyHashStr(address string) (string, error) {
 		fallthrough
 
 	default:
-		return "", fmt.Errorf("Address %s is not supported", address)
+		return "", fmt.Errorf("address %s is not supported", address)
 	}
 }
 
@@ -76,18 +74,16 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	// mainnet: 0
 
 	bb := make([]byte, 1)
-	if mainnet == false {
+	if !mainnet {
 		bb[0] = 111
 	}
 
 	bb = append(bb, hash...)
-	addr := Base58EncodeMissingChecksum(bb)
 
-	a := Address{
-		AddressString: addr,
+	return &Address{
+		AddressString: Base58EncodeMissingChecksum(bb),
 		PublicKeyHash: hex.EncodeToString(hash),
-	}
-	return &a, nil
+	}, nil
 }
 
 // NewAddressFromPublicKey takes a bsvec public key and returns an Address struct pointer.
@@ -100,18 +96,16 @@ func NewAddressFromPublicKey(pubKey *bsvec.PublicKey, mainnet bool) (*Address, e
 	// mainnet: 0
 
 	bb := make([]byte, 1)
-	if mainnet == false {
+	if !mainnet {
 		bb[0] = 111
 	}
 
 	bb = append(bb, hash...)
-	addr := Base58EncodeMissingChecksum(bb)
 
-	a := Address{
-		AddressString: addr,
+	return &Address{
+		AddressString: Base58EncodeMissingChecksum(bb),
 		PublicKeyHash: hex.EncodeToString(hash),
-	}
-	return &a, nil
+	}, nil
 }
 
 // Base58EncodeMissingChecksum appends a checksum to a byte sequence
@@ -119,13 +113,13 @@ func NewAddressFromPublicKey(pubKey *bsvec.PublicKey, mainnet bool) (*Address, e
 func Base58EncodeMissingChecksum(input []byte) string {
 	b := make([]byte, 0, len(input)+4)
 	b = append(b, input[:]...)
-	cksum := checksum(b)
-	b = append(b, cksum[:]...)
+	ckSum := checksum(b)
+	b = append(b, ckSum[:]...)
 	return base58.Encode(b)
 }
 
-func checksum(input []byte) (cksum [4]byte) {
+func checksum(input []byte) (ckSum [4]byte) {
 	h := crypto.Sha256d(input)
-	copy(cksum[:], h[:4])
+	copy(ckSum[:], h[:4])
 	return
 }

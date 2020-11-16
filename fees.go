@@ -6,11 +6,19 @@ import (
 	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
 )
 
-// DefaultStandard returns the default
+const (
+	// FeeTypeStandard is the fee type for standard tx parts
+	FeeTypeStandard = "standard"
+
+	// FeeTypeData is the fee type for data tx parts
+	FeeTypeData = "data"
+)
+
+// DefaultStandardFee returns the default
 // standard fees offered by most miners.
-func DefaultStandard() *mapi.Fee {
+func DefaultStandardFee() *mapi.Fee {
 	return &mapi.Fee{
-		FeeType: "standard",
+		FeeType: FeeTypeStandard,
 		MiningFee: mapi.FeeUnit{
 			Satoshis: 5,
 			Bytes:    10,
@@ -22,11 +30,11 @@ func DefaultStandard() *mapi.Fee {
 	}
 }
 
-// DefaultData returns the default
+// DefaultDataFee returns the default
 // data fees offered by most miners.
-func DefaultData() *mapi.Fee {
+func DefaultDataFee() *mapi.Fee {
 	return &mapi.Fee{
-		FeeType: "data",
+		FeeType: FeeTypeData,
 		MiningFee: mapi.FeeUnit{
 			Satoshis: 25,
 			Bytes:    100,
@@ -38,32 +46,32 @@ func DefaultData() *mapi.Fee {
 	}
 }
 
-// Default returns an array of the default
+// DefaultFees returns an array of the default
 // standard and data fees offered by most miners.
-func Default() (f []*mapi.Fee) {
-	f = append(f, DefaultStandard())
-	f = append(f, DefaultData())
+func DefaultFees() (f []*mapi.Fee) {
+	f = append(f, DefaultStandardFee())
+	f = append(f, DefaultDataFee())
 	return
 }
 
 // GetStandardFee returns the standard fee in the fees array supplied.
 func GetStandardFee(fees []*mapi.Fee) (*mapi.Fee, error) {
 	for _, f := range fees {
-		if f.FeeType == "standard" {
+		if f.FeeType == FeeTypeStandard {
 			return f, nil
 		}
 	}
 
-	return nil, errors.New("no standard fee supplied")
+	return nil, errors.New("no " + FeeTypeStandard + " fee supplied")
 }
 
 // GetDataFee returns the data fee in the fees array supplied.
 func GetDataFee(fees []*mapi.Fee) (*mapi.Fee, error) {
 	for _, f := range fees {
-		if f.FeeType == "data" {
+		if f.FeeType == FeeTypeData {
 			return f, nil
 		}
 	}
 
-	return nil, errors.New("no data fee supplied")
+	return nil, errors.New("no " + FeeTypeData + " fee supplied")
 }

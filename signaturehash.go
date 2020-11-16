@@ -9,11 +9,14 @@ import (
 	"github.com/libsv/go-bt/sighash"
 )
 
-// TODO: change to "serialise tx"
+// TODO: change to "serialize tx"
 
 // GetInputSignatureHash serializes the transaction based on the input index and the SIGHASH flag
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
+
+	// todo: test if input exists (return error)
+
 	in := tx.Inputs[inputNumber]
 
 	if in.PreviousTxID == "" {
@@ -23,13 +26,13 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 		return nil, errors.New("'PreviousTxScript' not supplied")
 	}
 
-	hashPrevouts := make([]byte, 32)
+	hashPreviousOuts := make([]byte, 32)
 	hashSequence := make([]byte, 32)
 	hashOutputs := make([]byte, 32)
 
 	if sigHashFlag&sighash.AnyOneCanPay == 0 {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashPrevouts = tx.getPrevoutHash()
+		hashPreviousOuts = tx.getPreviousOutHash()
 	}
 
 	if sigHashFlag&sighash.AnyOneCanPay == 0 &&
@@ -54,8 +57,8 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 	binary.LittleEndian.PutUint32(v, tx.Version)
 	buf = append(buf, v...)
 
-	// Input prevouts/nSequence (none/all, depending on flags)
-	buf = append(buf, hashPrevouts...)
+	// Input previousOuts/nSequence (none/all, depending on flags)
+	buf = append(buf, hashPreviousOuts...)
 	buf = append(buf, hashSequence...)
 
 	//  outpoint (32-byte hash + 4-byte little endian)
@@ -97,10 +100,11 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 	return ReverseBytes(ret), nil
 }
 
-func (tx *Tx) getPrevoutHash() []byte {
+func (tx *Tx) getPreviousOutHash() []byte {
 	buf := make([]byte, 0)
 
 	for _, in := range tx.Inputs {
+		// todo: error ignored?
 		txid, _ := hex.DecodeString(in.PreviousTxID[:])
 		buf = append(buf, ReverseBytes(txid)...)
 		oi := make([]byte, 4)

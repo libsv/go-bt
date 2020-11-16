@@ -56,7 +56,7 @@ func DecodeVarInt(b []byte) (result uint64, size int) {
 // indicate how many bytes will be increase if the length
 // in incremented. -1 will be returned when the upper limit
 // of VarInt is reached.
-func VarIntUpperLimitInc(length uint64) (increment int) {
+func VarIntUpperLimitInc(length uint64) int {
 	switch length {
 	case 252, 65535:
 		return 2
