@@ -1,125 +1,153 @@
 # go-bt
+> The go-to Bitcoin Transaction (BT) GoLang library  
 
-> The go-to Bitcoin Transaction (BT) GoLang library.  
+[![Release](https://img.shields.io/github/release-pre/libsv/go-bt.svg?logo=github&style=flat&v=1)](https://github.com/libsv/go-bt/releases)
+[![Build Status](https://travis-ci.com/libsv/go-bt.svg?branch=master&v=1)](https://travis-ci.com/libsv/go-bt)
+[![Report](https://goreportcard.com/badge/github.com/libsv/go-bt?style=flat&v=1)](https://goreportcard.com/report/github.com/libsv/go-bt)
+[![codecov](https://codecov.io/gh/libsv/go-bt/branch/master/graph/badge.svg?v=1)](https://codecov.io/gh/libsv/go-bt)
+[![Go](https://img.shields.io/github/go-mod/go-version/libsv/go-bt?v=1)](https://golang.org/)
+[![Sponsor](https://img.shields.io/badge/sponsor-libsv-181717.svg?logo=github&style=flat&v=3)](https://github.com/sponsors/libsv)
+[![Donate](https://img.shields.io/badge/donate-bitcoin-ff9900.svg?logo=bitcoin&style=flat&v=3)](https://gobitcoinsv.com/#sponsor)
 
-For more information around the technical aspects of Bitcoin, please see the updated [Bitcoin Wiki](https://wiki.bitcoinsv.io/index.php/Main_Page).
+<br/>
 
-## Documentation
+## Table of Contents
+- [Installation](#installation)
+- [Documentation](#documentation)
+- [Examples & Tests](#examples--tests)
+- [Benchmarks](#benchmarks)
+- [Code Standards](#code-standards)
+- [Usage](#usage)
+- [Maintainers](#maintainers)
+- [Contributing](#contributing)
+- [License](#license)
 
-Check the [GoDoc](https://pkg.go.dev/mod/github.com/libsv/go-bt) documentation.
+<br/>
 
 ## Installation
 
-**Install with [go](https://formulae.brew.sh/formula/go)**
-
-```console
-go get github.com/libsv/go-bt
+**go-bt** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy).
+```shell script
+go get -u github.com/libsv/go-bt
 ```
 
-## Tests
+<br/>
 
-Run all tests
+## Documentation
+View the generated [documentation](https://pkg.go.dev/github.com/libsv/go-bt)
 
-```console
+[![GoDoc](https://godoc.org/github.com/libsv/go-bt?status.svg&style=flat)](https://pkg.go.dev/github.com/libsv/go-bt)
+
+For more information around the technical aspects of Bitcoin, please see the updated [Bitcoin Wiki](https://wiki.bitcoinsv.io/index.php/Main_Page).
+
+### Features
+- Full Featured Bitcoin Transactions
+- Auto-Fee Calculations for Change Address
+- Uses common type: [`mAPI.Fee`](https://github.com/bitcoin-sv/merchantapi-reference/blob/35ba2d395acc632eed1bd528ab524aeafad8bd40/utils/types.go#L32) for easy integration across projects
+
+<details>
+<summary><strong><code>Library Deployment</code></strong></summary>
+<br/>
+
+[goreleaser](https://github.com/goreleaser/goreleaser) for easy binary or library deployment to Github and can be installed via: `brew install goreleaser`.
+
+The [.goreleaser.yml](.goreleaser.yml) file is used to configure [goreleaser](https://github.com/goreleaser/goreleaser).
+
+Use `make release-snap` to create a snapshot version of the release, and finally `make release` to ship to production.
+</details>
+
+<details>
+<summary><strong><code>Makefile Commands</code></strong></summary>
+<br/>
+
+View all `makefile` commands
+```shell script
+make help
+```
+
+List of all current commands:
+```text
+all                      Runs multiple commands
+clean                    Remove previous builds and any test cache data
+clean-mods               Remove all the Go mod cache
+coverage                 Shows the test coverage
+godocs                   Sync the latest tag with GoDocs
+help                     Show this help message
+install                  Install the application
+install-go               Install the application (Using Native Go)
+lint                     Run the golangci-lint application (install if not found)
+release                  Full production release (creates release in Github)
+release                  Runs common.release then runs godocs
+release-snap             Test the full release (build binaries)
+release-test             Full production test release (everything except deploy)
+replace-version          Replaces the version in HTML/JS (pre-deploy)
+tag                      Generate a new tag and push (tag version=0.0.0)
+tag-remove               Remove a tag if found (tag-remove version=0.0.0)
+tag-update               Update an existing tag to current commit (tag-update version=0.0.0)
+test                     Runs vet, lint and ALL tests
+test-short               Runs vet, lint and tests (excludes integration tests)
+test-travis              Runs all tests via Travis (also exports coverage)
+test-travis-no-race      Runs all tests (no race) (also exports coverage)
+test-travis-short        Runs unit tests via Travis (also exports coverage)
+uninstall                Uninstall the application (and remove files)
+update-linter            Update the golangci-lint package (macOS only)
+vet                      Run the Go vet application
+```
+</details>
+
+<br/>
+
+## Examples & Tests
+All unit tests and [examples](examples) run via [Travis CI](https://travis-ci.org/libsv/go-bt) and uses [Go version 1.15.x](https://golang.org/doc/go1.15). View the [deployment configuration file](.travis.yml).
+
+Run all tests (including integration tests)
+```shell script
 make test
 ```
 
-## Examples
-
-### Create a transaction
-
-#### Regular P2PKH
-
-```go
-package main
-
-import (
-	"fmt"
-
-	"github.com/bitcoinsv/bsvutil"
-	"github.com/libsv/go-bt"
-)
-
-func main() {
-
-	tx := bt.NewTx()
-
-	tx.From(
-		"11b476ad8e0a48fcd40807a111a050af51114877e09283bfa7f3505081a1819d",
-		0,
-		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac6a0568656c6c6f",
-		1500)
-
-	tx.PayTo("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
-
-	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
-
-	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
-	err := tx.SignAuto(&signer)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	fmt.Println(tx.ToString())
-}
-
+Run tests (excluding integration tests)
+```shell script
+make test-short
 ```
 
-prints:
+<br/>
 
-```console
-01000000019d81a1815050f3a7bf8392e077481151af50a011a10708d4fc480a8ead76b411000000006b483045022100dda18196d5217ecfe01390a7ec9c0bd577e7d97ed88f92b7c4a2bf8cb94a493b0220465f9ab035ae584d45c0fbb41363c1cd862b8439619b3b42decb1e9f556dd142412102798913bc057b344de675dac34faafe3dc2f312c758cd9068209f810877306d66ffffffff01e8030000000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788ac00000000
+## Benchmarks
+Run the Go [benchmarks](tx_test.go):
+```shell script
+make bench
 ```
 
-#### Regular P2PKH + OP_RETURN output
+<br/>
 
-```go
-package main
+## Code Standards
+Read more about this Go project's [code standards](CODE_STANDARDS.md).
 
-import (
-	"fmt"
+<br/>
 
-	"github.com/bitcoinsv/bsvutil"
-	"github.com/libsv/go-bt"
-)
+## Usage
+View the [examples](examples)
 
-func main() {
+<br/>
 
-	tx := bt.NewTx()
+## Maintainers
+| [<img src="https://github.com/jadwahab.png" height="50" alt="JW" />](https://github.com/jadwahab) | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
+|:---:|:---:|
+| [JW](https://github.com/jadwahab) | [MrZ](https://github.com/mrz1836) |
 
-	err := tx.From(
-		"b7b0650a7c3a1bd4716369783876348b59f5404784970192cec1996e86950576",
-		0,
-		"76a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac",
-		1000)
-
-	tx.PayTo("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 900)
-
-	o, err := bt.NewOpReturnOutput([]byte("You are using LiBSV!"))
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	tx.AddOutput(o)
-
-	wif, _ := bsvutil.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
-
-	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
-	err = tx.SignAuto(&signer)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	fmt.Println(tx.ToString())
-}
-```
-
-prints:
-
-```console
-0100000001760595866e99c1ce920197844740f5598b34763878696371d41b3a7c0a65b0b7000000006b48304502210095087fccf657f236ffc844d97d5a3a0c43c96972ff00a842b31cb1905e11de4a022074a41d90c548bde1fff9de3c85dd9f773ba64de26b4de2dfe2bef812ab8de23b412102ea87d1fd77d169bd56a71e700628113d0f8dfe57faa0ba0e55a36f9ce8e10be3ffffffff0284030000000000001976a9147a1980655efbfec416b2b0c663a7b3ac0b6a25d288ac000000000000000017006a14596f7520617265207573696e67204c694253562100000000
-```
+<br/>
 
 ## Contributing
-
 View the [contributing guidelines](CONTRIBUTING.md) and please follow the [code of conduct](CODE_OF_CONDUCT.md).
+
+### How can I help?
+All kinds of contributions are welcome :raised_hands:!
+The most basic way to show your support is to star :star2: the project, or to raise issues :speech_balloon:.
+You can also support this project by [becoming a sponsor on GitHub](https://github.com/sponsors/libsv) :clap:
+or by making a [**bitcoin donation**](https://gobitcoinsv.com/#sponsor) to ensure this journey continues indefinitely! :rocket:
+
+<br/>
+
+## License
+
+![License](https://img.shields.io/github/license/libsv/go-bt.svg?style=flat&v=1)
