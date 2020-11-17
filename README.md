@@ -133,9 +133,9 @@ View the [examples](examples)
 <br/>
 
 ## Maintainers
-| [<img src="https://github.com/jadwahab.png" height="50" alt="JW" />](https://github.com/jadwahab) | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
-|:---:|:---:|
-| [JW](https://github.com/jadwahab) | [MrZ](https://github.com/mrz1836) |
+| [<img src="https://github.com/dwatson6.png" height="50" alt="dwatson6" />](https://github.com/dwatson6)| [<img src="https://github.com/HaddadJoe.png" height="50" alt="Joe" />](https://github.com/HaddadJoe) | [<img src="https://github.com/ordishs.png" height="50" alt="ordishs" />](https://github.com/ordishs) | [<img src="https://github.com/jadwahab.png" height="50" alt="JW" />](https://github.com/jadwahab) | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
+|:---:|:---:|:---:|:---:|:---:|
+| [dwatson6](https://github.com/dwatson6)| [Joe](https://github.com/HaddadJoe)| [ordishs](https://github.com/ordishs) | [JW](https://github.com/jadwahab) | [MrZ](https://github.com/mrz1836) |
 
 <br/>
 
