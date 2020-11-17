@@ -1,4 +1,5 @@
 # go-bt
+
 > The go-to Bitcoin Transaction (BT) GoLang library  
 
 [![Release](https://img.shields.io/github/release-pre/libsv/go-bt.svg?logo=github&style=flat&v=1)](https://github.com/libsv/go-bt/releases)
@@ -12,6 +13,7 @@
 <br/>
 
 ## Table of Contents
+
 - [Installation](#installation)
 - [Documentation](#documentation)
 - [Examples & Tests](#examples--tests)
@@ -27,6 +29,7 @@
 ## Installation
 
 **go-bt** requires a [supported release of Go](https://golang.org/doc/devel/release.html#policy).
+
 ```shell script
 go get -u github.com/libsv/go-bt
 ```
@@ -34,6 +37,7 @@ go get -u github.com/libsv/go-bt
 <br/>
 
 ## Documentation
+
 View the generated [documentation](https://pkg.go.dev/github.com/libsv/go-bt)
 
 [![GoDoc](https://godoc.org/github.com/libsv/go-bt?status.svg&style=flat)](https://pkg.go.dev/github.com/libsv/go-bt)
@@ -43,6 +47,7 @@ For more information around the technical aspects of Bitcoin, please see the upd
 <br/>
 
 ### Features
+
 - Full Featured Bitcoin Transactions
 - Auto-Fee Calculations for Change Address
 
@@ -62,11 +67,13 @@ Use `make release-snap` to create a snapshot version of the release, and finally
 <br/>
 
 View all `makefile` commands
+
 ```shell script
 make help
 ```
 
 List of all current commands:
+
 ```text
 all                      Runs multiple commands
 clean                    Remove previous builds and any test cache data
@@ -94,19 +101,23 @@ uninstall                Uninstall the application (and remove files)
 update-linter            Update the golangci-lint package (macOS only)
 vet                      Run the Go vet application
 ```
+
 </details>
 
 <br/>
 
 ## Examples & Tests
+
 All unit tests and [examples](examples) run via [Travis CI](https://travis-ci.org/libsv/go-bt) and uses [Go version 1.15.x](https://golang.org/doc/go1.15). View the [deployment configuration file](.travis.yml).
 
 Run all tests (including integration tests)
+
 ```shell script
 make test
 ```
 
 Run tests (excluding integration tests)
+
 ```shell script
 make test-short
 ```
@@ -114,7 +125,9 @@ make test-short
 <br/>
 
 ## Benchmarks
+
 Run the Go [benchmarks](tx_test.go):
+
 ```shell script
 make bench
 ```
@@ -122,21 +135,25 @@ make bench
 <br/>
 
 ## Code Standards
+
 Read more about this Go project's [code standards](CODE_STANDARDS.md).
 
 <br/>
 
 ## Usage
+
 View the [examples](examples)
 
 <br/>
 
 ## Maintainers
+
 | [<img src="https://github.com/HaddadJoe.png" height="50" alt="JH" />](https://github.com/HaddadJoe) | [<img src="https://github.com/jadwahab.png" height="50" alt="JW" />](https://github.com/jadwahab) | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
 |:---:|:---:|:---:|:---:|:---:|
 |  [JH](https://github.com/HaddadJoe)| [JW](https://github.com/jadwahab) | [MrZ](https://github.com/mrz1836) |
 
 ## Contributors
+
 | [<img src="https://github.com/dwatson6.png" height="50" alt="DW" />](https://github.com/dwatson6)| [<img src="https://github.com/HaddadJoe.png" height="50" alt="JH" />](https://github.com/HaddadJoe) | [<img src="https://github.com/jadwahab.png" height="50" alt="JW" />](https://github.com/jadwahab) | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) | [<img src="https://github.com/ordishs.png" height="50" alt="SO" />](https://github.com/ordishs) |
 |:---:|:---:|:---:|:---:|:---:|
 | [DW](https://github.com/dwatson6)| [JH](https://github.com/HaddadJoe)| [JW](https://github.com/jadwahab) | [MrZ](https://github.com/mrz1836) | [SO](https://github.com/ordishs) |
@@ -144,9 +161,11 @@ View the [examples](examples)
 <br/>
 
 ## Contributing
+
 View the [contributing guidelines](CONTRIBUTING.md) and please follow the [code of conduct](CODE_OF_CONDUCT.md).
 
 ### How can I help?
+
 All kinds of contributions are welcome :raised_hands:!
 The most basic way to show your support is to star :star2: the project, or to raise issues :speech_balloon:.
 You can also support this project by [becoming a sponsor on GitHub](https://github.com/sponsors/libsv) :clap:
