@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bitcoin-sv/merchantapi-reference/utils"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
 )
@@ -16,9 +15,9 @@ General format of a Bitcoin transaction (inside a block)
 --------------------------------------------------------
 Field            Description                                                               Size
 
-Version no	     currently 1	                                                             4 bytes
+Version no	     currently 1	                                                           4 bytes
 
-In-counter  	   positive integer VI = VarInt                                              1 - 9 bytes
+In-counter  	 positive integer VI = VarInt                                              1 - 9 bytes
 
 list of inputs	 the first input of the first transaction is also called "coinbase"        <in-counter>-many inputs
                  (its content was ignored in earlier versions)
@@ -30,6 +29,7 @@ list of outputs  the outputs of the first transaction spend the mined           
 
 lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height or        4 bytes
                  timestamp when transaction is final
+--------------------------------------------------------
 */
 
 // Tx wraps a bitcoin transaction
@@ -41,12 +41,12 @@ type Tx struct {
 	Inputs   []*Input
 	Outputs  []*Output
 	Version  uint32
-	Locktime uint32
+	LockTime uint32
 }
 
 // NewTx creates a new transaction object with default values.
 func NewTx() *Tx {
-	return &Tx{Version: 1, Locktime: 0}
+	return &Tx{Version: 1, LockTime: 0}
 }
 
 // NewTxFromString takes a toBytesHelper string representation of a bitcoin transaction
@@ -109,7 +109,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 		return nil, fmt.Errorf("nLockTime length must be 4 bytes long")
 	}
 
-	t.Locktime = binary.LittleEndian.Uint32(b[offset:])
+	t.LockTime = binary.LittleEndian.Uint32(b[offset:])
 
 	// offset += 4 // @mrz I commented this out, as it was ineffectual
 
@@ -133,7 +133,7 @@ func (tx *Tx) From(txID string, vout uint32, prevTxLockingScript string, satoshi
 		PreviousTxOutIndex: vout,
 		PreviousTxSatoshis: satoshis,
 		PreviousTxScript:   pts,
-		SequenceNumber:     0xffffffff,
+		SequenceNumber:     DefaultSequenceNumber,
 	})
 
 	return nil
@@ -168,7 +168,7 @@ func (tx *Tx) PayTo(addr string, satoshis uint64) error {
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new P2PKH output using the address provided.
-func (tx *Tx) ChangeToAddress(addr string, f []*utils.Fee) error {
+func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
 	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return err
@@ -179,7 +179,7 @@ func (tx *Tx) ChangeToAddress(addr string, f []*utils.Fee) error {
 
 // Change calculates the amount of fees needed to cover the transaction
 //  and adds the left over change in a new output using the script provided.
-func (tx *Tx) Change(s *bscript.Script, f []*utils.Fee) error {
+func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
@@ -219,7 +219,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*utils.Fee) error {
 	return nil
 }
 
-func (tx *Tx) canAddChange(available uint64, standardFees *utils.Fee) bool {
+func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 
 	varIntUpper := VarIntUpperLimitInc(uint64(tx.OutputCount()))
 	if varIntUpper == -1 {
@@ -235,7 +235,7 @@ func (tx *Tx) canAddChange(available uint64, standardFees *utils.Fee) bool {
 	return available >= changeOutputFee
 }
 
-func (tx *Tx) getPreSignedFeeRequired(f []*utils.Fee) (uint64, error) {
+func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
 
 	standardBytes, dataBytes := tx.getStandardAndDataBytes()
 
@@ -246,7 +246,7 @@ func (tx *Tx) getPreSignedFeeRequired(f []*utils.Fee) (uint64, error) {
 
 	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
 
-	var dataFee *utils.Fee
+	var dataFee *Fee
 	if dataFee, err = GetDataFee(f); err != nil {
 		return 0, err
 	}
@@ -256,7 +256,7 @@ func (tx *Tx) getPreSignedFeeRequired(f []*utils.Fee) (uint64, error) {
 	return uint64(fr), nil
 }
 
-func (tx *Tx) getExpectedUnlockingScriptFees(f []*utils.Fee) (uint64, error) {
+func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
 
 	standardFee, err := GetStandardFee(f)
 	if err != nil {
@@ -389,7 +389,7 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 	}
 
 	lt := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lt, tx.Locktime)
+	binary.LittleEndian.PutUint32(lt, tx.LockTime)
 
 	return append(h, lt...)
 }

@@ -239,6 +239,7 @@ func (s *Script) IsP2PK() bool {
 }
 
 // IsP2SH returns true if this is a p2sh output script.
+// TODO: remove all p2sh stuff from repo
 func (s *Script) IsP2SH() bool {
 	b := []byte(*s)
 

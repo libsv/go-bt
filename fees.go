@@ -2,8 +2,6 @@ package bt
 
 import (
 	"errors"
-
-	mapi "github.com/bitcoin-sv/merchantapi-reference/utils"
 )
 
 const (
@@ -14,16 +12,33 @@ const (
 	FeeTypeData = "data"
 )
 
+// FeeUnit displays the amount of Satoshis needed
+// for a specific amount of Bytes in a transaction
+// see https://github.com/bitcoin-sv-specs/brfc-misc/tree/master/feespec
+type FeeUnit struct {
+	Satoshis int `json:"satoshis"` // Fee in satoshis of the amount of Bytes
+	Bytes    int `json:"bytes"`    // Nuumber of bytes that the Fee covers
+}
+
+// Fee displays the MiningFee as well as the RelayFee for a specific
+// FeeType, for example 'standard' or 'data'
+// see https://github.com/bitcoin-sv-specs/brfc-misc/tree/master/feespec
+type Fee struct {
+	FeeType   string  `json:"feeType"` // standard || data
+	MiningFee FeeUnit `json:"miningFee"`
+	RelayFee  FeeUnit `json:"relayFee"` // Fee for retaining Tx in secondary mempool
+}
+
 // DefaultStandardFee returns the default
 // standard fees offered by most miners.
-func DefaultStandardFee() *mapi.Fee {
-	return &mapi.Fee{
+func DefaultStandardFee() *Fee {
+	return &Fee{
 		FeeType: FeeTypeStandard,
-		MiningFee: mapi.FeeUnit{
+		MiningFee: FeeUnit{
 			Satoshis: 5,
 			Bytes:    10,
 		},
-		RelayFee: mapi.FeeUnit{
+		RelayFee: FeeUnit{
 			Satoshis: 5,
 			Bytes:    10,
 		},
@@ -32,14 +47,14 @@ func DefaultStandardFee() *mapi.Fee {
 
 // DefaultDataFee returns the default
 // data fees offered by most miners.
-func DefaultDataFee() *mapi.Fee {
-	return &mapi.Fee{
+func DefaultDataFee() *Fee {
+	return &Fee{
 		FeeType: FeeTypeData,
-		MiningFee: mapi.FeeUnit{
+		MiningFee: FeeUnit{
 			Satoshis: 25,
 			Bytes:    100,
 		},
-		RelayFee: mapi.FeeUnit{
+		RelayFee: FeeUnit{
 			Satoshis: 25,
 			Bytes:    100,
 		},
@@ -48,14 +63,14 @@ func DefaultDataFee() *mapi.Fee {
 
 // DefaultFees returns an array of the default
 // standard and data fees offered by most miners.
-func DefaultFees() (f []*mapi.Fee) {
+func DefaultFees() (f []*Fee) {
 	f = append(f, DefaultStandardFee())
 	f = append(f, DefaultDataFee())
 	return
 }
 
 // GetStandardFee returns the standard fee in the fees array supplied.
-func GetStandardFee(fees []*mapi.Fee) (*mapi.Fee, error) {
+func GetStandardFee(fees []*Fee) (*Fee, error) {
 	for _, f := range fees {
 		if f.FeeType == FeeTypeStandard {
 			return f, nil
@@ -66,7 +81,7 @@ func GetStandardFee(fees []*mapi.Fee) (*mapi.Fee, error) {
 }
 
 // GetDataFee returns the data fee in the fees array supplied.
-func GetDataFee(fees []*mapi.Fee) (*mapi.Fee, error) {
+func GetDataFee(fees []*Fee) (*Fee, error) {
 	for _, f := range fees {
 		if f.FeeType == FeeTypeData {
 			return f, nil

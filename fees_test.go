@@ -3,14 +3,13 @@ package bt_test
 import (
 	"testing"
 
-	"github.com/bitcoin-sv/merchantapi-reference/utils"
 	"github.com/libsv/go-bt"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetDataFee(t *testing.T) {
 	t.Run("get valid data fee", func(t *testing.T) {
-		fees := []*utils.Fee{bt.DefaultDataFee()}
+		fees := []*bt.Fee{bt.DefaultDataFee()}
 		fee, err := bt.GetDataFee(fees)
 		assert.NoError(t, err)
 		assert.NotNil(t, fee)
@@ -24,7 +23,7 @@ func TestGetDataFee(t *testing.T) {
 	t.Run("no data fee found", func(t *testing.T) {
 		wrongFee := bt.DefaultDataFee()
 		wrongFee.FeeType = "unknown"
-		fees := []*utils.Fee{wrongFee}
+		fees := []*bt.Fee{wrongFee}
 		fee, err := bt.GetDataFee(fees)
 		assert.Error(t, err)
 		assert.Nil(t, fee)
@@ -33,7 +32,7 @@ func TestGetDataFee(t *testing.T) {
 
 func TestGetStandardFee(t *testing.T) {
 	t.Run("get valid standard fee", func(t *testing.T) {
-		fees := []*utils.Fee{bt.DefaultStandardFee()}
+		fees := []*bt.Fee{bt.DefaultStandardFee()}
 		fee, err := bt.GetStandardFee(fees)
 		assert.NoError(t, err)
 		assert.NotNil(t, fee)
@@ -47,7 +46,7 @@ func TestGetStandardFee(t *testing.T) {
 	t.Run("no standard fee found", func(t *testing.T) {
 		wrongFee := bt.DefaultStandardFee()
 		wrongFee.FeeType = "unknown"
-		fees := []*utils.Fee{wrongFee}
+		fees := []*bt.Fee{wrongFee}
 		fee, err := bt.GetStandardFee(fees)
 		assert.Error(t, err)
 		assert.Nil(t, fee)
