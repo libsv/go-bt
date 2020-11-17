@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/bitcoin-sv/merchantapi-reference/utils"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
 )
@@ -169,7 +168,7 @@ func (tx *Tx) PayTo(addr string, satoshis uint64) error {
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new P2PKH output using the address provided.
-func (tx *Tx) ChangeToAddress(addr string, f []*utils.Fee) error {
+func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
 	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return err
@@ -180,7 +179,7 @@ func (tx *Tx) ChangeToAddress(addr string, f []*utils.Fee) error {
 
 // Change calculates the amount of fees needed to cover the transaction
 //  and adds the left over change in a new output using the script provided.
-func (tx *Tx) Change(s *bscript.Script, f []*utils.Fee) error {
+func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
@@ -220,7 +219,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*utils.Fee) error {
 	return nil
 }
 
-func (tx *Tx) canAddChange(available uint64, standardFees *utils.Fee) bool {
+func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 
 	varIntUpper := VarIntUpperLimitInc(uint64(tx.OutputCount()))
 	if varIntUpper == -1 {
@@ -236,7 +235,7 @@ func (tx *Tx) canAddChange(available uint64, standardFees *utils.Fee) bool {
 	return available >= changeOutputFee
 }
 
-func (tx *Tx) getPreSignedFeeRequired(f []*utils.Fee) (uint64, error) {
+func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
 
 	standardBytes, dataBytes := tx.getStandardAndDataBytes()
 
@@ -247,7 +246,7 @@ func (tx *Tx) getPreSignedFeeRequired(f []*utils.Fee) (uint64, error) {
 
 	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
 
-	var dataFee *utils.Fee
+	var dataFee *Fee
 	if dataFee, err = GetDataFee(f); err != nil {
 		return 0, err
 	}
@@ -257,7 +256,7 @@ func (tx *Tx) getPreSignedFeeRequired(f []*utils.Fee) (uint64, error) {
 	return uint64(fr), nil
 }
 
-func (tx *Tx) getExpectedUnlockingScriptFees(f []*utils.Fee) (uint64, error) {
+func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
 
 	standardFee, err := GetStandardFee(f)
 	if err != nil {
