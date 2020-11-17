@@ -261,12 +261,12 @@ func TestTx_Change(t *testing.T) {
 		)
 
 		feePaid := tx.GetTotalInputSatoshis() - tx.GetTotalOutputSatoshis()
-		assert.Equal(t, feePaid, uint64(122))
+		assert.Equal(t, uint64(122), feePaid)
 
 		txSize := len(tx.ToBytes())
-		assert.Equal(t, txSize, 251)
+		assert.Equal(t, 251, txSize)
 
 		feeRate := float64(feePaid) / float64(txSize)
-		assert.Equal(t, feeRate, 0.4860557768924303)
+		assert.Equal(t, 0.4860557768924303, feeRate)
 	})
 }
