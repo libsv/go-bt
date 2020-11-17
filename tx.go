@@ -133,7 +133,7 @@ func (tx *Tx) From(txID string, vout uint32, prevTxLockingScript string, satoshi
 		PreviousTxOutIndex: vout,
 		PreviousTxSatoshis: satoshis,
 		PreviousTxScript:   pts,
-		SequenceNumber:     0xffffffff,
+		SequenceNumber:     DefaultSequenceNumber,
 	})
 
 	return nil

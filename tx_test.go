@@ -23,8 +23,8 @@ func TestNewTx(t *testing.T) {
 func TestNewTxFromString(t *testing.T) {
 	t.Parallel()
 
-	h := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c000000004847304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041ffffffff01c0aff629010000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
-	tx, err := bt.NewTxFromString(h)
+	rawTx := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c000000004847304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041ffffffff01c0aff629010000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
+	tx, err := bt.NewTxFromString(rawTx)
 	assert.NoError(t, err)
 	assert.NotNil(t, tx)
 
@@ -34,10 +34,11 @@ func TestNewTxFromString(t *testing.T) {
 	assert.Equal(t, 1, len(tx.Inputs))
 
 	// Create a new unlocking script
-	i := bt.Input{}
-	i.PreviousTxID = "9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c"
-	i.PreviousTxOutIndex = 0
-	i.SequenceNumber = uint32(0xffffffff)
+	i := bt.Input{
+		PreviousTxID:       "9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c",
+		PreviousTxOutIndex: 0,
+		SequenceNumber:     bt.DefaultSequenceNumber,
+	}
 	i.UnlockingScript, err = bscript.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
 	assert.NoError(t, err)
 	assert.NotNil(t, i.UnlockingScript)
@@ -62,8 +63,8 @@ func TestNewTxFromString(t *testing.T) {
 func TestNewTxFromBytes(t *testing.T) {
 	t.Parallel()
 
-	h := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c0000000049483045022100c4df63202a9aa2bea5c24ebf4418d145e81712072ef744a4b108174f1ef59218022006eb54cf904707b51625f521f8ed2226f7d34b62492ebe4ddcb1c639caf16c3c41ffffffff0140420f00000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
-	b, err := hex.DecodeString(h)
+	rawTx := "02000000011ccba787d421b98904da3329b2c7336f368b62e89bc896019b5eadaa28145b9c0000000049483045022100c4df63202a9aa2bea5c24ebf4418d145e81712072ef744a4b108174f1ef59218022006eb54cf904707b51625f521f8ed2226f7d34b62492ebe4ddcb1c639caf16c3c41ffffffff0140420f00000000001976a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac00000000"
+	b, err := hex.DecodeString(rawTx)
 	assert.NoError(t, err)
 
 	var tx *bt.Tx
@@ -93,7 +94,7 @@ func TestTx_GetTotalOutputSatoshis(t *testing.T) {
 func TestGetVersion(t *testing.T) {
 	t.Parallel()
 
-	const rawTx = "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
+	rawTx := "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
 	tx, err := bt.NewTxFromString(rawTx)
 	assert.NoError(t, err)
 	assert.NotNil(t, tx)
@@ -153,6 +154,151 @@ func TestTx_CreateTx(t *testing.T) {
 
 	err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
 	assert.NoError(t, err)
+}
+
+func TestTx_InputCount(t *testing.T) {
+	t.Run("get input count", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, tx.InputCount())
+	})
+}
+
+func TestTx_PayTo(t *testing.T) {
+	t.Run("missing pay to address", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.PayTo("", 100)
+		assert.Error(t, err)
+	})
+
+	t.Run("invalid pay to address", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.PayTo("1234567", 100)
+		assert.Error(t, err)
+	})
+
+	t.Run("valid pay to address", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.PayTo("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", 100)
+		assert.NoError(t, err)
+		assert.Equal(t, 1, tx.OutputCount())
+	})
+}
+
+func TestTx_ChangeToAddress(t *testing.T) {
+	t.Run("missing address and nil fees", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.ChangeToAddress("", nil)
+		assert.Error(t, err)
+	})
+
+	t.Run("nil fees, valid address", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.ChangeToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", nil)
+		assert.Error(t, err)
+	})
+
+	t.Run("valid fees, valid address", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.ChangeToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", bt.DefaultFees())
+		assert.NoError(t, err)
+
+		assert.Equal(t, 1, tx.OutputCount())
+		assert.Equal(t, "76a914a7a1a7fd7d279b57b84e596cbbf82608efdb441a88ac", tx.Outputs[0].LockingScript.ToString())
+	})
+}
+
+func TestTx_From(t *testing.T) {
+	t.Run("invalid locking script (hex decode failed)", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"0",
+			4000000)
+		assert.Error(t, err)
+
+		err = tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae4016",
+			4000000)
+		assert.Error(t, err)
+	})
+
+	t.Run("valid script and tx", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		inputs := tx.GetInputs()
+		assert.Equal(t, 1, len(inputs))
+		assert.Equal(t, "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", inputs[0].PreviousTxID)
+		assert.Equal(t, uint32(0), inputs[0].PreviousTxOutIndex)
+		assert.Equal(t, uint64(4000000), inputs[0].PreviousTxSatoshis)
+		assert.Equal(t, bt.DefaultSequenceNumber, inputs[0].SequenceNumber)
+		assert.Equal(t, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", inputs[0].PreviousTxScript.ToString())
+	})
 }
 
 func TestTx_Change(t *testing.T) {

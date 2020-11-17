@@ -74,7 +74,13 @@ func TestInput_String(t *testing.T) {
 func TestNewInputFromUTXO(t *testing.T) {
 	t.Parallel()
 
-	i, err := bt.NewInputFromUTXO("a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", 4, 5064, "a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac", 0xffffffff)
+	i, err := bt.NewInputFromUTXO(
+		"a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5",
+		4,
+		5064,
+		"a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac",
+		bt.DefaultSequenceNumber,
+	)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", i.PreviousTxID)
