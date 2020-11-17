@@ -17,7 +17,7 @@ func TestNewTx(t *testing.T) {
 	tx := bt.NewTx()
 	assert.NotNil(t, tx)
 	assert.Equal(t, uint32(1), tx.Version)
-	assert.Equal(t, uint32(0), tx.Locktime)
+	assert.Equal(t, uint32(0), tx.LockTime)
 }
 
 func TestNewTxFromString(t *testing.T) {
@@ -30,7 +30,7 @@ func TestNewTxFromString(t *testing.T) {
 
 	// Check version, locktime, inputs
 	assert.Equal(t, uint32(2), tx.Version)
-	assert.Equal(t, uint32(0), tx.Locktime)
+	assert.Equal(t, uint32(0), tx.LockTime)
 	assert.Equal(t, 1, len(tx.Inputs))
 
 	// Create a new unlocking script

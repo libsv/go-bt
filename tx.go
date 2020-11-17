@@ -16,9 +16,9 @@ General format of a Bitcoin transaction (inside a block)
 --------------------------------------------------------
 Field            Description                                                               Size
 
-Version no	     currently 1	                                                             4 bytes
+Version no	     currently 1	                                                           4 bytes
 
-In-counter  	   positive integer VI = VarInt                                              1 - 9 bytes
+In-counter  	 positive integer VI = VarInt                                              1 - 9 bytes
 
 list of inputs	 the first input of the first transaction is also called "coinbase"        <in-counter>-many inputs
                  (its content was ignored in earlier versions)
@@ -30,6 +30,7 @@ list of outputs  the outputs of the first transaction spend the mined           
 
 lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height or        4 bytes
                  timestamp when transaction is final
+--------------------------------------------------------
 */
 
 // Tx wraps a bitcoin transaction
@@ -41,12 +42,12 @@ type Tx struct {
 	Inputs   []*Input
 	Outputs  []*Output
 	Version  uint32
-	Locktime uint32
+	LockTime uint32
 }
 
 // NewTx creates a new transaction object with default values.
 func NewTx() *Tx {
-	return &Tx{Version: 1, Locktime: 0}
+	return &Tx{Version: 1, LockTime: 0}
 }
 
 // NewTxFromString takes a toBytesHelper string representation of a bitcoin transaction
@@ -109,7 +110,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 		return nil, fmt.Errorf("nLockTime length must be 4 bytes long")
 	}
 
-	t.Locktime = binary.LittleEndian.Uint32(b[offset:])
+	t.LockTime = binary.LittleEndian.Uint32(b[offset:])
 
 	// offset += 4 // @mrz I commented this out, as it was ineffectual
 
@@ -389,7 +390,7 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 	}
 
 	lt := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lt, tx.Locktime)
+	binary.LittleEndian.PutUint32(lt, tx.LockTime)
 
 	return append(h, lt...)
 }

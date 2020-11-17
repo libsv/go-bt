@@ -85,9 +85,9 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 	// Outputs (none/one/all, depending on flags)
 	buf = append(buf, hashOutputs...)
 
-	// Locktime
+	// LockTime
 	lt := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lt, tx.Locktime)
+	binary.LittleEndian.PutUint32(lt, tx.LockTime)
 	buf = append(buf, lt...)
 
 	// sighashType
