@@ -18,7 +18,7 @@ func main() {
 
 	_ = tx.PayTo("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 900)
 
-	o, err := bt.NewOpReturnOutput([]byte("You are using LiBSV!"))
+	o, err := bt.NewOpReturnOutput([]byte("You are using go-bt!"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

@@ -1,0 +1,18 @@
+# Basic dependabot.yml to update gomod
+
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    target-branch: "master"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      # Check for npm updates at 9am UTC (5am EST)
+      time: "10:00"
+    reviewers:
+      - "jadwahab"
+    assignees:
+      - "jadwahab"
+    # Labels must be created first
+    labels:
+      - "update"

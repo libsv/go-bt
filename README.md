@@ -38,7 +38,9 @@ View the generated [documentation](https://pkg.go.dev/github.com/libsv/go-bt)
 
 [![GoDoc](https://godoc.org/github.com/libsv/go-bt?status.svg&style=flat)](https://pkg.go.dev/github.com/libsv/go-bt)
 
-For more information around the technical aspects of Bitcoin, please see the updated [Bitcoin Wiki](https://wiki.bitcoinsv.io/index.php/Main_Page).
+For more information around the technical aspects of Bitcoin, please see the updated [Bitcoin Wiki](https://wiki.bitcoinsv.io/index.php/Main_Page)
+
+<br/>
 
 ### Features
 - Full Featured Bitcoin Transactions
