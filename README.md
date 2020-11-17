@@ -45,7 +45,6 @@ For more information around the technical aspects of Bitcoin, please see the upd
 ### Features
 - Full Featured Bitcoin Transactions
 - Auto-Fee Calculations for Change Address
-- Uses common type: [`mAPI.Fee`](https://github.com/bitcoin-sv/merchantapi-reference/blob/35ba2d395acc632eed1bd528ab524aeafad8bd40/utils/types.go#L32) for easy integration across projects
 
 <details>
 <summary><strong><code>Library Deployment</code></strong></summary>
