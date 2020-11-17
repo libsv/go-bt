@@ -159,7 +159,7 @@ View the [examples](examples)
 ## Maintainers
 
 | [<img src="https://github.com/HaddadJoe.png" height="50" alt="JH" />](https://github.com/HaddadJoe) | [<img src="https://github.com/jadwahab.png" height="50" alt="JW" />](https://github.com/jadwahab) | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
-|:---:|:---:|:---:|:---:|:---:|
+|:---:|:---:|:---:|
 |  [JH](https://github.com/HaddadJoe)| [JW](https://github.com/jadwahab) | [MrZ](https://github.com/mrz1836) |
 
 ## Contributors
