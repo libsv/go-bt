@@ -50,6 +50,16 @@ For more information around the technical aspects of Bitcoin, please see the upd
 
 - Full Featured Bitcoin Transactions
 - Auto-Fee Calculations for Change Address
+- Bitcoin Transaction [Script](bscript/) Functionality
+  - P2PKH (base58 addresses)
+  - Data (OP_RETURN)
+  - [BIP276](https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki)
+
+- Transaction Signing Extendability
+
+#### Coming Soon! (18 months<sup>TM</sup>)
+
+- Complete SigHash Flag Capability
 
 <details>
 <summary><strong><code>Library Deployment</code></strong></summary>
