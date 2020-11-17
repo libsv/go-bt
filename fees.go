@@ -17,7 +17,7 @@ const (
 // see https://github.com/bitcoin-sv-specs/brfc-misc/tree/master/feespec
 type FeeUnit struct {
 	Satoshis int `json:"satoshis"` // Fee in satoshis of the amount of Bytes
-	Bytes    int `json:"bytes"`    // Nuumber of bytes that the Fee covers
+	Bytes    int `json:"bytes"`    // Number of bytes that the Fee covers
 }
 
 // Fee displays the MiningFee as well as the RelayFee for a specific
