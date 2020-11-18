@@ -64,4 +64,24 @@ func TestDecrypt(t *testing.T) {
 		assert.Equal(t, "this is a test", string(decrypted))
 		assert.Equal(t, "7468697320697320612074657374", hex.EncodeToString(decrypted))
 	})
+
+	t.Run("invalid cipher text", func(t *testing.T) {
+
+		keyStr := "2b7e151628aed2a6abf7158809cf4f3c"
+		key, err := hex.DecodeString(keyStr)
+		assert.NoError(t, err)
+
+		encryptedString := "000000"
+		var encryptedData []byte
+		encryptedData, err = hex.DecodeString(encryptedString)
+		assert.NoError(t, err)
+
+		var block cipher.Block
+		block, err = aes.NewCipher(key)
+		assert.NoError(t, err)
+		assert.NotNil(t, block)
+
+		_, err = Decrypt(block, encryptedData)
+		assert.Error(t, err)
+	})
 }
