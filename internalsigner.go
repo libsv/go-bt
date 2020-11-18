@@ -59,8 +59,6 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (*Tx, error) {
 	}
 
 	for i, in := range unsignedTx.Inputs {
-
-		// todo: error is not being checked
 		pubKeyHash, _ := in.PreviousTxScript.GetPublicKeyHash() // doesn't matter if returns error (not p2pkh)
 		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
 
