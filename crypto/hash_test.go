@@ -53,6 +53,18 @@ func TestHashFunctions(t *testing.T) {
 			"f88eec7ecabf88f9a64c4100cac1e0c0c4581100492137d1b656ea626cad63e3",
 			Sha256,
 		},
+		{
+			"Test Hash160 Empty String",
+			"",
+			"b472a266d0bd89c13706a4132ccfb16f7c3b9fcb",
+			Hash160,
+		},
+		{
+			"Test Hash160 String",
+			"this is the data I want to hash",
+			"e7fb13ef86fef4203f042fbfc2703fa628301e90",
+			Hash160,
+		},
 	}
 
 	for _, hashTest := range hashTests {

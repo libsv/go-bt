@@ -154,6 +154,12 @@ func TestGetVersion(t *testing.T) {
 func TestTx_IsCoinbase(t *testing.T) {
 	t.Parallel()
 
+	t.Run("invalid number of inputs", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+		assert.Equal(t, false, tx.IsCoinbase())
+	})
+
 	t.Run("valid coinbase tx, 1 input", func(t *testing.T) {
 		rawTx := "02000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0e5101010a2f4542323030302e302fffffffff0100f2052a01000000232103db233bb9fc387d78b133ec904069d46e95ff17da657671b44afa0bc64e89ac18ac00000000"
 		tx, err := bt.NewTxFromString(rawTx)
@@ -174,6 +180,14 @@ func TestTx_IsCoinbase(t *testing.T) {
 
 	t.Run("tx is not a coinbase tx", func(t *testing.T) {
 		coinbaseTx := "01000000014c6ec863cf3e0284b407a1a1b8138c76f98280812cb9653231f385a0305fc76f010000006b483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824fffffffff021d784500000000001976a914e9b62e25d4c6f97287dfe62f8063b79a9638c84688ac60d64f00000000001976a914bb4bca2306df66d72c6e44a470873484d8808b8888ac00000000"
+		tx, err := bt.NewTxFromString(coinbaseTx)
+		assert.NoError(t, err)
+		assert.NotNil(t, tx)
+		assert.Equal(t, false, tx.IsCoinbase())
+	})
+
+	t.Run("tx (2) is not a coinbase tx", func(t *testing.T) {
+		coinbaseTx := "010000000159ef0cbb7881f2c934d6fb669f68f7c6a9c632f997152f828d1153806b7ac82b010000006b483045022100e775a21994cc6d6d6bf79d295aeea592e7b4cf8d8ecddaf67bb6626d7af82fd302201921a313de67e23a78c81dd5fe9a19322839c0ea1034b9c54e8206dea3aa9e68412103d1c02ee3522ff58df6c6287e67202a797b562fa8b5a9ed86613fe5ee48fb8821ffffffff02000000000000000011006a0e6d657461737472656d652e636f6dc9990200000000001976a914fa1b02ff7e41975d698fec6fb1b2d7e4656f8e7f88ac00000000"
 		tx, err := bt.NewTxFromString(coinbaseTx)
 		assert.NoError(t, err)
 		assert.NotNil(t, tx)
@@ -464,5 +478,142 @@ func TestTx_Change(t *testing.T) {
 
 		feeRate := float64(feePaid) / float64(txSize)
 		assert.Equal(t, 0.4860557768924303, feeRate)
+	})
+}
+
+func TestTx_HasDataOutputs(t *testing.T) {
+	t.Parallel()
+
+	t.Run("has data outputs", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		err := tx.From(
+			"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+			0,
+			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+			2000000)
+		assert.NoError(t, err)
+
+		err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+		assert.NoError(t, err)
+
+		// Add op return data
+		type OpReturnData [][]byte
+		ops := OpReturnData{[]byte("prefix1"), []byte("example data"), []byte{0x13, 0x37}}
+
+		var out *bt.Output
+		out, err = bt.NewOpReturnPartsOutput(ops)
+		assert.NoError(t, err)
+
+		tx.AddOutput(out)
+
+		var wif *bsvutil.WIF
+		wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		assert.NoError(t, err)
+		assert.NotNil(t, wif)
+
+		err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+		assert.NoError(t, err)
+
+		assert.Equal(t, true, tx.HasDataOutputs())
+	})
+
+	t.Run("no data outputs", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		err := tx.From(
+			"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+			0,
+			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+			2000000)
+		assert.NoError(t, err)
+
+		err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+		assert.NoError(t, err)
+
+		var wif *bsvutil.WIF
+		wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		assert.NoError(t, err)
+		assert.NotNil(t, wif)
+
+		err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+		assert.NoError(t, err)
+
+		assert.Equal(t, false, tx.HasDataOutputs())
+	})
+}
+
+func TestTx_Sign(t *testing.T) {
+	// todo: add tests
+}
+
+func TestTx_SignAuto(t *testing.T) {
+	t.Parallel()
+
+	t.Run("valid tx (basic)", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		assert.NoError(t, err)
+
+		var wif *bsvutil.WIF
+		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		assert.NoError(t, err)
+		assert.NotNil(t, wif)
+
+		rawTxBefore := tx.ToString()
+
+		err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+		assert.NoError(t, err)
+
+		assert.NotEqual(t, rawTxBefore, tx.ToString())
+	})
+
+	t.Run("no input or output", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		rawTxBefore := tx.ToString()
+
+		err := tx.SignAuto(&bt.InternalSigner{PrivateKey: nil, SigHashFlag: 0})
+		assert.NoError(t, err)
+
+		assert.Equal(t, rawTxBefore, tx.ToString())
+	})
+
+	t.Run("valid tx (wrong wif)", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		err := tx.From(
+			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+			0,
+			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+			4000000)
+		assert.NoError(t, err)
+
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		assert.NoError(t, err)
+
+		var wif *bsvutil.WIF
+		wif, err = bsvutil.DecodeWIF("5KgHn2qiftW5LQgCYFtkbrLYB1FuvisDtacax8NCvumw3UTKdcP")
+		assert.NoError(t, err)
+		assert.NotNil(t, wif)
+
+		// No signature, wrong wif
+		rawTxBefore := tx.ToString()
+		err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+		assert.NoError(t, err)
+		assert.Equal(t, rawTxBefore, tx.ToString())
 	})
 }

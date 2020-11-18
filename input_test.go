@@ -43,8 +43,15 @@ func TestNewInputFromBytes(t *testing.T) {
 		assert.Equal(t, 0, s)
 	})
 
-	t.Run("invalid input", func(t *testing.T) {
+	t.Run("invalid input, too short", func(t *testing.T) {
 		i, s, err := bt.NewInputFromBytes([]byte("invalid"))
+		assert.Error(t, err)
+		assert.Nil(t, i)
+		assert.Equal(t, 0, s)
+	})
+
+	t.Run("invalid input, too short + script", func(t *testing.T) {
+		i, s, err := bt.NewInputFromBytes([]byte("000000000000000000000000000000000000000000000000000000000000000000000000"))
 		assert.Error(t, err)
 		assert.Nil(t, i)
 		assert.Equal(t, 0, s)
