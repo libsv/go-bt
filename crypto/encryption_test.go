@@ -9,12 +9,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const testKey = "2b7e151628aed2a6abf7158809cf4f3c"
+
 func TestEncrypt(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid aes encryption", func(t *testing.T) {
-		keyStr := "2b7e151628aed2a6abf7158809cf4f3c"
-		key, err := hex.DecodeString(keyStr)
+		key, err := hex.DecodeString(testKey)
 		assert.NoError(t, err)
 
 		testStr := "7468697320697320612074657374"
@@ -30,7 +31,7 @@ func TestEncrypt(t *testing.T) {
 		var encrypted []byte
 		encrypted, err = Encrypt(block, testData)
 		assert.NoError(t, err)
-		t.Logf("%x", encrypted)
+		// t.Logf("%x", encrypted)
 
 		var decrypted []byte
 		decrypted, err = Decrypt(block, encrypted)
@@ -44,8 +45,7 @@ func TestDecrypt(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid aes decryption", func(t *testing.T) {
-		keyStr := "2b7e151628aed2a6abf7158809cf4f3c"
-		key, err := hex.DecodeString(keyStr)
+		key, err := hex.DecodeString(testKey)
 		assert.NoError(t, err)
 
 		encryptedString := "16c9de9d806edf8bf7512f1654f0d72c63e4698d61714d1e7c394ada99ef10d8e43c0b22"
@@ -67,8 +67,7 @@ func TestDecrypt(t *testing.T) {
 
 	t.Run("invalid cipher text", func(t *testing.T) {
 
-		keyStr := "2b7e151628aed2a6abf7158809cf4f3c"
-		key, err := hex.DecodeString(keyStr)
+		key, err := hex.DecodeString(testKey)
 		assert.NoError(t, err)
 
 		encryptedString := "000000"
