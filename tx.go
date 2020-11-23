@@ -412,13 +412,13 @@ func (tx *Tx) Sign(index uint32, s Signer) error {
 // It takes a Signed interface as a parameter so that different
 // signing implementations can be used to sign the transaction -
 // for example internal/local or external signing.
-func (tx *Tx) SignAuto(s Signer) error {
-	signedTx, err := s.SignAuto(tx)
+func (tx *Tx) SignAuto(s Signer) (inputsSigned []int, err error) {
+	signedTx, inputsSigned, err := s.SignAuto(tx)
 	if err != nil {
-		return err
+		return
 	}
 	*tx = *signedTx
-	return nil
+	return
 }
 
 // ApplyUnlockingScript applies a script to the transaction at a specific index in

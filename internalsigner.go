@@ -54,7 +54,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (signedTx *Tx, err 
 // SignAuto goes through each input of the transaction and automatically
 // signs the P2PKH inputs that it is able to sign using the specific
 // PrivateKey passed in through the InternalSigner struct.
-func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, err error) {
+func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, inputsSigned []int, err error) {
 	if is.SigHashFlag == 0 {
 		is.SigHashFlag = sighash.AllForkID
 	}
@@ -69,6 +69,8 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, err error) {
 		if pubKeyHashStr == pubKeyHashStrFromPriv {
 
 			if signedTx, err = is.Sign(uint32(i), unsignedTx); err != nil {
+				inputsSigned = append(inputsSigned, i)
+			} else {
 				return
 			}
 		}
