@@ -77,6 +77,19 @@ func NewP2PKHOutputFromPubKeyBytes(publicKeyBytes []byte, satoshis uint64) (*Out
 	}, nil
 }
 
+// NewP2PKHOutputFromPubKeyStr makes an output to a PKH with a value.
+func NewP2PKHOutputFromPubKeyStr(publicKey string, satoshis uint64) (*Output, error) {
+	s, err := bscript.NewP2PKHFromPubKeyStr(publicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Output{
+		Satoshis:      satoshis,
+		LockingScript: s,
+	}, nil
+}
+
 // NewP2PKHOutputFromAddress makes an output to a PKH with a value.
 func NewP2PKHOutputFromAddress(addr string, satoshis uint64) (*Output, error) {
 	s, err := bscript.NewP2PKHFromAddress(addr)
