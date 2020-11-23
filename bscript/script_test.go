@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,6 +15,23 @@ func TestNewP2PKHFromPubKeyStr(t *testing.T) {
 	scriptP2PKH, err := bscript.NewP2PKHFromPubKeyStr(
 		"023717efaec6761e457f55c8417815505b695209d0bbfed8c3265be425b373c2d6",
 	)
+	assert.NoError(t, err)
+	assert.NotNil(t, scriptP2PKH)
+	assert.Equal(t,
+		"76a9144d5d1920331b71735a97a606d9734aed83cb3dfa88ac",
+		hex.EncodeToString(*scriptP2PKH),
+	)
+}
+
+func TestNewP2PKHFromPubKey(t *testing.T) {
+	t.Parallel()
+
+	pk, _ := hex.DecodeString("023717efaec6761e457f55c8417815505b695209d0bbfed8c3265be425b373c2d6")
+
+	pubkey, err := bsvec.ParsePubKey(pk, bsvec.S256())
+	assert.NoError(t, err)
+
+	scriptP2PKH, err := bscript.NewP2PKHFromPubKeyEC(pubkey)
 	assert.NoError(t, err)
 	assert.NotNil(t, scriptP2PKH)
 	assert.Equal(t,

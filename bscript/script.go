@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bitcoinsv/bsvd/bsvec"
 	"github.com/libsv/go-bt/crypto"
 )
 
@@ -44,6 +45,15 @@ func NewFromASM(str string) (*Script, error) {
 	}
 
 	return s, nil
+}
+
+// NewP2PKHFromPubKeyEC takes a public key hex string (in
+// compressed format) and creates a P2PKH script from it.
+func NewP2PKHFromPubKeyEC(pubKey *bsvec.PublicKey) (*Script, error) {
+
+	pubKeyBytes := pubKey.SerializeCompressed()
+
+	return NewP2PKHFromPubKeyBytes(pubKeyBytes)
 }
 
 // NewP2PKHFromPubKeyStr takes a public key hex string (in
