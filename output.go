@@ -51,8 +51,8 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	}, totalLength, nil
 }
 
-// NewP2PKHOutputFromPubKeyHash makes an output to a PKH with a value.
-func NewP2PKHOutputFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Output, error) {
+// NewP2PKHOutputFromPubKeyHashStr makes an output to a PKH with a value.
+func NewP2PKHOutputFromPubKeyHashStr(publicKeyHash string, satoshis uint64) (*Output, error) {
 	s, err := bscript.NewP2PKHFromPubKeyHashStr(publicKeyHash)
 	if err != nil {
 		return nil, err
