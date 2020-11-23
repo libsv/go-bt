@@ -18,20 +18,20 @@ type InternalSigner struct {
 
 // Sign a transaction at a given input index using the PrivateKey passed in through the
 // InternalSigner struct.
-func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (*Tx, error) {
+func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (signedTx *Tx, err error) {
 	if is.SigHashFlag == 0 {
 		is.SigHashFlag = sighash.AllForkID
 	}
 
 	sh, err := unsignedTx.GetInputSignatureHash(index, is.SigHashFlag)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var sig *bsvec.Signature
 	sig, err = is.PrivateKey.Sign(ReverseBytes(sh)) // little endian sign
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var s *bscript.Script
@@ -40,20 +40,21 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (*Tx, error) {
 		sig.Serialize(),
 		is.SigHashFlag,
 	); err != nil {
-		return nil, err
+		return
 	}
 
 	if err = unsignedTx.ApplyUnlockingScript(index, s); err != nil {
-		return nil, err
+		return
 	}
+	signedTx = unsignedTx
 
-	return unsignedTx, nil
+	return
 }
 
 // SignAuto goes through each input of the transaction and automatically
 // signs the P2PKH inputs that it is able to sign using the specific
 // PrivateKey passed in through the InternalSigner struct.
-func (is *InternalSigner) SignAuto(unsignedTx *Tx) (*Tx, error) {
+func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, err error) {
 	if is.SigHashFlag == 0 {
 		is.SigHashFlag = sighash.AllForkID
 	}
@@ -67,12 +68,15 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (*Tx, error) {
 		// check if able to sign (public key matches pubKeyHash in script)
 		if pubKeyHashStr == pubKeyHashStrFromPriv {
 
-			// todo: not sure if the tx value should be used or not? @mrz
-			if _, err := is.Sign(uint32(i), unsignedTx); err != nil {
-				return nil, err
+			if signedTx, err = is.Sign(uint32(i), unsignedTx); err != nil {
+				return
 			}
 		}
 	}
 
-	return unsignedTx, nil
+	if signedTx == nil {
+		signedTx = unsignedTx
+	}
+
+	return
 }
