@@ -61,16 +61,39 @@ func NewTxFromString(str string) (*Tx, error) {
 }
 
 // NewTxFromBytes takes an array of bytes, constructs a Tx and returns it.
+// This function assumes that the byte slice contains exactly 1 transaction.
 func NewTxFromBytes(b []byte) (*Tx, error) {
-	if len(b) < 10 {
-		return nil, fmt.Errorf("too short to be a tx - even an empty tx has 10 bytes")
+	tx, used, err := NewTxFromStream((b))
+	if err != nil {
+		return nil, err
 	}
 
-	var offset = 0
+	if used != len(b) {
+		return nil, fmt.Errorf("nLockTime length must be 4 bytes long")
+	}
+
+	return tx, nil
+}
+
+// NewTxFromStream takes an array of bytes and contructs a Tx from it, returning the Tx and the bytes used.
+// Despite the name, this is not actually reading a stream in the true sense: it is a byte slice that contains
+// many transactions one after another.
+func NewTxFromStream(b []byte) (*Tx, int, error) {
+
+	if len(b) < 10 {
+		return nil, 0, fmt.Errorf("too short to be a tx - even an empty tx has 10 bytes")
+	}
+
+	var offset int
 	t := Tx{
 		Version: binary.LittleEndian.Uint32(b[offset:4]),
 	}
 	offset += 4
+
+	// There is an optional Flag of 2 bytes after the version. It is always "0001" and represent that this is a SegWit tx.
+	if b[offset] == 0x00 && b[offset+1] == 0x01 {
+		offset += 2
+	}
 
 	inputCount, size := DecodeVarInt(b[offset:])
 	offset += size
@@ -82,7 +105,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	for ; i < inputCount; i++ {
 		input, size, err = NewInputFromBytes(b[offset:])
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		offset += size
 
@@ -97,23 +120,16 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	for i = 0; i < outputCount; i++ {
 		output, size, err = NewOutputFromBytes(b[offset:])
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		offset += size
 		t.Outputs = append(t.Outputs, output)
 	}
 
-	nLT := b[offset:]
-
-	if len(nLT) != 4 {
-		return nil, fmt.Errorf("nLockTime length must be 4 bytes long")
-	}
-
 	t.LockTime = binary.LittleEndian.Uint32(b[offset:])
+	offset += 4
 
-	// offset += 4 // @mrz I commented this out, as it was ineffectual
-
-	return &t, nil
+	return &t, offset, nil
 }
 
 // AddInput adds a new input to the transaction.
