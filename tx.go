@@ -413,8 +413,8 @@ func (tx *Tx) Sign(index uint32, s Signer) error {
 // signing implementations can be used to sign the transaction -
 // for example internal/local or external signing.
 func (tx *Tx) SignAuto(s Signer) (inputsSigned []int, err error) {
-	signedTx, inputsSigned, err := s.SignAuto(tx)
-	if err != nil {
+	var signedTx *Tx
+	if signedTx, inputsSigned, err = s.SignAuto(tx); err != nil {
 		return
 	}
 	*tx = *signedTx
