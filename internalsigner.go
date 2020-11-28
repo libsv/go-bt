@@ -23,14 +23,13 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (signedTx *Tx, err 
 		is.SigHashFlag = sighash.AllForkID
 	}
 
-	sh, err := unsignedTx.GetInputSignatureHash(index, is.SigHashFlag)
-	if err != nil {
+	var sh []byte
+	if sh, err = unsignedTx.GetInputSignatureHash(index, is.SigHashFlag); err != nil {
 		return
 	}
 
 	var sig *bsvec.Signature
-	sig, err = is.PrivateKey.Sign(ReverseBytes(sh)) // little endian sign
-	if err != nil {
+	if sig, err = is.PrivateKey.Sign(ReverseBytes(sh)); err != nil { // little endian sign
 		return
 	}
 
