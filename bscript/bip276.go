@@ -57,6 +57,7 @@ func DecodeBIP276(text string) (prefix string, version, network int, data []byte
 	// Determine if regex match
 	res := validBIP276.FindStringSubmatch(text)
 
+	// todo: check it exists first, otherwise it panics if text is empty
 	prefix = res[1]
 
 	if version, err = strconv.Atoi(res[2]); err != nil {
