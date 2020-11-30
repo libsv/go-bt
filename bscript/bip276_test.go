@@ -112,11 +112,9 @@ func TestDecodeBIP276(t *testing.T) {
 		assert.Equal(t, "fake script", fmt.Sprintf("%s", data))
 	})
 
-	t.Run("panic - invalid decode", func(t *testing.T) {
-		assert.Panics(t, func() {
-			_, _, _, _, err := bscript.DecodeBIP276("bitcoin-script:01")
-			assert.Error(t, err)
-		})
+	t.Run("invalid decode", func(t *testing.T) {
+		_, _, _, _, err := bscript.DecodeBIP276("bitcoin-script:01")
+		assert.Error(t, err)
 	})
 
 	t.Run("valid format, bad checksum", func(t *testing.T) {

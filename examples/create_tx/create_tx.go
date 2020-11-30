@@ -20,9 +20,9 @@ func main() {
 
 	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	err := tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
-	if err != nil {
-		log.Fatalln(err.Error())
+	inputsSigned, err := tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+	if err != nil && len(inputsSigned) > 0 {
+		log.Fatal(err.Error())
 	}
 	log.Println("tx: ", tx.ToString())
 }

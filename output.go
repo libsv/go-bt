@@ -51,9 +51,35 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	}, totalLength, nil
 }
 
-// NewP2PKHOutputFromPubKeyHash makes an output to a PKH with a value.
-func NewP2PKHOutputFromPubKeyHash(publicKeyHash string, satoshis uint64) (*Output, error) {
+// NewP2PKHOutputFromPubKeyHashStr makes an output to a PKH with a value.
+func NewP2PKHOutputFromPubKeyHashStr(publicKeyHash string, satoshis uint64) (*Output, error) {
 	s, err := bscript.NewP2PKHFromPubKeyHashStr(publicKeyHash)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Output{
+		Satoshis:      satoshis,
+		LockingScript: s,
+	}, nil
+}
+
+// NewP2PKHOutputFromPubKeyBytes makes an output to a PKH with a value.
+func NewP2PKHOutputFromPubKeyBytes(publicKeyBytes []byte, satoshis uint64) (*Output, error) {
+	s, err := bscript.NewP2PKHFromPubKeyBytes(publicKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Output{
+		Satoshis:      satoshis,
+		LockingScript: s,
+	}, nil
+}
+
+// NewP2PKHOutputFromPubKeyStr makes an output to a PKH with a value.
+func NewP2PKHOutputFromPubKeyStr(publicKey string, satoshis uint64) (*Output, error) {
+	s, err := bscript.NewP2PKHFromPubKeyStr(publicKey)
 	if err != nil {
 		return nil, err
 	}

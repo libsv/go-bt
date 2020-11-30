@@ -27,4 +27,28 @@ func TestValidateAddress(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, true, ok)
 	})
+
+	t.Run("empty address", func(t *testing.T) {
+		ok, err := bscript.ValidateAddress("")
+		assert.Error(t, err)
+		assert.Equal(t, false, ok)
+	})
+
+	t.Run("empty script", func(t *testing.T) {
+		ok, err := bscript.ValidateAddress("bitcoin-script:")
+		assert.Error(t, err)
+		assert.Equal(t, false, ok)
+	})
+
+	t.Run("invalid address", func(t *testing.T) {
+		ok, err := bscript.ValidateAddress("invalid")
+		assert.Error(t, err)
+		assert.Equal(t, false, ok)
+	})
+
+	t.Run("invalid script", func(t *testing.T) {
+		ok, err := bscript.ValidateAddress("bitcoin-script:invalid")
+		assert.Error(t, err)
+		assert.Equal(t, false, ok)
+	})
 }

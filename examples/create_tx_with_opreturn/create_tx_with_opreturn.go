@@ -27,8 +27,8 @@ func main() {
 
 	wif, _ := bsvutil.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
 
-	err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
-	if err != nil {
+	inputsSigned, err := tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+	if err != nil && len(inputsSigned) > 0 {
 		log.Fatal(err.Error())
 	}
 	log.Println("tx: ", tx.ToString())

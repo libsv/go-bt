@@ -61,11 +61,11 @@ func TestOutput_String(t *testing.T) {
 	})
 }
 
-func TestNewP2PKHOutputFromPubKeyHash(t *testing.T) {
+func TestNewP2PKHOutputFromPubKeyHashStr(t *testing.T) {
 	t.Parallel()
 
 	t.Run("empty pubkey hash", func(t *testing.T) {
-		o, err := bt.NewP2PKHOutputFromPubKeyHash(
+		o, err := bt.NewP2PKHOutputFromPubKeyHashStr(
 			"",
 			uint64(5000),
 		)
@@ -78,7 +78,7 @@ func TestNewP2PKHOutputFromPubKeyHash(t *testing.T) {
 	})
 
 	t.Run("invalid pubkey hash", func(t *testing.T) {
-		o, err := bt.NewP2PKHOutputFromPubKeyHash(
+		o, err := bt.NewP2PKHOutputFromPubKeyHashStr(
 			"0",
 			uint64(5000),
 		)
@@ -88,7 +88,7 @@ func TestNewP2PKHOutputFromPubKeyHash(t *testing.T) {
 
 	t.Run("valid output", func(t *testing.T) {
 		// This is the PKH for address mtdruWYVEV1wz5yL7GvpBj4MgifCB7yhPd
-		o, err := bt.NewP2PKHOutputFromPubKeyHash(
+		o, err := bt.NewP2PKHOutputFromPubKeyHashStr(
 			"8fe80c75c9560e8b56ed64ea3c26e18d2c52211b",
 			uint64(5000),
 		)

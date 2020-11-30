@@ -45,17 +45,17 @@ func GetPushDataPrefix(data []byte) ([]byte, error) {
 		b = append(b, byte(l))
 
 	} else if l <= 0xFF {
-		b = append(b, 0x4c) // OP_PUSHDATA1
+		b = append(b, OpPUSHDATA1)
 		b = append(b, byte(len(data)))
 
 	} else if l <= 0xFFFF {
-		b = append(b, 0x4d) // OP_PUSHDATA2
+		b = append(b, OpPUSHDATA2)
 		lenBuf := make([]byte, 2)
 		binary.LittleEndian.PutUint16(lenBuf, uint16(len(data)))
 		b = append(b, lenBuf...)
 
 	} else if l <= 0xFFFFFFFF { // bt.DefaultSequenceNumber
-		b = append(b, 0x4e) // OP_PUSHDATA4
+		b = append(b, OpPUSHDATA4)
 		lenBuf := make([]byte, 4)
 		binary.LittleEndian.PutUint32(lenBuf, uint32(len(data)))
 		b = append(b, lenBuf...)
@@ -112,7 +112,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 
 		case OpPUSHDATA4:
 			if len(b) < 5 {
-				return r, errors.New("Not enough data")
+				return r, errors.New("not enough data")
 			}
 			l := binary.LittleEndian.Uint32(b[1:])
 			if len(b) < int(5+l) {
@@ -123,7 +123,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			b = b[5+l:]
 
 		default:
-			if b[0] >= 0x01 && b[0] <= 0x4e {
+			if b[0] >= 0x01 && b[0] <= OpPUSHDATA4 {
 				l := b[0]
 				if len(b) < int(1+l) {
 					return r, errors.New("not enough data")
