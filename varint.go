@@ -1,8 +1,6 @@
 package bt
 
-import (
-	"encoding/binary"
-)
+import "encoding/binary"
 
 // VarInt takes an unsigned integer and  returns a byte array in VarInt format.
 // See http://learnmeabitcoin.com/glossary/varint
