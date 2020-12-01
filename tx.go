@@ -111,7 +111,6 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	var outputCount uint64
 	var output *Output
 	outputCount, size = DecodeVarInt(b[offset:])
-
 	offset += size
 	for i = 0; i < outputCount; i++ {
 		output, size, err = NewOutputFromBytes(b[offset:])
