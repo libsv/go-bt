@@ -30,6 +30,12 @@ func TestNewTx(t *testing.T) {
 func TestNewTxFromString(t *testing.T) {
 	t.Parallel()
 
+	t.Run("valid tx no inputs", func(t *testing.T) {
+		tx, err := bt.NewTxFromString("01000000000100000000000000001a006a07707265666978310c6578616d706c65206461746102133700000000")
+		assert.NoError(t, err)
+		assert.NotNil(t, tx)
+	})
+
 	t.Run("invalid tx", func(t *testing.T) {
 		tx, err := bt.NewTxFromString("0")
 		assert.Error(t, err)
