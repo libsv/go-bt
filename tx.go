@@ -90,11 +90,6 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	}
 	offset += 4
 
-	// There is an optional Flag of 2 bytes after the version. It is always "0001" and represent that this is a SegWit tx.
-	if b[offset] == 0x00 && b[offset+1] == 0x01 {
-		offset += 2
-	}
-
 	inputCount, size := DecodeVarInt(b[offset:])
 	offset += size
 
