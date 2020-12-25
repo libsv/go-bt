@@ -60,6 +60,7 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, inputsSigned [
 
 	for i, in := range unsignedTx.Inputs {
 		pubKeyHash, _ := in.PreviousTxScript.GetPublicKeyHash() // doesn't matter if returns error (not p2pkh)
+
 		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
 
 		pubKeyHashStrFromPriv := hex.EncodeToString(crypto.Hash160(is.PrivateKey.PubKey().SerializeCompressed()))
@@ -68,10 +69,10 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, inputsSigned [
 		if pubKeyHashStr == pubKeyHashStrFromPriv {
 
 			if signedTx, err = is.Sign(uint32(i), unsignedTx); err != nil {
-				inputsSigned = append(inputsSigned, i)
-			} else {
 				return
 			}
+
+			inputsSigned = append(inputsSigned, i)
 		}
 	}
 

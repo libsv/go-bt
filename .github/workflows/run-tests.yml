@@ -11,14 +11,13 @@ on:
     branches:
       - "*"
   schedule:
-    - cron: '* 22 * * *'
+    - cron: '1 4 * * *'
 
 jobs:
   test:
     strategy:
       matrix:
-        go-version: [ 1.15.x ]
-        #go-version: [ 1.14.x, 1.15.x ]
+        go-version: [ 1.14.x, 1.15.x ]
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
     steps:
