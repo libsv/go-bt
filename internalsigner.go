@@ -69,10 +69,10 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, inputsSigned [
 		if pubKeyHashStr == pubKeyHashStrFromPriv {
 
 			if signedTx, err = is.Sign(uint32(i), unsignedTx); err != nil {
-				inputsSigned = append(inputsSigned, i)
-			} // else { @mrz - commented out - fails to sign tx with inputs > 1 from same address
-			// return
-			// }
+				return
+			}
+
+			inputsSigned = append(inputsSigned, i)
 		}
 	}
 

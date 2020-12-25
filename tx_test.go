@@ -609,8 +609,11 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
+		is, err := tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0})
 		assert.NoError(t, err)
+
+		assert.ElementsMatch(t, []int{0, 1}, is)
+		assert.Equal(t, 2, len(is))
 
 		assert.Equal(t, "01000000028ee20a442cdbcc9f9f927d9c2c9370e611675ebc24c064e8e94508ec8eca889e000000006b483045022100fa52a44cd8010ba646a8df6bac6e5e8aa93f24439521c2ce1c8fe6550e73c1750220636e30d757702a6777d8310090962d4bac2b3fd634127856d51b184f5c702c8f4121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff42eaf7bdddc797a0beb97717ff8846f03c963fb5fe15a2b555b9cbd477b0254e000000006b483045022100c201fd55ef33525b3eb0557fac77408b8ec7f6ea5b00d08512df105172f992d60220753b21519a416dcbeaf1a501d9c36de2aea9c83c6d258320500371819d0758e14121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff01c62b0000000000001976a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac00000000", tx.ToString())
 	})
