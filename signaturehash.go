@@ -11,9 +11,20 @@ import (
 
 // TODO: change to "serialize tx"
 
-// GetInputSignatureHash serializes the transaction based on the input index and the SIGHASH flag
-// see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
+// GetInputSignatureHash gets the preimage of the specified input and hashes it.
 func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
+	buf, err := tx.GetInputPreimage(inputNumber, sigHashFlag)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := crypto.Sha256d(buf)
+	return ReverseBytes(ret), nil
+}
+
+// GetInputPreimage serializes the transaction based on the input index and the SIGHASH flag
+// see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
+func (tx *Tx) GetInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 
 	// todo: test if input exists (return error)
 
@@ -96,8 +107,7 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 	binary.LittleEndian.PutUint32(st, uint32(sigHashFlag)>>0)
 	buf = append(buf, st...)
 
-	ret := crypto.Sha256d(buf)
-	return ReverseBytes(ret), nil
+	return buf, nil
 }
 
 func (tx *Tx) getPreviousOutHash() []byte {
