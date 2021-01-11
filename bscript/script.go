@@ -198,7 +198,7 @@ func (s *Script) ToString() string { // TODO: change to HexString?
 // ToASM returns the string ASM opcodes of the script.
 func (s *Script) ToASM() (string, error) {
 	parts, err := DecodeParts(*s)
-	// if err != nil, ee will append [error] to the ASM script below.
+	// if err != nil, we will append [error] to the ASM script below (as done in the node).
 
 	var asmScript string
 	for _, p := range parts {
