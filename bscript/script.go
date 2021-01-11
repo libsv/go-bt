@@ -198,9 +198,7 @@ func (s *Script) ToString() string { // TODO: change to HexString?
 // ToASM returns the string ASM opcodes of the script.
 func (s *Script) ToASM() (string, error) {
 	parts, err := DecodeParts(*s)
-	if err != nil {
-		return "", err
-	}
+	// if err != nil, we will append [error] to the ASM script below (as done in the node).
 
 	var asmScript string
 	for _, p := range parts {
@@ -209,6 +207,10 @@ func (s *Script) ToASM() (string, error) {
 		} else {
 			asmScript = asmScript + " " + hex.EncodeToString(p)
 		}
+	}
+
+	if err != nil {
+		asmScript += " [error]"
 	}
 
 	return strings.TrimSpace(asmScript), nil

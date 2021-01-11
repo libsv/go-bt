@@ -2,6 +2,7 @@ package bscript_test
 
 import (
 	"encoding/hex"
+	"strings"
 	"testing"
 
 	"github.com/bitcoinsv/bsvd/bsvec"
@@ -169,4 +170,13 @@ func TestScript_GetPublicKeyHash(t *testing.T) {
 		assert.Error(t, err)
 		assert.EqualError(t, err, "script is empty")
 	})
+}
+
+func TestErrorIsAppended(t *testing.T) {
+	script, _ := hex.DecodeString("6a0548656c6c6f0548656c6c")
+	s := bscript.Script(script)
+
+	asm, err := s.ToASM()
+	assert.NoError(t, err)
+	assert.True(t, strings.HasSuffix(asm, "[error]"), "toASM() should end with [error]")
 }
