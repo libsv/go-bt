@@ -1,6 +1,7 @@
 package bt
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -130,6 +131,29 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 // AddInput adds a new input to the transaction.
 func (tx *Tx) AddInput(input *Input) {
 	tx.Inputs = append(tx.Inputs, input)
+}
+
+// AddInputFromTx take all outputs from previous transaction
+// that match a specific public key, add it as input to this new transaction.
+func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
+	matchPKHASH160 := crypto.Hash160(matchPK)
+	for i, utxo := range pvsTx.Outputs {
+		utxoPkHASH160, errPK := utxo.LockingScript.GetPublicKeyHash()
+		if errPK != nil {
+			return errPK
+		}
+		if !bytes.Equal(utxoPkHASH160, matchPKHASH160) {
+			continue
+		}
+		tx.AddInput(&Input{
+			PreviousTxID:       pvsTx.GetTxID(),
+			PreviousTxOutIndex: uint32(i),
+			PreviousTxSatoshis: utxo.Satoshis,
+			PreviousTxScript:   utxo.LockingScript,
+			SequenceNumber:     0xffffffff,
+		})
+	}
+	return nil
 }
 
 // From adds a new input to the transaction from the specified UTXO fields.

@@ -113,6 +113,28 @@ func TestNewTxFromBytes(t *testing.T) {
 	})
 }
 
+func TestAddInputFromTx(t *testing.T) {
+	pubkey1 := []byte{1, 2, 3} // utxo test owner
+	pubkey2 := []byte{1, 2, 4}
+
+	output1, err1 := bt.NewP2PKHOutputFromPubKeyBytes(pubkey1, uint64(100000))
+	assert.NoError(t, err1)
+	output2, err2 := bt.NewP2PKHOutputFromPubKeyBytes(pubkey1, uint64(100000))
+	assert.NoError(t, err2)
+	output3, err3 := bt.NewP2PKHOutputFromPubKeyBytes(pubkey2, uint64(5000000))
+	assert.NoError(t, err3)
+
+	prvTx := bt.NewTx()
+	prvTx.AddOutput(output1)
+	prvTx.AddOutput(output2)
+	prvTx.AddOutput(output3)
+	newTx := bt.NewTx()
+	err := newTx.AddInputFromTx(prvTx, pubkey1)
+	assert.NoError(t, err)
+	assert.Equal(t, newTx.InputCount(), 2) // only 2 utxos has been added
+	assert.Equal(t, newTx.GetTotalInputSatoshis(), uint64(200000))
+}
+
 func TestTx_GetTxID(t *testing.T) {
 	t.Parallel()
 
