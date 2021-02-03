@@ -378,6 +378,12 @@ func (tx *Tx) GetTotalOutputSatoshis() (total uint64) {
 	return
 }
 
+// GetTxIDAsBytes returns the transaction ID of the transaction as bytes
+// (which is also the transaction hash).
+func (tx *Tx) GetTxIDAsBytes() []byte {
+	return ReverseBytes(crypto.Sha256d(tx.ToBytes()))
+}
+
 // GetTxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
 func (tx *Tx) GetTxID() string {
