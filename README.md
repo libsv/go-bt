@@ -60,6 +60,7 @@ For more information around the technical aspects of Bitcoin, please see the upd
 #### Coming Soon! (18 months<sup>TM</sup>)
 
 - Complete SigHash Flag Capability
+- MultiSig functionality
 
 <details>
 <summary><strong><code>Library Deployment</code></strong></summary>
