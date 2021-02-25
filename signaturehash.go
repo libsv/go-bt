@@ -2,7 +2,6 @@ package bt
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 
 	"github.com/libsv/go-bt/crypto"
@@ -30,7 +29,7 @@ func (tx *Tx) GetInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]
 
 	in := tx.Inputs[inputNumber]
 
-	if in.PreviousTxID == "" {
+	if len(in.PreviousTxIDBytes) == 0 {
 		return nil, errors.New("'PreviousTxID' not supplied")
 	}
 	if in.PreviousTxScript == nil {
@@ -73,8 +72,7 @@ func (tx *Tx) GetInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]
 	buf = append(buf, hashSequence...)
 
 	//  outpoint (32-byte hash + 4-byte little endian)
-	txid, _ := hex.DecodeString(in.PreviousTxID[:])
-	buf = append(buf, ReverseBytes(txid)...)
+	buf = append(buf, ReverseBytes(in.PreviousTxIDBytes)...)
 	oi := make([]byte, 4)
 	binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 	buf = append(buf, oi...)
@@ -114,9 +112,7 @@ func (tx *Tx) getPreviousOutHash() []byte {
 	buf := make([]byte, 0)
 
 	for _, in := range tx.Inputs {
-		// todo: error ignored?
-		txid, _ := hex.DecodeString(in.PreviousTxID[:])
-		buf = append(buf, ReverseBytes(txid)...)
+		buf = append(buf, ReverseBytes(in.PreviousTxIDBytes)...)
 		oi := make([]byte, 4)
 		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 		buf = append(buf, oi...)

@@ -60,7 +60,9 @@ func TestNewTxFromString(t *testing.T) {
 		assert.Equal(t, 1, len(tx.Inputs))
 
 		// Create a new unlocking script
+		ptid, _ := hex.DecodeString("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
 		i := bt.Input{
+			PreviousTxIDBytes:  ptid,
 			PreviousTxID:       "9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c",
 			PreviousTxOutIndex: 0,
 			SequenceNumber:     bt.DefaultSequenceNumber,
