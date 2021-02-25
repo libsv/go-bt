@@ -146,6 +146,7 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 			continue
 		}
 		tx.AddInput(&Input{
+			PreviousTxIDBytes:  pvsTx.GetTxIDAsBytes(),
 			PreviousTxID:       pvsTx.GetTxID(),
 			PreviousTxOutIndex: uint32(i),
 			PreviousTxSatoshis: utxo.Satoshis,
@@ -163,7 +164,13 @@ func (tx *Tx) From(txID string, vout uint32, prevTxLockingScript string, satoshi
 		return err
 	}
 
+	ptid, err := hex.DecodeString(txID)
+	if err != nil {
+		return err
+	}
+
 	tx.AddInput(&Input{
+		PreviousTxIDBytes:  ptid,
 		PreviousTxID:       txID,
 		PreviousTxOutIndex: vout,
 		PreviousTxSatoshis: satoshis,
