@@ -114,6 +114,16 @@ sequence:     %x
 func (i *Input) ToBytes(clear bool) []byte {
 	h := make([]byte, 0)
 
+	// TODO: v2 make input (and other internal) elements private and not exposed
+	// so that we only store previoustxid in bytes and then do the conversion
+	// with getters and setters
+	if i.PreviousTxIDBytes == nil {
+		ptidb, err := hex.DecodeString(i.PreviousTxID)
+		if err == nil {
+			i.PreviousTxIDBytes = ptidb
+		}
+	}
+
 	h = append(h, ReverseBytes(i.PreviousTxIDBytes)...)
 	h = append(h, GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {

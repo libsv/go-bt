@@ -130,6 +130,17 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 
 // AddInput adds a new input to the transaction.
 func (tx *Tx) AddInput(input *Input) {
+
+	// TODO: v2 make input (and other internal) elements private and not exposed
+	// so that we only store previoustxid in bytes and then do the conversion
+	// with getters and setters
+	if input.PreviousTxIDBytes == nil {
+		ptidb, err := hex.DecodeString(input.PreviousTxID)
+		if err == nil {
+			input.PreviousTxIDBytes = ptidb
+		}
+	}
+
 	tx.Inputs = append(tx.Inputs, input)
 }
 
