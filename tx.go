@@ -458,6 +458,10 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 // signing implementations can be used to sign the transaction -
 // for example internal/local or external signing.
 func (tx *Tx) Sign(index uint32, s Signer) error {
+	// TODO: v2 put tx serialisation here so that the Signer.Sign
+	// func only does signing and not also serialisation which
+	// should be done here.
+
 	signedTx, err := s.Sign(index, tx)
 	if err != nil {
 		return err

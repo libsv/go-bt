@@ -23,6 +23,10 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (signedTx *Tx, err 
 		is.SigHashFlag = sighash.AllForkID
 	}
 
+	// TODO: v2 put tx serialisation in parent/general func (tx.Sign) so that the
+	// functions like that implement the Signer interface only sign and don't do
+	// tx input serialisation as well. So this Sign func would probably need to take
+	// Sign(sigdigest []bytes)
 	var sh []byte
 	if sh, err = unsignedTx.GetInputSignatureHash(index, is.SigHashFlag); err != nil {
 		return

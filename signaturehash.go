@@ -9,7 +9,7 @@ import (
 	"github.com/libsv/go-bt/sighash"
 )
 
-// TODO: change to "serialize tx"
+// TODO: v2 change to "serialize tx"
 
 // GetInputSignatureHash gets the preimage of the specified input and hashes it.
 func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
