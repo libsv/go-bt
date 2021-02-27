@@ -26,8 +26,9 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) GetInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 
-	// todo: test if input exists (return error)
-
+	if tx.Inputs[inputNumber] == nil {
+		return nil, errors.New("specified input does not exist")
+	}
 	in := tx.Inputs[inputNumber]
 
 	// TODO: v2 make input (and other internal) elements private and not exposed
