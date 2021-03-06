@@ -53,7 +53,7 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	// txid := tx.GetTxID()
 // 	// fmt.Println(txid)
 //
-// 	sigScript := tx.GetInputs()[0].UnlockingScript
+// 	sigScript := tx.Inputs[0].UnlockingScript
 //
 // 	publicKeyBytes := []byte(*sigScript)[len(*sigScript)-33:]
 // 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
@@ -98,7 +98,7 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	// txid := tx.GetTxID()
 // 	// fmt.Println(txid)
 //
-// 	sigScript := tx.GetInputs()[0].UnlockingScript
+// 	sigScript := tx.Inputs[0].UnlockingScript
 //
 // 	publicKeyBytes := []byte(*sigScript)[len(*sigScript)-33:]
 // 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
@@ -148,7 +148,7 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	var sigHashTypes = make([]uint32, 2)
 // 	var publicKeys = make([]*bsvec.PublicKey, 3)
 //
-// 	sigScript := tx.GetInputs()[0].UnlockingScript
+// 	sigScript := tx.Inputs[0].UnlockingScript
 //
 // 	sig0Bytes := []byte(*sigScript)[2:73]
 // 	sig0HashType, _ := binary.Uvarint([]byte(*sigScript)[73:74])
@@ -224,7 +224,7 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	var sigHashTypes = make([]uint32, 2)
 // 	var publicKeys = make([]*bsvec.PublicKey, 3)
 //
-// 	sigScript := tx.GetInputs()[0].UnlockingScript
+// 	sigScript := tx.Inputs[0].UnlockingScript
 //
 // 	sig0Bytes := []byte(*sigScript)[2:73]
 // 	sig0HashType, _ := binary.Uvarint([]byte(*sigScript)[73:74])

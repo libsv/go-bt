@@ -244,7 +244,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 	available -= preSignedFeeRequired + expectedUnlockingScriptFees
 
 	// add rest of available sats to the change output
-	tx.Outputs[len(tx.GetOutputs())-1].Satoshis = available
+	tx.Outputs[len(tx.Outputs)-1].Satoshis = available
 
 	return nil
 }
@@ -295,7 +295,7 @@ func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
 
 	var expectedBytes int
 
-	for _, in := range tx.GetInputs() {
+	for _, in := range tx.Inputs {
 		if !in.PreviousTxScript.IsP2PKH() {
 			return 0, errors.New("non-P2PKH input used in the tx - unsupported")
 		}
@@ -307,7 +307,7 @@ func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
 
 func (tx *Tx) getStandardAndDataBytes() (standardBytes, dataBytes int) {
 	// Subtract the value of each output as well as keeping track of data outputs
-	for _, out := range tx.GetOutputs() {
+	for _, out := range tx.Outputs {
 		if out.LockingScript.IsData() && len(*out.LockingScript) > 0 {
 			dataBytes += len(*out.LockingScript)
 		}
@@ -320,7 +320,7 @@ func (tx *Tx) getStandardAndDataBytes() (standardBytes, dataBytes int) {
 // HasDataOutputs returns true if the transaction has
 // at least one data (OP_RETURN) output in it.
 func (tx *Tx) HasDataOutputs() bool {
-	for _, out := range tx.GetOutputs() {
+	for _, out := range tx.Outputs {
 		if out.LockingScript.IsData() {
 			return true
 		}
@@ -348,27 +348,17 @@ func (tx *Tx) IsCoinbase() bool {
 	return false
 }
 
-// GetInputs returns an array of all inputs in the transaction.
-func (tx *Tx) GetInputs() []*Input {
-	return tx.Inputs
-}
-
 // TotalInputSatoshis returns the total Satoshis inputted to the transaction.
 func (tx *Tx) TotalInputSatoshis() (total uint64) {
-	for _, in := range tx.GetInputs() {
+	for _, in := range tx.Inputs {
 		total += in.PreviousTxSatoshis
 	}
 	return
 }
 
-// GetOutputs returns an array of all outputs in the transaction.
-func (tx *Tx) GetOutputs() []*Output {
-	return tx.Outputs
-}
-
 // TotalOutputSatoshis returns the total Satoshis outputted from the transaction.
 func (tx *Tx) TotalOutputSatoshis() (total uint64) {
-	for _, o := range tx.GetOutputs() {
+	for _, o := range tx.Outputs {
 		total += o.Satoshis
 	}
 	return
@@ -408,9 +398,9 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 
 	h = append(h, LittleEndianBytes(tx.Version, 4)...)
 
-	h = append(h, VarInt(uint64(len(tx.GetInputs())))...)
+	h = append(h, VarInt(uint64(len(tx.Inputs)))...)
 
-	for i, in := range tx.GetInputs() {
+	for i, in := range tx.Inputs {
 		s := in.ToBytes(lockingScript != nil)
 		if i == index && lockingScript != nil {
 			h = append(h, VarInt(uint64(len(lockingScript)))...)
@@ -420,8 +410,8 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 		}
 	}
 
-	h = append(h, VarInt(uint64(len(tx.GetOutputs())))...)
-	for _, out := range tx.GetOutputs() {
+	h = append(h, VarInt(uint64(len(tx.Outputs)))...)
+	for _, out := range tx.Outputs {
 		h = append(h, out.ToBytes()...)
 	}
 
