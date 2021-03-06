@@ -103,8 +103,7 @@ func (i *Input) ToBytes(clear bool) []byte {
 	return append(h, LittleEndianBytes(i.SequenceNumber, 4)...)
 }
 
-// AddInput adds a new input to the transaction.
-func (tx *Tx) AddInput(input *Input) {
+func (tx *Tx) addInput(input *Input) {
 	tx.Inputs = append(tx.Inputs, input)
 }
 
@@ -120,7 +119,7 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 		if !bytes.Equal(utxoPkHASH160, matchPKHASH160) {
 			continue
 		}
-		tx.AddInput(&Input{
+		tx.addInput(&Input{
 			PreviousTxIDBytes:  pvsTx.TxIDAsBytes(),
 			PreviousTxOutIndex: uint32(i),
 			PreviousTxSatoshis: utxo.Satoshis,
@@ -145,7 +144,7 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 		return err
 	}
 
-	tx.AddInput(&Input{
+	tx.addInput(&Input{
 		PreviousTxIDBytes:  ptxid,
 		PreviousTxOutIndex: vout,
 		PreviousTxSatoshis: satoshis,
