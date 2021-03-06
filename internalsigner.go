@@ -33,7 +33,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (signedTx *Tx, err 
 	}
 
 	var sig *bsvec.Signature
-	if sig, err = is.PrivateKey.Sign(ReverseBytes(sh)); err != nil { // little endian sign
+	if sig, err = is.PrivateKey.Sign(sh); err != nil { // little endian sign
 		return
 	}
 

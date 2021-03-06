@@ -18,8 +18,7 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 		return nil, err
 	}
 
-	ret := crypto.Sha256d(buf)
-	return ReverseBytes(ret), nil
+	return crypto.Sha256d(buf), nil
 }
 
 // GetInputPreimage serializes the transaction based on the input index and the SIGHASH flag

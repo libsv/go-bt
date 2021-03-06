@@ -92,7 +92,7 @@ func TestTx_GetInputSignatureHash(t *testing.T) {
 			100000000,
 			"76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac",
 			sighash.AllForkID,
-			"b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe",
+			"be9a42ef2e2dd7ef02cd631290667292cbbc5018f4e3f6843a8f4c302a2111b1",
 		},
 		{
 			"2 Inputs 3 Outputs - SIGHASH_ALL (FORKID) - Index 0",
@@ -101,7 +101,7 @@ func TestTx_GetInputSignatureHash(t *testing.T) {
 			2000000000,
 			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 			sighash.AllForkID,
-			"4c19a3288e2385767006c8438b0e63e029185d7b79195e4827e7d5b6cfee158b",
+			"8b15eecfb6d5e727485e19797b5d1829e0630e8b43c806707685238e28a3194c",
 		},
 		{
 			"2 Inputs 3 Outputs - SIGHASH_ALL (FORKID) - Index 1",
@@ -110,7 +110,7 @@ func TestTx_GetInputSignatureHash(t *testing.T) {
 			2000000000,
 			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 			sighash.AllForkID,
-			"dbba819f30c3cfbfe5d207bfb4eab0992079ee5ebd7fd939504a71a255c3727b",
+			"7b72c355a2714a5039d97fbd5eee792099b0eab4bf07d2e5bfcfc3309f81badb",
 		},
 		// TODO: add different SIGHASH flags
 		// note: checking bsv.js - using different sighash flags gives same
