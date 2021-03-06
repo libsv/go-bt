@@ -34,6 +34,14 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 	}, totalLength, nil
 }
 
+// TotalInputSatoshis returns the total Satoshis inputted to the transaction.
+func (tx *Tx) TotalInputSatoshis() (total uint64) {
+	for _, in := range tx.Inputs {
+		total += in.PreviousTxSatoshis
+	}
+	return
+}
+
 func (tx *Tx) addInput(input *Input) {
 	tx.Inputs = append(tx.Inputs, input)
 }
