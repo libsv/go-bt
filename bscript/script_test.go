@@ -136,7 +136,7 @@ func TestScript_IsMultisigOut(t *testing.T) { // TODO: check this
 	assert.Equal(t, true, scriptPub.IsMultisigOut())
 }
 
-func TestScript_GetPublicKeyHash(t *testing.T) {
+func TestScript_PublicKeyHash(t *testing.T) {
 	t.Parallel()
 
 	t.Run("get as bytes", func(t *testing.T) {
@@ -147,7 +147,7 @@ func TestScript_GetPublicKeyHash(t *testing.T) {
 		assert.NotNil(t, s)
 
 		var pkh []byte
-		pkh, err = s.GetPublicKeyHash()
+		pkh, err = s.PublicKeyHash()
 		assert.NoError(t, err)
 		assert.Equal(t, "04d03f746652cfcb6cb55119ab473a045137d265", hex.EncodeToString(pkh))
 	})
@@ -158,7 +158,7 @@ func TestScript_GetPublicKeyHash(t *testing.T) {
 		assert.NotNil(t, s)
 
 		var pkh []byte
-		pkh, err = s.GetPublicKeyHash()
+		pkh, err = s.PublicKeyHash()
 		assert.NoError(t, err)
 		assert.Equal(t, "04d03f746652cfcb6cb55119ab473a045137d265", hex.EncodeToString(pkh))
 	})
@@ -166,7 +166,7 @@ func TestScript_GetPublicKeyHash(t *testing.T) {
 	t.Run("empty script", func(t *testing.T) {
 		s := &bscript.Script{}
 
-		_, err := s.GetPublicKeyHash()
+		_, err := s.PublicKeyHash()
 		assert.Error(t, err)
 		assert.EqualError(t, err, "script is empty")
 	})

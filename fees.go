@@ -69,24 +69,22 @@ func DefaultFees() (f []*Fee) {
 	return
 }
 
-// GetStandardFee returns the standard fee in the fees array supplied.
-func GetStandardFee(fees []*Fee) (*Fee, error) {
-	for _, f := range fees {
-		if f.FeeType == FeeTypeStandard {
-			return f, nil
-		}
-	}
-
-	return nil, errors.New("no " + FeeTypeStandard + " fee supplied")
+// ExtractStandardFee returns the standard fee in the fees array supplied.
+func ExtractStandardFee(fees []*Fee) (*Fee, error) {
+	return extractFeeType(FeeTypeStandard, fees)
 }
 
-// GetDataFee returns the data fee in the fees array supplied.
-func GetDataFee(fees []*Fee) (*Fee, error) {
+// ExtractDataFee returns the data fee in the fees array supplied.
+func ExtractDataFee(fees []*Fee) (*Fee, error) {
+	return extractFeeType(FeeTypeData, fees)
+}
+
+func extractFeeType(feeType string, fees []*Fee) (*Fee, error) {
 	for _, f := range fees {
-		if f.FeeType == FeeTypeData {
+		if f.FeeType == feeType {
 			return f, nil
 		}
 	}
 
-	return nil, errors.New("no " + FeeTypeData + " fee supplied")
+	return nil, errors.New("no " + feeType + " fee supplied")
 }

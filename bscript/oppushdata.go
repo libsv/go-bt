@@ -18,7 +18,7 @@ func EncodeParts(parts [][]byte) ([]byte, error) {
 	b := make([]byte, 0)
 
 	for i, part := range parts {
-		pd, err := GetPushDataPrefix(part)
+		pd, err := PushDataPrefix(part)
 		if err != nil {
 			return nil, fmt.Errorf("part %d is too big", i)
 		}
@@ -30,14 +30,14 @@ func EncodeParts(parts [][]byte) ([]byte, error) {
 	return b, nil
 }
 
-// GetPushDataPrefix takes a single byte slice of data and returns its
+// PushDataPrefix takes a single byte slice of data and returns its
 // OP_PUSHDATA BitCoin encoding prefix based on its length.
 //
 // For example, the data byte slice '022a8c1a18378885db9054676f17a27f4219045e'
 // would be encoded as '14022a8c1a18378885db9054676f17a27f4219045e' in BitCoin.
 // The OP_PUSHDATA prefix is '14' since the length of the data is
 // 20 bytes (0x14 in decimal is 20).
-func GetPushDataPrefix(data []byte) ([]byte, error) {
+func PushDataPrefix(data []byte) ([]byte, error) {
 	b := make([]byte, 0)
 	l := int64(len(data))
 

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetLittleEndianBytes(t *testing.T) {
+func TestLittleEndianBytes(t *testing.T) {
 	// todo: add test coverage
 }
 

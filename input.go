@@ -117,7 +117,7 @@ func (i *Input) ToBytes(clear bool) []byte {
 	h := make([]byte, 0)
 
 	h = append(h, ReverseBytes(i.PreviousTxIDBytes)...)
-	h = append(h, GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
+	h = append(h, LittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		h = append(h, 0x00)
 	} else {
@@ -129,5 +129,5 @@ func (i *Input) ToBytes(clear bool) []byte {
 		}
 	}
 
-	return append(h, GetLittleEndianBytes(i.SequenceNumber, 4)...)
+	return append(h, LittleEndianBytes(i.SequenceNumber, 4)...)
 }

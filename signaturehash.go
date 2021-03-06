@@ -10,9 +10,9 @@ import (
 
 // TODO: v2 change to "serialize tx"
 
-// GetInputSignatureHash gets the preimage of the specified input and hashes it.
-func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
-	buf, err := tx.GetInputPreimage(inputNumber, sigHashFlag)
+// CalcInputSignatureHash gets the preimage of the specified input and hashes it.
+func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
+	buf, err := tx.CalcInputPreimage(inputNumber, sigHashFlag)
 	if err != nil {
 		return nil, err
 	}
@@ -20,9 +20,9 @@ func (tx *Tx) GetInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag
 	return crypto.Sha256d(buf), nil
 }
 
-// GetInputPreimage serializes the transaction based on the input index and the SIGHASH flag
+// CalcInputPreimage serializes the transaction based on the input index and the SIGHASH flag
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
-func (tx *Tx) GetInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
+func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 
 	if tx.Inputs[inputNumber] == nil {
 		return nil, errors.New("specified input does not exist")
@@ -138,10 +138,10 @@ func (tx *Tx) getOutputsHash(n int32) []byte {
 
 	if n == -1 {
 		for _, out := range tx.Outputs {
-			buf = append(buf, out.GetBytesForSigHash()...)
+			buf = append(buf, out.BytesForSigHash()...)
 		}
 	} else {
-		buf = append(buf, tx.Outputs[n].GetBytesForSigHash()...)
+		buf = append(buf, tx.Outputs[n].BytesForSigHash()...)
 	}
 
 	return crypto.Sha256d(buf)

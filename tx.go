@@ -139,7 +139,7 @@ func (tx *Tx) AddInput(input *Input) {
 func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 	matchPKHASH160 := crypto.Hash160(matchPK)
 	for i, utxo := range pvsTx.Outputs {
-		utxoPkHASH160, errPK := utxo.LockingScript.GetPublicKeyHash()
+		utxoPkHASH160, errPK := utxo.LockingScript.PublicKeyHash()
 		if errPK != nil {
 			return errPK
 		}
@@ -147,7 +147,7 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 			continue
 		}
 		tx.AddInput(&Input{
-			PreviousTxIDBytes:  pvsTx.GetTxIDAsBytes(),
+			PreviousTxIDBytes:  pvsTx.TxIDAsBytes(),
 			PreviousTxOutIndex: uint32(i),
 			PreviousTxSatoshis: utxo.Satoshis,
 			PreviousTxScript:   utxo.LockingScript,
@@ -211,8 +211,8 @@ func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
 //  and adds the left over change in a new output using the script provided.
 func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 
-	inputAmount := tx.GetTotalInputSatoshis()
-	outputAmount := tx.GetTotalOutputSatoshis()
+	inputAmount := tx.TotalInputSatoshis()
+	outputAmount := tx.TotalOutputSatoshis()
 
 	if inputAmount < outputAmount {
 		return errors.New("satoshis inputted to the tx are less than the outputted satoshis")
@@ -220,7 +220,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 
 	available := inputAmount - outputAmount
 
-	standardFees, err := GetStandardFee(f)
+	standardFees, err := ExtractStandardFee(f)
 	if err != nil {
 		return err
 	}
@@ -269,7 +269,7 @@ func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
 
 	standardBytes, dataBytes := tx.getStandardAndDataBytes()
 
-	standardFee, err := GetStandardFee(f)
+	standardFee, err := ExtractStandardFee(f)
 	if err != nil {
 		return 0, err
 	}
@@ -277,7 +277,7 @@ func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
 	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
 
 	var dataFee *Fee
-	if dataFee, err = GetDataFee(f); err != nil {
+	if dataFee, err = ExtractDataFee(f); err != nil {
 		return 0, err
 	}
 
@@ -288,7 +288,7 @@ func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
 
 func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
 
-	standardFee, err := GetStandardFee(f)
+	standardFee, err := ExtractStandardFee(f)
 	if err != nil {
 		return 0, err
 	}
@@ -353,8 +353,8 @@ func (tx *Tx) GetInputs() []*Input {
 	return tx.Inputs
 }
 
-// GetTotalInputSatoshis returns the total Satoshis inputted to the transaction.
-func (tx *Tx) GetTotalInputSatoshis() (total uint64) {
+// TotalInputSatoshis returns the total Satoshis inputted to the transaction.
+func (tx *Tx) TotalInputSatoshis() (total uint64) {
 	for _, in := range tx.GetInputs() {
 		total += in.PreviousTxSatoshis
 	}
@@ -366,23 +366,23 @@ func (tx *Tx) GetOutputs() []*Output {
 	return tx.Outputs
 }
 
-// GetTotalOutputSatoshis returns the total Satoshis outputted from the transaction.
-func (tx *Tx) GetTotalOutputSatoshis() (total uint64) {
+// TotalOutputSatoshis returns the total Satoshis outputted from the transaction.
+func (tx *Tx) TotalOutputSatoshis() (total uint64) {
 	for _, o := range tx.GetOutputs() {
 		total += o.Satoshis
 	}
 	return
 }
 
-// GetTxIDAsBytes returns the transaction ID of the transaction as bytes
+// TxIDAsBytes returns the transaction ID of the transaction as bytes
 // (which is also the transaction hash).
-func (tx *Tx) GetTxIDAsBytes() []byte {
+func (tx *Tx) TxIDAsBytes() []byte {
 	return ReverseBytes(crypto.Sha256d(tx.ToBytes()))
 }
 
-// GetTxID returns the transaction ID of the transaction
+// TxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
-func (tx *Tx) GetTxID() string {
+func (tx *Tx) TxID() string {
 	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.ToBytes())))
 }
 
@@ -406,7 +406,7 @@ func (tx *Tx) ToBytesWithClearedInputs(index int, lockingScript []byte) []byte {
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 	h := make([]byte, 0)
 
-	h = append(h, GetLittleEndianBytes(tx.Version, 4)...)
+	h = append(h, LittleEndianBytes(tx.Version, 4)...)
 
 	h = append(h, VarInt(uint64(len(tx.GetInputs())))...)
 

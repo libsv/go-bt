@@ -28,7 +28,7 @@ func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (signedTx *Tx, err 
 	// tx input serialization as well. So this Sign func would probably need to take
 	// Sign(sigdigest []bytes)
 	var sh []byte
-	if sh, err = unsignedTx.GetInputSignatureHash(index, is.SigHashFlag); err != nil {
+	if sh, err = unsignedTx.CalcInputSignatureHash(index, is.SigHashFlag); err != nil {
 		return
 	}
 
@@ -63,7 +63,7 @@ func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, inputsSigned [
 	}
 
 	for i, in := range unsignedTx.Inputs {
-		pubKeyHash, _ := in.PreviousTxScript.GetPublicKeyHash() // doesn't matter if returns error (not p2pkh)
+		pubKeyHash, _ := in.PreviousTxScript.PublicKeyHash() // doesn't matter if returns error (not p2pkh)
 
 		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
 

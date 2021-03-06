@@ -160,9 +160,9 @@ func createOpReturnOutput(data [][]byte) (*Output, error) {
 	return &Output{LockingScript: s}, nil
 }
 
-// GetLockingScriptHexString returns the locking script
+// LockingScriptHexString returns the locking script
 // of an output encoded as a hex string.
-func (o *Output) GetLockingScriptHexString() string {
+func (o *Output) LockingScriptHexString() string {
 	return hex.EncodeToString(*o.LockingScript)
 }
 
@@ -186,9 +186,9 @@ func (o *Output) ToBytes() []byte {
 	return h
 }
 
-// GetBytesForSigHash returns the proper serialization
+// BytesForSigHash returns the proper serialization
 // of an output to be hashed and signed (sighash).
-func (o *Output) GetBytesForSigHash() []byte {
+func (o *Output) BytesForSigHash() []byte {
 	buf := make([]byte, 0)
 
 	satoshis := make([]byte, 8)

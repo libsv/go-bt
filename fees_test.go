@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetDataFee(t *testing.T) {
+func TestExtractDataFee(t *testing.T) {
 	t.Run("get valid data fee", func(t *testing.T) {
 		fees := []*bt.Fee{bt.DefaultDataFee()}
-		fee, err := bt.GetDataFee(fees)
+		fee, err := bt.ExtractDataFee(fees)
 		assert.NoError(t, err)
 		assert.NotNil(t, fee)
 		assert.Equal(t, bt.FeeTypeData, fee.FeeType)
@@ -24,16 +24,16 @@ func TestGetDataFee(t *testing.T) {
 		wrongFee := bt.DefaultDataFee()
 		wrongFee.FeeType = "unknown"
 		fees := []*bt.Fee{wrongFee}
-		fee, err := bt.GetDataFee(fees)
+		fee, err := bt.ExtractDataFee(fees)
 		assert.Error(t, err)
 		assert.Nil(t, fee)
 	})
 }
 
-func TestGetStandardFee(t *testing.T) {
+func TestExtractStandardFee(t *testing.T) {
 	t.Run("get valid standard fee", func(t *testing.T) {
 		fees := []*bt.Fee{bt.DefaultStandardFee()}
-		fee, err := bt.GetStandardFee(fees)
+		fee, err := bt.ExtractStandardFee(fees)
 		assert.NoError(t, err)
 		assert.NotNil(t, fee)
 		assert.Equal(t, bt.FeeTypeStandard, fee.FeeType)
@@ -47,7 +47,7 @@ func TestGetStandardFee(t *testing.T) {
 		wrongFee := bt.DefaultStandardFee()
 		wrongFee.FeeType = "unknown"
 		fees := []*bt.Fee{wrongFee}
-		fee, err := bt.GetStandardFee(fees)
+		fee, err := bt.ExtractStandardFee(fees)
 		assert.Error(t, err)
 		assert.Nil(t, fee)
 	})
@@ -57,12 +57,12 @@ func TestDefaultFees(t *testing.T) {
 	fees := bt.DefaultFees()
 	assert.Equal(t, 2, len(fees))
 
-	fee, err := bt.GetDataFee(fees)
+	fee, err := bt.ExtractDataFee(fees)
 	assert.NoError(t, err)
 	assert.NotNil(t, fee)
 	assert.Equal(t, bt.FeeTypeData, fee.FeeType)
 
-	fee, err = bt.GetStandardFee(fees)
+	fee, err = bt.ExtractStandardFee(fees)
 	assert.NoError(t, err)
 	assert.NotNil(t, fee)
 	assert.Equal(t, bt.FeeTypeStandard, fee.FeeType)

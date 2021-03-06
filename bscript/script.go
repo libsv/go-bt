@@ -299,8 +299,8 @@ func isSmallIntOp(opcode byte) bool {
 	return opcode == OpZERO || (opcode >= OpONE && opcode <= Op16)
 }
 
-// GetPublicKeyHash returns a public key hash byte array if the script is a P2PKH script
-func (s *Script) GetPublicKeyHash() ([]byte, error) {
+// PublicKeyHash returns a public key hash byte array if the script is a P2PKH script.
+func (s *Script) PublicKeyHash() ([]byte, error) {
 	if s == nil || len(*s) == 0 {
 		return nil, fmt.Errorf("script is empty")
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTx_GetInputPreimage(t *testing.T) {
+func TestTx_CalcInputPreimage(t *testing.T) {
 	t.Parallel()
 
 	var testVector = []struct {
@@ -66,14 +66,14 @@ func TestTx_GetInputPreimage(t *testing.T) {
 			assert.NoError(t, err)
 
 			var actualSigHash []byte
-			actualSigHash, err = tx.GetInputPreimage(test.index, sighash.All|sighash.ForkID)
+			actualSigHash, err = tx.CalcInputPreimage(test.index, sighash.All|sighash.ForkID)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedPreimage, hex.EncodeToString(actualSigHash))
 		})
 	}
 }
 
-func TestTx_GetInputSignatureHash(t *testing.T) {
+func TestTx_CalcInputSignatureHash(t *testing.T) {
 	t.Parallel()
 
 	var testVector = []struct {
@@ -129,7 +129,7 @@ func TestTx_GetInputSignatureHash(t *testing.T) {
 			assert.NoError(t, err)
 
 			var actualSigHash []byte
-			actualSigHash, err = tx.GetInputSignatureHash(test.index, sighash.All|sighash.ForkID)
+			actualSigHash, err = tx.CalcInputSignatureHash(test.index, sighash.All|sighash.ForkID)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedSigHash, hex.EncodeToString(actualSigHash))
 		})
