@@ -33,64 +33,68 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	}, totalLength, nil
 }
 
-// NewP2PKHOutputFromPubKeyHashStr makes an output to a PKH with a value.
-func NewP2PKHOutputFromPubKeyHashStr(publicKeyHash string, satoshis uint64) (*Output, error) {
+// AddP2PKHOutputFromPubKeyHashStr makes an output to a PKH with a value.
+func (tx *Tx) AddP2PKHOutputFromPubKeyHashStr(publicKeyHash string, satoshis uint64) error {
 	s, err := bscript.NewP2PKHFromPubKeyHashStr(publicKeyHash)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &Output{
+	tx.AddOutput(&Output{
 		Satoshis:      satoshis,
 		LockingScript: s,
-	}, nil
+	})
+	return nil
 }
 
-// NewP2PKHOutputFromPubKeyBytes makes an output to a PKH with a value.
-func NewP2PKHOutputFromPubKeyBytes(publicKeyBytes []byte, satoshis uint64) (*Output, error) {
+// AddP2PKHOutputFromPubKeyBytes makes an output to a PKH with a value.
+func (tx *Tx) AddP2PKHOutputFromPubKeyBytes(publicKeyBytes []byte, satoshis uint64) error {
 	s, err := bscript.NewP2PKHFromPubKeyBytes(publicKeyBytes)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &Output{
+	tx.AddOutput(&Output{
 		Satoshis:      satoshis,
 		LockingScript: s,
-	}, nil
+	})
+	return nil
 }
 
-// NewP2PKHOutputFromPubKeyStr makes an output to a PKH with a value.
-func NewP2PKHOutputFromPubKeyStr(publicKey string, satoshis uint64) (*Output, error) {
+// AddP2PKHOutputFromPubKeyStr makes an output to a PKH with a value.
+func (tx *Tx) AddP2PKHOutputFromPubKeyStr(publicKey string, satoshis uint64) error {
 	s, err := bscript.NewP2PKHFromPubKeyStr(publicKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &Output{
+	tx.AddOutput(&Output{
 		Satoshis:      satoshis,
 		LockingScript: s,
-	}, nil
+	})
+	return nil
 }
 
-// NewP2PKHOutputFromAddress makes an output to a PKH with a value.
-func NewP2PKHOutputFromAddress(addr string, satoshis uint64) (*Output, error) {
+// AddP2PKHOutputFromAddress makes an output to a PKH with a value.
+func (tx *Tx) AddP2PKHOutputFromAddress(addr string, satoshis uint64) error {
 	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &Output{
+	tx.AddOutput(&Output{
 		Satoshis:      satoshis,
 		LockingScript: s,
-	}, nil
+	})
+	return nil
 }
 
-// NewHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
-func NewHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) (*Output, error) {
+// AddHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
+func (tx *Tx) AddHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) error {
 
 	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	s := &bscript.Script{}
@@ -99,34 +103,47 @@ func NewHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) (*Output
 	secretBytesHash := crypto.Hash160([]byte(secret))
 
 	if err = s.AppendPushData(secretBytesHash); err != nil {
-		return nil, err
+		return err
 	}
 	s.AppendOpCode(bscript.OpEQUALVERIFY)
 	s.AppendOpCode(bscript.OpDUP)
 	s.AppendOpCode(bscript.OpHASH160)
 
 	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
-		return nil, err
+		return err
 	}
 	s.AppendOpCode(bscript.OpEQUALVERIFY)
 	s.AppendOpCode(bscript.OpCHECKSIG)
 
-	return &Output{
+	tx.AddOutput(&Output{
 		Satoshis:      satoshis,
 		LockingScript: s,
-	}, nil
+	})
+	return nil
 }
 
-// NewOpReturnOutput creates a new Output with OP_FALSE OP_RETURN and then the data
+// AddOpReturnOutput creates a new Output with OP_FALSE OP_RETURN and then the data
 // passed in encoded as hex.
-func NewOpReturnOutput(data []byte) (*Output, error) {
-	return createOpReturnOutput([][]byte{data})
+func (tx *Tx) AddOpReturnOutput(data []byte) error {
+	o, err := createOpReturnOutput([][]byte{data})
+	if err != nil {
+		return err
+	}
+
+	tx.AddOutput(o)
+	return nil
 }
 
-// NewOpReturnPartsOutput creates a new Output with OP_FALSE OP_RETURN and then
+// AddOpReturnPartsOutput creates a new Output with OP_FALSE OP_RETURN and then
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
-func NewOpReturnPartsOutput(data [][]byte) (*Output, error) {
-	return createOpReturnOutput(data)
+func (tx *Tx) AddOpReturnPartsOutput(data [][]byte) error {
+	o, err := createOpReturnOutput(data)
+	if err != nil {
+		return err
+	}
+
+	tx.AddOutput(o)
+	return nil
 }
 
 func createOpReturnOutput(data [][]byte) (*Output, error) {

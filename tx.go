@@ -38,7 +38,6 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 // DO NOT CHANGE ORDER - Optimized memory via malign
 //
 type Tx struct {
-	// TODO: make variables private?
 	Inputs   []*Input
 	Outputs  []*Output
 	Version  uint32
@@ -141,13 +140,7 @@ func (tx *Tx) AddOutput(output *Output) {
 // PayTo creates a new P2PKH output from a BitCoin address (base58)
 // and the satoshis amount and adds that to the transaction.
 func (tx *Tx) PayTo(addr string, satoshis uint64) error {
-	o, err := NewP2PKHOutputFromAddress(addr, satoshis)
-	if err != nil {
-		return err
-	}
-
-	tx.AddOutput(o)
-	return nil
+	return tx.AddP2PKHOutputFromAddress(addr, satoshis)
 }
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction

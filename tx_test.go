@@ -118,19 +118,16 @@ func TestAddInputFromTx(t *testing.T) {
 	pubkey1 := []byte{1, 2, 3} // utxo test owner
 	pubkey2 := []byte{1, 2, 4}
 
-	output1, err1 := bt.NewP2PKHOutputFromPubKeyBytes(pubkey1, uint64(100000))
-	assert.NoError(t, err1)
-	output2, err2 := bt.NewP2PKHOutputFromPubKeyBytes(pubkey1, uint64(100000))
-	assert.NoError(t, err2)
-	output3, err3 := bt.NewP2PKHOutputFromPubKeyBytes(pubkey2, uint64(5000000))
-	assert.NoError(t, err3)
-
 	prvTx := bt.NewTx()
-	prvTx.AddOutput(output1)
-	prvTx.AddOutput(output2)
-	prvTx.AddOutput(output3)
+	err := prvTx.AddP2PKHOutputFromPubKeyBytes(pubkey1, uint64(100000))
+	assert.NoError(t, err)
+	err = prvTx.AddP2PKHOutputFromPubKeyBytes(pubkey1, uint64(100000))
+	assert.NoError(t, err)
+	err = prvTx.AddP2PKHOutputFromPubKeyBytes(pubkey2, uint64(100000))
+	assert.NoError(t, err)
+
 	newTx := bt.NewTx()
-	err := newTx.AddInputFromTx(prvTx, pubkey1)
+	err = newTx.AddInputFromTx(prvTx, pubkey1)
 	assert.NoError(t, err)
 	assert.Equal(t, newTx.InputCount(), 2) // only 2 utxos has been added
 	assert.Equal(t, newTx.TotalInputSatoshis(), uint64(200000))
@@ -477,11 +474,8 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 
 		// add some op return
-		var outPut *bt.Output
-		outPut, err = bt.NewOpReturnPartsOutput([][]byte{[]byte("hi"), []byte("how"), []byte("are"), []byte("you")})
+		err = tx.AddOpReturnPartsOutput([][]byte{[]byte("hi"), []byte("how"), []byte("are"), []byte("you")})
 		assert.NoError(t, err)
-		assert.NotNil(t, outPut)
-		tx.AddOutput(outPut)
 
 		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", bt.DefaultFees())
 		assert.NoError(t, err)
@@ -663,11 +657,8 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		type OpReturnData [][]byte
 		ops := OpReturnData{[]byte("prefix1"), []byte("example data"), []byte{0x13, 0x37}}
 
-		var out *bt.Output
-		out, err = bt.NewOpReturnPartsOutput(ops)
+		err = tx.AddOpReturnPartsOutput(ops)
 		assert.NoError(t, err)
-
-		tx.AddOutput(out)
 
 		var wif *bsvutil.WIF
 		wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
