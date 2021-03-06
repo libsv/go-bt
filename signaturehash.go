@@ -2,7 +2,6 @@ package bt
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 
 	"github.com/libsv/go-bt/crypto"
@@ -29,16 +28,6 @@ func (tx *Tx) GetInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]
 		return nil, errors.New("specified input does not exist")
 	}
 	in := tx.Inputs[inputNumber]
-
-	// TODO: v2 make input (and other internal) elements private and not exposed
-	// so that we only store previoustxid in bytes and then do the conversion
-	// with getters and setters
-	if in.PreviousTxIDBytes == nil {
-		ptidb, err := hex.DecodeString(in.PreviousTxID)
-		if err == nil {
-			in.PreviousTxIDBytes = ptidb
-		}
-	}
 
 	if len(in.PreviousTxIDBytes) == 0 {
 		return nil, errors.New("'PreviousTxID' not supplied")

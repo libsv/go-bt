@@ -26,12 +26,16 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
 //
 type Input struct {
 	PreviousTxIDBytes  []byte
-	PreviousTxID       string
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *bscript.Script
 	UnlockingScript    *bscript.Script
 	PreviousTxOutIndex uint32
 	SequenceNumber     uint32
+}
+
+// PreviousTxIDStr returns the Previous TxID as a hex string.
+func (i *Input) PreviousTxIDStr() string {
+	return hex.EncodeToString(i.PreviousTxIDBytes)
 }
 
 // DefaultSequenceNumber is the default starting sequence number
@@ -63,7 +67,6 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 
 	return &Input{
 		PreviousTxIDBytes:  ReverseBytes(bytes[0:32]),
-		PreviousTxID:       hex.EncodeToString(ReverseBytes(bytes[0:32])),
 		PreviousTxOutIndex: binary.LittleEndian.Uint32(bytes[32:36]),
 		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
 		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
@@ -86,7 +89,6 @@ func NewInputFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64,
 
 	return &Input{
 		PreviousTxIDBytes:  ptxid,
-		PreviousTxID:       prevTxID,
 		PreviousTxOutIndex: prevTxIndex,
 		PreviousTxSatoshis: prevTxSats,
 		PreviousTxScript:   pts,
@@ -96,13 +98,13 @@ func NewInputFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64,
 
 func (i *Input) String() string {
 	return fmt.Sprintf(
-		`prevTxHash:   %x
+		`prevTxHash:   %s
 prevOutIndex: %d
 scriptLen:    %d
 script:       %x
 sequence:     %x
 `,
-		i.PreviousTxID,
+		hex.EncodeToString(i.PreviousTxIDBytes),
 		i.PreviousTxOutIndex,
 		len(*i.UnlockingScript),
 		i.UnlockingScript,
@@ -113,16 +115,6 @@ sequence:     %x
 // ToBytes encodes the Input into a hex byte array.
 func (i *Input) ToBytes(clear bool) []byte {
 	h := make([]byte, 0)
-
-	// TODO: v2 make input (and other internal) elements private and not exposed
-	// so that we only store previoustxid in bytes and then do the conversion
-	// with getters and setters
-	if i.PreviousTxIDBytes == nil {
-		ptidb, err := hex.DecodeString(i.PreviousTxID)
-		if err == nil {
-			i.PreviousTxIDBytes = ptidb
-		}
-	}
 
 	h = append(h, ReverseBytes(i.PreviousTxIDBytes)...)
 	h = append(h, GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)

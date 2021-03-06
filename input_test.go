@@ -72,7 +72,7 @@ func TestInput_String(t *testing.T) {
 		assert.Equal(t, 148, s)
 
 		assert.Equal(t,
-			"prevTxHash:   36666337356633306130383566333331333236356239326338313830383266393736386331336238613161313037623438343032336563663633633836653463\nprevOutIndex: 1\nscriptLen:    107\nscript:       &483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824f\nsequence:     ffffffff\n",
+			"prevTxHash:   6fc75f30a085f3313265b92c818082f9768c13b8a1a107b484023ecf63c86e4c\nprevOutIndex: 1\nscriptLen:    107\nscript:       &483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824f\nsequence:     ffffffff\n",
 			i.String(),
 		)
 	})
@@ -90,7 +90,7 @@ func TestNewInputFromUTXO(t *testing.T) {
 	)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", i.PreviousTxID)
+	assert.Equal(t, "a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", i.PreviousTxIDStr())
 	assert.Equal(t, uint32(4), i.PreviousTxOutIndex)
 	assert.Equal(t, uint64(5064), i.PreviousTxSatoshis)
 

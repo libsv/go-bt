@@ -63,7 +63,6 @@ func TestNewTxFromString(t *testing.T) {
 		ptid, _ := hex.DecodeString("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
 		i := bt.Input{
 			PreviousTxIDBytes:  ptid,
-			PreviousTxID:       "9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c",
 			PreviousTxOutIndex: 0,
 			SequenceNumber:     bt.DefaultSequenceNumber,
 		}
@@ -387,7 +386,7 @@ func TestTx_From(t *testing.T) {
 
 		inputs := tx.GetInputs()
 		assert.Equal(t, 1, len(inputs))
-		assert.Equal(t, "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", inputs[0].PreviousTxID)
+		assert.Equal(t, "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", hex.EncodeToString(inputs[0].PreviousTxIDBytes))
 		assert.Equal(t, uint32(0), inputs[0].PreviousTxOutIndex)
 		assert.Equal(t, uint64(4000000), inputs[0].PreviousTxSatoshis)
 		assert.Equal(t, bt.DefaultSequenceNumber, inputs[0].SequenceNumber)

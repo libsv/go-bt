@@ -131,16 +131,6 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 // AddInput adds a new input to the transaction.
 func (tx *Tx) AddInput(input *Input) {
 
-	// TODO: v2 make input (and other internal) elements private and not exposed
-	// so that we only store previoustxid in bytes and then do the conversion
-	// with getters and setters
-	if input.PreviousTxIDBytes == nil {
-		ptidb, err := hex.DecodeString(input.PreviousTxID)
-		if err == nil {
-			input.PreviousTxIDBytes = ptidb
-		}
-	}
-
 	tx.Inputs = append(tx.Inputs, input)
 }
 
@@ -158,7 +148,6 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 		}
 		tx.AddInput(&Input{
 			PreviousTxIDBytes:  pvsTx.GetTxIDAsBytes(),
-			PreviousTxID:       pvsTx.GetTxID(),
 			PreviousTxOutIndex: uint32(i),
 			PreviousTxSatoshis: utxo.Satoshis,
 			PreviousTxScript:   utxo.LockingScript,
@@ -170,24 +159,12 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 
 // From adds a new input to the transaction from the specified UTXO fields.
 func (tx *Tx) From(txID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
-	pts, err := bscript.NewFromHexString(prevTxLockingScript)
+	in, err := NewInputFromUTXO(txID, vout, satoshis, prevTxLockingScript, DefaultSequenceNumber)
 	if err != nil {
 		return err
 	}
 
-	ptid, err := hex.DecodeString(txID)
-	if err != nil {
-		return err
-	}
-
-	tx.AddInput(&Input{
-		PreviousTxIDBytes:  ptid,
-		PreviousTxID:       txID,
-		PreviousTxOutIndex: vout,
-		PreviousTxSatoshis: satoshis,
-		PreviousTxScript:   pts,
-		SequenceNumber:     DefaultSequenceNumber,
-	})
+	tx.AddInput(in)
 
 	return nil
 }
@@ -358,8 +335,9 @@ func (tx *Tx) IsCoinbase() bool {
 		return false
 	}
 
-	// todo: make constant(s)?
-	if tx.Inputs[0].PreviousTxID != "0000000000000000000000000000000000000000000000000000000000000000" {
+	cbi := make([]byte, 32)
+
+	if !bytes.Equal(tx.Inputs[0].PreviousTxIDBytes, cbi) {
 		return false
 	}
 
