@@ -1,21 +1,12 @@
 package bt_test
 
 import (
-	"bytes"
 	"encoding/hex"
 	"testing"
 
 	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/bscript"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestNewInput(t *testing.T) {
-	input := bt.NewInput()
-	assert.NotNil(t, input)
-	assert.Equal(t, "", input.UnlockingScript.ToString())
-	assert.Equal(t, bt.DefaultSequenceNumber, input.SequenceNumber)
-}
 
 func TestNewInputFromBytes(t *testing.T) {
 	t.Parallel()
@@ -76,29 +67,4 @@ func TestInput_String(t *testing.T) {
 			i.String(),
 		)
 	})
-}
-
-func TestNewInputFromUTXO(t *testing.T) {
-	t.Parallel()
-
-	i, err := bt.NewInputFromUTXO(
-		"a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5",
-		4,
-		5064,
-		"a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac",
-		bt.DefaultSequenceNumber,
-	)
-	assert.NoError(t, err)
-
-	assert.Equal(t, "a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", i.PreviousTxIDStr())
-	assert.Equal(t, uint32(4), i.PreviousTxOutIndex)
-	assert.Equal(t, uint64(5064), i.PreviousTxSatoshis)
-
-	var es *bscript.Script
-	es, err = bscript.NewFromHexString("a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac")
-	assert.NoError(t, err)
-	assert.NotNil(t, es)
-
-	assert.Equal(t, true, bytes.Equal(*i.PreviousTxScript, *es))
-	assert.Equal(t, bt.DefaultSequenceNumber, i.SequenceNumber)
 }

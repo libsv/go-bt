@@ -128,52 +128,6 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	return &t, offset, nil
 }
 
-// AddInput adds a new input to the transaction.
-func (tx *Tx) AddInput(input *Input) {
-
-	tx.Inputs = append(tx.Inputs, input)
-}
-
-// AddInputFromTx take all outputs from previous transaction
-// that match a specific public key, add it as input to this new transaction.
-func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
-	matchPKHASH160 := crypto.Hash160(matchPK)
-	for i, utxo := range pvsTx.Outputs {
-		utxoPkHASH160, errPK := utxo.LockingScript.PublicKeyHash()
-		if errPK != nil {
-			return errPK
-		}
-		if !bytes.Equal(utxoPkHASH160, matchPKHASH160) {
-			continue
-		}
-		tx.AddInput(&Input{
-			PreviousTxIDBytes:  pvsTx.TxIDAsBytes(),
-			PreviousTxOutIndex: uint32(i),
-			PreviousTxSatoshis: utxo.Satoshis,
-			PreviousTxScript:   utxo.LockingScript,
-			SequenceNumber:     0xffffffff,
-		})
-	}
-	return nil
-}
-
-// From adds a new input to the transaction from the specified UTXO fields.
-func (tx *Tx) From(txID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
-	in, err := NewInputFromUTXO(txID, vout, satoshis, prevTxLockingScript, DefaultSequenceNumber)
-	if err != nil {
-		return err
-	}
-
-	tx.AddInput(in)
-
-	return nil
-}
-
-// InputCount returns the number of transaction inputs.
-func (tx *Tx) InputCount() int {
-	return len(tx.Inputs)
-}
-
 // OutputCount returns the number of transaction inputs.
 func (tx *Tx) OutputCount() int {
 	return len(tx.Outputs)
