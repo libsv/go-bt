@@ -36,7 +36,7 @@ func TestTx_SignAuto(t *testing.T) {
 
 		rawTxBefore := tx.ToString()
 
-		_, err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.NotEqual(t, rawTxBefore, tx.ToString())
@@ -48,7 +48,7 @@ func TestTx_SignAuto(t *testing.T) {
 
 		rawTxBefore := tx.ToString()
 
-		_, err := tx.SignAuto(&bt.InternalSigner{PrivateKey: nil})
+		_, err := tx.SignAuto(&bt.LocalSigner{PrivateKey: nil})
 		assert.NoError(t, err)
 
 		assert.Equal(t, rawTxBefore, tx.ToString())
@@ -75,7 +75,7 @@ func TestTx_SignAuto(t *testing.T) {
 
 		// No signature, wrong wif
 		rawTxBefore := tx.ToString()
-		_, err = tx.SignAuto(&bt.InternalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 		assert.Equal(t, rawTxBefore, tx.ToString())
 	})
