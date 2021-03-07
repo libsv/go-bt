@@ -8,9 +8,11 @@ import (
 	"github.com/libsv/go-bt/sighash"
 )
 
-// TODO: v2 change to "serialize tx"
-
-// CalcInputSignatureHash gets the preimage of the specified input and hashes it.
+// CalcInputSignatureHash serialized the transcation andreturns the hash digest
+// to be signed. BitCoin (SV) uses a different signature hashing algorithm
+// after the UAHF fork for replay protection.
+//
+// see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 	buf, err := tx.CalcInputPreimage(inputNumber, sigHashFlag)
 	if err != nil {
@@ -21,6 +23,8 @@ func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Fla
 }
 
 // CalcInputPreimage serializes the transaction based on the input index and the SIGHASH flag
+// and returns the preimage before double hashing (SHA256d).
+//
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 

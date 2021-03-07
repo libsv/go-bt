@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
 )
 
@@ -212,46 +211,4 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 	binary.LittleEndian.PutUint32(lt, tx.LockTime)
 
 	return append(h, lt...)
-}
-
-// Sign is used to sign the transaction at a specific input index.
-// It takes a Signed interface as a parameter so that different
-// signing implementations can be used to sign the transaction -
-// for example internal/local or external signing.
-func (tx *Tx) Sign(index uint32, s Signer) error {
-	// TODO: v2 put tx serialization here so that the Signer.Sign
-	// func only does signing and not also serialization which
-	// should be done here.
-
-	signedTx, err := s.Sign(index, tx)
-	if err != nil {
-		return err
-	}
-	*tx = *signedTx
-	return nil
-}
-
-// SignAuto is used to automatically check which P2PKH inputs are
-// able to be signed (match the public key) and then sign them.
-// It takes a Signed interface as a parameter so that different
-// signing implementations can be used to sign the transaction -
-// for example internal/local or external signing.
-func (tx *Tx) SignAuto(s Signer) (inputsSigned []int, err error) {
-	var signedTx *Tx
-	if signedTx, inputsSigned, err = s.SignAuto(tx); err != nil {
-		return
-	}
-	*tx = *signedTx
-	return
-}
-
-// ApplyUnlockingScript applies a script to the transaction at a specific index in
-// unlocking script field.
-func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
-	if tx.Inputs[index] != nil {
-		tx.Inputs[index].UnlockingScript = s
-		return nil
-	}
-
-	return fmt.Errorf("no input at index %d", index)
 }

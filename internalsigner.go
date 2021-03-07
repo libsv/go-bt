@@ -1,88 +1,48 @@
 package bt
 
 import (
-	"encoding/hex"
-
 	"github.com/bitcoinsv/bsvd/bsvec"
-	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/crypto"
 	"github.com/libsv/go-bt/sighash"
 )
 
 // InternalSigner implements the Signer interface. It is used to sign a Tx locally
-// given a PrivateKey and SIGHASH type.
+// using a bsvec PrivateKey.
 type InternalSigner struct {
-	PrivateKey  *bsvec.PrivateKey
-	SigHashFlag sighash.Flag
+	PrivateKey *bsvec.PrivateKey
 }
 
 // Sign a transaction at a given input index using the PrivateKey passed in through the
 // InternalSigner struct.
-func (is *InternalSigner) Sign(index uint32, unsignedTx *Tx) (signedTx *Tx, err error) {
-	if is.SigHashFlag == 0 {
-		is.SigHashFlag = sighash.AllForkID
+func (is *InternalSigner) Sign(unsignedTx *Tx, index uint32,
+	shf sighash.Flag) (publicKey []byte, signature []byte, err error) {
+
+	if shf == 0 {
+		shf = sighash.AllForkID
 	}
 
-	// TODO: v2 put tx serialization in parent/general func (tx.Sign) so that the
-	// functions like that implement the Signer interface only sign and don't do
-	// tx input serialization as well. So this Sign func would probably need to take
-	// Sign(sigdigest []bytes)
 	var sh []byte
-	if sh, err = unsignedTx.CalcInputSignatureHash(index, is.SigHashFlag); err != nil {
+	if sh, err = unsignedTx.CalcInputSignatureHash(index, shf); err != nil {
 		return
 	}
 
-	var sig *bsvec.Signature
-	if sig, err = is.PrivateKey.Sign(sh); err != nil { // little endian sign
+	return is.SignHash(sh)
+}
+
+// SignHash a transaction at a given a hash digest using the PrivateKey passed in through the
+// InternalSigner struct.
+func (is *InternalSigner) SignHash(hash []byte) (publicKey []byte, signature []byte, err error) {
+
+	sig, err := is.PrivateKey.Sign(hash)
+	if err != nil {
 		return
 	}
 
-	var s *bscript.Script
-	if s, err = bscript.NewP2PKHUnlockingScript(
-		is.PrivateKey.PubKey().SerializeCompressed(),
-		sig.Serialize(),
-		is.SigHashFlag,
-	); err != nil {
-		return
-	}
-
-	if err = unsignedTx.ApplyUnlockingScript(index, s); err != nil {
-		return
-	}
-	signedTx = unsignedTx
-
+	publicKey = is.PrivateKey.PubKey().SerializeCompressed()
+	signature = sig.Serialize()
 	return
 }
 
-// SignAuto goes through each input of the transaction and automatically
-// signs the P2PKH inputs that it is able to sign using the specific
-// PrivateKey passed in through the InternalSigner struct.
-func (is *InternalSigner) SignAuto(unsignedTx *Tx) (signedTx *Tx, inputsSigned []int, err error) {
-	if is.SigHashFlag == 0 {
-		is.SigHashFlag = sighash.AllForkID
-	}
-
-	for i, in := range unsignedTx.Inputs {
-		pubKeyHash, _ := in.PreviousTxScript.PublicKeyHash() // doesn't matter if returns error (not p2pkh)
-
-		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
-
-		pubKeyHashStrFromPriv := hex.EncodeToString(crypto.Hash160(is.PrivateKey.PubKey().SerializeCompressed()))
-
-		// check if able to sign (public key matches pubKeyHash in script)
-		if pubKeyHashStr == pubKeyHashStrFromPriv {
-
-			if signedTx, err = is.Sign(uint32(i), unsignedTx); err != nil {
-				return
-			}
-
-			inputsSigned = append(inputsSigned, i)
-		}
-	}
-
-	if signedTx == nil {
-		signedTx = unsignedTx
-	}
-
-	return
+// PublicKey returns the public key which will be used to sign.
+func (is *InternalSigner) PublicKey() (publicKey []byte) {
+	return is.PrivateKey.PubKey().SerializeCompressed()
 }

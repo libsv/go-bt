@@ -28,7 +28,7 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 	wif, err = bsvutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	assert.NoError(t, err)
 
-	signer := bt.InternalSigner{PrivateKey: wif.PrivKey, SigHashFlag: 0}
+	signer := bt.InternalSigner{PrivateKey: wif.PrivKey}
 	_, err = tx.SignAuto(&signer)
 	assert.NoError(t, err)
 
