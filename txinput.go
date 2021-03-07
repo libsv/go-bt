@@ -46,26 +46,24 @@ func (tx *Tx) addInput(input *Input) {
 	tx.Inputs = append(tx.Inputs, input)
 }
 
-// AddInputFromTx take all outputs from previous transaction
-// that match a specific public key, add it as input to this new transaction.
+// AddInputFromTx will add all outputs of given previous transaction
+// that match a specific public key to your transaction.
 func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
-	matchPKHASH160 := crypto.Hash160(matchPK)
+
 	for i, utxo := range pvsTx.Outputs {
-		utxoPkHASH160, errPK := utxo.LockingScript.PublicKeyHash()
-		if errPK != nil {
-			return errPK
+		utxoPkHASH160, err := utxo.LockingScript.PublicKeyHash()
+		if err != nil {
+			return err
 		}
-		if !bytes.Equal(utxoPkHASH160, matchPKHASH160) {
-			continue
+
+		if bytes.Equal(utxoPkHASH160, crypto.Hash160(matchPK)) {
+			err = tx.From(pvsTx.TxID(), uint32(i), utxo.LockingScriptHexString(), utxo.Satoshis)
+			if err != nil {
+				return err
+			}
 		}
-		tx.addInput(&Input{
-			PreviousTxIDBytes:  pvsTx.TxIDAsBytes(),
-			PreviousTxOutIndex: uint32(i),
-			PreviousTxSatoshis: utxo.Satoshis,
-			PreviousTxScript:   utxo.LockingScript,
-			SequenceNumber:     0xffffffff,
-		})
 	}
+
 	return nil
 }
 

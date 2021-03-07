@@ -70,14 +70,23 @@ func NewP2PKHFromPubKeyStr(pubKey string) (*Script, error) {
 // NewP2PKHFromPubKeyBytes takes public key bytes (in
 // compressed format) and creates a P2PKH script from it.
 func NewP2PKHFromPubKeyBytes(pubKeyBytes []byte) (*Script, error) {
-	hash := crypto.Hash160(pubKeyBytes)
 
+	if len(pubKeyBytes) != 33 {
+		return nil, errors.New("invalid public key length")
+	}
+
+	return NewP2PKHFromPubKeyHash(crypto.Hash160(pubKeyBytes))
+}
+
+// NewP2PKHFromPubKeyHash takes a public key hex string (in
+// compressed format) and creates a P2PKH script from it.
+func NewP2PKHFromPubKeyHash(pubKeyHash []byte) (*Script, error) {
 	b := []byte{
 		OpDUP,
 		OpHASH160,
 		0x14,
 	}
-	b = append(b, hash...)
+	b = append(b, pubKeyHash...)
 	b = append(b, OpEQUALVERIFY)
 	b = append(b, OpCHECKSIG)
 
@@ -93,17 +102,7 @@ func NewP2PKHFromPubKeyHashStr(pubKeyHash string) (*Script, error) {
 		return nil, err
 	}
 
-	b := []byte{
-		OpDUP,
-		OpHASH160,
-		0x14,
-	}
-	b = append(b, hash...)
-	b = append(b, OpEQUALVERIFY)
-	b = append(b, OpCHECKSIG)
-
-	s := Script(b)
-	return &s, nil
+	return NewP2PKHFromPubKeyHash(hash)
 }
 
 // NewP2PKHFromAddress takes an address

@@ -9,8 +9,8 @@ import (
 )
 
 func TestAddInputFromTx(t *testing.T) {
-	pubkey1 := []byte{1, 2, 3} // utxo test owner
-	pubkey2 := []byte{1, 2, 4}
+	pubkey1, _ := hex.DecodeString("0280f642908697e8068c2e921bd998d6c2b90553064656f91b9cb9e98f443aac30")
+	pubkey2, _ := hex.DecodeString("02434dc3db4281c0895d7a126bb266e7648caca7d0e2e487bc41f954722d4ee397")
 
 	prvTx := bt.NewTx()
 	err := prvTx.AddP2PKHOutputFromPubKeyBytes(pubkey1, uint64(100000))
@@ -23,7 +23,7 @@ func TestAddInputFromTx(t *testing.T) {
 	newTx := bt.NewTx()
 	err = newTx.AddInputFromTx(prvTx, pubkey1)
 	assert.NoError(t, err)
-	assert.Equal(t, newTx.InputCount(), 2) // only 2 utxos has been added
+	assert.Equal(t, newTx.InputCount(), 2) // only 2 utxos added
 	assert.Equal(t, newTx.TotalInputSatoshis(), uint64(200000))
 }
 
