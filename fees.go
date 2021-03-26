@@ -4,12 +4,18 @@ import (
 	"errors"
 )
 
+// FeeType is used to specify which
+// type of fee is used depending on
+// the type of tx data (eg: standard
+// bytes or data bytes).
+type FeeType string
+
 const (
 	// FeeTypeStandard is the fee type for standard tx parts
-	FeeTypeStandard = "standard"
+	FeeTypeStandard FeeType = "standard"
 
 	// FeeTypeData is the fee type for data tx parts
-	FeeTypeData = "data"
+	FeeTypeData FeeType = "data"
 )
 
 // FeeUnit displays the amount of Satoshis needed
@@ -24,7 +30,7 @@ type FeeUnit struct {
 // FeeType, for example 'standard' or 'data'
 // see https://github.com/bitcoin-sv-specs/brfc-misc/tree/master/feespec
 type Fee struct {
-	FeeType   string  `json:"feeType"` // standard || data
+	FeeType   FeeType `json:"feeType"` // standard || data
 	MiningFee FeeUnit `json:"miningFee"`
 	RelayFee  FeeUnit `json:"relayFee"` // Fee for retaining Tx in secondary mempool
 }
@@ -79,12 +85,12 @@ func ExtractDataFee(fees []*Fee) (*Fee, error) {
 	return extractFeeType(FeeTypeData, fees)
 }
 
-func extractFeeType(feeType string, fees []*Fee) (*Fee, error) {
+func extractFeeType(ft FeeType, fees []*Fee) (*Fee, error) {
 	for _, f := range fees {
-		if f.FeeType == feeType {
+		if f.FeeType == ft {
 			return f, nil
 		}
 	}
 
-	return nil, errors.New("no " + feeType + " fee supplied")
+	return nil, errors.New("no " + string(ft) + " fee supplied")
 }
