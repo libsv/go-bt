@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/bitcoinsv/bsvutil"
 	"github.com/libsv/go-bt"
+	"github.com/libsv/go-bt/bsvutil"
 	"github.com/stretchr/testify/assert"
 )
 

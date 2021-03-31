@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/bitcoinsv/bsvutil"
 	"github.com/libsv/go-bt"
+	"github.com/libsv/go-bt/bsvutil"
 )
 
 func main() {
