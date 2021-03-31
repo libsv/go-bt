@@ -1,14 +1,14 @@
-btcec
+bec
 =====
 
 [![Build Status](https://github.com/btcsuite/btcd/workflows/Build%20and%20Test/badge.svg)](https://github.com/btcsuite/btcd/actions)
 [![ISC License](http://img.shields.io/badge/license-ISC-blue.svg)](http://copyfree.org)
-[![GoDoc](https://pkg.go.dev/github.com/btcsuite/btcd/btcec?status.png)](https://pkg.go.dev/github.com/btcsuite/btcd/btcec)
+[![GoDoc](https://pkg.go.dev/github.com/btcsuite/btcd/bec?status.png)](https://pkg.go.dev/github.com/btcsuite/btcd/bec)
 
-Package btcec implements elliptic curve cryptography needed for working with
+Package bec implements elliptic curve cryptography needed for working with
 Bitcoin (secp256k1 only for now). It is designed so that it may be used with the
 standard crypto/ecdsa packages provided with go.  A comprehensive suite of test
-is provided to ensure proper functionality.  Package btcec was originally based
+is provided to ensure proper functionality.  Package bec was originally based
 on work from ThePiachu which is licensed under the same terms as Go, but it has
 signficantly diverged since then.  The btcsuite developers original is licensed
 under the liberal ISC license.
@@ -20,24 +20,24 @@ use secp256k1 elliptic curve cryptography.
 ## Installation and Updating
 
 ```bash
-$ go get -u github.com/btcsuite/btcd/btcec
+$ go get -u github.com/btcsuite/btcd/bec
 ```
 
 ## Examples
 
-* [Sign Message](https://pkg.go.dev/github.com/btcsuite/btcd/btcec#example-package--SignMessage)  
+* [Sign Message](https://pkg.go.dev/github.com/btcsuite/btcd/bec#example-package--SignMessage)  
   Demonstrates signing a message with a secp256k1 private key that is first
   parsed form raw bytes and serializing the generated signature.
 
-* [Verify Signature](https://pkg.go.dev/github.com/btcsuite/btcd/btcec#example-package--VerifySignature)  
+* [Verify Signature](https://pkg.go.dev/github.com/btcsuite/btcd/bec#example-package--VerifySignature)  
   Demonstrates verifying a secp256k1 signature against a public key that is
   first parsed from raw bytes.  The signature is also parsed from raw bytes.
 
-* [Encryption](https://pkg.go.dev/github.com/btcsuite/btcd/btcec#example-package--EncryptMessage)
+* [Encryption](https://pkg.go.dev/github.com/btcsuite/btcd/bec#example-package--EncryptMessage)
   Demonstrates encrypting a message for a public key that is first parsed from
   raw bytes, then decrypting it using the corresponding private key.
 
-* [Decryption](https://pkg.go.dev/github.com/btcsuite/btcd/btcec#example-package--DecryptMessage)
+* [Decryption](https://pkg.go.dev/github.com/btcsuite/btcd/bec#example-package--DecryptMessage)
   Demonstrates decrypting a message using a private key that is first parsed
   from raw bytes.
 
@@ -63,6 +63,6 @@ verify the signature perform the following:
 
 ## License
 
-Package btcec is licensed under the [copyfree](http://copyfree.org) ISC License
-except for btcec.go and btcec_test.go which is under the same license as Go.
+Package bec is licensed under the [copyfree](http://copyfree.org) ISC License
+except for bec.go and bec_test.go which is under the same license as Go.
 
