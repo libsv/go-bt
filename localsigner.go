@@ -1,14 +1,14 @@
 package bt
 
 import (
-	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/libsv/go-bt/bec"
 	"github.com/libsv/go-bt/sighash"
 )
 
 // LocalSigner implements the Signer interface. It is used to sign a Tx locally
-// using a bsvec PrivateKey.
+// using a bec PrivateKey.
 type LocalSigner struct {
-	PrivateKey *bsvec.PrivateKey
+	PrivateKey *bec.PrivateKey
 }
 
 // Sign a transaction at a given input index using the PrivateKey passed in through the

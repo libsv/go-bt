@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/libsv/go-bt/bec"
-	"github.com/libsv/libsv/crypto"
+	"github.com/libsv/go-bt/crypto"
 )
 
 // This example demonstrates signing a message with a secp256k1 private key that
