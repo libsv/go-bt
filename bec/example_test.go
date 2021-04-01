@@ -12,6 +12,8 @@ import (
 	"github.com/libsv/go-bt/crypto"
 )
 
+const message = "test message"
+
 // This example demonstrates signing a message with a secp256k1 private key that
 // is first parsed form raw bytes and serializing the generated signature.
 func Example_signMessage() {
@@ -25,7 +27,6 @@ func Example_signMessage() {
 	privKey, pubKey := bec.PrivKeyFromBytes(bec.S256(), pkBytes)
 
 	// Sign a message using the private key.
-	message := "test message"
 	messageHash := crypto.Sha256d([]byte(message))
 	signature, err := privKey.Sign(messageHash)
 	if err != nil {
@@ -78,7 +79,6 @@ func Example_verifySignature() {
 	}
 
 	// Verify the signature for the message using the public key.
-	message := "test message"
 	messageHash := crypto.Sha256d([]byte(message))
 	verified := signature.Verify(messageHash, pubKey)
 	fmt.Println("Signature Verified?", verified)
@@ -105,7 +105,6 @@ func Example_encryptMessage() {
 	}
 
 	// Encrypt a message decryptable by the private key corresponding to pubKey
-	message := "test message"
 	ciphertext, err := bec.Encrypt(pubKey, []byte(message))
 	if err != nil {
 		fmt.Println(err)
@@ -148,7 +147,7 @@ func Example_decryptMessage() {
 
 	privKey, _ := bec.PrivKeyFromBytes(bec.S256(), pkBytes)
 
-	ciphertext, err := hex.DecodeString("35f644fbfb208bc71e57684c3c8b437402ca" +
+	ciphertext, _ := hex.DecodeString("35f644fbfb208bc71e57684c3c8b437402ca" +
 		"002047a2f1b38aa1a8f1d5121778378414f708fe13ebf7b4a7bb74407288c1958969" +
 		"00207cf4ac6057406e40f79961c973309a892732ae7a74ee96cd89823913b8b8d650" +
 		"a44166dc61ea1c419d47077b748a9c06b8d57af72deb2819d98a9d503efc59fc8307" +
