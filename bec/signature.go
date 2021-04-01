@@ -143,6 +143,7 @@ func parseSig(sigStr []byte, curve elliptic.Curve, der bool) (*Signature, error)
 	// Then R itself.
 	rBytes := sigStr[index : index+rLen]
 	if der {
+		//nolint:errorlint
 		switch err := canonicalPadding(rBytes); err {
 		case errNegativeValue:
 			return nil, errors.New("signature R is negative")
@@ -169,6 +170,7 @@ func parseSig(sigStr []byte, curve elliptic.Curve, der bool) (*Signature, error)
 	// Then S itself.
 	sBytes := sigStr[index : index+sLen]
 	if der {
+		//nolint:errorlint
 		switch err := canonicalPadding(sBytes); err {
 		case errNegativeValue:
 			return nil, errors.New("signature S is negative")
@@ -523,7 +525,7 @@ func nonceRFC6979(privkey *big.Int, hash []byte) *big.Int {
 // mac returns an HMAC of the given key and message.
 func mac(alg func() hash.Hash, k, m []byte) []byte {
 	h := hmac.New(alg, k)
-	h.Write(m)
+	_, _ = h.Write(m)
 	return h.Sum(nil)
 }
 

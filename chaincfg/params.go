@@ -16,7 +16,7 @@ type Params struct {
 	HDPublicKeyID  [4]byte
 }
 
-// MainNetParams defines the network parameters for the main Bitcoin network.
+// MainNet defines the network parameters for the main Bitcoin network.
 var MainNet = Params{
 	Name: "mainnet",
 

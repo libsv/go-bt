@@ -833,10 +833,10 @@ func TestNAF(t *testing.T) {
 		nafPos, nafNeg := NAF(want.Bytes())
 		got := big.NewInt(0)
 		// Check that the NAF representation comes up with the right number
-		for i := 0; i < len(nafPos); i++ {
-			bytePos := nafPos[i]
-			byteNeg := nafNeg[i]
-			for j := 7; j >= 0; j-- {
+		for j := 0; j < len(nafPos); j++ {
+			bytePos := nafPos[j]
+			byteNeg := nafNeg[j]
+			for k := 7; k >= 0; k-- {
 				got.Mul(got, two)
 				if bytePos&0x80 == 0x80 {
 					got.Add(got, one)
@@ -868,10 +868,10 @@ func TestNAFRand(t *testing.T) {
 		want := new(big.Int).SetBytes(data)
 		got := big.NewInt(0)
 		// Check that the NAF representation comes up with the right number
-		for i := 0; i < len(nafPos); i++ {
-			bytePos := nafPos[i]
-			byteNeg := nafNeg[i]
-			for j := 7; j >= 0; j-- {
+		for j := 0; j < len(nafPos); j++ {
+			bytePos := nafPos[j]
+			byteNeg := nafNeg[j]
+			for k := 7; k >= 0; k-- {
 				got.Mul(got, two)
 				if bytePos&0x80 == 0x80 {
 					got.Add(got, one)

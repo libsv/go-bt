@@ -111,7 +111,11 @@ func Encrypt(pubkey *PublicKey, in []byte) ([]byte, error) {
 
 	// start HMAC-SHA-256
 	hm := hmac.New(sha256.New, keyM)
-	hm.Write(out[:len(out)-sha256.Size])          // everything is hashed
+	_, err = hm.Write(out[:len(out)-sha256.Size]) // everything is hashed
+	if err != nil {
+		return nil, err
+	}
+
 	copy(out[len(out)-sha256.Size:], hm.Sum(nil)) // write checksum
 
 	return out, nil
@@ -176,7 +180,10 @@ func Decrypt(priv *PrivateKey, in []byte) ([]byte, error) {
 
 	// verify mac
 	hm := hmac.New(sha256.New, keyM)
-	hm.Write(in[:len(in)-sha256.Size]) // everything is hashed
+	_, err = hm.Write(in[:len(in)-sha256.Size]) // everything is hashed
+	if err != nil {
+		return nil, err
+	}
 	expectedMAC := hm.Sum(nil)
 	if !hmac.Equal(messageMAC, expectedMAC) {
 		return nil, ErrInvalidMAC
