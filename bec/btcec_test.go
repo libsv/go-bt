@@ -23,10 +23,10 @@ func isJacobianOnS256Curve(x, y, z *fieldVal) bool {
 	// y^2/z^6 = x^3/z^6 + 7
 	// y^2 = x^3 + 7*z^6
 	var y2, z2, x3, result fieldVal
-	y2.SquareVal(y).Normalize()
+	y2.SquareVal(y).Normalise()
 	z2.SquareVal(z)
 	x3.SquareVal(x).Mul(x)
-	result.SquareVal(&z2).Mul(&z2).MulInt(7).Add(&x3).Normalize()
+	result.SquareVal(&z2).Mul(&z2).MulInt(7).Add(&x3).Normalise()
 	return y2.Equals(&result)
 }
 
@@ -651,14 +651,12 @@ func TestScalarMultRand(t *testing.T) {
 		_, err := rand.Read(data)
 		if err != nil {
 			t.Fatalf("failed to read random data at %d", i)
-			break
 		}
 		x, y = s256.ScalarMult(x, y, data)
 		exponent.Mul(exponent, new(big.Int).SetBytes(data))
 		xWant, yWant := s256.ScalarBaseMult(exponent.Bytes())
 		if x.Cmp(xWant) != 0 || y.Cmp(yWant) != 0 {
 			t.Fatalf("%d: bad output for %X: got (%X, %X), want (%X, %X)", i, data, x, y, xWant, yWant)
-			break
 		}
 	}
 }
@@ -756,7 +754,6 @@ func TestSplitKRand(t *testing.T) {
 		_, err := rand.Read(bytesK)
 		if err != nil {
 			t.Fatalf("failed to read random data at %d", i)
-			break
 		}
 		k := new(big.Int).SetBytes(bytesK)
 		k1, k2, k1Sign, k2Sign := s256.splitK(bytesK)
@@ -862,7 +859,6 @@ func TestNAFRand(t *testing.T) {
 		_, err := rand.Read(data)
 		if err != nil {
 			t.Fatalf("failed to read random data at %d", i)
-			break
 		}
 		nafPos, nafNeg := NAF(data)
 		want := new(big.Int).SetBytes(data)

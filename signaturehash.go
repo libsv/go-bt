@@ -8,7 +8,7 @@ import (
 	"github.com/libsv/go-bt/sighash"
 )
 
-// CalcInputSignatureHash serialized the transcation andreturns the hash digest
+// CalcInputSignatureHash serialised the transcation andreturns the hash digest
 // to be signed. BitCoin (SV) uses a different signature hashing algorithm
 // after the UAHF fork for replay protection.
 //
@@ -22,7 +22,7 @@ func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Fla
 	return crypto.Sha256d(buf), nil
 }
 
-// CalcInputPreimage serializes the transaction based on the input index and the SIGHASH flag
+// CalcInputPreimage serialises the transaction based on the input index and the SIGHASH flag
 // and returns the preimage before double hashing (SHA256d).
 //
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
@@ -81,7 +81,7 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 	binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 	buf = append(buf, oi...)
 
-	// scriptCode of the input (serialized as scripts inside CTxOuts)
+	// scriptCode of the input (serialised as scripts inside CTxOuts)
 	buf = append(buf, VarInt(uint64(len(*in.PreviousTxScript)))...)
 	buf = append(buf, *in.PreviousTxScript...)
 

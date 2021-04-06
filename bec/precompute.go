@@ -14,7 +14,7 @@ import (
 
 //go:generate go run -tags gensecp256k1 genprecomps.go
 
-// loadS256BytePoints decompresses and deserializes the pre-computed byte points
+// loadS256BytePoints decompresses and deserialises the pre-computed byte points
 // used to accelerate scalar base multiplication for the secp256k1 curve.  This
 // approach is used since it allows the compile to use significantly less ram
 // and be performed much faster than it is with hard-coding the final in-memory
@@ -34,12 +34,12 @@ func loadS256BytePoints() error {
 	if err != nil {
 		return err
 	}
-	serialized, err := ioutil.ReadAll(r)
+	serialised, err := ioutil.ReadAll(r)
 	if err != nil {
 		return err
 	}
 
-	// Deserialize the precomputed byte points and set the curve to them.
+	// Deserialise the precomputed byte points and set the curve to them.
 	offset := 0
 	var bytePoints [32][256][3]fieldVal
 	for byteNum := 0; byteNum < 32; byteNum++ {
@@ -49,15 +49,15 @@ func loadS256BytePoints() error {
 			py := &bytePoints[byteNum][i][1]
 			pz := &bytePoints[byteNum][i][2]
 			for i := 0; i < 10; i++ {
-				px.n[i] = binary.LittleEndian.Uint32(serialized[offset:])
+				px.n[i] = binary.LittleEndian.Uint32(serialised[offset:])
 				offset += 4
 			}
 			for i := 0; i < 10; i++ {
-				py.n[i] = binary.LittleEndian.Uint32(serialized[offset:])
+				py.n[i] = binary.LittleEndian.Uint32(serialised[offset:])
 				offset += 4
 			}
 			for i := 0; i < 10; i++ {
-				pz.n[i] = binary.LittleEndian.Uint32(serialized[offset:])
+				pz.n[i] = binary.LittleEndian.Uint32(serialised[offset:])
 				offset += 4
 			}
 		}

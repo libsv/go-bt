@@ -27,7 +27,7 @@ $ go get -u github.com/btcsuite/btcd/bec
 
 * [Sign Message](https://pkg.go.dev/github.com/btcsuite/btcd/bec#example-package--SignMessage)  
   Demonstrates signing a message with a secp256k1 private key that is first
-  parsed form raw bytes and serializing the generated signature.
+  parsed form raw bytes and serialising the generated signature.
 
 * [Verify Signature](https://pkg.go.dev/github.com/btcsuite/btcd/bec#example-package--VerifySignature)  
   Demonstrates verifying a secp256k1 signature against a public key that is

@@ -357,8 +357,8 @@ func TestSignatures(t *testing.T) {
 	}
 }
 
-// TestSignatureSerialize ensures that serializing signatures works as expected.
-func TestSignatureSerialize(t *testing.T) {
+// TestSignatureSerialise ensures that serialising signatures works as expected.
+func TestSignatureSerialise(t *testing.T) {
 	tests := []struct {
 		name     string
 		ecsig    *Signature
@@ -453,9 +453,9 @@ func TestSignatureSerialize(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		result := test.ecsig.Serialize()
+		result := test.ecsig.Serialise()
 		if !bytes.Equal(result, test.expected) {
-			t.Errorf("Serialize #%d (%s) unexpected result:\n"+
+			t.Errorf("Serialise #%d (%s) unexpected result:\n"+
 				"got:  %x\nwant: %x", i, test.name, result,
 				test.expected)
 		}
@@ -463,7 +463,7 @@ func TestSignatureSerialize(t *testing.T) {
 }
 
 func testSignCompact(t *testing.T, tag string, curve *KoblitzCurve,
-	data []byte, isCompressed bool) {
+	data []byte, isCompressed bool) { //nolint:unparam
 	priv, _ := NewPrivateKey(curve)
 
 	hashed := []byte("testing")
@@ -695,7 +695,7 @@ func TestRFC6979(t *testing.T) {
 				test.msg, err)
 			continue
 		}
-		gotSigBytes := gotSig.Serialize()
+		gotSigBytes := gotSig.Serialise()
 		wantSigBytes := decodeHex(test.signature)
 		if !bytes.Equal(gotSigBytes, wantSigBytes) {
 			t.Errorf("Sign #%d (%s): mismatched signature: %x "+

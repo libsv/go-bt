@@ -27,11 +27,11 @@ func main() {
 	}
 	defer fi.Close()
 
-	// Compress the serialized byte points.
-	serialized := bec.S256().SerializedBytePoints()
+	// Compress the serialised byte points.
+	serialised := bec.S256().SerialisedBytePoints()
 	var compressed bytes.Buffer
 	w := zlib.NewWriter(&compressed)
-	if _, err := w.Write(serialized); err != nil {
+	if _, err := w.Write(serialised); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

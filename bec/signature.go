@@ -37,14 +37,14 @@ var (
 	oneInitializer = []byte{0x01}
 )
 
-// Serialize returns the ECDSA signature in the more strict DER format.  Note
-// that the serialized bytes returned do not include the appended hash type
+// Serialise returns the ECDSA signature in the more strict DER format.  Note
+// that the serialised bytes returned do not include the appended hash type
 // used in Bitcoin signature scripts.
 //
 // encoding/asn1 is broken so we hand roll this output:
 //
 // 0x30 <length> 0x02 <length r> r 0x02 <length s> s
-func (sig *Signature) Serialize() []byte {
+func (sig *Signature) Serialise() []byte {
 	// low 'S' malleability breaker
 	sigS := sig.S
 	if sigS.Cmp(S256().halfOrder) == 1 {

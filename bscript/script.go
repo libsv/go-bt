@@ -51,7 +51,7 @@ func NewFromASM(str string) (*Script, error) {
 // compressed format) and creates a P2PKH script from it.
 func NewP2PKHFromPubKeyEC(pubKey *bec.PublicKey) (*Script, error) {
 
-	pubKeyBytes := pubKey.SerializeCompressed()
+	pubKeyBytes := pubKey.SerialiseCompressed()
 
 	return NewP2PKHFromPubKeyBytes(pubKeyBytes)
 }

@@ -37,21 +37,21 @@ func (curve *KoblitzCurve) getDoublingPoints() [][3]fieldVal {
 	return doublingPoints
 }
 
-// SerializedBytePoints returns a serialized byte slice which contains all of
+// SerialisedBytePoints returns a serialised byte slice which contains all of
 // the possible points per 8-bit window.  This is used to when generating
 // secp256k1.go.
-func (curve *KoblitzCurve) SerializedBytePoints() []byte {
+func (curve *KoblitzCurve) SerialisedBytePoints() []byte {
 	doublingPoints := curve.getDoublingPoints()
 
 	// Segregate the bits into byte-sized windows
-	serialized := make([]byte, curve.byteSize*256*3*10*4)
+	serialised := make([]byte, curve.byteSize*256*3*10*4)
 	offset := 0
 	for byteNum := 0; byteNum < curve.byteSize; byteNum++ {
 		// Grab the 8 bits that make up this byte from doublingPoints.
 		startingBit := 8 * (curve.byteSize - byteNum - 1)
 		computingPoints := doublingPoints[startingBit : startingBit+8]
 
-		// Compute all points in this window and serialize them.
+		// Compute all points in this window and serialise them.
 		for i := 0; i < 256; i++ {
 			px, py, pz := new(fieldVal), new(fieldVal), new(fieldVal)
 			for j := 0; j < 8; j++ {
@@ -61,21 +61,21 @@ func (curve *KoblitzCurve) SerializedBytePoints() []byte {
 				}
 			}
 			for i := 0; i < 10; i++ {
-				binary.LittleEndian.PutUint32(serialized[offset:], px.n[i])
+				binary.LittleEndian.PutUint32(serialised[offset:], px.n[i])
 				offset += 4
 			}
 			for i := 0; i < 10; i++ {
-				binary.LittleEndian.PutUint32(serialized[offset:], py.n[i])
+				binary.LittleEndian.PutUint32(serialised[offset:], py.n[i])
 				offset += 4
 			}
 			for i := 0; i < 10; i++ {
-				binary.LittleEndian.PutUint32(serialized[offset:], pz.n[i])
+				binary.LittleEndian.PutUint32(serialised[offset:], pz.n[i])
 				offset += 4
 			}
 		}
 	}
 
-	return serialized
+	return serialised
 }
 
 // sqrt returns the square root of the provided big integer using Newton's

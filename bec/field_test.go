@@ -157,12 +157,12 @@ func TestStringer(t *testing.T) {
 	}
 }
 
-// TestNormalize ensures that normalizing the internal field words works as
+// TestNormalise ensures that normalising the internal field words works as
 // expected.
-func TestNormalize(t *testing.T) {
+func TestNormalise(t *testing.T) {
 	tests := []struct {
-		raw        [10]uint32 // Intentionally denormalized value
-		normalized [10]uint32 // Normalized form of the raw value
+		raw        [10]uint32 // Intentionally denormalised value
+		normalised [10]uint32 // Normalised form of the raw value
 	}{
 		{
 			[10]uint32{0x00000005, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -316,10 +316,10 @@ func TestNormalize(t *testing.T) {
 	for i, test := range tests {
 		f := new(fieldVal)
 		f.n = test.raw
-		f.Normalize()
-		if !reflect.DeepEqual(f.n, test.normalized) {
-			t.Errorf("fieldVal.Normalize #%d wrong result\n"+
-				"got: %x\nwant: %x", i, f.n, test.normalized)
+		f.Normalise()
+		if !reflect.DeepEqual(f.n, test.normalised) {
+			t.Errorf("fieldVal.Normalise #%d wrong result\n"+
+				"got: %x\nwant: %x", i, f.n, test.normalised)
 			continue
 		}
 	}
@@ -377,8 +377,8 @@ func TestEquals(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in1).Normalize()
-		f2 := new(fieldVal).SetHex(test.in2).Normalize()
+		f := new(fieldVal).SetHex(test.in1).Normalise()
+		f2 := new(fieldVal).SetHex(test.in2).Normalise()
 		result := f.Equals(f2)
 		if result != test.expected {
 			t.Errorf("fieldVal.Equals #%d wrong result\n"+
@@ -425,9 +425,9 @@ func TestNegate(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in).Normalize()
-		expected := new(fieldVal).SetHex(test.expected).Normalize()
-		result := f.Negate(1).Normalize()
+		f := new(fieldVal).SetHex(test.in).Normalise()
+		expected := new(fieldVal).SetHex(test.expected).Normalise()
+		result := f.Negate(1).Normalise()
 		if !result.Equals(expected) {
 			t.Errorf("fieldVal.Negate #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
@@ -476,9 +476,9 @@ func TestAddInt(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in1).Normalize()
-		expected := new(fieldVal).SetHex(test.expected).Normalize()
-		result := f.AddInt(test.in2).Normalize()
+		f := new(fieldVal).SetHex(test.in1).Normalise()
+		expected := new(fieldVal).SetHex(test.expected).Normalise()
+		result := f.AddInt(test.in2).Normalise()
 		if !result.Equals(expected) {
 			t.Errorf("fieldVal.AddInt #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
@@ -527,10 +527,10 @@ func TestAdd(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in1).Normalize()
-		f2 := new(fieldVal).SetHex(test.in2).Normalize()
-		expected := new(fieldVal).SetHex(test.expected).Normalize()
-		result := f.Add(f2).Normalize()
+		f := new(fieldVal).SetHex(test.in1).Normalise()
+		f2 := new(fieldVal).SetHex(test.in2).Normalise()
+		expected := new(fieldVal).SetHex(test.expected).Normalise()
+		result := f.Add(f2).Normalise()
 		if !result.Equals(expected) {
 			t.Errorf("fieldVal.Add #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
@@ -581,10 +581,10 @@ func TestAdd2(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in1).Normalize()
-		f2 := new(fieldVal).SetHex(test.in2).Normalize()
-		expected := new(fieldVal).SetHex(test.expected).Normalize()
-		result := f.Add2(f, f2).Normalize()
+		f := new(fieldVal).SetHex(test.in1).Normalise()
+		f2 := new(fieldVal).SetHex(test.in2).Normalise()
+		expected := new(fieldVal).SetHex(test.expected).Normalise()
+		result := f.Add2(f, f2).Normalise()
 		if !result.Equals(expected) {
 			t.Errorf("fieldVal.Add2 #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
@@ -646,9 +646,9 @@ func TestMulInt(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in1).Normalize()
-		expected := new(fieldVal).SetHex(test.expected).Normalize()
-		result := f.MulInt(test.in2).Normalize()
+		f := new(fieldVal).SetHex(test.in1).Normalise()
+		expected := new(fieldVal).SetHex(test.expected).Normalise()
+		result := f.MulInt(test.in2).Normalise()
 		if !result.Equals(expected) {
 			t.Errorf("fieldVal.MulInt #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
@@ -713,10 +713,10 @@ func TestMul(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in1).Normalize()
-		f2 := new(fieldVal).SetHex(test.in2).Normalize()
-		expected := new(fieldVal).SetHex(test.expected).Normalize()
-		result := f.Mul(f2).Normalize()
+		f := new(fieldVal).SetHex(test.in1).Normalise()
+		f2 := new(fieldVal).SetHex(test.in2).Normalise()
+		expected := new(fieldVal).SetHex(test.expected).Normalise()
+		result := f.Mul(f2).Normalise()
 		if !result.Equals(expected) {
 			t.Errorf("fieldVal.Mul #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
@@ -760,9 +760,9 @@ func TestSquare(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in).Normalize()
-		expected := new(fieldVal).SetHex(test.expected).Normalize()
-		result := f.Square().Normalize()
+		f := new(fieldVal).SetHex(test.in).Normalise()
+		expected := new(fieldVal).SetHex(test.expected).Normalise()
+		result := f.Square().Normalise()
 		if !result.Equals(expected) {
 			t.Errorf("fieldVal.Square #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
@@ -813,9 +813,9 @@ func TestInverse(t *testing.T) {
 
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
-		f := new(fieldVal).SetHex(test.in).Normalize()
-		expected := new(fieldVal).SetHex(test.expected).Normalize()
-		result := f.Inverse().Normalize()
+		f := new(fieldVal).SetHex(test.in).Normalise()
+		expected := new(fieldVal).SetHex(test.expected).Normalise()
+		result := f.Inverse().Normalise()
 		if !result.Equals(expected) {
 			t.Errorf("fieldVal.Inverse #%d wrong result\n"+
 				"got: %v\nwant: %v", i, result, expected)
@@ -824,7 +824,7 @@ func TestInverse(t *testing.T) {
 	}
 }
 
-// randFieldVal returns a random, normalized element in the field.
+// randFieldVal returns a random, normalised element in the field.
 func randFieldVal(t *testing.T) fieldVal {
 	var b [32]byte
 	if _, err := rand.Read(b[:]); err != nil {
@@ -832,7 +832,7 @@ func randFieldVal(t *testing.T) fieldVal {
 	}
 
 	var x fieldVal
-	return *x.SetBytes(&b).Normalize()
+	return *x.SetBytes(&b).Normalise()
 }
 
 type sqrtTest struct {
@@ -855,8 +855,8 @@ func TestSqrt(t *testing.T) {
 		)
 
 		x.SetInt(i)
-		s.SquareVal(&x).Normalize()
-		n.NegateVal(&s, 1).Normalize()
+		s.SquareVal(&x).Normalise()
+		n.NegateVal(&s, 1).Normalise()
 
 		tests = append(tests, sqrtTest{
 			name: fmt.Sprintf("-%d", i),
@@ -872,7 +872,7 @@ func TestSqrt(t *testing.T) {
 		)
 
 		x.SetInt(i)
-		s.SquareVal(&x).Normalize()
+		s.SquareVal(&x).Normalise()
 
 		tests = append(tests, sqrtTest{
 			name:     fmt.Sprintf("%d", i),
@@ -884,7 +884,7 @@ func TestSqrt(t *testing.T) {
 	// Compute a non-square element, by negating if it has a root.
 	ns := randFieldVal(t)
 	if new(fieldVal).SqrtVal(&ns).Square().Equals(&ns) {
-		ns.Negate(1).Normalize()
+		ns.Negate(1).Normalise()
 	}
 
 	// For large random field values, test that:
@@ -900,9 +900,9 @@ func TestSqrt(t *testing.T) {
 		)
 
 		x = randFieldVal(t)
-		s.SquareVal(&x).Normalize()
-		n.NegateVal(&s, 1).Normalize()
-		m.Mul2(&s, &ns).Normalize()
+		s.SquareVal(&x).Normalise()
+		n.NegateVal(&s, 1).Normalise()
+		m.Mul2(&s, &ns).Normalise()
 
 		// A root should exist for true squares.
 		tests = append(tests, sqrtTest{
@@ -939,11 +939,11 @@ func testSqrt(t *testing.T, test sqrtTest) {
 		rootNeg fieldVal
 	)
 
-	f.SetHex(test.in).Normalize()
+	f.SetHex(test.in).Normalise()
 
 	// Compute sqrt(f) and its negative.
-	root.SqrtVal(&f).Normalize()
-	rootNeg.NegateVal(&root, 1).Normalize()
+	root.SqrtVal(&f).Normalise()
+	rootNeg.NegateVal(&root, 1).Normalise()
 
 	switch {
 
@@ -951,7 +951,7 @@ func testSqrt(t *testing.T, test sqrtTest) {
 	// root is +/- the expected value.
 	case len(test.expected) > 0:
 		var expected fieldVal
-		expected.SetHex(test.expected).Normalize()
+		expected.SetHex(test.expected).Normalise()
 		if !root.Equals(&expected) && !rootNeg.Equals(&expected) {
 			t.Fatalf("fieldVal.Sqrt incorrect root\n"+
 				"got:     %v\ngot_neg: %v\nwant:    %v",

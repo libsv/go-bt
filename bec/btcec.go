@@ -57,10 +57,10 @@ type KoblitzCurve struct {
 	// The next 6 values are used specifically for endomorphism
 	// optimizations in ScalarMult.
 
-	// lambda must fulfill lambda^3 = 1 mod N where N is the order of G.
+	// lambda must fulfil lambda^3 = 1 mod N where N is the order of G.
 	lambda *big.Int
 
-	// beta must fulfill beta^3 = 1 mod P where P is the prime field of the
+	// beta must fulfil beta^3 = 1 mod P where P is the prime field of the
 	// curve.
 	beta *fieldVal
 
@@ -92,7 +92,7 @@ func (curve *KoblitzCurve) bigAffineToField(x, y *big.Int) (*fieldVal, *fieldVal
 func (curve *KoblitzCurve) fieldJacobianToBigAffine(x, y, z *fieldVal) (*big.Int, *big.Int) {
 	// Inversions are expensive and both point addition and point doubling
 	// are faster when working with points that have a z value of one.  So,
-	// if the point needs to be converted to affine, go ahead and normalize
+	// if the point needs to be converted to affine, go ahead and normalise
 	// the point itself at the same time as the calculation is the same.
 	var zInv, tempZ fieldVal
 	zInv.Set(z).Inverse()   // zInv = Z^-1
@@ -101,9 +101,9 @@ func (curve *KoblitzCurve) fieldJacobianToBigAffine(x, y, z *fieldVal) (*big.Int
 	y.Mul(tempZ.Mul(&zInv)) // Y = Y/Z^3 (mag: 1)
 	z.SetInt(1)             // Z = 1 (mag: 1)
 
-	// Normalize the x and y values.
-	x.Normalize()
-	y.Normalize()
+	// Normalise the x and y values.
+	x.Normalise()
+	y.Normalise()
 
 	// Convert the field values for the now affine point to big.Ints.
 	x3, y3 := new(big.Int), new(big.Int)
@@ -120,8 +120,8 @@ func (curve *KoblitzCurve) IsOnCurve(x, y *big.Int) bool {
 	fx, fy := curve.bigAffineToField(x, y)
 
 	// Elliptic curve equation for secp256k1 is: y^2 = x^3 + 7
-	y2 := new(fieldVal).SquareVal(fy).Normalize()
-	result := new(fieldVal).SquareVal(fx).Mul(fx).AddInt(7).Normalize()
+	y2 := new(fieldVal).SquareVal(fy).Normalise()
+	result := new(fieldVal).SquareVal(fx).Mul(fx).AddInt(7).Normalise()
 	return y2.Equals(result)
 }
 
@@ -132,7 +132,7 @@ func (curve *KoblitzCurve) IsOnCurve(x, y *big.Int) bool {
 // avoid the z value multiplications.
 func (curve *KoblitzCurve) addZ1AndZ2EqualsOne(x1, y1, z1, x2, y2, x3, y3, z3 *fieldVal) {
 	// To compute the point addition efficiently, this implementation splits
-	// the equation into intermediate elements which are used to minimize
+	// the equation into intermediate elements which are used to minimise
 	// the number of field multiplications using the method shown at:
 	// http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-mmadd-2007-bl
 	//
@@ -147,10 +147,10 @@ func (curve *KoblitzCurve) addZ1AndZ2EqualsOne(x1, y1, z1, x2, y2, x3, y3, z3 *f
 	// y coordinates either must be the same, in which case it is point
 	// doubling, or they are opposite and the result is the point at
 	// infinity per the group law for elliptic curve cryptography.
-	x1.Normalize()
-	y1.Normalize()
-	x2.Normalize()
-	y2.Normalize()
+	x1.Normalise()
+	y1.Normalise()
+	x2.Normalise()
+	y2.Normalise()
 	if x1.Equals(x2) {
 		if y1.Equals(y2) {
 			// Since x1 == x2 and y1 == y2, point doubling must be
@@ -185,10 +185,10 @@ func (curve *KoblitzCurve) addZ1AndZ2EqualsOne(x1, y1, z1, x2, y2, x3, y3, z3 *f
 	y3.Set(&v).Add(&negX3).Mul(&r).Add(&j)     // Y3 = r*(V-X3)-2*Y1*J (mag: 4)
 	z3.Set(&h).MulInt(2)                       // Z3 = 2*H (mag: 6)
 
-	// Normalize the resulting field values to a magnitude of 1 as needed.
-	x3.Normalize()
-	y3.Normalize()
-	z3.Normalize()
+	// Normalise the resulting field values to a magnitude of 1 as needed.
+	x3.Normalise()
+	y3.Normalise()
+	z3.Normalise()
 }
 
 // addZ1EqualsZ2 adds two Jacobian points that are already known to have the
@@ -198,7 +198,7 @@ func (curve *KoblitzCurve) addZ1AndZ2EqualsOne(x1, y1, z1, x2, y2, x3, y3, z3 *f
 // equivalence.
 func (curve *KoblitzCurve) addZ1EqualsZ2(x1, y1, z1, x2, y2, x3, y3, z3 *fieldVal) {
 	// To compute the point addition efficiently, this implementation splits
-	// the equation into intermediate elements which are used to minimize
+	// the equation into intermediate elements which are used to minimise
 	// the number of field multiplications using a slightly modified version
 	// of the method shown at:
 	// http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-mmadd-2007-bl
@@ -214,10 +214,10 @@ func (curve *KoblitzCurve) addZ1EqualsZ2(x1, y1, z1, x2, y2, x3, y3, z3 *fieldVa
 	// y coordinates either must be the same, in which case it is point
 	// doubling, or they are opposite and the result is the point at
 	// infinity per the group law for elliptic curve cryptography.
-	x1.Normalize()
-	y1.Normalize()
-	x2.Normalize()
-	y2.Normalize()
+	x1.Normalise()
+	y1.Normalise()
+	x2.Normalise()
+	y2.Normalise()
 	if x1.Equals(x2) {
 		if y1.Equals(y2) {
 			// Since x1 == x2 and y1 == y2, point doubling must be
@@ -249,14 +249,14 @@ func (curve *KoblitzCurve) addZ1EqualsZ2(x1, y1, z1, x2, y2, x3, y3, z3 *fieldVa
 	negE.Set(&e).Negate(1)                 // negE = -E (mag: 2)
 	f.Mul2(x2, &b)                         // F = X2*B (mag: 1)
 	x3.Add2(&e, &f).Negate(3).Add(&d)      // X3 = D-E-F (mag: 5)
-	negX3.Set(x3).Negate(5).Normalize()    // negX3 = -X3 (mag: 1)
+	negX3.Set(x3).Negate(5).Normalise()    // negX3 = -X3 (mag: 1)
 	y3.Set(y1).Mul(f.Add(&negE)).Negate(3) // Y3 = -(Y1*(F-E)) (mag: 4)
 	y3.Add(e.Add(&negX3).Mul(&c))          // Y3 = C*(E-X3)+Y3 (mag: 5)
 	z3.Mul2(z1, &a)                        // Z3 = Z1*A (mag: 1)
 
-	// Normalize the resulting field values to a magnitude of 1 as needed.
-	x3.Normalize()
-	y3.Normalize()
+	// Normalise the resulting field values to a magnitude of 1 as needed.
+	x3.Normalise()
+	y3.Normalise()
 }
 
 // addZ2EqualsOne adds two Jacobian points when the second point is already
@@ -267,7 +267,7 @@ func (curve *KoblitzCurve) addZ1EqualsZ2(x1, y1, z1, x2, y2, x3, y3, z3 *fieldVa
 // multiplications by the second point's z value.
 func (curve *KoblitzCurve) addZ2EqualsOne(x1, y1, z1, x2, y2, x3, y3, z3 *fieldVal) {
 	// To compute the point addition efficiently, this implementation splits
-	// the equation into intermediate elements which are used to minimize
+	// the equation into intermediate elements which are used to minimise
 	// the number of field multiplications using the method shown at:
 	// http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-madd-2007-bl
 	//
@@ -288,11 +288,11 @@ func (curve *KoblitzCurve) addZ2EqualsOne(x1, y1, z1, x2, y2, x3, y3, z3 *fieldV
 	// the assumption made for this function that the second point has a z
 	// value of 1 (z2=1), the first point is already "converted".
 	var z1z1, u2, s2 fieldVal
-	x1.Normalize()
-	y1.Normalize()
+	x1.Normalise()
+	y1.Normalise()
 	z1z1.SquareVal(z1)                        // Z1Z1 = Z1^2 (mag: 1)
-	u2.Set(x2).Mul(&z1z1).Normalize()         // U2 = X2*Z1Z1 (mag: 1)
-	s2.Set(y2).Mul(&z1z1).Mul(z1).Normalize() // S2 = Y2*Z1*Z1Z1 (mag: 1)
+	u2.Set(x2).Mul(&z1z1).Normalise()         // U2 = X2*Z1Z1 (mag: 1)
+	s2.Set(y2).Mul(&z1z1).Mul(z1).Normalise() // S2 = Y2*Z1*Z1Z1 (mag: 1)
 	if x1.Equals(&u2) {
 		if y1.Equals(&s2) {
 			// Since x1 == x2 and y1 == y2, point doubling must be
@@ -331,10 +331,10 @@ func (curve *KoblitzCurve) addZ2EqualsOne(x1, y1, z1, x2, y2, x3, y3, z3 *fieldV
 	z3.Add2(z1, &h).Square()               // Z3 = (Z1+H)^2 (mag: 1)
 	z3.Add(z1z1.Add(&hh).Negate(2))        // Z3 = Z3-(Z1Z1+HH) (mag: 4)
 
-	// Normalize the resulting field values to a magnitude of 1 as needed.
-	x3.Normalize()
-	y3.Normalize()
-	z3.Normalize()
+	// Normalise the resulting field values to a magnitude of 1 as needed.
+	x3.Normalise()
+	y3.Normalise()
+	z3.Normalise()
 }
 
 // addGeneric adds two Jacobian points (x1, y1, z1) and (x2, y2, z2) without any
@@ -343,7 +343,7 @@ func (curve *KoblitzCurve) addZ2EqualsOne(x1, y1, z1, x2, y2, x3, y3, z3 *fieldV
 // is the slowest of the add routines due to requiring the most arithmetic.
 func (curve *KoblitzCurve) addGeneric(x1, y1, z1, x2, y2, z2, x3, y3, z3 *fieldVal) {
 	// To compute the point addition efficiently, this implementation splits
-	// the equation into intermediate elements which are used to minimize
+	// the equation into intermediate elements which are used to minimise
 	// the number of field multiplications using the method shown at:
 	// http://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
 	//
@@ -365,10 +365,10 @@ func (curve *KoblitzCurve) addGeneric(x1, y1, z1, x2, y2, z2, x3, y3, z3 *fieldV
 	var z1z1, z2z2, u1, u2, s1, s2 fieldVal
 	z1z1.SquareVal(z1)                        // Z1Z1 = Z1^2 (mag: 1)
 	z2z2.SquareVal(z2)                        // Z2Z2 = Z2^2 (mag: 1)
-	u1.Set(x1).Mul(&z2z2).Normalize()         // U1 = X1*Z2Z2 (mag: 1)
-	u2.Set(x2).Mul(&z1z1).Normalize()         // U2 = X2*Z1Z1 (mag: 1)
-	s1.Set(y1).Mul(&z2z2).Mul(z2).Normalize() // S1 = Y1*Z2*Z2Z2 (mag: 1)
-	s2.Set(y2).Mul(&z1z1).Mul(z1).Normalize() // S2 = Y2*Z1*Z1Z1 (mag: 1)
+	u1.Set(x1).Mul(&z2z2).Normalise()         // U1 = X1*Z2Z2 (mag: 1)
+	u2.Set(x2).Mul(&z1z1).Normalise()         // U2 = X2*Z1Z1 (mag: 1)
+	s1.Set(y1).Mul(&z2z2).Mul(z2).Normalise() // S1 = Y1*Z2*Z2Z2 (mag: 1)
+	s2.Set(y2).Mul(&z1z1).Mul(z1).Normalise() // S2 = Y2*Z1*Z1Z1 (mag: 1)
 	if u1.Equals(&u2) {
 		if s1.Equals(&s2) {
 			// Since x1 == x2 and y1 == y2, point doubling must be
@@ -407,9 +407,9 @@ func (curve *KoblitzCurve) addGeneric(x1, y1, z1, x2, y2, z2, x3, y3, z3 *fieldV
 	z3.Add(z1z1.Add(&z2z2).Negate(2))      // Z3 = Z3-(Z1Z1+Z2Z2) (mag: 4)
 	z3.Mul(&h)                             // Z3 = Z3*H (mag: 1)
 
-	// Normalize the resulting field values to a magnitude of 1 as needed.
-	x3.Normalize()
-	y3.Normalize()
+	// Normalise the resulting field values to a magnitude of 1 as needed.
+	x3.Normalise()
+	y3.Normalise()
 }
 
 // addJacobian adds the passed Jacobian points (x1, y1, z1) and (x2, y2, z2)
@@ -435,8 +435,8 @@ func (curve *KoblitzCurve) addJacobian(x1, y1, z1, x2, y2, z2, x3, y3, z3 *field
 	// on the z values can be avoided.  This section thus checks for these
 	// conditions and calls an appropriate add function which is accelerated
 	// by using those assumptions.
-	z1.Normalize()
-	z2.Normalize()
+	z1.Normalise()
+	z2.Normalise()
 	isZ1One := z1.Equals(fieldOne)
 	isZ2One := z2.Equals(fieldOne)
 	switch {
@@ -495,8 +495,8 @@ func (curve *KoblitzCurve) doubleZ1EqualsOne(x1, y1, x3, y3, z3 *fieldVal) {
 	// Z3 = 2*Y1
 	//
 	// To compute the above efficiently, this implementation splits the
-	// equation into intermediate elements which are used to minimize the
-	// number of field multiplications in favor of field squarings which
+	// equation into intermediate elements which are used to minimise the
+	// number of field multiplications in favour of field squarings which
 	// are roughly 35% faster than field multiplications with the current
 	// implementation at the time this was written.
 	//
@@ -522,14 +522,14 @@ func (curve *KoblitzCurve) doubleZ1EqualsOne(x1, y1, x3, y3, z3 *fieldVal) {
 	f.SquareVal(&e)                          // F = E^2 (mag: 1)
 	x3.Set(&d).MulInt(2).Negate(16)          // X3 = -(2*D) (mag: 17)
 	x3.Add(&f)                               // X3 = F+X3 (mag: 18)
-	f.Set(x3).Negate(18).Add(&d).Normalize() // F = D-X3 (mag: 1)
+	f.Set(x3).Negate(18).Add(&d).Normalise() // F = D-X3 (mag: 1)
 	y3.Set(&c).MulInt(8).Negate(8)           // Y3 = -(8*C) (mag: 9)
 	y3.Add(f.Mul(&e))                        // Y3 = E*F+Y3 (mag: 10)
 
-	// Normalize the field values back to a magnitude of 1.
-	x3.Normalize()
-	y3.Normalize()
-	z3.Normalize()
+	// Normalise the field values back to a magnitude of 1.
+	x3.Normalise()
+	y3.Normalise()
+	z3.Normalise()
 }
 
 // doubleGeneric performs point doubling on the passed Jacobian point without
@@ -544,8 +544,8 @@ func (curve *KoblitzCurve) doubleGeneric(x1, y1, z1, x3, y3, z3 *fieldVal) {
 	// Z3 = 2*Y1*Z1
 	//
 	// To compute the above efficiently, this implementation splits the
-	// equation into intermediate elements which are used to minimize the
-	// number of field multiplications in favor of field squarings which
+	// equation into intermediate elements which are used to minimise the
+	// number of field multiplications in favour of field squarings which
 	// are roughly 35% faster than field multiplications with the current
 	// implementation at the time this was written.
 	//
@@ -571,14 +571,14 @@ func (curve *KoblitzCurve) doubleGeneric(x1, y1, z1, x3, y3, z3 *fieldVal) {
 	f.SquareVal(&e)                          // F = E^2 (mag: 1)
 	x3.Set(&d).MulInt(2).Negate(16)          // X3 = -(2*D) (mag: 17)
 	x3.Add(&f)                               // X3 = F+X3 (mag: 18)
-	f.Set(x3).Negate(18).Add(&d).Normalize() // F = D-X3 (mag: 1)
+	f.Set(x3).Negate(18).Add(&d).Normalise() // F = D-X3 (mag: 1)
 	y3.Set(&c).MulInt(8).Negate(8)           // Y3 = -(8*C) (mag: 9)
 	y3.Add(f.Mul(&e))                        // Y3 = E*F+Y3 (mag: 10)
 
-	// Normalize the field values back to a magnitude of 1.
-	x3.Normalize()
-	y3.Normalize()
-	z3.Normalize()
+	// Normalise the field values back to a magnitude of 1.
+	x3.Normalise()
+	y3.Normalise()
+	z3.Normalise()
 }
 
 // doubleJacobian doubles the passed Jacobian point (x1, y1, z1) and stores the
@@ -596,7 +596,7 @@ func (curve *KoblitzCurve) doubleJacobian(x1, y1, z1, x3, y3, z3 *fieldVal) {
 	// by avoiding the multiplication on the z value.  This section calls
 	// a point doubling function which is accelerated by using that
 	// assumption when possible.
-	if z1.Normalize().Equals(fieldOne) {
+	if z1.Normalise().Equals(fieldOne) {
 		curve.doubleZ1EqualsOne(x1, y1, x3, y3, z3)
 		return
 	}
@@ -631,7 +631,7 @@ func (curve *KoblitzCurve) Double(x1, y1 *big.Int) (*big.Int, *big.Int) {
 // the final equation of k = k1 + k2 * lambda (mod n) will hold.  This is
 // provable mathematically due to how a1/b1/a2/b2 are computed.
 //
-// c1 and c2 are chosen to minimize the max(k1,k2).
+// c1 and c2 are chosen to minimise the max(k1,k2).
 func (curve *KoblitzCurve) splitK(k []byte) ([]byte, []byte, int, int) {
 	// All math here is done with big.Int, which is slow.
 	// At some point, it might be useful to write something similar to
@@ -647,7 +647,7 @@ func (curve *KoblitzCurve) splitK(k []byte) ([]byte, []byte, int, int) {
 	// Rounding isn't really necessary and costs too much, hence skipped
 	c1.Mul(curve.b2, bigIntK)
 	c1.Div(c1, curve.N)
-	// c2 = round(b1 * k / n) from step 4 (sign reversed to optimize one step)
+	// c2 = round(b1 * k / n) from step 4 (sign reversed to optimise one step)
 	// Rounding isn't really necessary and costs too much, hence skipped
 	c2.Mul(curve.b1, bigIntK)
 	c2.Div(c2, curve.N)
@@ -688,7 +688,7 @@ func (curve *KoblitzCurve) moduloReduce(k []byte) []byte {
 // be.  NAF is convenient in that on average, only 1/3rd of its values are
 // non-zero.  This is algorithm 3.30 from [GECC].
 //
-// Essentially, this makes it possible to minimize the number of operations
+// Essentially, this makes it possible to minimise the number of operations
 // since the resulting ints returned will be at least 50% 0s.
 func NAF(k []byte) ([]byte, []byte) {
 	// The essence of this algorithm is that whenever we have consecutive 1s
@@ -941,7 +941,7 @@ func initS256() {
 	// Provided for convenience since this gets computed repeatedly.
 	secp256k1.byteSize = secp256k1.BitSize / 8
 
-	// Deserialize and set the pre-computed table used to accelerate scalar
+	// Deserialise and set the pre-computed table used to accelerate scalar
 	// base multiplication.  This is hard-coded data, so any errors are
 	// panics because it means something is wrong in the source code.
 	if err := loadS256BytePoints(); err != nil {

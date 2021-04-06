@@ -33,7 +33,7 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 
 // Tx wraps a bitcoin transaction
 //
-// DO NOT CHANGE ORDER - Optimized memory via malign
+// DO NOT CHANGE ORDER - Optimised memory via malign
 //
 type Tx struct {
 	Inputs   []*Input
@@ -50,12 +50,12 @@ func NewTx() *Tx {
 // NewTxFromString takes a toBytesHelper string representation of a bitcoin transaction
 // and returns a Tx object.
 func NewTxFromString(str string) (*Tx, error) {
-	bytes, err := hex.DecodeString(str)
+	b, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewTxFromBytes(bytes)
+	return NewTxFromBytes(b)
 }
 
 // NewTxFromBytes takes an array of bytes, constructs a Tx and returns it.

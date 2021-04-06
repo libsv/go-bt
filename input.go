@@ -24,7 +24,7 @@ const DefaultSequenceNumber uint32 = 0xFFFFFFFF
 
 // Input is a representation of a transaction input
 //
-// DO NOT CHANGE ORDER - Optimized for memory via maligned
+// DO NOT CHANGE ORDER - Optimised for memory via maligned
 //
 type Input struct {
 	PreviousTxIDBytes  []byte
