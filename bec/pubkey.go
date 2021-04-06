@@ -11,7 +11,7 @@ import (
 	"math/big"
 )
 
-// These constants define the lengths of serialized public keys.
+// These constants define the lengths of serialised public keys.
 const (
 	PubKeyBytesLenCompressed   = 33
 	PubKeyBytesLenUncompressed = 65
@@ -31,21 +31,21 @@ func decompressPoint(curve *KoblitzCurve, bigX *big.Int, ybit bool) (*big.Int, e
 	// Compute x^3 + B mod p.
 	var x3 fieldVal
 	x3.SquareVal(&x).Mul(&x)
-	x3.Add(curve.fieldB).Normalize()
+	x3.Add(curve.fieldB).Normalise()
 
 	// Now calculate sqrt mod p of x^3 + B
 	// This code used to do a full sqrt based on tonelli/shanks,
 	// but this was replaced by the algorithms referenced in
 	// https://bitcointalk.org/index.php?topic=162805.msg1712294#msg1712294
 	var y fieldVal
-	y.SqrtVal(&x3).Normalize()
+	y.SqrtVal(&x3).Normalise()
 	if ybit != y.IsOdd() {
-		y.Negate(1).Normalize()
+		y.Negate(1).Normalise()
 	}
 
 	// Check that y is a square root of x^3 + B.
 	var y2 fieldVal
-	y2.SquareVal(&y).Normalize()
+	y2.SquareVal(&y).Normalise()
 	if !y2.Equals(&x3) {
 		return nil, fmt.Errorf("invalid square root")
 	}
@@ -64,7 +64,7 @@ const (
 	pubkeyHybrid       byte = 0x6 // y_bit + x coord + y coord
 )
 
-// IsCompressedPubKey returns true the the passed serialized public key has
+// IsCompressedPubKey returns true the the passed serialised public key has
 // been encoded in compressed format, and false otherwise.
 func IsCompressedPubKey(pubKey []byte) bool {
 	// The public key is only compressed if it is the correct length and
@@ -135,7 +135,7 @@ func ParsePubKey(pubKeyStr []byte, curve *KoblitzCurve) (key *PublicKey, err err
 }
 
 // PublicKey is an ecdsa.PublicKey with additional functions to
-// serialize in uncompressed, compressed, and hybrid formats.
+// serialise in uncompressed, compressed, and hybrid formats.
 type PublicKey ecdsa.PublicKey
 
 // ToECDSA returns the public key as a *ecdsa.PublicKey.
@@ -143,17 +143,17 @@ func (p *PublicKey) ToECDSA() *ecdsa.PublicKey {
 	return (*ecdsa.PublicKey)(p)
 }
 
-// SerializeUncompressed serializes a public key in a 65-byte uncompressed
+// SerialiseUncompressed serialises a public key in a 65-byte uncompressed
 // format.
-func (p *PublicKey) SerializeUncompressed() []byte {
+func (p *PublicKey) SerialiseUncompressed() []byte {
 	b := make([]byte, 0, PubKeyBytesLenUncompressed)
 	b = append(b, pubkeyUncompressed)
 	b = paddedAppend(32, b, p.X.Bytes())
 	return paddedAppend(32, b, p.Y.Bytes())
 }
 
-// SerializeCompressed serializes a public key in a 33-byte compressed format.
-func (p *PublicKey) SerializeCompressed() []byte {
+// SerialiseCompressed serialises a public key in a 33-byte compressed format.
+func (p *PublicKey) SerialiseCompressed() []byte {
 	b := make([]byte, 0, PubKeyBytesLenCompressed)
 	format := pubkeyCompressed
 	if isOdd(p.Y) {
@@ -163,8 +163,8 @@ func (p *PublicKey) SerializeCompressed() []byte {
 	return paddedAppend(32, b, p.X.Bytes())
 }
 
-// SerializeHybrid serializes a public key in a 65-byte hybrid format.
-func (p *PublicKey) SerializeHybrid() []byte {
+// SerialiseHybrid serialises a public key in a 65-byte hybrid format.
+func (p *PublicKey) SerialiseHybrid() []byte {
 	b := make([]byte, 0, PubKeyBytesLenHybrid)
 	format := pubkeyHybrid
 	if isOdd(p.Y) {

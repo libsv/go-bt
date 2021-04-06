@@ -37,12 +37,12 @@ func (is *LocalSigner) SignHash(hash []byte) (publicKey []byte, signature []byte
 		return
 	}
 
-	publicKey = is.PrivateKey.PubKey().SerializeCompressed()
-	signature = sig.Serialize()
+	publicKey = is.PrivateKey.PubKey().SerialiseCompressed()
+	signature = sig.Serialise()
 	return
 }
 
 // PublicKey returns the public key which will be used to sign.
 func (is *LocalSigner) PublicKey() (publicKey []byte) {
-	return is.PrivateKey.PubKey().SerializeCompressed()
+	return is.PrivateKey.PubKey().SerialiseCompressed()
 }

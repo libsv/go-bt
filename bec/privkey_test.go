@@ -28,7 +28,7 @@ func TestPrivKeys(t *testing.T) {
 	for _, test := range tests {
 		priv, pub := PrivKeyFromBytes(S256(), test.key)
 
-		_, err := ParsePubKey(pub.SerializeUncompressed(), S256())
+		_, err := ParsePubKey(pub.SerialiseUncompressed(), S256())
 		if err != nil {
 			t.Errorf("%s privkey: %v", test.name, err)
 			continue
@@ -46,10 +46,10 @@ func TestPrivKeys(t *testing.T) {
 			continue
 		}
 
-		serializedKey := priv.Serialize()
-		if !bytes.Equal(serializedKey, test.key) {
-			t.Errorf("%s unexpected serialized bytes - got: %x, "+
-				"want: %x", test.name, serializedKey, test.key)
+		serialisedKey := priv.Serialise()
+		if !bytes.Equal(serialisedKey, test.key) {
+			t.Errorf("%s unexpected serialised bytes - got: %x, "+
+				"want: %x", test.name, serialisedKey, test.key)
 		}
 	}
 }

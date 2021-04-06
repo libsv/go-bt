@@ -49,16 +49,16 @@ func TestBase58Check(t *testing.T) {
 	// test the two decoding failure cases
 	// case 1: checksum error
 	_, _, err := base58.CheckDecode("3MNQE1Y")
-	if err != base58.ErrChecksum {
+	if err != base58.ErrChecksum { //nolint:errorlint
 		t.Error("Checkdecode test failed, expected ErrChecksum")
 	}
 	// case 2: invalid formats (string lengths below 5 mean the version byte and/or the checksum
 	// bytes are missing).
 	testString := ""
-	for len := 0; len < 4; len++ {
+	for l := 0; l < 4; l++ {
 		// make a string of length `len`
 		_, _, err = base58.CheckDecode(testString)
-		if err != base58.ErrInvalidFormat {
+		if err != base58.ErrInvalidFormat { //nolint:errorlint
 			t.Error("Checkdecode test failed, expected ErrInvalidFormat")
 		}
 	}

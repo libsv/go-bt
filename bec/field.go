@@ -3,7 +3,6 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-//nolint:dupl
 package bec
 
 // References:
@@ -11,9 +10,9 @@ package bec
 //     http://cacr.uwaterloo.ca/hac/
 
 // All elliptic curve operations for secp256k1 are done in a finite field
-// characterized by a 256-bit prime.  Given this precision is larger than the
+// characterised by a 256-bit prime.  Given this precision is larger than the
 // biggest available native type, obviously some form of bignum math is needed.
-// This package implements specialized fixed-precision field arithmetic rather
+// This package implements specialised fixed-precision field arithmetic rather
 // than relying on an arbitrary-precision arithmetic package such as math/big
 // for dealing with the field math since the size is known.  As a result, rather
 // large performance gains are achieved by taking advantage of many
@@ -33,11 +32,11 @@ package bec
 // 10 uint32s with each word (array entry) treated as base 2^26.  This was
 // chosen for the following reasons:
 // 1) Most systems at the current time are 64-bit (or at least have 64-bit
-//    registers available for specialized purposes such as MMX) so the
+//    registers available for specialised purposes such as MMX) so the
 //    intermediate results can typically be done using a native register (and
 //    using uint64s to avoid the need for additional half-word arithmetic)
 // 2) In order to allow addition of the internal words without having to
-//    propagate the the carry, the max normalized value for each register must
+//    propagate the the carry, the max normalised value for each register must
 //    be less than the number of bits available in the register
 // 3) Since we're dealing with 32-bit values, 64-bits of overflow is a
 //    reasonable choice for #2
@@ -50,7 +49,7 @@ package bec
 // Since it is so important that the field arithmetic is extremely fast for
 // high performance crypto, this package does not perform any validation where
 // it ordinarily would.  For example, some functions only give the correct
-// result is the field is normalized and there is no checking to ensure it is.
+// result is the field is normalised and there is no checking to ensure it is.
 // While I typically prefer to ensure all state and input is valid for most
 // packages, this code is really only used internally and every extra check
 // counts.
@@ -79,7 +78,7 @@ const (
 
 	// fieldOverflowBits is the minimum number of "overflow" bits for each
 	// word in the field value.
-	fieldOverflowBits = 32 - fieldBase
+	fieldOverflowBits = 32 - fieldBase //nolint:varcheck,deadcode,unused
 
 	// fieldBaseMask is the mask for the bits in each word needed to
 	// represent the numeric base of each word (except the most significant
@@ -117,7 +116,7 @@ var (
 	}
 )
 
-// fieldVal implements optimized fixed-precision arithmetic over the
+// fieldVal implements optimised fixed-precision arithmetic over the
 // secp256k1 finite field.  This means all arithmetic is performed modulo
 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f.  It
 // represents each 256-bit value as 10 32-bit integers in base 2^26.  This
@@ -153,7 +152,7 @@ type fieldVal struct {
 
 // String returns the field value as a human-readable hex string.
 func (f fieldVal) String() string {
-	t := new(fieldVal).Set(&f).Normalize()
+	t := new(fieldVal).Set(&f).Normalise()
 	return hex.EncodeToString(t.Bytes()[:])
 }
 
@@ -235,7 +234,7 @@ func (f *fieldVal) SetBytes(b *[32]byte) *fieldVal {
 // possible that the truncated value is less than the field prime.  It is up to
 // the caller to decide whether it needs to provide numbers of the appropriate
 // size or if it is acceptable to use this function with the described
-// truncation behavior.
+// truncation behaviour.
 //
 // The field value is returned to support chaining.  This enables syntax like:
 // f := new(fieldVal).SetByteSlice(byteSlice)
@@ -261,14 +260,14 @@ func (f *fieldVal) SetHex(hexString string) *fieldVal {
 	return f.SetByteSlice(bytes)
 }
 
-// Normalize normalizes the internal field words into the desired range and
+// Normalise normalises the internal field words into the desired range and
 // performs fast modular reduction over the secp256k1 prime by making use of the
 // special form of the prime.
-func (f *fieldVal) Normalize() *fieldVal {
+func (f *fieldVal) Normalise() *fieldVal {
 	// The field representation leaves 6 bits of overflow in each word so
 	// intermediate calculations can be performed without needing to
 	// propagate the carry to each higher word during the calculations.  In
-	// order to normalize, we need to "compact" the full 256-bit value to
+	// order to normalise, we need to "compact" the full 256-bit value to
 	// the right while propagating any carries through to the high order
 	// word.
 	//
@@ -371,7 +370,7 @@ func (f *fieldVal) Normalize() *fieldVal {
 	t8 = t8 & fieldBaseMask
 	t9 = t9 & fieldMSBMask // Remove potential multiple of 2^256.
 
-	// Finally, set the normalized and reduced words.
+	// Finally, set the normalised and reduced words.
 	f.n[0] = t0
 	f.n[1] = t1
 	f.n[2] = t2
@@ -391,7 +390,7 @@ func (f *fieldVal) Normalize() *fieldVal {
 // since it can be useful to cut down on the number of allocations by allowing
 // the caller to reuse a buffer.
 //
-// The field value must be normalized for this function to return the correct
+// The field value must be normalised for this function to return the correct
 // result.
 func (f *fieldVal) PutBytes(b *[32]byte) {
 	// Unpack the 256 total bits from the 10 uint32 words with a max of
@@ -437,7 +436,7 @@ func (f *fieldVal) PutBytes(b *[32]byte) {
 // to cut down on the number of allocations by allowing the caller to reuse a
 // buffer.
 //
-// The field value must be normalized for this function to return correct
+// The field value must be normalised for this function to return correct
 // result.
 func (f *fieldVal) Bytes() *[32]byte {
 	b := new([32]byte)
@@ -457,7 +456,7 @@ func (f *fieldVal) IsZero() bool {
 
 // IsOdd returns whether or not the field value is an odd number.
 //
-// The field value must be normalized for this function to return correct
+// The field value must be normalised for this function to return correct
 // result.
 func (f *fieldVal) IsOdd() bool {
 	// Only odd numbers have the bottom bit set.
@@ -465,7 +464,7 @@ func (f *fieldVal) IsOdd() bool {
 }
 
 // Equals returns whether or not the two field values are the same.  Both
-// field values being compared must be normalized for this function to return
+// field values being compared must be normalised for this function to return
 // the correct result.
 func (f *fieldVal) Equals(val *fieldVal) bool {
 	// Xor only sets bits when they are different, so the two field values
@@ -487,10 +486,10 @@ func (f *fieldVal) Equals(val *fieldVal) bool {
 func (f *fieldVal) NegateVal(val *fieldVal, magnitude uint32) *fieldVal {
 	// Negation in the field is just the prime minus the value.  However,
 	// in order to allow negation against a field value without having to
-	// normalize/reduce it first, multiply by the magnitude (that is how
-	// "far" away it is from the normalized value) to adjust.  Also, since
+	// normalise/reduce it first, multiply by the magnitude (that is how
+	// "far" away it is from the normalised value) to adjust.  Also, since
 	// negating a value pushes it one more order of magnitude away from the
-	// normalized range, add 1 to compensate.
+	// normalised range, add 1 to compensate.
 	//
 	// For some intuition here, imagine you're performing mod 12 arithmetic
 	// (picture a clock) and you are negating the number 7.  So you start at
@@ -535,7 +534,7 @@ func (f *fieldVal) Negate(magnitude uint32) *fieldVal {
 func (f *fieldVal) AddInt(ui uint) *fieldVal {
 	// Since the field representation intentionally provides overflow bits,
 	// it's ok to use carryless addition as the carry bit is safely part of
-	// the word and will be normalized out.
+	// the word and will be normalised out.
 	f.n[0] += uint32(ui)
 
 	return f
@@ -549,7 +548,7 @@ func (f *fieldVal) AddInt(ui uint) *fieldVal {
 func (f *fieldVal) Add(val *fieldVal) *fieldVal {
 	// Since the field representation intentionally provides overflow bits,
 	// it's ok to use carryless addition as the carry bit is safely part of
-	// each word and will be normalized out.  This could obviously be done
+	// each word and will be normalised out.  This could obviously be done
 	// in a loop, but the unrolled version is faster.
 	f.n[0] += val.n[0]
 	f.n[1] += val.n[1]
@@ -572,7 +571,7 @@ func (f *fieldVal) Add(val *fieldVal) *fieldVal {
 func (f *fieldVal) Add2(val *fieldVal, val2 *fieldVal) *fieldVal {
 	// Since the field representation intentionally provides overflow bits,
 	// it's ok to use carryless addition as the carry bit is safely part of
-	// each word and will be normalized out.  This could obviously be done
+	// each word and will be normalised out.  This could obviously be done
 	// in a loop, but the unrolled version is faster.
 	f.n[0] = val.n[0] + val2.n[0]
 	f.n[1] = val.n[1] + val2.n[1]
@@ -597,7 +596,7 @@ func (f *fieldVal) Add2(val *fieldVal, val2 *fieldVal) *fieldVal {
 // f.MulInt(2).Add(f2) so that f = 2 * f + f2.
 func (f *fieldVal) MulInt(val uint) *fieldVal {
 	// Since each word of the field representation can hold up to
-	// fieldOverflowBits extra bits which will be normalized out, it's safe
+	// fieldOverflowBits extra bits which will be normalised out, it's safe
 	// to multiply each word without using a larger type or carry
 	// propagation so long as the values won't overflow a uint32.  This
 	// could obviously be done in a loop, but the unrolled version is
@@ -637,6 +636,8 @@ func (f *fieldVal) Mul(val *fieldVal) *fieldVal {
 //
 // The field value is returned to support chaining.  This enables syntax like:
 // f3.Mul2(f, f2).AddInt(1) so that f3 = (f * f2) + 1.
+//
+//nolint:dupl
 func (f *fieldVal) Mul2(val *fieldVal, val2 *fieldVal) *fieldVal {
 	// This could be done with a couple of for loops and an array to store
 	// the intermediate terms, but this unrolled version is significantly
@@ -882,7 +883,7 @@ func (f *fieldVal) Mul2(val *fieldVal, val2 *fieldVal) *fieldVal {
 	// skip this in that case, however always running regardless allows it
 	// to run in constant time.  The final result will be in the range
 	// 0 <= result <= prime + (2^64 - c), so it is guaranteed to have a
-	// magnitude of 1, but it is denormalized.
+	// magnitude of 1, but it is denormalised.
 	d := t0 + m*977
 	f.n[0] = uint32(d & fieldBaseMask)
 	d = (d >> fieldBase) + t1 + m*64
@@ -1115,7 +1116,7 @@ func (f *fieldVal) SquareVal(val *fieldVal) *fieldVal {
 	// skip this in that case, however always running regardless allows it
 	// to run in constant time.  The final result will be in the range
 	// 0 <= result <= prime + (2^64 - c), so it is guaranteed to have a
-	// magnitude of 1, but it is denormalized.
+	// magnitude of 1, but it is denormalised.
 	n := t0 + m*977
 	f.n[0] = uint32(n & fieldBaseMask)
 	n = (n >> fieldBase) + t1 + m*64
@@ -1144,7 +1145,7 @@ func (f *fieldVal) Inverse() *fieldVal {
 	// Thus, a^(p-2) is the multiplicative inverse.
 	//
 	// In order to efficiently compute a^(p-2), p-2 needs to be split into
-	// a sequence of squares and multipications that minimizes the number of
+	// a sequence of squares and multipications that minimises the number of
 	// multiplications needed (since they are more costly than squarings).
 	// Intermediate results are saved and reused as well.
 	//
@@ -1251,7 +1252,7 @@ func (f *fieldVal) Inverse() *fieldVal {
 //
 // NOTE: This method only works when P is intended to be the secp256k1 prime and
 // is not constant time. The returned value is of magnitude 1, but is
-// denormalized.
+// denormalised.
 func (f *fieldVal) SqrtVal(x *fieldVal) *fieldVal {
 	// The following computation iteratively computes x^((P+1)/4) = x^Q
 	// using the recursive, piece-wise definition:
@@ -1270,7 +1271,7 @@ func (f *fieldVal) SqrtVal(x *fieldVal) *fieldVal {
 	// See https://en.wikipedia.org/wiki/Exponentiation_by_squaring for more
 	// details.
 	//
-	// This can be further optimized, by observing that the value of Q in
+	// This can be further optimised, by observing that the value of Q in
 	// secp256k1 has the value:
 	//
 	//   Q = 3fffffffffffffffffffffffffffffffffffffffffffffffffffffffbfffff0c
@@ -1284,7 +1285,7 @@ func (f *fieldVal) SqrtVal(x *fieldVal) *fieldVal {
 	// Since there there are only 4 unique bytes of Q, this keeps the jump
 	// table small without the need to handle all possible 8-bit values.
 	// Further, we observe that 29 of the 32 bytes are 0xff; making the
-	// first case handle 0xff therefore optimizes the hot path.
+	// first case handle 0xff therefore optimises the hot path.
 	f.SetInt(1)
 	for _, b := range fieldQBytes {
 		switch b {
@@ -1351,7 +1352,7 @@ func (f *fieldVal) SqrtVal(x *fieldVal) *fieldVal {
 //
 // NOTE: This method only works when P is intended to be the secp256k1 prime and
 // is not constant time. The returned value is of magnitude 1, but is
-// denormalized.
+// denormalised.
 func (f *fieldVal) Sqrt() *fieldVal {
 	return f.SqrtVal(f)
 }

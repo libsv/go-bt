@@ -21,7 +21,7 @@ import (
 var ErrMalformedPrivateKey = errors.New("malformed private key")
 
 // compressMagic is the magic byte used to identify a WIF encoding for
-// an address created from a compressed serialized public key.
+// an address created from a compressed serialised public key.
 const compressMagic byte = 0x01
 
 // WIF contains the individual components described by the Wallet Import Format
@@ -36,7 +36,7 @@ type WIF struct {
 
 	// CompressPubKey specifies whether the address controlled by the
 	// imported or exported private key was created by hashing a
-	// compressed (33-byte) serialized public key, rather than an
+	// compressed (33-byte) serialised public key, rather than an
 	// uncompressed (65-byte) one.
 	CompressPubKey bool
 
@@ -48,7 +48,7 @@ type WIF struct {
 // NewWIF creates a new WIF structure to export an address and its private key
 // as a string encoded in the Wallet Import Format.  The compress argument
 // specifies whether the address intended to be imported or exported was created
-// by serializing the public key compressed rather than uncompressed.
+// by serialising the public key compressed rather than uncompressed.
 func NewWIF(privKey *bec.PrivateKey, net *chaincfg.Params, compress bool) (*WIF, error) {
 	if net == nil {
 		return nil, errors.New("no network")
@@ -72,7 +72,7 @@ func (w *WIF) IsForNet(net *chaincfg.Params) bool {
 //    either testnet3 or the regression test network
 //  * 32 bytes of a binary-encoded, big-endian, zero-padded private key
 //  * Optional 1 byte (equal to 0x01) if the address being imported or exported
-//    was created by taking the RIPEMD160 after SHA256 hash of a serialized
+//    was created by taking the RIPEMD160 after SHA256 hash of a serialised
 //    compressed (33-byte) public key
 //  * 4 bytes of checksum, must equal the first four bytes of the double SHA256
 //    of every byte before the checksum in this sequence
@@ -136,7 +136,7 @@ func (w *WIF) String() string {
 
 	a := make([]byte, 0, encodeLen)
 	a = append(a, w.netID)
-	// Pad and append bytes manually, instead of using Serialize, to
+	// Pad and append bytes manually, instead of using Serialise, to
 	// avoid another call to make.
 	a = paddedAppend(bec.PrivKeyBytesLen, a, w.PrivKey.D.Bytes())
 	if w.CompressPubKey {
@@ -147,15 +147,15 @@ func (w *WIF) String() string {
 	return base58.Encode(a)
 }
 
-// SerializePubKey serializes the associated public key of the imported or
+// SerialisePubKey serialises the associated public key of the imported or
 // exported private key in either a compressed or uncompressed format.  The
-// serialization format chosen depends on the value of w.CompressPubKey.
-func (w *WIF) SerializePubKey() []byte {
+// serialisation format chosen depends on the value of w.CompressPubKey.
+func (w *WIF) SerialisePubKey() []byte {
 	pk := (*bec.PublicKey)(&w.PrivKey.PublicKey)
 	if w.CompressPubKey {
-		return pk.SerializeCompressed()
+		return pk.SerialiseCompressed()
 	}
-	return pk.SerializeUncompressed()
+	return pk.SerialiseUncompressed()
 }
 
 // paddedAppend appends the src byte slice to dst, returning the new slice.

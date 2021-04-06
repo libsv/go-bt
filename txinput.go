@@ -68,7 +68,7 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 }
 
 // From adds a new input to the transaction from the specified UTXO fields, using the default
-// finalized sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
+// finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
 // afterwards.
 func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
 	pts, err := bscript.NewFromHexString(prevTxLockingScript)
@@ -86,7 +86,7 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 		PreviousTxOutIndex: vout,
 		PreviousTxSatoshis: satoshis,
 		PreviousTxScript:   pts,
-		SequenceNumber:     DefaultSequenceNumber, // use default finalized sequence number
+		SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
 	})
 
 	return nil
