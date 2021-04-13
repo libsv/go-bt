@@ -9,10 +9,10 @@ import (
 
 func TestExtractDataFee(t *testing.T) {
 	t.Run("get valid data fee", func(t *testing.T) {
-		fees := []*bt.Fee{bt.DefaultDataFee()}
-		fee, err := bt.ExtractDataFee(fees)
-		assert.NoError(t, err)
+		fees := bt.NewFeeQuote()
+		fee, err := fees.Fee(bt.FeeTypeData)
 		assert.NotNil(t, fee)
+		assert.NoError(t, err)
 		assert.Equal(t, bt.FeeTypeData, fee.FeeType)
 		assert.Equal(t, 25, fee.MiningFee.Satoshis)
 		assert.Equal(t, 100, fee.MiningFee.Bytes)
@@ -21,19 +21,18 @@ func TestExtractDataFee(t *testing.T) {
 	})
 
 	t.Run("no data fee found", func(t *testing.T) {
-		wrongFee := bt.DefaultDataFee()
-		wrongFee.FeeType = "unknown"
-		fees := []*bt.Fee{wrongFee}
-		fee, err := bt.ExtractDataFee(fees)
-		assert.Error(t, err)
+		fees := bt.NewFeeQuote()
+		fees.AddQuote(bt.FeeTypeData, nil)
+		fee, err := fees.Fee(bt.FeeTypeData)
 		assert.Nil(t, fee)
+		assert.Error(t, err)
 	})
 }
 
 func TestExtractStandardFee(t *testing.T) {
 	t.Run("get valid standard fee", func(t *testing.T) {
-		fees := []*bt.Fee{bt.DefaultStandardFee()}
-		fee, err := bt.ExtractStandardFee(fees)
+		fees := bt.NewFeeQuote()
+		fee, err := fees.Fee(bt.FeeTypeStandard)
 		assert.NoError(t, err)
 		assert.NotNil(t, fee)
 		assert.Equal(t, bt.FeeTypeStandard, fee.FeeType)
@@ -44,25 +43,23 @@ func TestExtractStandardFee(t *testing.T) {
 	})
 
 	t.Run("no standard fee found", func(t *testing.T) {
-		wrongFee := bt.DefaultStandardFee()
-		wrongFee.FeeType = "unknown"
-		fees := []*bt.Fee{wrongFee}
-		fee, err := bt.ExtractStandardFee(fees)
+		fees := bt.NewFeeQuote()
+		fees.AddQuote(bt.FeeTypeStandard, nil)
+		fee, err := fees.Fee(bt.FeeTypeStandard)
 		assert.Error(t, err)
 		assert.Nil(t, fee)
 	})
 }
 
 func TestDefaultFees(t *testing.T) {
-	fees := bt.DefaultFees()
-	assert.Equal(t, 2, len(fees))
+	fees := bt.NewFeeQuote()
 
-	fee, err := bt.ExtractDataFee(fees)
+	fee, err := fees.Fee( bt.FeeTypeData)
 	assert.NoError(t, err)
 	assert.NotNil(t, fee)
 	assert.Equal(t, bt.FeeTypeData, fee.FeeType)
 
-	fee, err = bt.ExtractStandardFee(fees)
+	fee, err = fees.Fee( bt.FeeTypeStandard)
 	assert.NoError(t, err)
 	assert.NotNil(t, fee)
 	assert.Equal(t, bt.FeeTypeStandard, fee.FeeType)
