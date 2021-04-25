@@ -3,6 +3,7 @@ package bip39
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strconv"
@@ -19,17 +20,25 @@ func Words(ent uint32) ([]string, error) {
 	}
 	bb := make([]byte, ent/8)
 	_, _ = rand.Read(bb)
+	fmt.Println(hex.EncodeToString(bb))
 	cs := ent / 32
-	ms := ent + cs
+	ms := int(ent + cs)
+	bb = append(bb, sha256.Sum256(bb)[0])
 	sb := strings.Builder{}
+	sb.Grow(ms)
 	for _, b := range bb {
-		sb.WriteString(fmt.Sprintf("%08b", b))
+		for t := 7; t >= 0; t--{
+			if b & (1 << t) != 0{
+				sb.WriteString("1")
+				continue
+			}
+			sb.WriteString("0")
+		}
 	}
-	sb.WriteString(fmt.Sprintf("%08b", sha256.Sum256(bb)[0])[:cs-1])
 	bitString := sb.String()
 	words := make([]string, 0, ms/11)
-	for i := 10; i < int(ms); i += 11 {
-		output, err := strconv.ParseInt(bitString[i-10:i], 2, 32)
+	for i := 11; i <= ms; i += 11 {
+		output, err := strconv.ParseInt(bitString[i-11:i], 2, 32)
 		if err != nil{
 			return nil, fmt.Errorf("failed to convert binary to int %w", err)
 		}

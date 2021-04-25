@@ -32,7 +32,7 @@ func TestEntropy(t *testing.T) {
 			assert.Equal(t, test.expLen, len(out))
 			fmt.Printf("%+v\n", out)
 			fmt.Println(strings.Join(out, " "))
-			privkey := pbkdf2.Key([]byte(strings.Join(out, " ")), []byte(strings.Join(out, " ")),2048, 64,sha512.New)
+			privkey := pbkdf2.Key([]byte(strings.Join(out, " ")), []byte("mnemonic"+"test"),2048, 64, sha512.New)
 			fmt.Println(hex.EncodeToString(privkey))
 
 		})
