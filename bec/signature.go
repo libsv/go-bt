@@ -142,12 +142,12 @@ func parseSig(sigStr []byte, curve elliptic.Curve, der bool) (*Signature, error)
 
 	// Then R itself.
 	rBytes := sigStr[index : index+rLen]
+	err := canonicalPadding(rBytes)
 	if der {
-		//nolint:errorlint
-		switch err := canonicalPadding(rBytes); err {
-		case errNegativeValue:
+		switch  {
+		case errors.Is(err, errNegativeValue):
 			return nil, errors.New("signature R is negative")
-		case errExcessivelyPaddedValue:
+		case  errors.Is(err,errExcessivelyPaddedValue):
 			return nil, errors.New("signature R is excessively padded")
 		}
 	}
@@ -169,12 +169,12 @@ func parseSig(sigStr []byte, curve elliptic.Curve, der bool) (*Signature, error)
 
 	// Then S itself.
 	sBytes := sigStr[index : index+sLen]
+	err = canonicalPadding(sBytes)
 	if der {
-		//nolint:errorlint
-		switch err := canonicalPadding(sBytes); err {
-		case errNegativeValue:
+		switch {
+		case errors.Is(err, errNegativeValue):
 			return nil, errors.New("signature S is negative")
-		case errExcessivelyPaddedValue:
+		case errors.Is(err, errExcessivelyPaddedValue):
 			return nil, errors.New("signature S is excessively padded")
 		}
 	}

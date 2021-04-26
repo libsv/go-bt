@@ -160,6 +160,7 @@ func Benchmark_GenerateSeed(b *testing.B){
 
 type vectors [][]string
 
+// nolint:misspell
 const testVectors = `[
 	[
 		"00000000000000000000000000000000",

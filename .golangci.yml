@@ -270,7 +270,7 @@ linters-settings:
     # Exclude following linters from requiring an explanation.  Default is [].
     allow-no-explanation: []
     # Enable to require an explanation of nonzero length after each nolint directive. Default is false.
-    require-explanation: true
+    require-explanation: false
     # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
     require-specific: true
   rowserrcheck:

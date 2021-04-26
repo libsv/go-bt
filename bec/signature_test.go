@@ -462,8 +462,7 @@ func TestSignatureSerialise(t *testing.T) {
 	}
 }
 
-func testSignCompact(t *testing.T, tag string, curve *KoblitzCurve,
-	data []byte, isCompressed bool) { //nolint:unparam
+func testSignCompact(t *testing.T, tag string, curve *KoblitzCurve, data []byte, isCompressed bool) { //nolint:unparam // only a test
 	priv, _ := NewPrivateKey(curve)
 
 	hashed := []byte("testing")

@@ -1,4 +1,4 @@
-// package bip39 implements the bip39 protocol https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
+// Package bip39 implements the bip39 protocol https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 // This protocol relates closely with bip32 (https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki)
 // and allows a memorable word list to be
 // generated for a user of a wallet to store. This is a bit more user friendly
@@ -24,8 +24,10 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
+// Sentinel errors raised by the lib.
 var(
-	ErrInvalidLength = errors.New("invalid number of bits requested, should be a multiple of 32 and between 128 and 256 (inclusive)")
+	ErrInvalidLength = errors.New("invalid number of bits requested, " +
+		"should be a multiple of 32 and between 128 and 256 (inclusive)")
 	ErrInvalidMnemonic = errors.New("invalid mnemonic; length should be a multiple of 3 between 12 and 24")
 	ErrInvalidWordlist = errors.New("mnemonic contains invalid word (word not in approved wordlist)")
 )
@@ -36,10 +38,10 @@ type Entropy uint32
 // Allowed mnemonic lengths to supply to the GenerateEntropy function.
 const(
 	EntWords12 Entropy = 128
-	EntWords15 = 160
-	EntWords18 = 192
-	EntWords21 = 224
-	EntWords24 = 256
+	EntWords15 Entropy = 160
+	EntWords18 Entropy = 192
+	EntWords21 Entropy = 224
+	EntWords24 Entropy = 256
 )
 
 // GenerateEntropy will generate a bytearray of cryptographically random bytes
