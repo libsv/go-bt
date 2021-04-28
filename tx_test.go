@@ -1,6 +1,7 @@
 package bt_test
 
 import (
+	"context"
 	"encoding/hex"
 	"reflect"
 	"testing"
@@ -206,7 +207,7 @@ func TestTx_CreateTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, wif)
 
-	_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+	_, err = tx.SignAuto(context.Background(),&bt.LocalSigner{PrivateKey: wif.PrivKey})
 	assert.NoError(t, err)
 }
 
@@ -239,7 +240,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(),&bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, true, tx.HasDataOutputs())
@@ -264,7 +265,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(),&bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, false, tx.HasDataOutputs())

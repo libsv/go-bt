@@ -1,6 +1,8 @@
 package bt
 
 import (
+	"context"
+
 	"github.com/libsv/go-bt/bec"
 	"github.com/libsv/go-bt/sighash"
 )
@@ -13,7 +15,7 @@ type LocalSigner struct {
 
 // Sign a transaction at a given input index using the PrivateKey passed in through the
 // InternalSigner struct.
-func (is *LocalSigner) Sign(unsignedTx *Tx, index uint32,
+func (is *LocalSigner) Sign(ctx context.Context, unsignedTx *Tx, index uint32,
 	shf sighash.Flag) (publicKey []byte, signature []byte, err error) {
 
 	if shf == 0 {
@@ -25,12 +27,12 @@ func (is *LocalSigner) Sign(unsignedTx *Tx, index uint32,
 		return
 	}
 
-	return is.SignHash(sh)
+	return is.SignHash(ctx, sh)
 }
 
 // SignHash a transaction at a given a hash digest using the PrivateKey passed in through the
 // InternalSigner struct.
-func (is *LocalSigner) SignHash(hash []byte) (publicKey []byte, signature []byte, err error) {
+func (is *LocalSigner) SignHash(ctx context.Context, hash []byte) (publicKey []byte, signature []byte, err error) {
 
 	sig, err := is.PrivateKey.Sign(hash)
 	if err != nil {
@@ -43,6 +45,6 @@ func (is *LocalSigner) SignHash(hash []byte) (publicKey []byte, signature []byte
 }
 
 // PublicKey returns the public key which will be used to sign.
-func (is *LocalSigner) PublicKey() (publicKey []byte) {
+func (is *LocalSigner) PublicKey(ctx context.Context) (publicKey []byte) {
 	return is.PrivateKey.PubKey().SerialiseCompressed()
 }

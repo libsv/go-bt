@@ -133,7 +133,7 @@ func TestScript_IsMultisigOut(t *testing.T) { // TODO: check this
 
 	scriptPub := bscript.NewFromBytes(b)
 	assert.NotNil(t, scriptPub)
-	assert.Equal(t, true, scriptPub.IsMultisigOut())
+	assert.Equal(t, true, scriptPub.IsMultiSigOut())
 }
 
 func TestScript_PublicKeyHash(t *testing.T) {
