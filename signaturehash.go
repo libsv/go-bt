@@ -8,7 +8,7 @@ import (
 	"github.com/libsv/go-bt/sighash"
 )
 
-// CalcInputSignatureHash serialised the transcation andreturns the hash digest
+// CalcInputSignatureHash serialised the transaction and returns the hash digest
 // to be signed. BitCoin (SV) uses a different signature hashing algorithm
 // after the UAHF fork for replay protection.
 //

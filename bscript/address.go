@@ -9,6 +9,13 @@ import (
 	"github.com/libsv/go-bt/crypto"
 )
 
+const(
+	hashP2PKH = 0x00
+	hashTestNetP2PKH = 0x6f
+	hashP2SH = 0x05
+	hashTestNetP2SH = 0xc4
+)
+
 // An Address struct contains the address string as well as the hash160 hexstring of the public key.
 // The address string will be human readable and specific to the network type, but the public key hash
 // is useful because it stays the same regardless of the network type (mainnet, testnet).
@@ -38,17 +45,16 @@ func addressToPubKeyHashStr(address string) (string, error) {
 	}
 
 	switch decoded[0] {
-	case 0x00: // Pubkey hash (P2PKH address)
+	case hashP2PKH: // Pubkey hash (P2PKH address)
 		return hex.EncodeToString(decoded[1 : len(decoded)-4]), nil
 
-	case 0x6f: // Testnet pubkey hash (P2PKH address)
+	case hashTestNetP2PKH: // Testnet pubkey hash (P2PKH address)
 		return hex.EncodeToString(decoded[1 : len(decoded)-4]), nil
 
-	case 0x05: // Script hash (P2SH address)
+	case hashP2SH: // Script hash (P2SH address)
 		fallthrough
-	case 0xc4: // Testnet script hash (P2SH address)
+	case hashTestNetP2SH: // Testnet script hash (P2SH address)
 		fallthrough
-
 	default:
 		return "", fmt.Errorf("address %s is not supported", address)
 	}

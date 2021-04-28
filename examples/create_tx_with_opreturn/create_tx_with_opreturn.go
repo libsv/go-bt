@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/libsv/go-bt"
@@ -22,7 +23,7 @@ func main() {
 
 	wif, _ := bsvutil.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
 
-	inputsSigned, err := tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+	inputsSigned, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 	if err != nil && len(inputsSigned) > 0 {
 		log.Fatal(err.Error())
 	}

@@ -20,7 +20,6 @@ func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
 // Change calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new output using the script provided.
 func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
-
 	inputAmount := tx.TotalInputSatoshis()
 	outputAmount := tx.TotalOutputSatoshis()
 

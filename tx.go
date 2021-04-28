@@ -61,7 +61,7 @@ func NewTxFromString(str string) (*Tx, error) {
 // NewTxFromBytes takes an array of bytes, constructs a Tx and returns it.
 // This function assumes that the byte slice contains exactly 1 transaction.
 func NewTxFromBytes(b []byte) (*Tx, error) {
-	tx, used, err := NewTxFromStream((b))
+	tx, used, err := NewTxFromStream(b)
 	if err != nil {
 		return nil, err
 	}

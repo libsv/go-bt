@@ -115,7 +115,7 @@ func ParsePubKey(pubKeyStr []byte, curve *KoblitzCurve) (key *PublicKey, err err
 	case PubKeyBytesLenCompressed:
 		// format is 0x2 | solution, <X coordinate>
 		// solution determines which solution of the curve we use.
-		/// y^2 = x^3 + Curve.B
+		// y^2 = x^3 + Curve.B
 		if format != pubkeyCompressed {
 			return nil, fmt.Errorf("invalid magic in compressed "+
 				"pubkey string: %d", pubKeyStr[0])

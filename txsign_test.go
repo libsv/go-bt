@@ -1,6 +1,7 @@
 package bt_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/libsv/go-bt"
@@ -36,7 +37,7 @@ func TestTx_SignAuto(t *testing.T) {
 
 		rawTxBefore := tx.ToString()
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.NotEqual(t, rawTxBefore, tx.ToString())
@@ -48,7 +49,7 @@ func TestTx_SignAuto(t *testing.T) {
 
 		rawTxBefore := tx.ToString()
 
-		_, err := tx.SignAuto(&bt.LocalSigner{PrivateKey: nil})
+		_, err := tx.SignAuto(context.Background(),&bt.LocalSigner{PrivateKey: nil})
 		assert.NoError(t, err)
 
 		assert.Equal(t, rawTxBefore, tx.ToString())
@@ -75,7 +76,7 @@ func TestTx_SignAuto(t *testing.T) {
 
 		// No signature, wrong wif
 		rawTxBefore := tx.ToString()
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(),&bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 		assert.Equal(t, rawTxBefore, tx.ToString())
 	})
