@@ -2,9 +2,15 @@ package bt
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 	"time"
+)
+
+var (
+	ErrFeeQuotesNotInit = errors.New("feeQuotes have not been setup, call NewFeeQuotes")
+	ErrMinerNoQuotes    = errors.New("miner has no quotes stored")
+	ErrFeeTypeNotFound  = errors.New("feetype not found")
+	ErrFeeQuoteNotInit  = errors.New("feeQuote has not been initialized, call NewFeeQuote()")
 )
 
 // FeeType is used to specify which
@@ -21,14 +27,88 @@ const (
 	FeeTypeData FeeType = "data"
 )
 
-// FeeQuotes contains a thread safe map of fees for standard and data
-// fees as well as an expiry time.
+// FeeQuotes contains a list of miners and the current fees for each miner as well as their expiry.
+type FeeQuotes struct {
+	mu     sync.RWMutex
+	quotes map[string]*FeeQuote
+}
+
+// NewFeeQuotes will setup default feeQuotes for the minerName supplied, ie TAAL etc.
+func NewFeeQuotes(minerName string) *FeeQuotes {
+	return &FeeQuotes{
+		mu:     sync.RWMutex{},
+		quotes: map[string]*FeeQuote{minerName: NewFeeQuote()},
+	}
+}
+
+// AddMinerWithDefault will add a new miner to the quotes map with default fees & immediate expiry.
+func (f *FeeQuotes) AddMinerWithDefault(minerName string) *FeeQuotes {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.quotes[minerName] = NewFeeQuote()
+	return f
+}
+
+// AddMiner will add a new miner to the quotes map with the provided fees.
+// If you just want to add default fees use the AddMinerWithDefault method.
+func (f *FeeQuotes) AddMiner(minerName string, quote *FeeQuote) *FeeQuotes {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.quotes[minerName] = quote
+	return f
+}
+
+// Quote will return all fees for a miner.
+// If no fees are found a ErrMinerNoQuotes error is returned.
+func (f *FeeQuotes) Quote(minerName string) (*FeeQuote, error) {
+	if f == nil {
+		return nil, ErrFeeQuotesNotInit
+	}
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	q, ok := f.quotes[minerName]
+	if !ok {
+		return nil, ErrMinerNoQuotes
+	}
+	return q, nil
+}
+
+// Fees is a convenience method for quickly getting a fee by type and miner name.
+// If the miner has no fees an ErrMinerNoQuotes error will be returned.
+// If the feeType cannot be found an ErrFeeTypeNotFound error will be returned.
+func (f *FeeQuotes) Fees(minerName string, feeType FeeType) (*Fee, error) {
+	if f == nil {
+		return nil, ErrFeeQuotesNotInit
+	}
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	m := f.quotes[minerName]
+	if m == nil {
+		return nil, ErrMinerNoQuotes
+	}
+	return m.Fee(feeType)
+}
+
+// UpdateMinerFees a convenience method to update a fee quote from a FeeQuotes struct directly.
+// This will update the miner feeType with the provided fee. Useful after receiving new quotes from mapi.
+func (f *FeeQuotes) UpdateMinerFees(minerName string, feeType FeeType, fee *Fee) (*FeeQuote, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	m := f.quotes[minerName]
+	if m == nil {
+		return nil, ErrMinerNoQuotes
+	}
+	return m.AddQuote(feeType, fee), nil
+}
+
+// FeeQuote contains a thread safe map of fees for standard and data
+// fees as well as an expiry time for a specific miner.
 //
-// NewFeeQuote() should be called to get a
+// NewFeeQuote(minerName) should be called to get a
 //
 // When expiry expires ie Expired() == true then you should fetch
 // new quotes from a MAPI server and call AddQuote with the fee information.
-type FeeQuotes struct {
+type FeeQuote struct {
 	mu         sync.RWMutex
 	fees       map[FeeType]*Fee
 	expiryTime time.Time
@@ -37,6 +117,8 @@ type FeeQuotes struct {
 // NewFeeQuote will setup and return a new FeeQuotes struct which
 // contains default fees when initially setup. You would then pass this
 // data structure to a singleton struct via injection for reading.
+// If you are only getting quotes from one miner you can use this directly
+// instead of using the NewFeeQuotes() method which is for storing multiple miner quotes.
 //
 //  fq := NewFeeQuote()
 //
@@ -76,35 +158,34 @@ type FeeQuotes struct {
 //  }
 // It will set the expiry time to now.UTC which when expires
 // will indicate that new quotes should be fetched from a MAPI server.
-func NewFeeQuote() *FeeQuotes {
-	fq := &FeeQuotes{
+func NewFeeQuote() *FeeQuote {
+	fq := &FeeQuote{
 		fees:       map[FeeType]*Fee{},
 		expiryTime: time.Now().UTC(),
-		mu: sync.RWMutex{},
+		mu:         sync.RWMutex{},
 	}
 	fq.AddQuote(FeeTypeStandard, defaultStandardFee()).
 		AddQuote(FeeTypeData, defaultDataFee())
 	return fq
 }
 
-
 // Fee will return a fee by type if found, nil and an error if not.
-func (f *FeeQuotes) Fee(t FeeType) (*Fee, error) {
-	if f == nil{
-		return nil, errors.New("feeQuotes have not been initialized, call NewFeeQuote()")
+func (f *FeeQuote) Fee(t FeeType) (*Fee, error) {
+	if f == nil {
+		return nil, ErrFeeQuoteNotInit
 	}
 	f.mu.RLock()
 	defer f.mu.RUnlock()
 	fee, ok := f.fees[t]
-	if fee == nil || !ok{
-		return nil, fmt.Errorf("feetype %s not found", t)
+	if fee == nil || !ok {
+		return nil, ErrFeeTypeNotFound
 	}
 	return fee, nil
 }
 
 // AddQuote will add new set of quotes for a feetype or update an existing
 // quote if it already exists.
-func (f *FeeQuotes) AddQuote(ft FeeType, fee *Fee) *FeeQuotes {
+func (f *FeeQuote) AddQuote(ft FeeType, fee *Fee) *FeeQuote {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.fees[ft] = fee
@@ -114,7 +195,7 @@ func (f *FeeQuotes) AddQuote(ft FeeType, fee *Fee) *FeeQuotes {
 // UpdateExpiry will update the expiry time of the quotes, this will be
 // used when you fetch a fresh set of quotes from a MAPI server which
 // should return an expiration time.
-func (f *FeeQuotes) UpdateExpiry(exp time.Time) {
+func (f *FeeQuote) UpdateExpiry(exp time.Time) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.expiryTime = exp
@@ -122,7 +203,7 @@ func (f *FeeQuotes) UpdateExpiry(exp time.Time) {
 
 // Expired will return true if the expiry time is before UTC now, this
 // means we need to fetch fresh quotes from a MAPI server.
-func (f *FeeQuotes) Expired() bool {
+func (f *FeeQuote) Expired() bool {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	return f.expiryTime.Before(time.Now().UTC())

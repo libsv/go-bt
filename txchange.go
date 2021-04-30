@@ -8,7 +8,7 @@ import (
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new P2PKH output using the address provided.
-func (tx *Tx) ChangeToAddress(addr string, f *FeeQuotes) error {
+func (tx *Tx) ChangeToAddress(addr string, f *FeeQuote) error {
 	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return err
@@ -19,7 +19,7 @@ func (tx *Tx) ChangeToAddress(addr string, f *FeeQuotes) error {
 
 // Change calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new output using the script provided.
-func (tx *Tx) Change(s *bscript.Script, f *FeeQuotes) error {
+func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
 	inputAmount := tx.TotalInputSatoshis()
 	outputAmount := tx.TotalOutputSatoshis()
 
@@ -30,7 +30,7 @@ func (tx *Tx) Change(s *bscript.Script, f *FeeQuotes) error {
 	available := inputAmount - outputAmount
 
 	standardFees, err := f.Fee(FeeTypeStandard)
-	if err != nil{
+	if err != nil {
 		return errors.New("standard fees not found")
 	}
 	if !tx.canAddChange(available, standardFees) {
@@ -72,17 +72,17 @@ func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 	return available >= changeOutputFee
 }
 
-func (tx *Tx) getPreSignedFeeRequired(f *FeeQuotes) (uint64, error) {
+func (tx *Tx) getPreSignedFeeRequired(f *FeeQuote) (uint64, error) {
 	standardBytes, dataBytes := tx.getStandardAndDataBytes()
 
 	standardFee, err := f.Fee(FeeTypeStandard)
-	if err != nil{
+	if err != nil {
 		return 0, err
 	}
 	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
 
 	dataFee, err := f.Fee(FeeTypeData)
-	if err != nil{
+	if err != nil {
 		return 0, err
 	}
 
@@ -91,9 +91,9 @@ func (tx *Tx) getPreSignedFeeRequired(f *FeeQuotes) (uint64, error) {
 	return uint64(fr), nil
 }
 
-func (tx *Tx) getExpectedUnlockingScriptFees(f *FeeQuotes) (uint64, error) {
+func (tx *Tx) getExpectedUnlockingScriptFees(f *FeeQuote) (uint64, error) {
 	standardFee, err := f.Fee(FeeTypeStandard)
-	if err != nil{
+	if err != nil {
 		return 0, errors.New("standard fee not found")
 	}
 	var expectedBytes int
