@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	. "github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/bsvutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -78,8 +78,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *WIF
+		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -104,8 +104,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *WIF
+		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -146,8 +146,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", bt.DefaultFees())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *WIF
+		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -183,8 +183,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *WIF
+		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -216,8 +216,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *WIF
+		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -250,8 +250,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *WIF
+		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
@@ -287,8 +287,8 @@ func TestTx_Change(t *testing.T) {
 		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.DefaultFees())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("5JXAjNX7cbiWvmkdnj1EnTKPChauttKAJibXLm8tqWtDhXrRbKz")
+		var wif *WIF
+		wif, err = DecodeWIF("5JXAjNX7cbiWvmkdnj1EnTKPChauttKAJibXLm8tqWtDhXrRbKz")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 

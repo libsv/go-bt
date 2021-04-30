@@ -6,8 +6,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/libsv/go-bk/crypto"
+
 	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/crypto"
 )
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
@@ -56,7 +57,7 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 		}
 
 		if bytes.Equal(utxoPkHASH160, crypto.Hash160(matchPK)) {
-			if err := tx.From(pvsTx.TxID(), uint32(i), utxo.LockingScriptHexString(), utxo.Satoshis);err != nil {
+			if err := tx.From(pvsTx.TxID(), uint32(i), utxo.LockingScriptHexString(), utxo.Satoshis); err != nil {
 				return err
 			}
 		}

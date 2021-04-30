@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
 )
 
 /*

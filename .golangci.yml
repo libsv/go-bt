@@ -347,7 +347,6 @@ linters:
     - exhaustive
     - sqlclosecheck
     - nolintlint
-    - gci
     - goconst
     - lll
   disable:
@@ -360,6 +359,7 @@ linters:
     - testpackage
     - nestif
     - nlreturn
+    - gci
   disable-all: false
   presets:
     - bugs

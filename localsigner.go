@@ -3,7 +3,7 @@ package bt
 import (
 	"context"
 
-	"github.com/libsv/go-bt/bec"
+	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bt/sighash"
 )
 

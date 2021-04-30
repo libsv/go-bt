@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/bsvutil"
+	"github.com/libsv/go-bk/wif"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 
 	_ = tx.PayTo("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
 
-	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	wif, _ := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
 	inputsSigned, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 	if err != nil && len(inputsSigned) > 0 {

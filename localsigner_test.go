@@ -7,7 +7,7 @@ import (
 
 	"github.com/libsv/go-bt"
 	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/bsvutil"
+	. "github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,8 +25,8 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Our private key
-	var wif *bsvutil.WIF
-	wif, err = bsvutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
+	var wif *WIF
+	wif, err = DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	assert.NoError(t, err)
 
 	signer := bt.LocalSigner{PrivateKey: wif.PrivKey}
