@@ -6,8 +6,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/libsv/go-bt/bec"
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/crypto"
 )
 
 // Sentinel errors raised by the package.

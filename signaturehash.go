@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/sighash"
 )
 

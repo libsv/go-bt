@@ -4,16 +4,16 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/go-bt/bec"
-	"github.com/libsv/go-bt/bsvutil/base58"
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/base58"
+	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/crypto"
 )
 
-const(
-	hashP2PKH = 0x00
+const (
+	hashP2PKH        = 0x00
 	hashTestNetP2PKH = 0x6f
-	hashP2SH = 0x05
-	hashTestNetP2SH = 0xc4
+	hashP2SH         = 0x05
+	hashTestNetP2SH  = 0xc4
 )
 
 // An Address struct contains the address string as well as the hash160 hexstring of the public key.
@@ -84,6 +84,7 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 		bb[0] = 111
 	}
 
+	// nolint: makezero // this needs init this way
 	bb = append(bb, hash...)
 
 	return &Address{
@@ -105,7 +106,7 @@ func NewAddressFromPublicKey(pubKey *bec.PublicKey, mainnet bool) (*Address, err
 	if !mainnet {
 		bb[0] = 111
 	}
-
+	// nolint: makezero // this needs init this way
 	bb = append(bb, hash...)
 
 	return &Address{

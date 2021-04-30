@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/crypto"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/libsv/go-bt/bec"
+	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/stretchr/testify/assert"
 )

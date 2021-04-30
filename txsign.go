@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/sighash"
 )
 

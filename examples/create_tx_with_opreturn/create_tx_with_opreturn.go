@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/bsvutil"
+	"github.com/libsv/go-bk/wif"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
 
 	_ = tx.AddOpReturnOutput([]byte("You are using go-bt!"))
 
-	wif, _ := bsvutil.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
+	wif, _ := wif.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
 
 	inputsSigned, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 	if err != nil && len(inputsSigned) > 0 {
