@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/bitcoinsv/bsvutil"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/libsv/go-bt"
 	"github.com/libsv/go-bt/bscript"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewTx(t *testing.T) {
@@ -778,4 +779,75 @@ func TestTx_SignAuto(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, rawTxBefore, tx.ToString())
 	})
+}
+
+func TestTx_ChangeToOutput(t *testing.T) {
+	tests := map[string]struct {
+		tx              *bt.Tx
+		index           uint
+		fees            []*bt.Fee
+		expOutputTotal  uint64
+		expChangeOutput uint64
+		err             error
+	}{
+		"no change to add should return no change output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 1000))
+				return tx
+			}(),
+			index:           0,
+			fees:            bt.DefaultFees(),
+			expOutputTotal:  1000,
+			expChangeOutput: 1000,
+			err:             nil,
+		}, "change to add should add change to output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			index:           0,
+			fees:            bt.DefaultFees(),
+			expOutputTotal:  904,
+			expChangeOutput: 904,
+			err:             nil,
+		}, "change to add should add change to specified output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					2500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			index:           3,
+			fees:            bt.DefaultFees(),
+			expOutputTotal:  2353,
+			expChangeOutput: 853,
+			err:             nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, test.err, test.tx.ChangeToOutput(test.index, test.fees))
+			assert.Equal(t, test.expOutputTotal, test.tx.GetTotalOutputSatoshis())
+			assert.Equal(t, test.expChangeOutput, test.tx.Outputs[test.index].Satoshis)
+		})
+	}
 }

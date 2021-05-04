@@ -233,43 +233,68 @@ func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
 // Change calculates the amount of fees needed to cover the transaction
 //  and adds the left over change in a new output using the script provided.
 func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
+	available, hasChange, err := tx.change(s, f, true)
+	if err != nil {
+		return err
+	}
+	if hasChange {
+		// add rest of available sats to the change output
+		tx.Outputs[len(tx.GetOutputs())-1].Satoshis = available
+	}
+	return nil
+}
 
+// ChangeToOutput will calculate fees and add them to an output at the index specified (0 based).
+// If an invalid index is supplied and error is returned.
+func (tx *Tx) ChangeToOutput(index uint, f []*Fee) error {
+	if len(tx.Outputs)-1 > int(index) {
+		return errors.New("index is greater than number of inputs in transaction")
+	}
+	available, hasChange, err := tx.change(tx.Outputs[index].LockingScript, f, false)
+	if err != nil {
+		return err
+	}
+	if hasChange {
+		tx.Outputs[index].Satoshis += available
+	}
+	return nil
+}
+
+func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool, error) {
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
 
 	if inputAmount < outputAmount {
-		return errors.New("satoshis inputted to the tx are less than the outputted satoshis")
+		return 0, false, errors.New("satoshis inputted to the tx are less than the outputted satoshis")
 	}
 
 	available := inputAmount - outputAmount
 
 	standardFees, err := GetStandardFee(f)
 	if err != nil {
-		return err
+		return 0, false, err
 	}
 
 	if !tx.canAddChange(available, standardFees) {
-		return nil
+		return 0, false, err
 	}
-
-	tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
+	if newOutput {
+		tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
+	}
 
 	var preSignedFeeRequired uint64
 	if preSignedFeeRequired, err = tx.getPreSignedFeeRequired(f); err != nil {
-		return err
+		return 0, false, err
 	}
 
 	var expectedUnlockingScriptFees uint64
 	if expectedUnlockingScriptFees, err = tx.getExpectedUnlockingScriptFees(f); err != nil {
-		return err
+		return 0, false, err
 	}
 
 	available -= preSignedFeeRequired + expectedUnlockingScriptFees
 
-	// add rest of available sats to the change output
-	tx.Outputs[len(tx.GetOutputs())-1].Satoshis = available
-
-	return nil
+	return available, true, nil
 }
 
 func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
@@ -305,7 +330,6 @@ func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
 	}
 
 	fr += dataBytes * dataFee.MiningFee.Satoshis / dataFee.MiningFee.Bytes
-
 	return uint64(fr), nil
 }
 
