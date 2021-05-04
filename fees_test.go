@@ -66,20 +66,20 @@ func TestDefaultFees(t *testing.T) {
 	assert.Equal(t, FeeTypeStandard, fee.FeeType)
 }
 
-func TestFeeQuotes_New(t *testing.T) {
+func TestFeeQuote_New(t *testing.T) {
 	fq := NewFeeQuote()
 	assert.NotNil(t, fq.fees)
 	assert.NotEmpty(t, fq.expiryTime)
 }
 
-func TestFeeQuotes_Expired(t *testing.T) {
+func TestFeeQuote_Expired(t *testing.T) {
 	// should always be true as setup sets up a time for now.
 	fq := NewFeeQuote()
 	time.Sleep(1 * time.Millisecond)
 	assert.True(t, fq.Expired())
 }
 
-func TestFeeQuotes_AddQuote(t *testing.T) {
+func TestFeeQuote_AddQuote(t *testing.T) {
 	std := &Fee{
 		FeeType: FeeTypeStandard,
 		MiningFee: FeeUnit{
@@ -112,7 +112,7 @@ func TestFeeQuotes_AddQuote(t *testing.T) {
 	assert.Equal(t, data, dFee)
 }
 
-func TestFeeQuotes_Concurrent(t *testing.T) {
+func TestFeeQuote_Concurrent(t *testing.T) {
 	std := &Fee{
 		FeeType: FeeTypeStandard,
 		MiningFee: FeeUnit{
@@ -158,8 +158,90 @@ func TestFeeQuotes_Concurrent(t *testing.T) {
 	assert.Equal(t, data, dFee)
 }
 
-func TestFeeQuotes_UpdateExpiry(t *testing.T) {
+func TestFeeQuote_UpdateExpiry(t *testing.T) {
 	fq := NewFeeQuote()
 	fq.UpdateExpiry(time.Now().Add(1 * time.Minute))
 	assert.False(t, fq.Expired())
+}
+
+func TestFeeQuotes_New(t *testing.T) {
+	fq := NewFeeQuotes("test")
+	assert.NotEmpty(t, fq.quotes)
+	assert.NotNil(t, fq.quotes["test"])
+}
+
+func TestFeeQuotes_AddMinerWithDefault(t *testing.T) {
+	fq := NewFeeQuotes("test")
+	quotes := fq.AddMinerWithDefault("test2")
+	quote, err := quotes.Quote("test2")
+	assert.NoError(t, err)
+	assert.NotNil(t, quote)
+	fees, err := quote.Fee(FeeTypeStandard)
+	assert.NoError(t, err)
+	assert.Equal(t, defaultStandardFee(), fees)
+}
+
+func TestFeeQuotes_AddMiner(t *testing.T) {
+	tests := map[string]struct {
+		fee       *FeeQuote
+		minername string
+	}{
+		"adding a miner with custom fee should return custom fee": {
+			fee: &FeeQuote{
+				mu: sync.RWMutex{},
+				fees: map[FeeType]*Fee{"test": {
+					MiningFee: FeeUnit{
+						Satoshis: 100,
+						Bytes:    10,
+					},
+					RelayFee: FeeUnit{
+						Satoshis: 1000,
+						Bytes:    55,
+					},
+				},
+				},
+			},
+			minername: "test",
+		}, "adding miners with custom fees should return correct fee": {
+			fee: &FeeQuote{
+				mu: sync.RWMutex{},
+				fees: map[FeeType]*Fee{
+					"test": {
+						MiningFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    10,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 1000,
+							Bytes:    55,
+						},
+					},
+					"test2": {
+						MiningFee: FeeUnit{
+							Satoshis: 99,
+							Bytes:    20,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 999,
+							Bytes:    11,
+						},
+					},
+				},
+			},
+			minername: "test",
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			fq := NewFeeQuotes("test")
+			fq.AddMiner(test.minername, test.fee)
+			q, err := fq.Quote(test.minername)
+			assert.NoError(t, err)
+			assert.Equal(t, test.fee, q)
+		})
+	}
+}
+
+func TestFeeQuotes_UpdateMinerFees(t *testing.T) {
+
 }
