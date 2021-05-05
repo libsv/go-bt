@@ -247,7 +247,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 // ChangeToOutput will calculate fees and add them to an output at the index specified (0 based).
 // If an invalid index is supplied and error is returned.
 func (tx *Tx) ChangeToOutput(index uint, f []*Fee) error {
-	if len(tx.Outputs)-1 > int(index) {
+	if int(index) > len(tx.Outputs)-1 {
 		return errors.New("index is greater than number of inputs in transaction")
 	}
 	available, hasChange, err := tx.change(tx.Outputs[index].LockingScript, f, false)

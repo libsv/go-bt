@@ -2,6 +2,7 @@ package bt_test
 
 import (
 	"encoding/hex"
+	"errors"
 	"reflect"
 	"testing"
 
@@ -841,11 +842,30 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			expOutputTotal:  2353,
 			expChangeOutput: 853,
 			err:             nil,
+		}, "index out of range should return error": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			index: 1,
+			fees:  bt.DefaultFees(),
+			err:   errors.New("index is greater than number of inputs in transaction"),
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, test.err, test.tx.ChangeToOutput(test.index, test.fees))
+			err := test.tx.ChangeToOutput(test.index, test.fees)
+			if test.err != nil {
+				assert.Error(t, err)
+				assert.Equal(t, test.err, err)
+				return
+			}
 			assert.Equal(t, test.expOutputTotal, test.tx.GetTotalOutputSatoshis())
 			assert.Equal(t, test.expChangeOutput, test.tx.Outputs[test.index].Satoshis)
 		})
