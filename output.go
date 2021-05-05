@@ -3,6 +3,7 @@ package bt
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/libsv/go-bt/bscript"
@@ -24,6 +25,46 @@ Txout-script / scriptPubKey   Script                                      <out-s
 type Output struct {
 	Satoshis      uint64
 	LockingScript *bscript.Script
+	index         int
+}
+
+// MarshalJSON will serialise an output to json.
+func (o *Output) MarshalJSON() ([]byte, error) {
+	asm, err := o.LockingScript.ToASM()
+	if err != nil {
+		return nil, err
+	}
+	addresses, err := o.LockingScript.Addresses()
+	if err != nil {
+		return nil, err
+	}
+	output := struct {
+		Value        float64 `json:"value"`
+		Satoshis     uint64  `json:"satoshis"`
+		Index        int     `json:"n"`
+		ScriptPubKey struct {
+			Asm     string `json:"asm"`
+			Hex     string `json:"hex"`
+			ReqSigs int    `json:"reqSigs,omitempty"`
+			Type    string `json:"type"`
+		} `json:"scriptPubKey"`
+	}{
+		Value:    float64(o.Satoshis) / 100000000,
+		Satoshis: o.Satoshis,
+		Index:    o.index,
+		ScriptPubKey: struct {
+			Asm     string `json:"asm"`
+			Hex     string `json:"hex"`
+			ReqSigs int    `json:"reqSigs,omitempty"`
+			Type    string `json:"type"`
+		}{
+			Asm:     asm,
+			Hex:     o.LockingScriptHexString(),
+			ReqSigs: len(addresses),
+			Type:    o.LockingScript.ScriptType(),
+		},
+	}
+	return json.Marshal(output)
 }
 
 // LockingScriptHexString returns the locking script

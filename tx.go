@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/libsv/go-bt/crypto"
@@ -36,10 +37,36 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 // DO NOT CHANGE ORDER - Optimized memory via malign
 //
 type Tx struct {
-	Inputs   []*Input
-	Outputs  []*Output
-	Version  uint32
-	LockTime uint32
+	Inputs   []*Input  `json:"vin"`
+	Outputs  []*Output `json:"vout"`
+	Version  uint32    `json:"version"`
+	LockTime uint32    `json:"locktime"`
+}
+
+func (tx *Tx) MarshalJSON() ([]byte, error) {
+	for i, o := range tx.Outputs {
+		o.index = i
+	}
+	m := struct {
+		Version  uint32    `json:"version"`
+		LockTime uint32    `json:"locktime"`
+		TxID     string    `json:"txid"`
+		Hash     string    `json:"hash"`
+		Size     int       `json:"size"`
+		Hex      string    `json:"hex"`
+		Inputs   []*Input  `json:"vin"`
+		Outputs  []*Output `json:"vout"`
+	}{
+		Version:  tx.Version,
+		LockTime: tx.LockTime,
+		Inputs:   tx.Inputs,
+		Outputs:  tx.Outputs,
+		TxID:     tx.TxID(),
+		Hash:     tx.TxID(),
+		Size:     len(tx.ToBytes()),
+		Hex:      tx.ToString(),
+	}
+	return json.Marshal(m)
 }
 
 // NewTx creates a new transaction object with default values.

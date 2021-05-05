@@ -10,6 +10,14 @@ import (
 	"github.com/libsv/go-bt/crypto"
 )
 
+const (
+	ScriptTypePubKey      = "pubkey"
+	ScriptTypePubKeyHash  = "pubkeyhash"
+	ScriptTypeNonStandard = "nonstandard"
+	ScriptTypeMultiSig    = "multisig"
+	ScriptTypeNullData    = "nulldata"
+)
+
 // Script type
 type Script []byte
 
@@ -314,4 +322,39 @@ func (s *Script) PublicKeyHash() ([]byte, error) {
 	}
 
 	return parts[0], nil
+}
+
+// ScriptType returns the type of script this is as a string.
+func (s *Script) ScriptType() string {
+	if s.IsP2PKH() {
+		return ScriptTypePubKeyHash
+	}
+	if s.IsP2PK() {
+		return ScriptTypePubKey
+	}
+	if s.IsMultisigOut() {
+		return ScriptTypeMultiSig
+	}
+	if s.IsData() {
+		return ScriptTypeNullData
+	}
+	return ScriptTypeNonStandard
+}
+
+// Addresses will return all addresses found in the script, if any.
+func (s *Script) Addresses() ([]string, error) {
+	addresses := make([]string, 0)
+	if s.IsP2PKH() {
+		pkh, err := s.PublicKeyHash()
+		if err != nil {
+			return nil, err
+		}
+		a, err := NewAddressFromPublicKeyHash(pkh, true)
+		if err != nil {
+			return nil, err
+		}
+		addresses = []string{a.AddressString}
+	}
+	// TODO: handle multisig, and other outputs
+	return addresses, nil
 }

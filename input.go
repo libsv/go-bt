@@ -2,6 +2,7 @@ package bt
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/libsv/go-bt/bscript"
@@ -33,6 +34,36 @@ type Input struct {
 	UnlockingScript    *bscript.Script
 	PreviousTxOutIndex uint32
 	SequenceNumber     uint32
+}
+
+// MarshalJSON will convert an input to json, expanding upon the
+// input struct to add additional fields.
+func (i *Input) MarshalJSON() ([]byte, error) {
+	asm, err := i.UnlockingScript.ToASM()
+	if err != nil {
+		return nil, err
+	}
+	input := struct {
+		TxID      string `json:"txid"`
+		Vout      uint32 `json:"vout"`
+		ScriptSig struct {
+			Asm string `json:"asm"`
+			Hex string `json:"hex"`
+		} `json:"unlockingScript"`
+		Sequence uint32 `json:"sequence"`
+	}{
+		TxID: hex.EncodeToString(i.PreviousTxIDBytes),
+		Vout: i.PreviousTxOutIndex,
+		ScriptSig: struct {
+			Asm string `json:"asm"`
+			Hex string `json:"hex"`
+		}{
+			Asm: asm,
+			Hex: i.UnlockingScript.ToString(),
+		},
+		Sequence: i.SequenceNumber,
+	}
+	return json.Marshal(input)
 }
 
 // PreviousTxIDStr returns the Previous TxID as a hex string.
