@@ -92,7 +92,7 @@ func NewP2PKHFromPubKeyHash(pubKeyHash []byte) (*Script, error) {
 	b := []byte{
 		OpDUP,
 		OpHASH160,
-		0x14,
+		OpDATA20,
 	}
 	b = append(b, pubKeyHash...)
 	b = append(b, OpEQUALVERIFY)
@@ -229,7 +229,7 @@ func (s *Script) IsP2PKH() bool {
 	return len(b) == 25 &&
 		b[0] == OpDUP &&
 		b[1] == OpHASH160 &&
-		b[2] == 0x14 &&
+		b[2] == OpDATA20 &&
 		b[23] == OpEQUALVERIFY &&
 		b[24] == OpCHECKSIG
 }
@@ -264,7 +264,7 @@ func (s *Script) IsP2SH() bool {
 
 	return len(b) == 23 &&
 		b[0] == OpHASH160 &&
-		b[1] == 0x14 &&
+		b[1] == OpDATA20 &&
 		b[22] == OpEQUAL
 }
 
@@ -273,8 +273,8 @@ func (s *Script) IsP2SH() bool {
 func (s *Script) IsData() bool {
 	b := []byte(*s)
 
-	return b[0] == 0x6a ||
-		b[0] == 0x00 && b[1] == 0x6a
+	return b[0] == OpRETURN ||
+		b[0] == OpFALSE && b[1] == OpRETURN
 }
 
 // IsMultisigOut returns true if this is a multisig output script.
@@ -312,7 +312,7 @@ func (s *Script) PublicKeyHash() ([]byte, error) {
 		return nil, fmt.Errorf("script is empty")
 	}
 
-	if (*s)[0] != 0x76 || (*s)[1] != 0xa9 {
+	if (*s)[0] != OpDUP || (*s)[1] != OpHASH160 {
 		return nil, fmt.Errorf("not a P2PKH")
 	}
 
@@ -356,5 +356,6 @@ func (s *Script) Addresses() ([]string, error) {
 		addresses = []string{a.AddressString}
 	}
 	// TODO: handle multisig, and other outputs
+	// https://github.com/libsv/go-bt/issues/6
 	return addresses, nil
 }
