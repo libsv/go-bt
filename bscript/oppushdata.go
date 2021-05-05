@@ -106,7 +106,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			if len(b) < int(3+l) {
 				return r, errors.New("not enough data")
 			}
-			part := b[3 : 3+l]
+			part := b[3 : 3+int(l)]
 			r = append(r, part)
 			b = b[3+l:]
 
