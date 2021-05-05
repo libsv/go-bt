@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/libsv/go-bt/crypto"
@@ -44,6 +45,9 @@ type Tx struct {
 }
 
 func (tx *Tx) MarshalJSON() ([]byte, error) {
+	if tx == nil {
+		return nil, errors.New("tx is nil so cannot be marshalled")
+	}
 	for i, o := range tx.Outputs {
 		o.index = i
 	}
@@ -67,6 +71,22 @@ func (tx *Tx) MarshalJSON() ([]byte, error) {
 		Hex:      tx.ToString(),
 	}
 	return json.Marshal(m)
+}
+
+// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+func (tx *Tx) UnmarshalJSON(b []byte) error {
+	var h struct {
+		Hex string `json:"hex"`
+	}
+	if err := json.Unmarshal(b, &h); err != nil {
+		return err
+	}
+	t, err := NewTxFromString(h.Hex)
+	if err != nil {
+		return err
+	}
+	*tx = *t
+	return nil
 }
 
 // NewTx creates a new transaction object with default values.

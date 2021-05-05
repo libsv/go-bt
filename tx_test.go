@@ -292,3 +292,62 @@ func TestTx_ToJson(t *testing.T) {
 	assert.NoError(t, err)
 	fmt.Println(string(bb))
 }
+
+func TestTx_JSON(t *testing.T) {
+	tests := map[string]struct {
+		tx  *bt.Tx
+		err error
+	}{
+		"standard tx should marshal and unmarshall correctly": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
+				var wif *bsvutil.WIF
+				wif, err := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				assert.NoError(t, err)
+				assert.NotNil(t, wif)
+
+				_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+				return tx
+			}(),
+		}, "data tx should marshall correctly": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
+				var wif *bsvutil.WIF
+				wif, err := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+				assert.NoError(t, err)
+				assert.NotNil(t, wif)
+				s := &bscript.Script{}
+				assert.NoError(t, s.AppendPushDataString("test"))
+				tx.AddOutput(&bt.Output{
+					LockingScript: s,
+				})
+				_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+				return tx
+			}(),
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			bb, err := json.Marshal(test.tx)
+			assert.NoError(t, err)
+			if err != nil {
+				return
+			}
+			var tx *bt.Tx
+			assert.NoError(t, json.Unmarshal(bb, &tx))
+			assert.Equal(t, test.tx.ToString(), tx.ToString())
+		})
+	}
+}
