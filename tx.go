@@ -260,6 +260,19 @@ func (tx *Tx) ChangeToOutput(index uint, f []*Fee) error {
 	return nil
 }
 
+// CalculateFee will return the amount of fees the current transaction will
+// require.
+func (tx *Tx) CalculateFee(f []*Fee) (uint64, error) {
+	total := tx.GetTotalInputSatoshis() - tx.GetTotalOutputSatoshis()
+	sats, _, err := tx.change(nil, f, false)
+	if err != nil {
+		return 0, err
+	}
+	return total - sats, nil
+}
+
+// change will return the amount of satoshis to add to an input after fees are removed.
+// True will be returned if change has been added.
 func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool, error) {
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
