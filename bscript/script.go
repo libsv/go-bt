@@ -11,12 +11,13 @@ import (
 )
 
 // Sentinel errors raised by the package.
-var(
-	ErrInvalidPKLen = errors.New("invalid public key length")
+var (
+	ErrInvalidPKLen  = errors.New("invalid public key length")
 	ErrInvalidOpCode = errors.New("invalid opcode data")
-	ErrEmptyScript =  errors.New("script is empty")
-	ErrNotP2PKH =  errors.New("not a P2PKH")
+	ErrEmptyScript   = errors.New("script is empty")
+	ErrNotP2PKH      = errors.New("not a P2PKH")
 )
+
 // Script type
 type Script []byte
 
@@ -191,7 +192,7 @@ func (s *Script) AppendOpCode(o uint8) *Script {
 }
 
 // ToString returns hex string of script.
-func (s *Script) ToString() string { // TODO: change to HexString?
+func (s *Script) String() string { // TODO: change to HexString?
 	return hex.EncodeToString(*s)
 }
 
@@ -315,18 +316,18 @@ func (s *Script) PublicKeyHash() ([]byte, error) {
 }
 
 // Equals will compare the script to b and return true if they match.
-func (s *Script) Equals(b *Script) bool{
+func (s *Script) Equals(b *Script) bool {
 	return bytes.Equal(*s, *b)
 }
 
 // EqualsBytes will compare the script to a byte representation of a
 // script, b, and return true if they match.
-func (s *Script) EqualsBytes(b []byte) bool{
+func (s *Script) EqualsBytes(b []byte) bool {
 	return bytes.Equal(*s, b)
 }
 
 // EqualsHex will compare the script to a hex string h,
 // if they match then true is returned otherwise false.
-func (s *Script) EqualsHex(h string) bool{
-	return s.ToString() == h
+func (s *Script) EqualsHex(h string) bool {
+	return s.String() == h
 }

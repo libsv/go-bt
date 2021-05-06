@@ -45,7 +45,7 @@ func (i *Input) String() string {
 		`prevTxHash:   %s
 prevOutIndex: %d
 scriptLen:    %d
-script:       %x
+script:       %s
 sequence:     %x
 `,
 		hex.EncodeToString(i.PreviousTxIDBytes),

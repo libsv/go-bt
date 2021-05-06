@@ -4,8 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/go-bt"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/libsv/go-bt"
 )
 
 const outputHexStr = "8a08ac4a000000001976a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac00000000"
@@ -55,6 +56,6 @@ func TestOutput_String(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, o)
 
-		assert.Equal(t, "value:     1252788362\nscriptLen: 25\nscript:    &76a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac\n", o.String())
+		assert.Equal(t, "value:     1252788362\nscriptLen: 25\nscript:    76a9148bf10d323ac757268eb715e613cb8e8e1d1793aa88ac\n", o.String())
 	})
 }

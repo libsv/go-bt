@@ -35,7 +35,7 @@ func (o *Output) LockingScriptHexString() string {
 func (o *Output) String() string {
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d
-script:    %x
+script:    %s
 `, o.Satoshis, len(*o.LockingScript), o.LockingScript)
 }
 
