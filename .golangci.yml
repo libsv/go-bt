@@ -347,13 +347,13 @@ linters:
     - exhaustive
     - sqlclosecheck
     - nolintlint
-    - gci
     - goconst
     - lll
   disable:
     - gocritic # use this for very opinionated linting
     - gochecknoglobals
     - whitespace
+    - gci
     - wsl
     - goerr113
     - godot

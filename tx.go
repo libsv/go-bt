@@ -44,9 +44,10 @@ type Tx struct {
 	LockTime uint32    `json:"locktime"`
 }
 
+// MarshalJSON will serialize a transaction to json.
 func (tx *Tx) MarshalJSON() ([]byte, error) {
 	if tx == nil {
-		return nil, errors.New("tx is nil so cannot be marshalled")
+		return nil, errors.New("tx is nil so cannot be marshaled")
 	}
 	for i, o := range tx.Outputs {
 		o.index = i
@@ -73,7 +74,7 @@ func (tx *Tx) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
-// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+// UnmarshalJSON will unmarshall a transaction that has been marshaled with this library.
 func (tx *Tx) UnmarshalJSON(b []byte) error {
 	var h struct {
 		Hex string `json:"hex"`

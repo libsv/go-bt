@@ -28,7 +28,7 @@ type Output struct {
 	index         int
 }
 
-// MarshalJSON will serialise an output to json.
+// MarshalJSON will serialize an output to json.
 func (o *Output) MarshalJSON() ([]byte, error) {
 	asm, err := o.LockingScript.ToASM()
 	if err != nil {

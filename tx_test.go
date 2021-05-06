@@ -313,6 +313,7 @@ func TestTx_JSON(t *testing.T) {
 				assert.NotNil(t, wif)
 
 				_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+				assert.NoError(t, err)
 				return tx
 			}(),
 		}, "data tx should marshall correctly": {
@@ -334,6 +335,7 @@ func TestTx_JSON(t *testing.T) {
 					LockingScript: s,
 				})
 				_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+				assert.NoError(t, err)
 				return tx
 			}(),
 		},

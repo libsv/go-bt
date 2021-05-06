@@ -44,12 +44,12 @@ func (i *Input) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	input := struct {
-		TxID      string `json:"txid"`
-		Vout      uint32 `json:"vout"`
 		ScriptSig struct {
 			Asm string `json:"asm"`
 			Hex string `json:"hex"`
 		} `json:"unlockingScript"`
+		TxID     string `json:"txid"`
+		Vout     uint32 `json:"vout"`
 		Sequence uint32 `json:"sequence"`
 	}{
 		TxID: hex.EncodeToString(i.PreviousTxIDBytes),

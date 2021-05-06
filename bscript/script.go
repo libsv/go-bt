@@ -10,6 +10,7 @@ import (
 	"github.com/libsv/go-bt/crypto"
 )
 
+// ScriptKey types.
 const (
 	ScriptTypePubKey      = "pubkey"
 	ScriptTypePubKeyHash  = "pubkeyhash"
