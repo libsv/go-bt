@@ -93,7 +93,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 
 			l := int(b[1])
 			b = b[2:]
- 
+
 			if len(b) < l {
 				return r, errors.New("not enough data")
 			}
