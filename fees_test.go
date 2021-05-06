@@ -359,7 +359,7 @@ func TestFeeQuotes_UpdateMinerFees(t *testing.T) {
 func TestFeeQuotes_UpdateMinerFeesConcurrent(t *testing.T) {
 	fq := NewFeeQuotes("test")
 	wg := sync.WaitGroup{}
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 10000; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
