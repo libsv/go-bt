@@ -28,6 +28,10 @@ const (
 )
 
 // FeeQuotes contains a list of miners and the current fees for each miner as well as their expiry.
+//
+// This can be used when getting fees from multiple miners and you want to use the cheapest for example.
+//
+// Useage setup should be calling NewFeeQuotes(minerName).
 type FeeQuotes struct {
 	mu     sync.RWMutex
 	quotes map[string]*FeeQuote
@@ -49,7 +53,7 @@ func (f *FeeQuotes) AddMinerWithDefault(minerName string) *FeeQuotes {
 	return f
 }
 
-// AddMiner will add a new miner to the quotes map with the provided fees.
+// AddMiner will add a new miner to the quotes map with the provided feeQuote.
 // If you just want to add default fees use the AddMinerWithDefault method.
 func (f *FeeQuotes) AddMiner(minerName string, quote *FeeQuote) *FeeQuotes {
 	f.mu.Lock()
@@ -59,7 +63,7 @@ func (f *FeeQuotes) AddMiner(minerName string, quote *FeeQuote) *FeeQuotes {
 }
 
 // Quote will return all fees for a miner.
-// If no fees are found a ErrMinerNoQuotes error is returned.
+// If no fees are found an ErrMinerNoQuotes error is returned.
 func (f *FeeQuotes) Quote(minerName string) (*FeeQuote, error) {
 	if f == nil {
 		return nil, ErrFeeQuotesNotInit
@@ -92,8 +96,8 @@ func (f *FeeQuotes) Fees(minerName string, feeType FeeType) (*Fee, error) {
 // UpdateMinerFees a convenience method to update a fee quote from a FeeQuotes struct directly.
 // This will update the miner feeType with the provided fee. Useful after receiving new quotes from mapi.
 func (f *FeeQuotes) UpdateMinerFees(minerName string, feeType FeeType, fee *Fee) (*FeeQuote, error) {
-	f.mu.RLock()
-	defer f.mu.RUnlock()
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	m := f.quotes[minerName]
 	if m == nil {
 		return nil, ErrMinerNoQuotes
@@ -101,10 +105,43 @@ func (f *FeeQuotes) UpdateMinerFees(minerName string, feeType FeeType, fee *Fee)
 	return m.AddQuote(feeType, fee), nil
 }
 
+// CheapestFee will search all cached mining feeQuotes for the cheapest fee for a given fee type.
+// string will be the miner name, this will allow you to broadcast the transaction
+// to the cheapest miner via mAPI.
+// Fee contains the quote which you can supply to the tx when calculating the change output / fees.
+func (f *FeeQuotes) CheapestFee(feeType FeeType) (string, *Fee, error) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	var fee *Fee
+	var miner string
+	for m, q := range f.quotes {
+		f, err := q.Fee(feeType)
+		if err != nil {
+			return "", nil, err
+		}
+		if fee == nil {
+			miner = m
+			fee = f
+		}
+		if f.MiningFee.Satoshis/f.MiningFee.Bytes < fee.MiningFee.Satoshis/fee.MiningFee.Bytes {
+			fee = f
+			miner = m
+		}
+	}
+	return miner, fee, nil
+}
+
 // FeeQuote contains a thread safe map of fees for standard and data
 // fees as well as an expiry time for a specific miner.
 //
-// NewFeeQuote(minerName) should be called to get a
+// This can be used if you are only dealing with a single miner and know you
+// will always be using a single miner.
+// FeeQuote will store the fees for a single miner and can be passed to transactions
+// to calculate fees when creating change outputs.
+//
+// If you are dealing with quotes from multiple miners, use the FeeQuotes structure above.
+//
+// NewFeeQuote() should be called to get a new instance of a FeeQuote.
 //
 // When expiry expires ie Expired() == true then you should fetch
 // new quotes from a MAPI server and call AddQuote with the fee information.

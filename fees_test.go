@@ -233,7 +233,7 @@ func TestFeeQuotes_AddMiner(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fq := NewFeeQuotes("test")
+			fq := NewFeeQuotes(test.minername)
 			fq.AddMiner(test.minername, test.fee)
 			q, err := fq.Quote(test.minername)
 			assert.NoError(t, err)
