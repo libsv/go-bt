@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Sentinel errors reported by the fees.
 var (
 	ErrFeeQuotesNotInit = errors.New("feeQuotes have not been setup, call NewFeeQuotes")
 	ErrMinerNoQuotes    = errors.New("miner has no quotes stored")
@@ -31,7 +32,7 @@ const (
 //
 // This can be used when getting fees from multiple miners and you want to use the cheapest for example.
 //
-// Useage setup should be calling NewFeeQuotes(minerName).
+// Usage setup should be calling NewFeeQuotes(minerName).
 type FeeQuotes struct {
 	mu     sync.RWMutex
 	quotes map[string]*FeeQuote
