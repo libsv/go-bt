@@ -347,7 +347,6 @@ linters:
     - exhaustive
     - sqlclosecheck
     - nolintlint
-    - gci
     - goconst
     - lll
   disable:
