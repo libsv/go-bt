@@ -128,7 +128,8 @@ func (f *FeeQuotes) CheapestFee(feeType FeeType) (string, *Fee, error) {
 			miner = m
 			fee = f
 		}
-		if float64(f.MiningFee.Satoshis)/float64(f.MiningFee.Bytes) < float64(fee.MiningFee.Satoshis)/float64(fee.MiningFee.Bytes) {
+		if float64(f.MiningFee.Satoshis)/float64(f.MiningFee.Bytes) <
+			float64(fee.MiningFee.Satoshis)/float64(fee.MiningFee.Bytes) {
 			fee = f
 			miner = m
 		}

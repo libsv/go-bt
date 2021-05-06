@@ -360,8 +360,8 @@ func TestFeeQuotes_UpdateMinerFeesConcurrent(t *testing.T) {
 	fq := NewFeeQuotes("test")
 	wg := sync.WaitGroup{}
 	for i := 0; i < 100000; i++ {
+		wg.Add(1)
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			_, _ = fq.UpdateMinerFees("test", FeeTypeStandard, &Fee{
 				FeeType: FeeTypeStandard,
