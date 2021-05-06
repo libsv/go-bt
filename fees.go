@@ -12,6 +12,7 @@ var (
 	ErrMinerNoQuotes    = errors.New("miner has no quotes stored")
 	ErrFeeTypeNotFound  = errors.New("feetype not found")
 	ErrFeeQuoteNotInit  = errors.New("feeQuote has not been initialized, call NewFeeQuote()")
+	ErrEmptyValues      = errors.New("empty value or values passed, all arguments are required and cannot be empty")
 )
 
 // FeeType is used to specify which
@@ -78,10 +79,10 @@ func (f *FeeQuotes) Quote(minerName string) (*FeeQuote, error) {
 	return q, nil
 }
 
-// Fees is a convenience method for quickly getting a fee by type and miner name.
+// Fee is a convenience method for quickly getting a fee by type and miner name.
 // If the miner has no fees an ErrMinerNoQuotes error will be returned.
 // If the feeType cannot be found an ErrFeeTypeNotFound error will be returned.
-func (f *FeeQuotes) Fees(minerName string, feeType FeeType) (*Fee, error) {
+func (f *FeeQuotes) Fee(minerName string, feeType FeeType) (*Fee, error) {
 	if f == nil {
 		return nil, ErrFeeQuotesNotInit
 	}
@@ -99,6 +100,9 @@ func (f *FeeQuotes) Fees(minerName string, feeType FeeType) (*Fee, error) {
 func (f *FeeQuotes) UpdateMinerFees(minerName string, feeType FeeType, fee *Fee) (*FeeQuote, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if minerName == "" || feeType == "" || fee == nil {
+		return nil, errors.New("empty value or values passed, all arguments are required and cannot be empty")
+	}
 	m := f.quotes[minerName]
 	if m == nil {
 		return nil, ErrMinerNoQuotes
@@ -124,7 +128,7 @@ func (f *FeeQuotes) CheapestFee(feeType FeeType) (string, *Fee, error) {
 			miner = m
 			fee = f
 		}
-		if f.MiningFee.Satoshis/f.MiningFee.Bytes < fee.MiningFee.Satoshis/fee.MiningFee.Bytes {
+		if float64(f.MiningFee.Satoshis)/float64(f.MiningFee.Bytes) < float64(fee.MiningFee.Satoshis)/float64(fee.MiningFee.Bytes) {
 			fee = f
 			miner = m
 		}

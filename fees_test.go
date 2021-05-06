@@ -243,5 +243,393 @@ func TestFeeQuotes_AddMiner(t *testing.T) {
 }
 
 func TestFeeQuotes_UpdateMinerFees(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		feeQuotes   *FeeQuotes
+		minerName   string
+		feeType     FeeType
+		fee         *Fee
+		expFeeQuote *FeeQuote
+		err         error
+	}{
+		"Updating existing miner fee should return correct quote": {
+			feeQuotes: NewFeeQuotes("test"),
+			minerName: "test",
+			feeType:   FeeTypeStandard,
+			fee: &Fee{
+				FeeType: FeeTypeStandard,
+				MiningFee: FeeUnit{
+					Satoshis: 100,
+					Bytes:    15,
+				},
+				RelayFee: FeeUnit{
+					Satoshis: 100,
+					Bytes:    25,
+				},
+			},
+			expFeeQuote: &FeeQuote{
+				fees: map[FeeType]*Fee{
+					FeeTypeStandard: {
+						FeeType: FeeTypeStandard,
+						MiningFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    15,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    25,
+						},
+					},
+				},
+				expiryTime: time.Time{},
+			},
+			err: nil,
+		}, "Updating existing miner fee with multiple fees stored should return correct quote": {
+			feeQuotes: func() *FeeQuotes {
+				fq := NewFeeQuotes("test").
+					AddMinerWithDefault("test2").
+					AddMinerWithDefault("test3").
+					AddMinerWithDefault("test4")
+				return fq
+			}(),
+			minerName: "test3",
+			feeType:   FeeTypeStandard,
+			fee: &Fee{
+				FeeType: FeeTypeStandard,
+				MiningFee: FeeUnit{
+					Satoshis: 100,
+					Bytes:    15,
+				},
+				RelayFee: FeeUnit{
+					Satoshis: 100,
+					Bytes:    25,
+				},
+			},
+			expFeeQuote: &FeeQuote{
+				fees: map[FeeType]*Fee{
+					FeeTypeStandard: {
+						FeeType: FeeTypeStandard,
+						MiningFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    15,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    25,
+						},
+					},
+				},
+				expiryTime: time.Time{},
+			},
+			err: nil,
+		}, "Updating miner that doesn't exist should return ErrMinerNoQuotes": {
+			feeQuotes: NewFeeQuotes("test"),
+			minerName: "test2",
+			feeType:   FeeTypeStandard,
+			fee: &Fee{
+				FeeType: FeeTypeStandard,
+				MiningFee: FeeUnit{
+					Satoshis: 100,
+					Bytes:    15,
+				},
+				RelayFee: FeeUnit{
+					Satoshis: 100,
+					Bytes:    25,
+				},
+			},
+			err: ErrMinerNoQuotes,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			fq, err := test.feeQuotes.UpdateMinerFees(test.minerName, test.feeType, test.fee)
+			if test.err != nil {
+				assert.Error(t, err)
+				assert.Nil(t, fq)
+				assert.EqualError(t, err, test.err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.NotNil(t, fq)
+			assert.Equal(t, test.expFeeQuote.fees[test.feeType], fq.fees[test.feeType])
+		})
+	}
+}
 
+func TestFeeQuotes_UpdateMinerFeesConcurrent(t *testing.T) {
+	fq := NewFeeQuotes("test")
+	wg := sync.WaitGroup{}
+	for i := 0; i < 100000; i++ {
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			_, _ = fq.UpdateMinerFees("test", FeeTypeStandard, &Fee{
+				FeeType: FeeTypeStandard,
+				MiningFee: FeeUnit{
+					Satoshis: 100,
+					Bytes:    15,
+				},
+				RelayFee: FeeUnit{
+					Satoshis: 100,
+					Bytes:    25,
+				},
+			})
+			fq.AddMinerWithDefault("test")
+			_, _ = fq.Quote("test")
+		}()
+	}
+	wg.Wait()
+}
+
+func TestFeeQuotes_Quote(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		fq        *FeeQuotes
+		minerName string
+		expQuote  *FeeQuote
+		err       error
+	}{
+		"single miner and default quote is requested should return quote": {
+			fq:        NewFeeQuotes("test"),
+			minerName: "test",
+			expQuote:  NewFeeQuote(),
+			err:       nil,
+		},
+		"multiple miners with default quote is requested should return quote": {
+			fq: func() *FeeQuotes {
+				fq := NewFeeQuotes("test").
+					AddMinerWithDefault("test2").
+					AddMinerWithDefault("test3").
+					AddMinerWithDefault("test4")
+				return fq
+			}(),
+			minerName: "test2",
+			expQuote:  NewFeeQuote(),
+			err:       nil,
+		}, "multiple miners with differing quotes requested should return correct quote": {
+			fq: func() *FeeQuotes {
+				fq := NewFeeQuotes("test").
+					AddMinerWithDefault("test2").
+					AddMinerWithDefault("test3").
+					AddMinerWithDefault("test4")
+
+				_, err := fq.UpdateMinerFees("test2", FeeTypeStandard, &Fee{
+					FeeType: FeeTypeStandard,
+					MiningFee: FeeUnit{
+						Satoshis: 1000,
+						Bytes:    200,
+					},
+					RelayFee: FeeUnit{
+						Satoshis: 500,
+						Bytes:    10,
+					},
+				})
+				assert.NoError(t, err)
+				return fq
+			}(),
+			minerName: "test2",
+			expQuote: func() *FeeQuote {
+				fq := NewFeeQuote()
+				fq.AddQuote(FeeTypeStandard, &Fee{
+					FeeType: FeeTypeStandard,
+					MiningFee: FeeUnit{
+						Satoshis: 1000,
+						Bytes:    200,
+					},
+					RelayFee: FeeUnit{
+						Satoshis: 500,
+						Bytes:    10,
+					},
+				})
+				return fq
+			}(),
+			err: nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			fq, err := test.fq.Quote(test.minerName)
+			if test.err != nil {
+				assert.Error(t, err)
+				assert.Nil(t, fq)
+				assert.EqualError(t, err, test.err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.NotNil(t, fq)
+			assert.Equal(t, test.expQuote.fees, fq.fees)
+		})
+	}
+}
+
+func TestFeeQuotes_Fee(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		fq        *FeeQuotes
+		minerName string
+		feeType   FeeType
+		expFee    *Fee
+		err       error
+	}{
+		"miner and fee present, should return correct fee": {
+			fq:        NewFeeQuotes("test"),
+			minerName: "test",
+			feeType:   FeeTypeStandard,
+			expFee:    defaultStandardFee(),
+			err:       nil,
+		}, "multiple miners and fee present, should return correct fee": {
+			fq: func() *FeeQuotes {
+				fq := NewFeeQuotes("test").
+					AddMinerWithDefault("test2").
+					AddMinerWithDefault("test3").
+					AddMinerWithDefault("test4")
+
+				_, err := fq.UpdateMinerFees("test2", FeeTypeStandard, &Fee{
+					FeeType: FeeTypeStandard,
+					MiningFee: FeeUnit{
+						Satoshis: 1000,
+						Bytes:    200,
+					},
+					RelayFee: FeeUnit{
+						Satoshis: 500,
+						Bytes:    10,
+					},
+				})
+				assert.NoError(t, err)
+				return fq
+			}(),
+			minerName: "test2",
+			feeType:   FeeTypeStandard,
+			expFee: &Fee{
+				FeeType: FeeTypeStandard,
+				MiningFee: FeeUnit{
+					Satoshis: 1000,
+					Bytes:    200,
+				},
+				RelayFee: FeeUnit{
+					Satoshis: 500,
+					Bytes:    10,
+				},
+			},
+			err: nil,
+		}, "miner no quotes should return error": {
+			fq:        NewFeeQuotes("test"),
+			minerName: "test2",
+			feeType:   FeeTypeStandard,
+			err:       ErrMinerNoQuotes,
+		}, "feeType not found should return error": {
+			fq:        NewFeeQuotes("test"),
+			minerName: "test",
+			feeType:   "dontexist",
+			err:       ErrFeeTypeNotFound,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			fee, err := test.fq.Fee(test.minerName, test.feeType)
+			if test.err != nil {
+				assert.Error(t, err)
+				assert.Nil(t, fee)
+				assert.EqualError(t, err, test.err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.NotNil(t, fee)
+			assert.Equal(t, test.expFee, fee)
+		})
+	}
+}
+
+func TestFeeQuotes_CheapestFee(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		fq            *FeeQuotes
+		feeType       FeeType
+		expMinerNames []string
+		expFee        *Fee
+		err           error
+	}{
+		"single quote added, should return": {
+			fq:            NewFeeQuotes("test1"),
+			feeType:       FeeTypeData,
+			expMinerNames: []string{"test1"},
+			expFee:        defaultDataFee(),
+			err:           nil,
+		}, "multiple quotes added, should return cheapest": {
+			fq: func() *FeeQuotes {
+				fq := NewFeeQuotes("test").
+					AddMinerWithDefault("test2").
+					AddMinerWithDefault("test3").
+					AddMinerWithDefault("test4")
+
+				_, err := fq.UpdateMinerFees("test2", FeeTypeStandard, &Fee{
+					FeeType: FeeTypeStandard,
+					MiningFee: FeeUnit{
+						Satoshis: 5,
+						Bytes:    200,
+					},
+					RelayFee: FeeUnit{
+						Satoshis: 5,
+						Bytes:    200,
+					},
+				})
+				assert.NoError(t, err)
+				return fq
+			}(),
+			feeType:       FeeTypeStandard,
+			expMinerNames: []string{"test2"},
+			expFee: &Fee{
+				FeeType: FeeTypeStandard,
+				MiningFee: FeeUnit{
+					Satoshis: 5,
+					Bytes:    200,
+				},
+				RelayFee: FeeUnit{
+					Satoshis: 5,
+					Bytes:    200,
+				},
+			},
+			err: nil,
+		}, "multiple quotes added with 3 same, should return one of cheapest": {
+			fq: func() *FeeQuotes {
+				fq := NewFeeQuotes("test1").
+					AddMinerWithDefault("test2").
+					AddMinerWithDefault("test3").
+					AddMinerWithDefault("test4")
+
+				_, err := fq.UpdateMinerFees("test2", FeeTypeStandard, &Fee{
+					FeeType: FeeTypeStandard,
+					MiningFee: FeeUnit{
+						Satoshis: 500,
+						Bytes:    200,
+					},
+					RelayFee: FeeUnit{
+						Satoshis: 500,
+						Bytes:    200,
+					},
+				})
+				assert.NoError(t, err)
+				return fq
+			}(),
+			feeType:       FeeTypeStandard,
+			expMinerNames: []string{"test1", "test3", "test4"},
+			expFee:        defaultStandardFee(),
+			err:           nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			minerName, fee, err := test.fq.CheapestFee(test.feeType)
+			if test.err != nil {
+				assert.Error(t, err)
+				assert.Nil(t, fee)
+				assert.EqualError(t, err, test.err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			assert.NotNil(t, fee)
+			assert.Equal(t, test.expFee, fee)
+			assert.Contains(t, test.expMinerNames, minerName)
+		})
+	}
 }
