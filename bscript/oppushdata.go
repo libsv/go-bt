@@ -90,37 +90,51 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			if len(b) < 2 {
 				return r, errors.New("not enough data")
 			}
-			l := uint64(b[1])
-			if len(b) < int(2+l) {
+
+			l := int(b[1])
+			b = b[2:]
+
+			if len(b) < l {
 				return r, errors.New("not enough data")
 			}
-			part := b[2 : 2+l]
+
+			part := b[:l]
 			r = append(r, part)
-			b = b[2+l:]
+			b = b[l:]
 
 		case OpPUSHDATA2:
 			if len(b) < 3 {
 				return r, errors.New("not enough data")
 			}
-			l := binary.LittleEndian.Uint16(b[1:])
-			if len(b) < int(3+l) {
+
+			l := int(binary.LittleEndian.Uint16(b[1:]))
+
+			b = b[3:]
+
+			if len(b) < l {
 				return r, errors.New("not enough data")
 			}
-			part := b[3 : 3+l]
+
+			part := b[:l]
 			r = append(r, part)
-			b = b[3+l:]
+			b = b[l:]
 
 		case OpPUSHDATA4:
 			if len(b) < 5 {
 				return r, errors.New("not enough data")
 			}
-			l := binary.LittleEndian.Uint32(b[1:])
-			if len(b) < int(5+l) {
+
+			l := int(binary.LittleEndian.Uint32(b[1:]))
+
+			b = b[5:]
+
+			if len(b) < l {
 				return r, errors.New("not enough data")
 			}
-			part := b[5 : 5+l]
+
+			part := b[:l]
 			r = append(r, part)
-			b = b[5+l:]
+			b = b[l:]
 
 		default:
 			if b[0] >= 0x01 && b[0] <= OpPUSHDATA4 {
