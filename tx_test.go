@@ -357,7 +357,7 @@ func TestTx_JSON(t *testing.T) {
 func TestTx_MarshallJSON(t *testing.T) {
 	tests := map[string]struct {
 		tx      *bt.Tx
-		expJson string
+		expJSON string
 	}{
 		"transaction with 1 input 1 p2pksh output 1 data output should create valid json": {
 			tx: func() *bt.Tx {
@@ -365,7 +365,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 				assert.NoError(t, err)
 				return tx
 			}(),
-			expJson: `{
+			expJSON: `{
 	"version": 1,
 	"locktime": 0,
 	"txid": "aec245f27b7640c8b1865045107731bfb848115c573f7da38166074b1c9e475d",
@@ -431,9 +431,10 @@ func TestTx_MarshallJSON(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, wif)
 				_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+				assert.NoError(t, err)
 				return tx
 			}(),
-			expJson: `{
+			expJSON: `{
 	"version": 1,
 	"locktime": 0,
 	"txid": "41741af6fb64839c69f2385987eb3770c55c42eb6f7900fa2af9d667c42ceb20",
@@ -489,7 +490,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			bb, err := json.MarshalIndent(test.tx, "", "\t")
 			assert.NoError(t, err)
-			assert.Equal(t, test.expJson, string(bb))
+			assert.Equal(t, test.expJSON, string(bb))
 		})
 	}
 }
