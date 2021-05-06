@@ -425,6 +425,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 					114,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 					10000))
+
 				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var wif *bsvutil.WIF
 				wif, err := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
