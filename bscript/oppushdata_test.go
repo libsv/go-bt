@@ -4,8 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/go-bt/bscript"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/libsv/go-bt/bscript"
 )
 
 func TestDecodeParts(t *testing.T) {
@@ -96,6 +97,31 @@ func TestDecodeParts(t *testing.T) {
 		decoded, err := bscript.DecodeParts(b)
 		assert.Error(t, err)
 		assert.Equal(t, 0, len(decoded))
+	})
+
+	t.Run("invalid decode using OP_PUSHDATA2 - overflow", func(t *testing.T) {
+
+		b := make([]byte, 0)
+		b = append(b, bscript.OpPUSHDATA2)
+		b = append(b, 0xff)
+		b = append(b, 0xff)
+
+		bigScript := make([]byte, 0xffff)
+
+		b = append(b, bigScript...)
+
+		t.Logf("Script len is %d", len(b))
+
+		defer func() {
+			if r := recover(); r != nil {
+				t.Errorf("Panic detected: %v", r)
+			}
+		}()
+
+		_, err := bscript.DecodeParts(b)
+		if err != nil {
+			t.Error(err)
+		}
 	})
 
 	t.Run("invalid decode using OP_PUSHDATA4 - payload too small", func(t *testing.T) {
