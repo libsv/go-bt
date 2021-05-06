@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bt/bscript"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/libsv/go-bt/bscript"
 )
 
 func TestNewP2PKHFromPubKeyStr(t *testing.T) {
@@ -179,4 +180,76 @@ func TestErrorIsAppended(t *testing.T) {
 	asm, err := s.ToASM()
 	assert.NoError(t, err)
 	assert.True(t, strings.HasSuffix(asm, "[error]"), "toASM() should end with [error]")
+}
+
+func TestScript_Equals(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		script1 *bscript.Script
+		script2 *bscript.Script
+		exp     bool
+	}{
+		"P2PKH scripts that equal should return true": {
+			script1: func() *bscript.Script {
+				s, err := bscript.NewP2PKHFromAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk")
+				assert.NoError(t, err)
+				return s
+			}(),
+			script2: func() *bscript.Script {
+				s, err := bscript.NewP2PKHFromAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk")
+				assert.NoError(t, err)
+				return s
+			}(),
+			exp: true,
+		}, "scripts from bytes equal should return true": {
+			script1: func() *bscript.Script {
+				b, err := hex.DecodeString("5201110122013353ae")
+				assert.NoError(t, err)
+
+				return bscript.NewFromBytes(b)
+			}(),
+			script2: func() *bscript.Script {
+				b, err := hex.DecodeString("5201110122013353ae")
+				assert.NoError(t, err)
+
+				return bscript.NewFromBytes(b)
+			}(),
+			exp: true,
+		}, "scripts from hex, equal should return true": {
+			script1: func() *bscript.Script {
+				s, err := bscript.NewFromHexString("76a91404d03f746652cfcb6cb55119ab473a045137d26588ac")
+				assert.NoError(t, err)
+				assert.NotNil(t, s)
+				return s
+			}(),
+			script2: func() *bscript.Script {
+				s, err := bscript.NewFromHexString("76a91404d03f746652cfcb6cb55119ab473a045137d26588ac")
+				assert.NoError(t, err)
+				assert.NotNil(t, s)
+				return s
+			}(),
+			exp: true,
+		}, "scripts from hex, not equal should return false": {
+			script1: func() *bscript.Script {
+				s, err := bscript.NewFromHexString("76a91404d03f746652cfcb6cb55119ab473a045137d26566ac")
+				assert.NoError(t, err)
+				assert.NotNil(t, s)
+				return s
+			}(),
+			script2: func() *bscript.Script {
+				s, err := bscript.NewFromHexString("76a91404d03f746652cfcb6cb55119ab473a045137d26588ac")
+				assert.NoError(t, err)
+				assert.NotNil(t, s)
+				return s
+			}(),
+			exp: false,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, test.exp, test.script1.Equals(test.script2))
+			assert.Equal(t, test.exp, test.script1.EqualsBytes(*test.script2))
+			assert.Equal(t, test.exp, test.script1.EqualsHex(test.script2.String()))
+		})
+	}
 }

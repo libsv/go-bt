@@ -168,8 +168,8 @@ func (tx *Tx) TxID() string {
 	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.ToBytes())))
 }
 
-// ToString encodes the transaction into a hex string.
-func (tx *Tx) ToString() string {
+// String encodes the transaction into a hex string.
+func (tx *Tx) String() string {
 	return hex.EncodeToString(tx.ToBytes())
 }
 

@@ -35,24 +35,24 @@ func TestTx_SignAuto(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		rawTxBefore := tx.ToString()
+		rawTxBefore := tx.String()
 
 		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
-		assert.NotEqual(t, rawTxBefore, tx.ToString())
+		assert.NotEqual(t, rawTxBefore, tx.String())
 	})
 
 	t.Run("no input or output", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
-		rawTxBefore := tx.ToString()
+		rawTxBefore := tx.String()
 
 		_, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: nil})
 		assert.NoError(t, err)
 
-		assert.Equal(t, rawTxBefore, tx.ToString())
+		assert.Equal(t, rawTxBefore, tx.String())
 	})
 
 	t.Run("valid tx (wrong wif)", func(t *testing.T) {
@@ -75,9 +75,9 @@ func TestTx_SignAuto(t *testing.T) {
 		assert.NotNil(t, wif)
 
 		// No signature, wrong wif
-		rawTxBefore := tx.ToString()
+		rawTxBefore := tx.String()
 		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
-		assert.Equal(t, rawTxBefore, tx.ToString())
+		assert.Equal(t, rawTxBefore, tx.String())
 	})
 }

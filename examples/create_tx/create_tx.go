@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/libsv/go-bt"
 	"github.com/libsv/go-bk/wif"
+	"github.com/libsv/go-bt"
 )
 
 func main() {
@@ -25,5 +25,5 @@ func main() {
 	if err != nil && len(inputsSigned) > 0 {
 		log.Fatal(err.Error())
 	}
-	log.Println("tx: ", tx.ToString())
+	log.Println("tx: ", tx.String())
 }
