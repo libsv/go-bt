@@ -1,6 +1,7 @@
 package bt_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/bitcoinsv/bsvutil"
@@ -298,4 +299,141 @@ func TestTx_Change(t *testing.T) {
 
 		assert.Equal(t, "01000000028ee20a442cdbcc9f9f927d9c2c9370e611675ebc24c064e8e94508ec8eca889e000000006b483045022100fa52a44cd8010ba646a8df6bac6e5e8aa93f24439521c2ce1c8fe6550e73c1750220636e30d757702a6777d8310090962d4bac2b3fd634127856d51b184f5c702c8f4121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff42eaf7bdddc797a0beb97717ff8846f03c963fb5fe15a2b555b9cbd477b0254e000000006b483045022100c201fd55ef33525b3eb0557fac77408b8ec7f6ea5b00d08512df105172f992d60220753b21519a416dcbeaf1a501d9c36de2aea9c83c6d258320500371819d0758e14121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff01c62b0000000000001976a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac00000000", tx.ToString())
 	})
+}
+
+func TestTx_ChangeToOutput(t *testing.T) {
+	tests := map[string]struct {
+		tx              *bt.Tx
+		index           uint
+		fees            []*bt.Fee
+		expOutputTotal  uint64
+		expChangeOutput uint64
+		err             error
+	}{
+		"no change to add should return no change output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 1000))
+				return tx
+			}(),
+			index:           0,
+			fees:            bt.DefaultFees(),
+			expOutputTotal:  1000,
+			expChangeOutput: 1000,
+			err:             nil,
+		}, "change to add should add change to output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			index:           0,
+			fees:            bt.DefaultFees(),
+			expOutputTotal:  904,
+			expChangeOutput: 904,
+			err:             nil,
+		}, "change to add should add change to specified output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					2500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			index:           3,
+			fees:            bt.DefaultFees(),
+			expOutputTotal:  2353,
+			expChangeOutput: 853,
+			err:             nil,
+		}, "index out of range should return error": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			index: 1,
+			fees:  bt.DefaultFees(),
+			err:   errors.New("index is greater than number of inputs in transaction"),
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := test.tx.ChangeToOutput(test.index, test.fees)
+			if test.err != nil {
+				assert.Error(t, err)
+				assert.Equal(t, test.err, err)
+				return
+			}
+			assert.Equal(t, test.expOutputTotal, test.tx.TotalOutputSatoshis())
+			assert.Equal(t, test.expChangeOutput, test.tx.Outputs[test.index].Satoshis)
+		})
+	}
+}
+
+func TestTx_CalculateChange(t *testing.T) {
+	tests := map[string]struct {
+		tx      *bt.Tx
+		fees    []*bt.Fee
+		expFees uint64
+		err     error
+	}{
+		"Transaction with one input one output should return 96": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			fees:    bt.DefaultFees(),
+			expFees: 96,
+		}, "Transaction with one input 4 outputs should return 147": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					2500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			fees:    bt.DefaultFees(),
+			expFees: 147,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			fee, err := test.tx.CalculateFee(test.fees)
+			assert.Equal(t, test.err, err)
+			assert.Equal(t, test.expFees, fee)
+		})
+	}
 }
