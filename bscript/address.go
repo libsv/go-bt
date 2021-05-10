@@ -83,7 +83,8 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	if !mainnet {
 		bb[0] = 111
 	}
-	// nolint:makezero // stop complaining
+
+	// nolint: makezero // this needs init this way
 	bb = append(bb, hash...)
 
 	return &Address{
