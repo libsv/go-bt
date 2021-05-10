@@ -1,11 +1,12 @@
 package bt_test
 
 import (
+	"context"
 	"encoding/hex"
 	"reflect"
 	"testing"
 
-	"github.com/bitcoinsv/bsvutil"
+	. "github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/stretchr/testify/assert"
@@ -201,12 +202,12 @@ func TestTx_CreateTx(t *testing.T) {
 	err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 	assert.NoError(t, err)
 
-	var wif *bsvutil.WIF
-	wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	var wif *WIF
+	wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 	assert.NoError(t, err)
 	assert.NotNil(t, wif)
 
-	_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+	_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 	assert.NoError(t, err)
 }
 
@@ -234,12 +235,12 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		err = tx.AddOpReturnPartsOutput(ops)
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		var wif *WIF
+		wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, true, tx.HasDataOutputs())
@@ -259,12 +260,12 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		var wif *WIF
+		wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, false, tx.HasDataOutputs())
