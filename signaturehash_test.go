@@ -16,7 +16,7 @@ func TestTx_CalcInputPreimage(t *testing.T) {
 	var testVector = []struct {
 		name               string
 		unsignedTx         string
-		index              uint32
+		index              int
 		previousTxSatoshis uint64
 		previousTxScript   string
 		sigHashType        sighash.Flag
@@ -61,12 +61,12 @@ func TestTx_CalcInputPreimage(t *testing.T) {
 			assert.NotNil(t, tx)
 
 			// Add the UTXO amount and script (PreviousTxScript already in unsiged tx)
-			tx.Inputs()[test.index].PreviousTxSatoshis = test.previousTxSatoshis
-			tx.Inputs()[test.index].PreviousTxScript, err = bscript.NewFromHexString(test.previousTxScript)
+			tx.InputIdx(test.index).PreviousTxSatoshis = test.previousTxSatoshis
+			tx.InputIdx(test.index).PreviousTxScript, err = bscript.NewFromHexString(test.previousTxScript)
 			assert.NoError(t, err)
 
 			var actualSigHash []byte
-			actualSigHash, err = tx.CalcInputPreimage(test.index, sighash.All|sighash.ForkID)
+			actualSigHash, err = tx.CalcInputPreimage(uint32(test.index), sighash.All|sighash.ForkID)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedPreimage, hex.EncodeToString(actualSigHash))
 		})

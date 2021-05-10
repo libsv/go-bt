@@ -28,10 +28,10 @@ func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Fla
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 
-	if tx.Inputs()[inputNumber] == nil {
+	if tx.InputIdx(int(inputNumber)) == nil {
 		return nil, errors.New("specified input does not exist")
 	}
-	in := tx.Inputs()[inputNumber]
+	in := tx.InputIdx(int(inputNumber))
 
 	if len(in.PreviousTxID()) == 0 {
 		return nil, errors.New("'PreviousTxID' not supplied")
