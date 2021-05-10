@@ -8,7 +8,7 @@ import (
 )
 
 // LocalSigner implements the Signer interface. It is used to sign a Tx locally
-// using a bec PrivateKey.
+// using a bkec PrivateKey.
 type LocalSigner struct {
 	PrivateKey *bec.PrivateKey
 }
