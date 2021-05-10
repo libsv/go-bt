@@ -342,66 +342,114 @@ func TestTx_OutputIdx(t *testing.T) {
 func TestTx_InputIdx(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
-		tx        *bt.Tx
-		idx       int
-		expOutput *bt.Output
+		tx       *bt.Tx
+		idx      int
+		expInput *bt.Input
 	}{
 		"tx with 3 inputs and input idx 0 requested should return correct input": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
 				return tx
 			}(),
 			idx: 0,
-			expOutput: &bt.Output{
-				Satoshis: 1000,
-				LockingScript: func() *bscript.Script {
-					s, err := bscript.NewP2PKHFromAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh")
-					assert.NoError(t, err)
-					return s
-				}(),
-			},
+			expInput: func() *bt.Input {
+				in := &bt.Input{
+					PreviousTxSatoshis: 1000,
+					PreviousTxScript: func() *bscript.Script {
+						b, err := bscript.NewFromHexString("76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac")
+						assert.NoError(t, err)
+						return b
+					}(),
+					PreviousTxOutIndex: 0,
+					SequenceNumber:     bt.DefaultSequenceNumber,
+				}
+				_ = in.PreviousTxIDAddStr("3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5")
+				return in
+			}(),
 		}, "tx with 3 outputs and output idx 2 requested should return output": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
-				assert.NoError(t, tx.PayTo("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdac4",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					999))
 				return tx
 			}(),
 			idx: 2,
-			expOutput: &bt.Output{
-				Satoshis: 1000,
-				LockingScript: func() *bscript.Script {
-					s, err := bscript.NewP2PKHFromAddress("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz")
-					assert.NoError(t, err)
-					return s
-				}(),
-			},
+			expInput: func() *bt.Input {
+				in := &bt.Input{
+					PreviousTxSatoshis: 999,
+					PreviousTxScript: func() *bscript.Script {
+						b, err := bscript.NewFromHexString("76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac")
+						assert.NoError(t, err)
+						return b
+					}(),
+					PreviousTxOutIndex: 0,
+					SequenceNumber:     bt.DefaultSequenceNumber,
+				}
+				_ = in.PreviousTxIDAddStr("3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdac4")
+				return in
+			}(),
 		}, "tx with 3 outputs and output idx 5 requested should return nil": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
-				assert.NoError(t, tx.PayTo("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					999))
 				return tx
 			}(),
-			idx:       5,
-			expOutput: nil,
+			idx:      5,
+			expInput: nil,
 		}, "tx with 0 outputs and output idx 5 requested should return nil": {
 			tx: func() *bt.Tx {
 				return bt.NewTx()
 			}(),
-			idx:       5,
-			expOutput: nil,
+			idx:      5,
+			expInput: nil,
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			o := test.tx.OutputIdx(test.idx)
-			assert.Equal(t, test.expOutput, o)
+			o := test.tx.InputIdx(test.idx)
+			assert.Equal(t, test.expInput, o)
 		})
 	}
 }
