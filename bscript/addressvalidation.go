@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
 )
 
 type a25 [25]byte

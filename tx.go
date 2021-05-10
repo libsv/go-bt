@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
 )
 
 /*
@@ -32,13 +32,14 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 --------------------------------------------------------
 */
 
+// Sentinel errors for transactions.
 var (
 	ErrInvalidTxID = errors.New("invalid TxID")
 )
 
 // Tx wraps a bitcoin transaction
 //
-// DO NOT CHANGE ORDER - Optimized memory via malign
+// DO NOT CHANGE ORDER - Optimised memory via malign
 //
 type Tx struct {
 	inputs   []*Input
@@ -204,22 +205,22 @@ func (tx *Tx) TxID() string {
 	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.ToBytes())))
 }
 
+// String encodes the transaction into a hex string.
+func (tx *Tx) String() string {
+	return hex.EncodeToString(tx.ToBytes())
+}
+
 // IsValidTxID will check that the txid bytes are valid.
 //
-// A txid should be in hexadecimal and be of 64 bytes length.
+// A txid should be in hexadecimal and be of 32 bytes length.
 func IsValidTxID(txid []byte) bool {
-	if len(txid) != 64 {
+	if len(txid) != 32 {
 		return false
 	}
-	if _, err := hex.DecodeString(string(txid)); err != nil {
+	if s := hex.EncodeToString(txid); s == "" {
 		return false
 	}
 	return true
-}
-
-// ToString encodes the transaction into a hex string.
-func (tx *Tx) ToString() string {
-	return hex.EncodeToString(tx.ToBytes())
 }
 
 // ToBytes encodes the transaction into a byte array.

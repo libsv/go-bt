@@ -1,6 +1,10 @@
 package bt
 
-import "github.com/libsv/go-bt/sighash"
+import (
+	"context"
+
+	"github.com/libsv/go-bt/sighash"
+)
 
 // Signer interface to allow custom implementations of different signing mechanisms.
 // Implement the Sign function as shown in InternalSigner, for example. Sign generates
@@ -9,8 +13,8 @@ import "github.com/libsv/go-bt/sighash"
 // signature is deterministic (same message and same key yield the same signature) and
 // canonical in accordance with RFC6979 and BIP0062.
 type Signer interface {
-	Sign(unsignedTx *Tx, index uint32, shf sighash.Flag) (publicKey []byte, signature []byte, err error)
-	SignHash(hash []byte) (publicKey []byte, signature []byte, err error)
+	Sign(ctx context.Context, unsignedTx *Tx, index uint32, shf sighash.Flag) (publicKey, signature []byte, err error)
+	SignHash(ctx context.Context, hash []byte) (publicKey, signature []byte, err error)
 }
 
 // AutoSigner interface to allow custom implementations of different signing mechanisms.
@@ -23,7 +27,6 @@ type Signer interface {
 // To automatically sign, the PublicKey() method must also be implemented in order to
 // use the public key to check which inputs can be signed for before signing.
 type AutoSigner interface {
-	Sign(unsignedTx *Tx, index uint32, shf sighash.Flag) (publicKey []byte, signature []byte, err error)
-	SignHash(hash []byte) (publicKey []byte, signature []byte, err error)
-	PublicKey() (publicKey []byte)
+	Signer
+	PublicKey(ctx context.Context ) (publicKey []byte)
 }

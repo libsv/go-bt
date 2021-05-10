@@ -1,11 +1,12 @@
 package bt_test
 
 import (
+	"context"
 	"encoding/hex"
 	"reflect"
 	"testing"
 
-	"github.com/bitcoinsv/bsvutil"
+	. "github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/stretchr/testify/assert"
@@ -60,18 +61,18 @@ func TestNewTxFromString(t *testing.T) {
 		assert.Equal(t, 1, len(tx.Inputs()))
 
 		// Create a new unlocking script
-		ptid, _ := hex.DecodeString("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
-		i := bt.Input{
+		//ptid, _ := hex.DecodeString("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
+		i := &bt.Input{
 			PreviousTxOutIndex: 0,
 			SequenceNumber:     bt.DefaultSequenceNumber,
 		}
-		assert.NotEmpty(t, i.PreviousTxIDAdd(ptid))
+		assert.NoError(t, i.PreviousTxIDAdd(tx.InputIdx(0).PreviousTxID()))
 		i.UnlockingScript, err = bscript.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
 		assert.NoError(t, err)
 		assert.NotNil(t, i.UnlockingScript)
 
 		// Check input type
-		assert.Equal(t, true, reflect.DeepEqual(*tx.Inputs()[0], i))
+		assert.Equal(t, tx.InputIdx(0), i)
 
 		// Check output
 		assert.Equal(t, 1, len(tx.Outputs()))
@@ -201,12 +202,12 @@ func TestTx_CreateTx(t *testing.T) {
 	err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 	assert.NoError(t, err)
 
-	var wif *bsvutil.WIF
-	wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	var wif *WIF
+	wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 	assert.NoError(t, err)
 	assert.NotNil(t, wif)
 
-	_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+	_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 	assert.NoError(t, err)
 }
 
@@ -234,12 +235,12 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		err = tx.AddOpReturnPartsOutput(ops)
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		var wif *WIF
+		wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, true, tx.HasDataOutputs())
@@ -259,12 +260,12 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+		var wif *WIF
+		wif, err = DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, false, tx.HasDataOutputs())
@@ -401,6 +402,32 @@ func TestTx_InputIdx(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			o := test.tx.OutputIdx(test.idx)
 			assert.Equal(t, test.expOutput, o)
+		})
+	}
+}
+
+func Test_IsValidTxID(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		txid string
+		exp  bool
+	}{
+		"valid txID should return true": {
+			txid: "a2a55ecc61f418e300888b1f82eaf84024496b34e3e538f3d32d342fd753adab",
+			exp:  true,
+		},
+		"invalid txID should return false": {
+			txid: "a2a55ecc61f418e300888b1f82eaf84024496b34e3e538f3d32d342fd753adZZ",
+			exp:  false,
+		}, "empty txID should return false": {
+			txid: "",
+			exp:  false,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			bb, _ := hex.DecodeString(test.txid)
+			assert.Equal(t, test.exp, bt.IsValidTxID(bb))
 		})
 	}
 }

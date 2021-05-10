@@ -1,12 +1,13 @@
 package bt_test
 
 import (
+	"context"
 	"encoding/hex"
 	"testing"
 
-	"github.com/bitcoinsv/bsvutil"
 	"github.com/libsv/go-bt"
 	"github.com/libsv/go-bt/bscript"
+	. "github.com/libsv/go-bk/wif"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,12 +25,12 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Our private key
-	var wif *bsvutil.WIF
-	wif, err = bsvutil.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
+	var wif *WIF
+	wif, err = DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	assert.NoError(t, err)
 
 	signer := bt.LocalSigner{PrivateKey: wif.PrivKey}
-	_, err = tx.SignAuto(&signer)
+	_, err = tx.SignAuto(context.Background(),&signer)
 	assert.NoError(t, err)
 
 	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
@@ -59,12 +60,12 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
 // 	sigHashType, _ := binary.Uvarint([]byte(*sigScript)[len(*sigScript)-35 : len(*sigScript)-34])
 //
-// 	publicKey, err := bsvec.ParsePubKey(publicKeyBytes, bsvec.S256())
+// 	publicKey, err := bec.ParsePubKey(publicKeyBytes, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	sig, err := bsvec.ParseDERSignature(sigBytes, bsvec.S256())
+// 	sig, err := bec.ParseDERSignature(sigBytes, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
@@ -104,12 +105,12 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	sigBytes := []byte(*sigScript)[1 : len(*sigScript)-35]
 // 	sigHashType, _ := binary.Uvarint([]byte(*sigScript)[len(*sigScript)-35 : len(*sigScript)-34])
 //
-// 	publicKey, err := bsvec.ParsePubKey(publicKeyBytes, bsvec.S256())
+// 	publicKey, err := bec.ParsePubKey(publicKeyBytes, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	sig, err := bsvec.ParseDERSignature(sigBytes, bsvec.S256())
+// 	sig, err := bec.ParseDERSignature(sigBytes, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
@@ -144,9 +145,9 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	// txid := tx.GetTxID()
 // 	// fmt.Println(txid)
 //
-// 	var sigs = make([]*bsvec.Signature, 2)
+// 	var sigs = make([]*bec.Signature, 2)
 // 	var sigHashTypes = make([]uint32, 2)
-// 	var publicKeys = make([]*bsvec.PublicKey, 3)
+// 	var publicKeys = make([]*bec.PublicKey, 3)
 //
 // 	sigScript := tx.Inputs[0].UnlockingScript
 //
@@ -159,28 +160,28 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	pk1, _ := hex.DecodeString("039281958c651c013f5b3b007c78be231eeb37f130b925ceff63dc3ac8886f22a3")
 // 	pk2, _ := hex.DecodeString("03ac76121ffc9db556b0ce1da978021bd6cb4a5f9553c14f785e15f0e202139e3e")
 //
-// 	publicKeys[0], err = bsvec.ParsePubKey(pk0, bsvec.S256())
+// 	publicKeys[0], err = bec.ParsePubKey(pk0, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	publicKeys[1], err = bsvec.ParsePubKey(pk1, bsvec.S256())
+// 	publicKeys[1], err = bec.ParsePubKey(pk1, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	publicKeys[2], err = bsvec.ParsePubKey(pk2, bsvec.S256())
+// 	publicKeys[2], err = bec.ParsePubKey(pk2, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
 //
-// 	sigs[0], err = bsvec.ParseDERSignature(sig0Bytes, bsvec.S256())
+// 	sigs[0], err = bec.ParseDERSignature(sig0Bytes, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	sigs[1], err = bsvec.ParseDERSignature(sig1Bytes, bsvec.S256())
+// 	sigs[1], err = bec.ParseDERSignature(sig1Bytes, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
@@ -220,9 +221,9 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	// txid := tx.GetTxID()
 // 	// fmt.Println(txid)
 //
-// 	var sigs = make([]*bsvec.Signature, 2)
+// 	var sigs = make([]*bec.Signature, 2)
 // 	var sigHashTypes = make([]uint32, 2)
-// 	var publicKeys = make([]*bsvec.PublicKey, 3)
+// 	var publicKeys = make([]*bec.PublicKey, 3)
 //
 // 	sigScript := tx.Inputs[0].UnlockingScript
 //
@@ -235,28 +236,28 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 // 	pk1, _ := hex.DecodeString("0308b00cf7dfbb64604475e8b18e8450ac6ec04655cfa5c6d4d8a0f3f141ee4194")
 // 	pk2, _ := hex.DecodeString("030c7f9342ff6583599db8ee8b52383cadb4cf6fee3650c1ad8f66158a4ff0ebd9")
 //
-// 	publicKeys[0], err = bsvec.ParsePubKey(pk0, bsvec.S256())
+// 	publicKeys[0], err = bec.ParsePubKey(pk0, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	publicKeys[1], err = bsvec.ParsePubKey(pk1, bsvec.S256())
+// 	publicKeys[1], err = bec.ParsePubKey(pk1, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	publicKeys[2], err = bsvec.ParsePubKey(pk2, bsvec.S256())
+// 	publicKeys[2], err = bec.ParsePubKey(pk2, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
 //
-// 	sigs[0], err = bsvec.ParseDERSignature(sig0Bytes, bsvec.S256())
+// 	sigs[0], err = bec.ParseDERSignature(sig0Bytes, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return
 // 	}
-// 	sigs[1], err = bsvec.ParseDERSignature(sig1Bytes, bsvec.S256())
+// 	sigs[1], err = bec.ParseDERSignature(sig1Bytes, bec.S256())
 // 	if err != nil {
 // 		t.Error(err)
 // 		return

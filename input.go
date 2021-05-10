@@ -24,7 +24,7 @@ const DefaultSequenceNumber uint32 = 0xFFFFFFFF
 
 // Input is a representation of a transaction input
 //
-// DO NOT CHANGE ORDER - Optimized for memory via maligned
+// DO NOT CHANGE ORDER - Optimised for memory via maligned
 //
 type Input struct {
 	previousTxID       []byte
@@ -45,6 +45,20 @@ func (i *Input) PreviousTxIDAdd(txID []byte) error {
 	return nil
 }
 
+// PreviousTxIDAddStr will validate and add the supplied txID string to the Input,
+// if it isn't a valid transaction id an ErrInvalidTxID error will be returned.
+func (i *Input) PreviousTxIDAddStr(txID string) error {
+	bb, err := hex.DecodeString(txID)
+	if err != nil {
+		return err
+	}
+	if !IsValidTxID(bb) {
+		return ErrInvalidTxID
+	}
+	i.previousTxID = bb
+	return nil
+}
+
 // PreviousTxID will return the PreviousTxID if set.
 func (i *Input) PreviousTxID() []byte {
 	return i.previousTxID
@@ -62,7 +76,7 @@ func (i *Input) String() string {
 		`prevTxHash:   %s
 prevOutIndex: %d
 scriptLen:    %d
-script:       %x
+script:       %s
 sequence:     %x
 `,
 		hex.EncodeToString(i.previousTxID),

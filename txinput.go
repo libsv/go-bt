@@ -5,8 +5,9 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/libsv/go-bk/crypto"
+
 	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/crypto"
 )
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
@@ -48,7 +49,6 @@ func (tx *Tx) addInput(input *Input) {
 // AddInputFromTx will add all outputs of given previous transaction
 // that match a specific public key to your transaction.
 func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
-
 	for i, utxo := range pvsTx.outputs {
 		utxoPkHASH160, err := utxo.LockingScript.PublicKeyHash()
 		if err != nil {
@@ -56,8 +56,7 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 		}
 
 		if bytes.Equal(utxoPkHASH160, crypto.Hash160(matchPK)) {
-			err = tx.From(pvsTx.TxID(), uint32(i), utxo.LockingScriptHexString(), utxo.Satoshis)
-			if err != nil {
+			if err := tx.From(pvsTx.TxID(), uint32(i), utxo.LockingScriptHexString(), utxo.Satoshis); err != nil {
 				return err
 			}
 		}
@@ -67,7 +66,7 @@ func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 }
 
 // From adds a new input to the transaction from the specified UTXO fields, using the default
-// finalized sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
+// finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
 // afterwards.
 func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
 	pts, err := bscript.NewFromHexString(prevTxLockingScript)
@@ -79,9 +78,9 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 		PreviousTxOutIndex: vout,
 		PreviousTxSatoshis: satoshis,
 		PreviousTxScript:   pts,
-		SequenceNumber:     DefaultSequenceNumber, // use default finalized sequence number
+		SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
 	}
-	if err := i.PreviousTxIDAdd([]byte(prevTxID)); err != nil {
+	if err := i.PreviousTxIDAddStr(prevTxID); err != nil {
 		return err
 	}
 	tx.addInput(i)
