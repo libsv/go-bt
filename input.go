@@ -95,6 +95,7 @@ func (i *Input) UnmarshalJSON(b []byte) error {
 	}
 	i.UnlockingScript = s
 	i.PreviousTxIDBytes = ptxID
+	i.PreviousTxOutIndex = ij.Vout
 	i.SequenceNumber = ij.Sequence
 	return nil
 }

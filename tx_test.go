@@ -277,18 +277,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 
 func TestTx_ToJson(t *testing.T) {
 	tx, _ := bt.NewTxFromString("0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000")
-	/*	assert.NoError(t, tx.From(
-			"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
-			0,
-			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-			2000000))
-		var wif *bsvutil.WIF
-		wif, err := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
-		assert.NoError(t, err)
-		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
-		assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942))*/
 	bb, err := json.MarshalIndent(tx, "", "\t")
 	assert.NoError(t, err)
 	fmt.Println(string(bb))
@@ -492,6 +481,169 @@ func TestTx_MarshallJSON(t *testing.T) {
 			bb, err := json.MarshalIndent(test.tx, "", "\t")
 			assert.NoError(t, err)
 			assert.Equal(t, test.expJSON, string(bb))
+		})
+	}
+}
+
+func TestTx_UnmarshalJSON(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		json  string
+		expTX *bt.Tx
+	}{
+		"our json with hex should map correctly": {
+			json: `{
+				"version": 1,
+				"locktime": 0,
+				"txid": "aec245f27b7640c8b1865045107731bfb848115c573f7da38166074b1c9e475d",
+				"hash": "aec245f27b7640c8b1865045107731bfb848115c573f7da38166074b1c9e475d",
+				"size": 208,
+				"hex": "0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000",
+				"vin": [
+			{
+				"unlockingScript": {
+				"asm": "30440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41 0294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8",
+				"hex": "4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8"
+			},
+				"txid": "a2a55ecc61f418e300888b1f82eaf84024496b34e3e538f3d32d342fd753adab",
+				"vout": 1,
+				"sequence": 4294967295
+			}
+			],
+				"vout": [
+			{
+				"value": 0,
+				"satoshis": 0,
+				"n": 0,
+				"scriptPubKey": {
+				"asm": "OP_FALSE OP_RETURN 48656c6c6f",
+				"hex": "006a0548656c6c6f",
+				"type": "nulldata"
+			}
+			},
+			{
+				"value": 0.00000895,
+				"satoshis": 895,
+				"n": 1,
+				"scriptPubKey": {
+				"asm": "OP_DUP OP_HASH160 b85524abf8202a961b847a3bd0bc89d3d4d41cc5 OP_EQUALVERIFY OP_CHECKSIG",
+				"hex": "76a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac",
+				"reqSigs": 1,
+				"type": "pubkeyhash"
+			}
+			}
+			]
+			}`,
+			expTX: func() *bt.Tx {
+				tx, err := bt.NewTxFromString("0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000")
+				assert.NoError(t, err)
+				return tx
+			}(),
+		}, "ONLY hex should map correctly": {
+			json: `{
+				"hex": "0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000"
+			}`,
+			expTX: func() *bt.Tx {
+				tx, err := bt.NewTxFromString("0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000")
+				assert.NoError(t, err)
+				return tx
+			}(),
+		}, "Node json with hex should map correctly": {
+			json: `{
+				"version": 1,
+				"locktime": 0,
+				"txid": "aec245f27b7640c8b1865045107731bfb848115c573f7da38166074b1c9e475d",
+				"hash": "aec245f27b7640c8b1865045107731bfb848115c573f7da38166074b1c9e475d",
+				"size": 208,
+				"hex": "0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000",
+				"vin": [
+			{
+				"scriptSig": {
+				"asm": "30440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41 0294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8",
+				"hex": "4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8"
+			},
+				"txid": "a2a55ecc61f418e300888b1f82eaf84024496b34e3e538f3d32d342fd753adab",
+				"vout": 1,
+				"sequence": 4294967295
+			}
+			],
+				"vout": [
+			{
+				"value": 0,
+				"n": 0,
+				"scriptPubKey": {
+				"asm": "OP_FALSE OP_RETURN 48656c6c6f",
+				"hex": "006a0548656c6c6f",
+				"type": "nulldata"
+			}
+			},
+			{
+				"value": 0.00000895,
+				"n": 1,
+				"scriptPubKey": {
+				"asm": "OP_DUP OP_HASH160 b85524abf8202a961b847a3bd0bc89d3d4d41cc5 OP_EQUALVERIFY OP_CHECKSIG",
+				"hex": "76a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac",
+				"reqSigs": 1,
+				"type": "pubkeyhash"
+			}
+			}
+			]
+			}`,
+			expTX: func() *bt.Tx {
+				tx, err := bt.NewTxFromString("0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000")
+				assert.NoError(t, err)
+				return tx
+			}(),
+		}, "Node json without hex should map correctly": {
+			json: `{
+	"version": 1,
+	"locktime": 0,
+	"txid": "aec245f27b7640c8b1865045107731bfb848115c573f7da38166074b1c9e475d",
+	"hash": "aec245f27b7640c8b1865045107731bfb848115c573f7da38166074b1c9e475d",
+	"size": 208,
+	"vin": [{
+		"scriptSig": {
+			"asm": "30440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41 0294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8",
+			"hex": "4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8"
+		},
+		"txid": "a2a55ecc61f418e300888b1f82eaf84024496b34e3e538f3d32d342fd753adab",
+		"vout": 1,
+		"sequence": 4294967295
+	}],
+	"vout": [{
+			"value": 0,
+			"n": 0,
+			"scriptPubKey": {
+				"asm": "OP_FALSE OP_RETURN 48656c6c6f",
+				"hex": "006a0548656c6c6f",
+				"type": "nulldata"
+			}
+		},
+		{
+			"value": 0.00000895,
+			"n": 1,
+			"scriptPubKey": {
+				"asm": "OP_DUP OP_HASH160 b85524abf8202a961b847a3bd0bc89d3d4d41cc5 OP_EQUALVERIFY OP_CHECKSIG",
+				"hex": "76a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac",
+				"reqSigs": 1,
+				"type": "pubkeyhash"
+			}
+		}
+	]
+}`,
+			expTX: func() *bt.Tx {
+				tx, err := bt.NewTxFromString("0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000")
+				assert.NoError(t, err)
+				return tx
+			}(),
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			var tx *bt.Tx
+			err := json.Unmarshal([]byte(test.json), &tx)
+			assert.NoError(t, err)
+			assert.Equal(t, test.expTX, tx)
 		})
 	}
 }

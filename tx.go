@@ -91,6 +91,10 @@ func (tx *Tx) UnmarshalJSON(b []byte) error {
 		*tx = *t
 		return nil
 	}
+	tx.Inputs = txj.Inputs
+	tx.Outputs = txj.Outputs
+	tx.LockTime = txj.LockTime
+	tx.Version = txj.Version
 	return nil
 }
 
@@ -167,6 +171,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 		if err != nil {
 			return nil, 0, err
 		}
+		output.index = int(i)
 		offset += size
 		t.Outputs = append(t.Outputs, output)
 	}
