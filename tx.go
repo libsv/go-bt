@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
 )
 
 /*
@@ -35,7 +35,7 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 
 // Tx wraps a bitcoin transaction
 //
-// DO NOT CHANGE ORDER - Optimized memory via malign
+// DO NOT CHANGE ORDER - Optimised memory via malign
 //
 type Tx struct {
 	Inputs   []*Input  `json:"vin"`
@@ -44,24 +44,26 @@ type Tx struct {
 	LockTime uint32    `json:"locktime"`
 }
 
-// MarshalJSON will serialize a transaction to json.
+type txJSON struct {
+	Version  uint32    `json:"version"`
+	LockTime uint32    `json:"locktime"`
+	TxID     string    `json:"txid"`
+	Hash     string    `json:"hash"`
+	Size     int       `json:"size"`
+	Hex      string    `json:"hex"`
+	Inputs   []*Input  `json:"vin"`
+	Outputs  []*Output `json:"vout"`
+}
+
+// MarshalJSON will serialise a transaction to json.
 func (tx *Tx) MarshalJSON() ([]byte, error) {
 	if tx == nil {
-		return nil, errors.New("tx is nil so cannot be marshaled")
+		return nil, errors.New("tx is nil so cannot be marshalled")
 	}
 	for i, o := range tx.Outputs {
 		o.index = i
 	}
-	m := struct {
-		Version  uint32    `json:"version"`
-		LockTime uint32    `json:"locktime"`
-		TxID     string    `json:"txid"`
-		Hash     string    `json:"hash"`
-		Size     int       `json:"size"`
-		Hex      string    `json:"hex"`
-		Inputs   []*Input  `json:"vin"`
-		Outputs  []*Output `json:"vout"`
-	}{
+	txj := txJSON{
 		Version:  tx.Version,
 		LockTime: tx.LockTime,
 		Inputs:   tx.Inputs,
@@ -69,24 +71,26 @@ func (tx *Tx) MarshalJSON() ([]byte, error) {
 		TxID:     tx.TxID(),
 		Hash:     tx.TxID(),
 		Size:     len(tx.ToBytes()),
-		Hex:      tx.ToString(),
+		Hex:      tx.String(),
 	}
-	return json.Marshal(m)
+	return json.Marshal(txj)
 }
 
-// UnmarshalJSON will unmarshall a transaction that has been marshaled with this library.
+// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
 func (tx *Tx) UnmarshalJSON(b []byte) error {
-	var h struct {
-		Hex string `json:"hex"`
-	}
-	if err := json.Unmarshal(b, &h); err != nil {
+	var txj txJSON
+	if err := json.Unmarshal(b, &txj); err != nil {
 		return err
 	}
-	t, err := NewTxFromString(h.Hex)
-	if err != nil {
-		return err
+	// quick convert
+	if txj.Hex != "" {
+		t, err := NewTxFromString(txj.Hex)
+		if err != nil {
+			return err
+		}
+		*tx = *t
+		return nil
 	}
-	*tx = *t
 	return nil
 }
 
@@ -98,18 +102,18 @@ func NewTx() *Tx {
 // NewTxFromString takes a toBytesHelper string representation of a bitcoin transaction
 // and returns a Tx object.
 func NewTxFromString(str string) (*Tx, error) {
-	bytes, err := hex.DecodeString(str)
+	b, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewTxFromBytes(bytes)
+	return NewTxFromBytes(b)
 }
 
 // NewTxFromBytes takes an array of bytes, constructs a Tx and returns it.
 // This function assumes that the byte slice contains exactly 1 transaction.
 func NewTxFromBytes(b []byte) (*Tx, error) {
-	tx, used, err := NewTxFromStream((b))
+	tx, used, err := NewTxFromStream(b)
 	if err != nil {
 		return nil, err
 	}
@@ -216,8 +220,8 @@ func (tx *Tx) TxID() string {
 	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.ToBytes())))
 }
 
-// ToString encodes the transaction into a hex string.
-func (tx *Tx) ToString() string {
+// String encodes the transaction into a hex string.
+func (tx *Tx) String() string {
 	return hex.EncodeToString(tx.ToBytes())
 }
 

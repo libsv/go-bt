@@ -25,7 +25,7 @@ const DefaultSequenceNumber uint32 = 0xFFFFFFFF
 
 // Input is a representation of a transaction input
 //
-// DO NOT CHANGE ORDER - Optimized for memory via maligned
+// DO NOT CHANGE ORDER - Optimised for memory via maligned
 //
 type Input struct {
 	PreviousTxIDBytes  []byte
@@ -36,6 +36,23 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
+// inputJSON is used to covnert an input to and from json.
+// Script is duplicated as we have our own name for unlockingScript
+// but want to be compatible with node json also.
+type inputJSON struct {
+	UnlockingScript *struct {
+		Asm string `json:"asm"`
+		Hex string `json:"hex"`
+	} `json:"unlockingScript,omitempty"`
+	ScriptSig *struct {
+		Asm string `json:"asm"`
+		Hex string `json:"hex"`
+	} `json:"scriptSig,omitempty"`
+	TxID     string `json:"txid"`
+	Vout     uint32 `json:"vout"`
+	Sequence uint32 `json:"sequence"`
+}
+
 // MarshalJSON will convert an input to json, expanding upon the
 // input struct to add additional fields.
 func (i *Input) MarshalJSON() ([]byte, error) {
@@ -43,27 +60,43 @@ func (i *Input) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	input := struct {
-		ScriptSig struct {
-			Asm string `json:"asm"`
-			Hex string `json:"hex"`
-		} `json:"unlockingScript"`
-		TxID     string `json:"txid"`
-		Vout     uint32 `json:"vout"`
-		Sequence uint32 `json:"sequence"`
-	}{
+	input := &inputJSON{
 		TxID: hex.EncodeToString(i.PreviousTxIDBytes),
 		Vout: i.PreviousTxOutIndex,
-		ScriptSig: struct {
+		UnlockingScript: &struct {
 			Asm string `json:"asm"`
 			Hex string `json:"hex"`
 		}{
 			Asm: asm,
-			Hex: i.UnlockingScript.ToString(),
+			Hex: i.UnlockingScript.String(),
 		},
 		Sequence: i.SequenceNumber,
 	}
 	return json.Marshal(input)
+}
+
+// UnmarshalJSON will convert a JSON input to an input.
+func (i *Input) UnmarshalJSON(b []byte) error {
+	var ij inputJSON
+	if err := json.Unmarshal(b, &ij); err != nil {
+		return err
+	}
+	ptxID, err := hex.DecodeString(ij.TxID)
+	if err != nil {
+		return err
+	}
+	sig := ij.UnlockingScript
+	if sig == nil {
+		sig = ij.ScriptSig
+	}
+	s, err := bscript.NewFromHexString(sig.Hex)
+	if err != nil {
+		return err
+	}
+	i.UnlockingScript = s
+	i.PreviousTxIDBytes = ptxID
+	i.SequenceNumber = ij.Sequence
+	return nil
 }
 
 // PreviousTxIDStr returns the Previous TxID as a hex string.
@@ -76,7 +109,7 @@ func (i *Input) String() string {
 		`prevTxHash:   %s
 prevOutIndex: %d
 scriptLen:    %d
-script:       %x
+script:       %s
 sequence:     %x
 `,
 		hex.EncodeToString(i.PreviousTxIDBytes),

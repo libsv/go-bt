@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"log"
 
-	"github.com/bitcoinsv/bsvutil"
+	"github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt"
 )
 
@@ -18,11 +19,11 @@ func main() {
 
 	_ = tx.PayTo("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
 
-	wif, _ := bsvutil.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	wif, _ := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	inputsSigned, err := tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+	inputsSigned, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 	if err != nil && len(inputsSigned) > 0 {
 		log.Fatal(err.Error())
 	}
-	log.Println("tx: ", tx.ToString())
+	log.Println("tx: ", tx.String())
 }

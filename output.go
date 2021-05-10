@@ -28,7 +28,19 @@ type Output struct {
 	index         int
 }
 
-// MarshalJSON will serialize an output to json.
+type outputJSON struct {
+	Value        float64 `json:"value"`
+	Satoshis     uint64  `json:"satoshis"`
+	Index        int     `json:"n"`
+	ScriptPubKey struct {
+		Asm     string `json:"asm"`
+		Hex     string `json:"hex"`
+		ReqSigs int    `json:"reqSigs,omitempty"`
+		Type    string `json:"type"`
+	} `json:"scriptPubKey,omitempty"`
+}
+
+// MarshalJSON will serialise an output to json.
 func (o *Output) MarshalJSON() ([]byte, error) {
 	asm, err := o.LockingScript.ToASM()
 	if err != nil {
@@ -38,17 +50,8 @@ func (o *Output) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	output := struct {
-		Value        float64 `json:"value"`
-		Satoshis     uint64  `json:"satoshis"`
-		Index        int     `json:"n"`
-		ScriptPubKey struct {
-			Asm     string `json:"asm"`
-			Hex     string `json:"hex"`
-			ReqSigs int    `json:"reqSigs,omitempty"`
-			Type    string `json:"type"`
-		} `json:"scriptPubKey"`
-	}{
+
+	output := &outputJSON{
 		Value:    float64(o.Satoshis) / 100000000,
 		Satoshis: o.Satoshis,
 		Index:    o.index,
@@ -67,6 +70,26 @@ func (o *Output) MarshalJSON() ([]byte, error) {
 	return json.Marshal(output)
 }
 
+// UnmarshalJSON will convert a json serialised output to a bt Output.
+func (o *Output) UnmarshalJSON(b []byte) error {
+	var oj outputJSON
+	if err := json.Unmarshal(b, &oj); err != nil {
+		return err
+	}
+	s, err := bscript.NewFromHexString(oj.ScriptPubKey.Hex)
+	if err != nil {
+		return err
+	}
+	if oj.Satoshis > 0 {
+		o.Satoshis = oj.Satoshis
+	} else {
+		o.Satoshis = uint64(oj.Value * 100000000)
+	}
+	o.index = oj.Index
+	o.LockingScript = s
+	return nil
+}
+
 // LockingScriptHexString returns the locking script
 // of an output encoded as a hex string.
 func (o *Output) LockingScriptHexString() string {
@@ -76,7 +99,7 @@ func (o *Output) LockingScriptHexString() string {
 func (o *Output) String() string {
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d
-script:    %x
+script:    %s
 `, o.Satoshis, len(*o.LockingScript), o.LockingScript)
 }
 
@@ -93,7 +116,7 @@ func (o *Output) ToBytes() []byte {
 	return h
 }
 
-// BytesForSigHash returns the proper serialization
+// BytesForSigHash returns the proper serialisation
 // of an output to be hashed and signed (sighash).
 func (o *Output) BytesForSigHash() []byte {
 	buf := make([]byte, 0)
