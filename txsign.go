@@ -67,8 +67,8 @@ func (tx *Tx) ApplyP2PKHUnlockingScript(index uint32, pubKey []byte, sig []byte,
 // ApplyUnlockingScript applies a script to the transaction at a specific index in
 // unlocking script field.
 func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
-	if tx.Inputs[index] != nil {
-		tx.Inputs[index].UnlockingScript = s
+	if tx.inputs[index] != nil {
+		tx.inputs[index].UnlockingScript = s
 		return nil
 	}
 
@@ -84,7 +84,7 @@ func (tx *Tx) SignAuto(s AutoSigner) (inputsSigned []int, err error) {
 
 	shf := sighash.AllForkID // use SIGHASHALLFORFORKID to sign automatically
 
-	for i, in := range tx.Inputs {
+	for i, in := range tx.inputs {
 		pubKeyHash, _ := in.PreviousTxScript.PublicKeyHash() // doesn't matter if returns error (not p2pkh)
 		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
 

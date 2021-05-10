@@ -3,7 +3,6 @@ package bt
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/libsv/go-bt/bscript"
@@ -27,7 +26,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 	}
 
 	return &Input{
-		PreviousTxIDBytes:  ReverseBytes(bytes[0:32]),
+		previousTxID:       ReverseBytes(bytes[0:32]),
 		PreviousTxOutIndex: binary.LittleEndian.Uint32(bytes[32:36]),
 		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
 		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
@@ -36,21 +35,21 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 
 // TotalInputSatoshis returns the total Satoshis inputted to the transaction.
 func (tx *Tx) TotalInputSatoshis() (total uint64) {
-	for _, in := range tx.Inputs {
+	for _, in := range tx.inputs {
 		total += in.PreviousTxSatoshis
 	}
 	return
 }
 
 func (tx *Tx) addInput(input *Input) {
-	tx.Inputs = append(tx.Inputs, input)
+	tx.inputs = append(tx.inputs, input)
 }
 
 // AddInputFromTx will add all outputs of given previous transaction
 // that match a specific public key to your transaction.
 func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
 
-	for i, utxo := range pvsTx.Outputs {
+	for i, utxo := range pvsTx.outputs {
 		utxoPkHASH160, err := utxo.LockingScript.PublicKeyHash()
 		if err != nil {
 			return err
@@ -76,23 +75,21 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 		return err
 	}
 
-	ptxid, err := hex.DecodeString(prevTxID)
-	if err != nil {
-		return err
-	}
-
-	tx.addInput(&Input{
-		PreviousTxIDBytes:  ptxid,
+	i := &Input{
 		PreviousTxOutIndex: vout,
 		PreviousTxSatoshis: satoshis,
 		PreviousTxScript:   pts,
 		SequenceNumber:     DefaultSequenceNumber, // use default finalized sequence number
-	})
+	}
+	if err := i.PreviousTxIDAdd([]byte(prevTxID)); err != nil {
+		return err
+	}
+	tx.addInput(i)
 
 	return nil
 }
 
 // InputCount returns the number of transaction inputs.
 func (tx *Tx) InputCount() int {
-	return len(tx.Inputs)
+	return len(tx.inputs)
 }

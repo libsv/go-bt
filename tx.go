@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/libsv/go-bt/crypto"
@@ -31,13 +32,17 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 --------------------------------------------------------
 */
 
+var (
+	ErrInvalidTxID = errors.New("invalid TxID")
+)
+
 // Tx wraps a bitcoin transaction
 //
 // DO NOT CHANGE ORDER - Optimized memory via malign
 //
 type Tx struct {
-	Inputs   []*Input
-	Outputs  []*Output
+	inputs   []*Input
+	outputs  []*Output
 	Version  uint32
 	LockTime uint32
 }
@@ -50,18 +55,18 @@ func NewTx() *Tx {
 // NewTxFromString takes a toBytesHelper string representation of a bitcoin transaction
 // and returns a Tx object.
 func NewTxFromString(str string) (*Tx, error) {
-	bytes, err := hex.DecodeString(str)
+	bb, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewTxFromBytes(bytes)
+	return NewTxFromBytes(bb)
 }
 
 // NewTxFromBytes takes an array of bytes, constructs a Tx and returns it.
 // This function assumes that the byte slice contains exactly 1 transaction.
 func NewTxFromBytes(b []byte) (*Tx, error) {
-	tx, used, err := NewTxFromStream((b))
+	tx, used, err := NewTxFromStream(b)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +78,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	return tx, nil
 }
 
-// NewTxFromStream takes an array of bytes and contructs a Tx from it, returning the Tx and the bytes used.
+// NewTxFromStream takes an array of bytes and constructs a Tx from it, returning the Tx and the bytes used.
 // Despite the name, this is not actually reading a stream in the true sense: it is a byte slice that contains
 // many transactions one after another.
 func NewTxFromStream(b []byte) (*Tx, int, error) {
@@ -101,8 +106,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 			return nil, 0, err
 		}
 		offset += size
-
-		t.Inputs = append(t.Inputs, input)
+		t.addInput(input)
 	}
 
 	// create outputs
@@ -116,7 +120,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 			return nil, 0, err
 		}
 		offset += size
-		t.Outputs = append(t.Outputs, output)
+		t.AddOutput(output)
 	}
 
 	t.LockTime = binary.LittleEndian.Uint32(b[offset:])
@@ -128,7 +132,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 // HasDataOutputs returns true if the transaction has
 // at least one data (OP_RETURN) output in it.
 func (tx *Tx) HasDataOutputs() bool {
-	for _, out := range tx.Outputs {
+	for _, out := range tx.Outputs() {
 		if out.LockingScript.IsData() {
 			return true
 		}
@@ -136,20 +140,52 @@ func (tx *Tx) HasDataOutputs() bool {
 	return false
 }
 
+// Inputs returns the inputs for the transaction.
+func (tx *Tx) Inputs() []*Input {
+	return tx.inputs
+}
+
+// InputIdx will return the input at the specified index.
+//
+// This will consume an overflow error and simply return nil if the input
+// isn't found at the index.
+func (tx *Tx) InputIdx(i int) *Input {
+	if i > tx.InputCount()-1 {
+		return nil
+	}
+	return tx.inputs[i]
+}
+
+// Outputs returns the outputs for the transaction.
+func (tx *Tx) Outputs() []*Output {
+	return tx.outputs
+}
+
+// OutputIdx will return the output at the specified index.
+//
+// This will consume an overflow error and simply return nil if the output
+// isn't found at the index.
+func (tx *Tx) OutputIdx(i int) *Output {
+	if i > tx.OutputCount()-1 {
+		return nil
+	}
+	return tx.outputs[i]
+}
+
 // IsCoinbase determines if this transaction is a coinbase by
 // checking if the tx input is a standard coinbase input.
 func (tx *Tx) IsCoinbase() bool {
-	if len(tx.Inputs) != 1 {
+	if len(tx.inputs) != 1 {
 		return false
 	}
 
 	cbi := make([]byte, 32)
 
-	if !bytes.Equal(tx.Inputs[0].PreviousTxIDBytes, cbi) {
+	if !bytes.Equal(tx.inputs[0].PreviousTxID(), cbi) {
 		return false
 	}
 
-	if tx.Inputs[0].PreviousTxOutIndex == DefaultSequenceNumber || tx.Inputs[0].SequenceNumber == DefaultSequenceNumber {
+	if tx.inputs[0].PreviousTxOutIndex == DefaultSequenceNumber || tx.inputs[0].SequenceNumber == DefaultSequenceNumber {
 		return true
 	}
 
@@ -166,6 +202,19 @@ func (tx *Tx) TxIDAsBytes() []byte {
 // (which is also the transaction hash).
 func (tx *Tx) TxID() string {
 	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.ToBytes())))
+}
+
+// IsValidTxID will check that the txid bytes are valid.
+//
+// A txid should be in hexadecimal and be of 64 bytes length.
+func IsValidTxID(txid []byte) bool {
+	if len(txid) != 64 {
+		return false
+	}
+	if _, err := hex.DecodeString(string(txid)); err != nil {
+		return false
+	}
+	return true
 }
 
 // ToString encodes the transaction into a hex string.
@@ -190,9 +239,9 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 
 	h = append(h, LittleEndianBytes(tx.Version, 4)...)
 
-	h = append(h, VarInt(uint64(len(tx.Inputs)))...)
+	h = append(h, VarInt(uint64(len(tx.inputs)))...)
 
-	for i, in := range tx.Inputs {
+	for i, in := range tx.inputs {
 		s := in.ToBytes(lockingScript != nil)
 		if i == index && lockingScript != nil {
 			h = append(h, VarInt(uint64(len(lockingScript)))...)
@@ -202,8 +251,8 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 		}
 	}
 
-	h = append(h, VarInt(uint64(len(tx.Outputs)))...)
-	for _, out := range tx.Outputs {
+	h = append(h, VarInt(uint64(len(tx.outputs)))...)
+	for _, out := range tx.outputs {
 		h = append(h, out.ToBytes()...)
 	}
 

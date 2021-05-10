@@ -27,7 +27,7 @@ const DefaultSequenceNumber uint32 = 0xFFFFFFFF
 // DO NOT CHANGE ORDER - Optimized for memory via maligned
 //
 type Input struct {
-	PreviousTxIDBytes  []byte
+	previousTxID       []byte
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *bscript.Script
 	UnlockingScript    *bscript.Script
@@ -35,11 +35,28 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
-// PreviousTxIDStr returns the Previous TxID as a hex string.
-func (i *Input) PreviousTxIDStr() string {
-	return hex.EncodeToString(i.PreviousTxIDBytes)
+// PreviousTxIDAdd will add the supplied txID bytes to the Input,
+// if it isn't a valid transaction id an ErrInvalidTxID error will be returned.
+func (i *Input) PreviousTxIDAdd(txID []byte) error {
+	if !IsValidTxID(txID) {
+		return ErrInvalidTxID
+	}
+	i.previousTxID = txID
+	return nil
 }
 
+// PreviousTxID will return the PreviousTxID if set.
+func (i *Input) PreviousTxID() []byte {
+	return i.previousTxID
+}
+
+// PreviousTxIDStr returns the Previous TxID as a hex string.
+func (i *Input) PreviousTxIDStr() string {
+	return hex.EncodeToString(i.previousTxID)
+}
+
+// String implements the Stringer interface and returns a string
+// representation of a transaction input.
 func (i *Input) String() string {
 	return fmt.Sprintf(
 		`prevTxHash:   %s
@@ -48,7 +65,7 @@ scriptLen:    %d
 script:       %x
 sequence:     %x
 `,
-		hex.EncodeToString(i.PreviousTxIDBytes),
+		hex.EncodeToString(i.previousTxID),
 		i.PreviousTxOutIndex,
 		len(*i.UnlockingScript),
 		i.UnlockingScript,
@@ -60,7 +77,7 @@ sequence:     %x
 func (i *Input) ToBytes(clear bool) []byte {
 	h := make([]byte, 0)
 
-	h = append(h, ReverseBytes(i.PreviousTxIDBytes)...)
+	h = append(h, ReverseBytes(i.previousTxID)...)
 	h = append(h, LittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		h = append(h, 0x00)

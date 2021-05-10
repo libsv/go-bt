@@ -26,7 +26,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 	}
 	if hasChange {
 		// add rest of available sats to the change output
-		tx.Outputs[len(tx.Outputs)-1].Satoshis = available
+		tx.Outputs()[tx.OutputCount()-1].Satoshis = available
 	}
 	return nil
 }
@@ -34,15 +34,15 @@ func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 // ChangeToOutput will calculate fees and add them to an output at the index specified (0 based).
 // If an invalid index is supplied and error is returned.
 func (tx *Tx) ChangeToOutput(index uint, f []*Fee) error {
-	if int(index) > len(tx.Outputs)-1 {
+	if int(index) > tx.OutputCount()-1 {
 		return errors.New("index is greater than number of inputs in transaction")
 	}
-	available, hasChange, err := tx.change(tx.Outputs[index].LockingScript, f, false)
+	available, hasChange, err := tx.change(tx.Outputs()[index].LockingScript, f, false)
 	if err != nil {
 		return err
 	}
 	if hasChange {
-		tx.Outputs[index].Satoshis += available
+		tx.Outputs()[index].Satoshis += available
 	}
 	return nil
 }
@@ -143,7 +143,7 @@ func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
 
 	var expectedBytes int
 
-	for _, in := range tx.Inputs {
+	for _, in := range tx.Inputs() {
 		if !in.PreviousTxScript.IsP2PKH() {
 			return 0, errors.New("non-P2PKH input used in the tx - unsupported")
 		}
@@ -155,7 +155,7 @@ func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
 
 func (tx *Tx) getStandardAndDataBytes() (standardBytes, dataBytes int) {
 	// Subtract the value of each output as well as keeping track of data outputs
-	for _, out := range tx.Outputs {
+	for _, out := range tx.Outputs() {
 		if out.LockingScript.IsData() && len(*out.LockingScript) > 0 {
 			dataBytes += len(*out.LockingScript)
 		}

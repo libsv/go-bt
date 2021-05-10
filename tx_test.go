@@ -57,24 +57,24 @@ func TestNewTxFromString(t *testing.T) {
 		// Check version, locktime, inputs
 		assert.Equal(t, uint32(2), tx.Version)
 		assert.Equal(t, uint32(0), tx.LockTime)
-		assert.Equal(t, 1, len(tx.Inputs))
+		assert.Equal(t, 1, len(tx.Inputs()))
 
 		// Create a new unlocking script
 		ptid, _ := hex.DecodeString("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
 		i := bt.Input{
-			PreviousTxIDBytes:  ptid,
 			PreviousTxOutIndex: 0,
 			SequenceNumber:     bt.DefaultSequenceNumber,
 		}
+		assert.NotEmpty(t, i.PreviousTxIDAdd(ptid))
 		i.UnlockingScript, err = bscript.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
 		assert.NoError(t, err)
 		assert.NotNil(t, i.UnlockingScript)
 
 		// Check input type
-		assert.Equal(t, true, reflect.DeepEqual(*tx.Inputs[0], i))
+		assert.Equal(t, true, reflect.DeepEqual(*tx.Inputs()[0], i))
 
 		// Check output
-		assert.Equal(t, 1, len(tx.Outputs))
+		assert.Equal(t, 1, len(tx.Outputs()))
 
 		// New output
 		var ls *bscript.Script
@@ -84,7 +84,7 @@ func TestNewTxFromString(t *testing.T) {
 
 		// Check the type
 		o := bt.Output{Satoshis: 4999000000, LockingScript: ls}
-		assert.Equal(t, true, reflect.DeepEqual(*tx.Outputs[0], o))
+		assert.Equal(t, true, reflect.DeepEqual(*tx.Outputs()[0], o))
 	})
 }
 
@@ -269,4 +269,138 @@ func TestTx_HasDataOutputs(t *testing.T) {
 
 		assert.Equal(t, false, tx.HasDataOutputs())
 	})
+}
+
+func TestTx_OutputIdx(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		tx        *bt.Tx
+		idx       int
+		expOutput *bt.Output
+	}{
+		"tx with 3 outputs and output idx 0 requested should return output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx: 0,
+			expOutput: &bt.Output{
+				Satoshis: 1000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewP2PKHFromAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh")
+					assert.NoError(t, err)
+					return s
+				}(),
+			},
+		}, "tx with 3 outputs and output idx 2 requested should return output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayTo("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx: 2,
+			expOutput: &bt.Output{
+				Satoshis: 1000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewP2PKHFromAddress("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz")
+					assert.NoError(t, err)
+					return s
+				}(),
+			},
+		}, "tx with 3 outputs and output idx 5 requested should return nil": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayTo("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx:       5,
+			expOutput: nil,
+		}, "tx with 0 outputs and output idx 5 requested should return nil": {
+			tx: func() *bt.Tx {
+				return bt.NewTx()
+			}(),
+			idx:       5,
+			expOutput: nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := test.tx.OutputIdx(test.idx)
+			assert.Equal(t, test.expOutput, o)
+		})
+	}
+}
+
+func TestTx_InputIdx(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		tx        *bt.Tx
+		idx       int
+		expOutput *bt.Output
+	}{
+		"tx with 3 inputs and input idx 0 requested should return correct input": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx: 0,
+			expOutput: &bt.Output{
+				Satoshis: 1000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewP2PKHFromAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh")
+					assert.NoError(t, err)
+					return s
+				}(),
+			},
+		}, "tx with 3 outputs and output idx 2 requested should return output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayTo("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx: 2,
+			expOutput: &bt.Output{
+				Satoshis: 1000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewP2PKHFromAddress("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz")
+					assert.NoError(t, err)
+					return s
+				}(),
+			},
+		}, "tx with 3 outputs and output idx 5 requested should return nil": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayTo("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx:       5,
+			expOutput: nil,
+		}, "tx with 0 outputs and output idx 5 requested should return nil": {
+			tx: func() *bt.Tx {
+				return bt.NewTx()
+			}(),
+			idx:       5,
+			expOutput: nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := test.tx.OutputIdx(test.idx)
+			assert.Equal(t, test.expOutput, o)
+		})
+	}
 }

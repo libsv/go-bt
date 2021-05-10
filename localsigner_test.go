@@ -19,8 +19,8 @@ func TestInternalSigner_SignAuto(t *testing.T) {
 	assert.NotNil(t, tx)
 
 	// Add the UTXO amount and script.
-	tx.Inputs[0].PreviousTxSatoshis = 100000000
-	tx.Inputs[0].PreviousTxScript, err = bscript.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
+	tx.Inputs()[0].PreviousTxSatoshis = 100000000
+	tx.Inputs()[0].PreviousTxScript, err = bscript.NewFromHexString("76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac")
 	assert.NoError(t, err)
 
 	// Our private key

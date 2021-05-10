@@ -28,12 +28,12 @@ func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Fla
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 
-	if tx.Inputs[inputNumber] == nil {
+	if tx.Inputs()[inputNumber] == nil {
 		return nil, errors.New("specified input does not exist")
 	}
-	in := tx.Inputs[inputNumber]
+	in := tx.Inputs()[inputNumber]
 
-	if len(in.PreviousTxIDBytes) == 0 {
+	if len(in.PreviousTxID()) == 0 {
 		return nil, errors.New("'PreviousTxID' not supplied")
 	}
 	if in.PreviousTxScript == nil {
@@ -59,7 +59,7 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 	if (sigHashFlag&31) != sighash.Single && (sigHashFlag&31) != sighash.None {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashOutputs = tx.getOutputsHash(-1)
-	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(len(tx.Outputs)) {
+	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(tx.OutputCount()) {
 		// This will *not* be executed in the usual BSV case (where sigHashType = SighashAllForkID)
 		hashOutputs = tx.getOutputsHash(int32(inputNumber))
 	}
@@ -76,7 +76,7 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 	buf = append(buf, hashSequence...)
 
 	//  outpoint (32-byte hash + 4-byte little endian)
-	buf = append(buf, ReverseBytes(in.PreviousTxIDBytes)...)
+	buf = append(buf, ReverseBytes(in.PreviousTxID())...)
 	oi := make([]byte, 4)
 	binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 	buf = append(buf, oi...)
@@ -115,8 +115,8 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 func (tx *Tx) getPreviousOutHash() []byte {
 	buf := make([]byte, 0)
 
-	for _, in := range tx.Inputs {
-		buf = append(buf, ReverseBytes(in.PreviousTxIDBytes)...)
+	for _, in := range tx.Inputs() {
+		buf = append(buf, ReverseBytes(in.PreviousTxID())...)
 		oi := make([]byte, 4)
 		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
 		buf = append(buf, oi...)
@@ -128,7 +128,7 @@ func (tx *Tx) getPreviousOutHash() []byte {
 func (tx *Tx) getSequenceHash() []byte {
 	buf := make([]byte, 0)
 
-	for _, in := range tx.Inputs {
+	for _, in := range tx.Inputs() {
 		oi := make([]byte, 4)
 		binary.LittleEndian.PutUint32(oi, in.SequenceNumber)
 		buf = append(buf, oi...)
@@ -141,11 +141,11 @@ func (tx *Tx) getOutputsHash(n int32) []byte {
 	buf := make([]byte, 0)
 
 	if n == -1 {
-		for _, out := range tx.Outputs {
+		for _, out := range tx.Outputs() {
 			buf = append(buf, out.BytesForSigHash()...)
 		}
 	} else {
-		buf = append(buf, tx.Outputs[n].BytesForSigHash()...)
+		buf = append(buf, tx.Outputs()[n].BytesForSigHash()...)
 	}
 
 	return crypto.Sha256d(buf)
