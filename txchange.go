@@ -18,42 +18,81 @@ func (tx *Tx) ChangeToAddress(addr string, f *FeeQuote) error {
 }
 
 // Change calculates the amount of fees needed to cover the transaction
-// and adds the left over change in a new output using the script provided.
+//  and adds the left over change in a new output using the script provided.
 func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
+	available, hasChange, err := tx.change(s, f, true)
+	if err != nil {
+		return err
+	}
+	if hasChange {
+		// add rest of available sats to the change output
+		tx.Outputs[len(tx.Outputs)-1].Satoshis = available
+	}
+	return nil
+}
+
+// ChangeToOutput will calculate fees and add them to an output at the index specified (0 based).
+// If an invalid index is supplied and error is returned.
+func (tx *Tx) ChangeToOutput(index uint, f *FeeQuote) error {
+	if int(index) > len(tx.Outputs)-1 {
+		return errors.New("index is greater than number of inputs in transaction")
+	}
+	available, hasChange, err := tx.change(tx.Outputs[index].LockingScript, f, false)
+	if err != nil {
+		return err
+	}
+	if hasChange {
+		tx.Outputs[index].Satoshis += available
+	}
+	return nil
+}
+
+// CalculateFee will return the amount of fees the current transaction will
+// require.
+func (tx *Tx) CalculateFee(f *FeeQuote) (uint64, error) {
+	total := tx.TotalInputSatoshis() - tx.TotalOutputSatoshis()
+	sats, _, err := tx.change(nil, f, false)
+	if err != nil {
+		return 0, err
+	}
+	return total - sats, nil
+}
+
+// change will return the amount of satoshis to add to an input after fees are removed.
+// True will be returned if change has been added.
+func (tx *Tx) change(s *bscript.Script, f *FeeQuote, newOutput bool) (uint64, bool, error) {
 	inputAmount := tx.TotalInputSatoshis()
 	outputAmount := tx.TotalOutputSatoshis()
 
 	if inputAmount < outputAmount {
-		return errors.New("satoshis inputted to the tx are less than the outputted satoshis")
+		return 0, false, errors.New("satoshis inputted to the tx are less than the outputted satoshis")
 	}
 
 	available := inputAmount - outputAmount
 
 	standardFees, err := f.Fee(FeeTypeStandard)
 	if err != nil {
-		return errors.New("standard fees not found")
+		return 0, false, errors.New("standard fees not found")
 	}
 	if !tx.canAddChange(available, standardFees) {
-		return nil
+		return 0, false, err
 	}
-
-	tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
+	if newOutput {
+		tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
+	}
 
 	preSignedFeeRequired, err := tx.getPreSignedFeeRequired(f)
 	if err != nil {
-		return err
+		return 0, false, err
 	}
 	expectedUnlockingScriptFees, err := tx.getExpectedUnlockingScriptFees(f)
 	if err != nil {
-		return err
+		return 0, false, err
 	}
 
 	available -= preSignedFeeRequired + expectedUnlockingScriptFees
 
-	// add rest of available sats to the change output
-	tx.Outputs[len(tx.Outputs)-1].Satoshis = available
-
-	return nil
+	return available, true, nil
 }
 
 func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {

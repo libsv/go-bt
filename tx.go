@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
 )
 
 /*
@@ -33,7 +33,7 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 
 // Tx wraps a bitcoin transaction
 //
-// DO NOT CHANGE ORDER - Optimized memory via malign
+// DO NOT CHANGE ORDER - Optimised memory via malign
 //
 type Tx struct {
 	Inputs   []*Input
@@ -50,18 +50,18 @@ func NewTx() *Tx {
 // NewTxFromString takes a toBytesHelper string representation of a bitcoin transaction
 // and returns a Tx object.
 func NewTxFromString(str string) (*Tx, error) {
-	bytes, err := hex.DecodeString(str)
+	b, err := hex.DecodeString(str)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewTxFromBytes(bytes)
+	return NewTxFromBytes(b)
 }
 
 // NewTxFromBytes takes an array of bytes, constructs a Tx and returns it.
 // This function assumes that the byte slice contains exactly 1 transaction.
 func NewTxFromBytes(b []byte) (*Tx, error) {
-	tx, used, err := NewTxFromStream((b))
+	tx, used, err := NewTxFromStream(b)
 	if err != nil {
 		return nil, err
 	}
@@ -168,8 +168,8 @@ func (tx *Tx) TxID() string {
 	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.ToBytes())))
 }
 
-// ToString encodes the transaction into a hex string.
-func (tx *Tx) ToString() string {
+// String encodes the transaction into a hex string.
+func (tx *Tx) String() string {
 	return hex.EncodeToString(tx.ToBytes())
 }
 

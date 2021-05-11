@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/bitcoinsv/bsvd/bsvec"
+	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bt/bscript"
 	"github.com/stretchr/testify/assert"
 )
@@ -88,8 +88,8 @@ func TestNewAddressFromPublicKey(t *testing.T) {
 	pubKeyBytes, err := hex.DecodeString("026cf33373a9f3f6c676b75b543180703df225f7f8edbffedc417718a8ad4e89ce")
 	assert.NoError(t, err)
 
-	var pubKey *bsvec.PublicKey
-	pubKey, err = bsvec.ParsePubKey(pubKeyBytes, bsvec.S256())
+	var pubKey *bec.PublicKey
+	pubKey, err = bec.ParsePubKey(pubKeyBytes, bec.S256())
 	assert.NoError(t, err)
 	assert.NotNil(t, pubKey)
 

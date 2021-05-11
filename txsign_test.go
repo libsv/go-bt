@@ -1,9 +1,10 @@
 package bt_test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/bitcoinsv/bsvutil"
+	. "github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,29 +30,29 @@ func TestTx_SignAuto(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
+		var wif *WIF
+		wif, err = DecodeWIF("L3MhnEn1pLWcggeYLk9jdkvA2wUK1iWwwrGkBbgQRqv6HPCdRxuw")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		rawTxBefore := tx.ToString()
+		rawTxBefore := tx.String()
 
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
-		assert.NotEqual(t, rawTxBefore, tx.ToString())
+		assert.NotEqual(t, rawTxBefore, tx.String())
 	})
 
 	t.Run("no input or output", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
-		rawTxBefore := tx.ToString()
+		rawTxBefore := tx.String()
 
-		_, err := tx.SignAuto(&bt.LocalSigner{PrivateKey: nil})
+		_, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: nil})
 		assert.NoError(t, err)
 
-		assert.Equal(t, rawTxBefore, tx.ToString())
+		assert.Equal(t, rawTxBefore, tx.String())
 	})
 
 	t.Run("valid tx (wrong wif)", func(t *testing.T) {
@@ -68,15 +69,15 @@ func TestTx_SignAuto(t *testing.T) {
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
-		var wif *bsvutil.WIF
-		wif, err = bsvutil.DecodeWIF("5KgHn2qiftW5LQgCYFtkbrLYB1FuvisDtacax8NCvumw3UTKdcP")
+		var wif *WIF
+		wif, err = DecodeWIF("5KgHn2qiftW5LQgCYFtkbrLYB1FuvisDtacax8NCvumw3UTKdcP")
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
 		// No signature, wrong wif
-		rawTxBefore := tx.ToString()
-		_, err = tx.SignAuto(&bt.LocalSigner{PrivateKey: wif.PrivKey})
+		rawTxBefore := tx.String()
+		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
-		assert.Equal(t, rawTxBefore, tx.ToString())
+		assert.Equal(t, rawTxBefore, tx.String())
 	})
 }

@@ -76,6 +76,6 @@ func TestTx_From(t *testing.T) {
 		assert.Equal(t, uint32(0), inputs[0].PreviousTxOutIndex)
 		assert.Equal(t, uint64(4000000), inputs[0].PreviousTxSatoshis)
 		assert.Equal(t, bt.DefaultSequenceNumber, inputs[0].SequenceNumber)
-		assert.Equal(t, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", inputs[0].PreviousTxScript.ToString())
+		assert.Equal(t, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", inputs[0].PreviousTxScript.String())
 	})
 }

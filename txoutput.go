@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
 )
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
@@ -99,7 +99,6 @@ func (tx *Tx) AddP2PKHOutputFromAddress(addr string, satoshis uint64) error {
 
 // AddHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
 func (tx *Tx) AddHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) error {
-
 	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
 	if err != nil {
 		return err
@@ -113,15 +112,15 @@ func (tx *Tx) AddHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64)
 	if err = s.AppendPushData(secretBytesHash); err != nil {
 		return err
 	}
-	s.AppendOpCode(bscript.OpEQUALVERIFY)
-	s.AppendOpCode(bscript.OpDUP)
-	s.AppendOpCode(bscript.OpHASH160)
+	s.AppendOpCode(bscript.OpEQUALVERIFY).
+		AppendOpCode(bscript.OpDUP).
+		AppendOpCode(bscript.OpHASH160)
 
 	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
 		return err
 	}
-	s.AppendOpCode(bscript.OpEQUALVERIFY)
-	s.AppendOpCode(bscript.OpCHECKSIG)
+	s.AppendOpCode(bscript.OpEQUALVERIFY).
+		AppendOpCode(bscript.OpCHECKSIG)
 
 	tx.AddOutput(&Output{
 		Satoshis:      satoshis,
@@ -149,7 +148,6 @@ func (tx *Tx) AddOpReturnPartsOutput(data [][]byte) error {
 	if err != nil {
 		return err
 	}
-
 	tx.AddOutput(o)
 	return nil
 }

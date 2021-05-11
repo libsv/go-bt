@@ -11,7 +11,7 @@ var (
 	ErrFeeQuotesNotInit = errors.New("feeQuotes have not been setup, call NewFeeQuotes")
 	ErrMinerNoQuotes    = errors.New("miner has no quotes stored")
 	ErrFeeTypeNotFound  = errors.New("feetype not found")
-	ErrFeeQuoteNotInit  = errors.New("feeQuote has not been initialized, call NewFeeQuote()")
+	ErrFeeQuoteNotInit  = errors.New("feeQuote has not been initialised, call NewFeeQuote()")
 	ErrEmptyValues      = errors.New("empty value or values passed, all arguments are required and cannot be empty")
 )
 

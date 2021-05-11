@@ -4,9 +4,16 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/bitcoinsv/bsvd/bsvec"
-	"github.com/bitcoinsv/bsvutil/base58"
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/base58"
+	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/crypto"
+)
+
+const (
+	hashP2PKH        = 0x00
+	hashTestNetP2PKH = 0x6f
+	hashP2SH         = 0x05 // TODO: remove deprecated p2sh stuff
+	hashTestNetP2SH  = 0xc4
 )
 
 // An Address struct contains the address string as well as the hash160 hexstring of the public key.
@@ -38,17 +45,16 @@ func addressToPubKeyHashStr(address string) (string, error) {
 	}
 
 	switch decoded[0] {
-	case 0x00: // Pubkey hash (P2PKH address)
+	case hashP2PKH: // Pubkey hash (P2PKH address)
 		return hex.EncodeToString(decoded[1 : len(decoded)-4]), nil
 
-	case 0x6f: // Testnet pubkey hash (P2PKH address)
+	case hashTestNetP2PKH: // Testnet pubkey hash (P2PKH address)
 		return hex.EncodeToString(decoded[1 : len(decoded)-4]), nil
 
-	case 0x05: // Script hash (P2SH address)
+	case hashP2SH: // Script hash (P2SH address)
 		fallthrough
-	case 0xc4: // Testnet script hash (P2SH address)
+	case hashTestNetP2SH: // Testnet script hash (P2SH address)
 		fallthrough
-
 	default:
 		return "", fmt.Errorf("address %s is not supported", address)
 	}
@@ -86,11 +92,11 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	}, nil
 }
 
-// NewAddressFromPublicKey takes a bsvec public key and returns an Address struct pointer.
+// NewAddressFromPublicKey takes a bec public key and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
 // Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
-func NewAddressFromPublicKey(pubKey *bsvec.PublicKey, mainnet bool) (*Address, error) {
-	hash := crypto.Hash160(pubKey.SerializeCompressed())
+func NewAddressFromPublicKey(pubKey *bec.PublicKey, mainnet bool) (*Address, error) {
+	hash := crypto.Hash160(pubKey.SerialiseCompressed())
 
 	// regtest := 111
 	// mainnet: 0
