@@ -32,12 +32,18 @@ type outputJSON struct {
 	Value        float64 `json:"value"`
 	Satoshis     uint64  `json:"satoshis"`
 	Index        int     `json:"n"`
-	ScriptPubKey struct {
+	ScriptPubKey *struct {
 		Asm     string `json:"asm"`
 		Hex     string `json:"hex"`
 		ReqSigs int    `json:"reqSigs,omitempty"`
 		Type    string `json:"type"`
 	} `json:"scriptPubKey,omitempty"`
+	LockingScript *struct {
+		Asm     string `json:"asm"`
+		Hex     string `json:"hex"`
+		ReqSigs int    `json:"reqSigs,omitempty"`
+		Type    string `json:"type"`
+	} `json:"lockingScript,omitempty"`
 }
 
 // MarshalJSON will serialise an output to json.
@@ -55,7 +61,7 @@ func (o *Output) MarshalJSON() ([]byte, error) {
 		Value:    float64(o.Satoshis) / 100000000,
 		Satoshis: o.Satoshis,
 		Index:    o.index,
-		ScriptPubKey: struct {
+		LockingScript: &struct {
 			Asm     string `json:"asm"`
 			Hex     string `json:"hex"`
 			ReqSigs int    `json:"reqSigs,omitempty"`
@@ -76,7 +82,11 @@ func (o *Output) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &oj); err != nil {
 		return err
 	}
-	s, err := bscript.NewFromHexString(oj.ScriptPubKey.Hex)
+	script := oj.LockingScript
+	if script == nil {
+		script = oj.ScriptPubKey
+	}
+	s, err := bscript.NewFromHexString(script.Hex)
 	if err != nil {
 		return err
 	}

@@ -378,7 +378,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 			"value": 0,
 			"satoshis": 0,
 			"n": 0,
-			"scriptPubKey": {
+			"lockingScript": {
 				"asm": "OP_FALSE OP_RETURN 48656c6c6f",
 				"hex": "006a0548656c6c6f",
 				"type": "nulldata"
@@ -388,7 +388,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 			"value": 0.00000895,
 			"satoshis": 895,
 			"n": 1,
-			"scriptPubKey": {
+			"lockingScript": {
 				"asm": "OP_DUP OP_HASH160 b85524abf8202a961b847a3bd0bc89d3d4d41cc5 OP_EQUALVERIFY OP_CHECKSIG",
 				"hex": "76a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac",
 				"reqSigs": 1,
@@ -465,7 +465,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 			"value": 0.00001,
 			"satoshis": 1000,
 			"n": 0,
-			"scriptPubKey": {
+			"lockingScript": {
 				"asm": "OP_DUP OP_HASH160 eb0bd5edba389198e73f8efabddfc61666969ff7 OP_EQUALVERIFY OP_CHECKSIG",
 				"hex": "76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 				"reqSigs": 1,
@@ -515,7 +515,7 @@ func TestTx_UnmarshalJSON(t *testing.T) {
 				"value": 0,
 				"satoshis": 0,
 				"n": 0,
-				"scriptPubKey": {
+				"lockingScript": {
 				"asm": "OP_FALSE OP_RETURN 48656c6c6f",
 				"hex": "006a0548656c6c6f",
 				"type": "nulldata"
@@ -525,7 +525,7 @@ func TestTx_UnmarshalJSON(t *testing.T) {
 				"value": 0.00000895,
 				"satoshis": 895,
 				"n": 1,
-				"scriptPubKey": {
+				"lockingScript": {
 				"asm": "OP_DUP OP_HASH160 b85524abf8202a961b847a3bd0bc89d3d4d41cc5 OP_EQUALVERIFY OP_CHECKSIG",
 				"hex": "76a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac",
 				"reqSigs": 1,
