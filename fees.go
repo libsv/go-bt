@@ -35,8 +35,14 @@ const (
 //
 // Usage setup should be calling NewFeeQuotes(minerName).
 type FeeQuotes struct {
-	mu     sync.RWMutex
-	quotes map[string]*FeeQuote
+	mu       sync.RWMutex
+	quotes   map[string]*FeeQuote
+	cheapest map[FeeType]*memoizedFee
+}
+
+type memoizedFee struct {
+	fee   *Fee
+	miner string
 }
 
 // NewFeeQuotes will setup default feeQuotes for the minerName supplied, ie TAAL etc.
@@ -107,6 +113,8 @@ func (f *FeeQuotes) UpdateMinerFees(minerName string, feeType FeeType, fee *Fee)
 	if m == nil {
 		return nil, ErrMinerNoQuotes
 	}
+	// clear memoized cheapest fees
+	f.cheapest = nil
 	return m.AddQuote(feeType, fee), nil
 }
 
@@ -117,6 +125,11 @@ func (f *FeeQuotes) UpdateMinerFees(minerName string, feeType FeeType, fee *Fee)
 func (f *FeeQuotes) CheapestFee(feeType FeeType) (string, *Fee, error) {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
+	if f.cheapest != nil {
+		if memoizedFee, ok := f.cheapest[feeType]; ok {
+			return memoizedFee.miner, memoizedFee.fee, nil
+		}
+	}
 	var fee *Fee
 	var miner string
 	for m, q := range f.quotes {
@@ -133,6 +146,14 @@ func (f *FeeQuotes) CheapestFee(feeType FeeType) (string, *Fee, error) {
 			fee = f
 			miner = m
 		}
+	}
+	// memoizeFee for later retrieval; cheap fees are cleared when we update a feequote.
+	if f.cheapest == nil {
+		f.cheapest = map[FeeType]*memoizedFee{}
+	}
+	f.cheapest[feeType] = &memoizedFee{
+		fee:   fee,
+		miner: miner,
 	}
 	return miner, fee, nil
 }
