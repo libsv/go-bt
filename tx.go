@@ -33,6 +33,11 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 --------------------------------------------------------
 */
 
+const (
+	// DustLimit is the current minimum output satoshis accepted by the network.
+	DustLimit = 136
+)
+
 // Tx wraps a bitcoin transaction
 //
 // DO NOT CHANGE ORDER - Optimized memory via malign
@@ -226,8 +231,35 @@ func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
 	if err != nil {
 		return err
 	}
-
 	return tx.Change(s, f)
+}
+
+// HasOutputsWithAddress will return the index of any outputs found matching
+// the address 'addr'.
+//
+// bool will be false if none have been found.
+// err will not be nil if the addr is not a valid P2PKH address.
+func (tx *Tx) HasOutputsWithAddress(addr string) ([]int, bool, error) {
+	cs, err := bscript.NewP2PKHFromAddress(addr)
+	if err != nil {
+		return nil, false, err
+	}
+	ii, ok := tx.HasOutputsWithScript(cs)
+	return ii, ok, nil
+}
+
+// HasOutputsWithScript will return the index of any outputs found matching
+// the locking script 's'.
+//
+// bool will be false if none have been found.
+func (tx *Tx) HasOutputsWithScript(s *bscript.Script) ([]int, bool) {
+	idx := make([]int, 0)
+	for i, o := range tx.Outputs {
+		if bytes.Equal(*o.LockingScript, *s) {
+			idx = append(idx, i)
+		}
+	}
+	return idx, len(idx) > 0
 }
 
 // Change calculates the amount of fees needed to cover the transaction
@@ -323,7 +355,7 @@ func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 	changeOutputFee += uint64(changeP2pkhByteLen * standardFees.MiningFee.Satoshis / standardFees.MiningFee.Bytes)
 
 	// not enough change to add a whole change output so don't add anything and return
-	return available >= changeOutputFee
+	return available >= (changeOutputFee + DustLimit)
 }
 
 func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
