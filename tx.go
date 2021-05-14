@@ -348,7 +348,7 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 		if newOutput {
 			tx.Outputs = tx.Outputs[:tx.OutputCount()-1]
 		}
-		return available, false, nil
+		return 0, false, nil
 	}
 
 	return available, true, nil
