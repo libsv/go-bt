@@ -321,7 +321,7 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 	}
 
 	if !tx.canAddChange(available, standardFees) {
-		return 0, false, err
+		return 0, false, nil
 	}
 	if newOutput {
 		tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
@@ -338,12 +338,14 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 	}
 
 	available -= preSignedFeeRequired + expectedUnlockingScriptFees
-
+	if available <= DustLimit {
+		tx.Outputs = tx.Outputs[:tx.OutputCount()-1]
+		return available, false, nil
+	}
 	return available, true, nil
 }
 
 func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
-
 	varIntUpper := VarIntUpperLimitInc(uint64(tx.OutputCount()))
 	if varIntUpper == -1 {
 		return false // upper limit of outputs in one tx reached

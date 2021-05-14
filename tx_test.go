@@ -659,6 +659,23 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 1, tx.OutputCount())
 	})
+	t.Run("not enough to cover fees and change should not add change (751 would be 136 sats change after fees)", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		err := tx.From(
+			"9e88ca8eec0845e9e864c024bc5e6711e670932c9c7d929f9fccdb2c440ae28e",
+			0,
+			"76a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac",
+			1000)
+		assert.NoError(t, err)
+		// 751 takes us JUST below the threshold with a change amount of 136 (dust limit)
+		assert.NoError(t, tx.PayTo("1BxGFoR7YDgYxoAStEncL6HuELqPkV3JVj", 751))
+		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.DefaultFees())
+		assert.NoError(t, err)
+
+		assert.Equal(t, 1, tx.OutputCount())
+	})
 }
 
 func TestTx_HasDataOutputs(t *testing.T) {
