@@ -33,6 +33,11 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 --------------------------------------------------------
 */
 
+const (
+	// DustLimit is the current minimum output satoshis accepted by the network.
+	DustLimit = 136
+)
+
 // Tx wraps a bitcoin transaction
 //
 // DO NOT CHANGE ORDER - Optimized memory via malign
@@ -226,12 +231,39 @@ func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
 	if err != nil {
 		return err
 	}
-
 	return tx.Change(s, f)
 }
 
+// HasOutputsWithAddress will return the index of any outputs found matching
+// the address 'addr'.
+//
+// bool will be false if none have been found.
+// err will not be nil if the addr is not a valid P2PKH address.
+func (tx *Tx) HasOutputsWithAddress(addr string) ([]int, bool, error) {
+	cs, err := bscript.NewP2PKHFromAddress(addr)
+	if err != nil {
+		return nil, false, err
+	}
+	ii, ok := tx.HasOutputsWithScript(cs)
+	return ii, ok, nil
+}
+
+// HasOutputsWithScript will return the index of any outputs found matching
+// the locking script 's'.
+//
+// bool will be false if none have been found.
+func (tx *Tx) HasOutputsWithScript(s *bscript.Script) ([]int, bool) {
+	idx := make([]int, 0)
+	for i, o := range tx.Outputs {
+		if bytes.Equal(*o.LockingScript, *s) {
+			idx = append(idx, i)
+		}
+	}
+	return idx, len(idx) > 0
+}
+
 // Change calculates the amount of fees needed to cover the transaction
-//  and adds the left over change in a new output using the script provided.
+// and adds the left over change in a new output using the script provided.
 func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 	available, hasChange, err := tx.change(s, f, true)
 	if err != nil {
@@ -271,8 +303,8 @@ func (tx *Tx) CalculateFee(f []*Fee) (uint64, error) {
 	return total - sats, nil
 }
 
-// change will return the amount of satoshis to add to an input after fees are removed.
-// True will be returned if change has been added.
+// change will return the amount of satoshis to add to an output after fees are removed.
+// True will be returned if a change output has been added.
 func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool, error) {
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
@@ -289,7 +321,7 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 	}
 
 	if !tx.canAddChange(available, standardFees) {
-		return 0, false, err
+		return 0, false, nil
 	}
 	if newOutput {
 		tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
@@ -305,13 +337,24 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 		return 0, false, err
 	}
 
+	if available < (preSignedFeeRequired + expectedUnlockingScriptFees) {
+		if newOutput {
+			tx.Outputs = tx.Outputs[:tx.OutputCount()-1]
+		}
+		return 0, false, nil
+	}
 	available -= preSignedFeeRequired + expectedUnlockingScriptFees
+	if available <= DustLimit {
+		if newOutput {
+			tx.Outputs = tx.Outputs[:tx.OutputCount()-1]
+		}
+		return 0, false, nil
+	}
 
 	return available, true, nil
 }
 
 func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
-
 	varIntUpper := VarIntUpperLimitInc(uint64(tx.OutputCount()))
 	if varIntUpper == -1 {
 		return false // upper limit of outputs in one tx reached
