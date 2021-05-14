@@ -1,43 +1,58 @@
-name: run-go-tests
-
-env:
-  GO111MODULE: on
+name: Go
 
 on:
-  pull_request:
-    branches:
-      - "*"
   push:
-    branches:
-      - "*"
-  schedule:
-    - cron: '1 4 * * *'
+    tags:
+      - '*'
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
-  test:
+  golangci:
     strategy:
       matrix:
-        go-version: [ 1.14.x, 1.15.x ]
-        os: [ ubuntu-latest ]
+        go-version: [1.15.x,1.16.x]
+        os: [macos-latest, ubuntu-latest]
+    name: lint
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install Go
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
+          version: latest
+  build:
+    strategy:
+      matrix:
+        go-version: [ 1.13.x,1.14.x,1.15.x, 1.16.x ]
+        os: [ macos-latest, ubuntu-latest ]
+    runs-on:  ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/go/pkg/mod              # Module download cache
-            ~/.cache/go-build         # Build cache (Linux)
-            ~/Library/Caches/go-build # Build cache (Mac)
-            '%LocalAppData%\go-build' # Build cache (Windows)
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-      - name: Run linter and tests
-        run: make test-ci
+
+      - name: Tests
+        run: make test-unit
       - name: Update code coverage
         run: bash <(curl -s https://codecov.io/bash)
+      - name: Build
+        run: go build -v ./...
+  release:
+    needs: [golangci,build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: release
+        uses: goreleaser/goreleaser-action@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

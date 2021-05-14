@@ -62,6 +62,9 @@ test-short: ## Runs vet, lint and tests (excludes integration tests)
 	@echo "running tests (short)..."
 	@go test ./... -v -test.short
 
+test-unit:
+	@go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+
 test-ci: ## Runs all tests via CI (exports coverage)
 	@$(MAKE) lint
 	@echo "running tests (CI)..."
