@@ -263,7 +263,7 @@ func (tx *Tx) HasOutputsWithScript(s *bscript.Script) ([]int, bool) {
 }
 
 // Change calculates the amount of fees needed to cover the transaction
-//  and adds the left over change in a new output using the script provided.
+// and adds the left over change in a new output using the script provided.
 func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 	available, hasChange, err := tx.change(s, f, true)
 	if err != nil {
@@ -303,8 +303,8 @@ func (tx *Tx) CalculateFee(f []*Fee) (uint64, error) {
 	return total - sats, nil
 }
 
-// change will return the amount of satoshis to add to an input after fees are removed.
-// True will be returned if change has been added.
+// change will return the amount of satoshis to add to an output after fees are removed.
+// True will be returned if a change output has been added.
 func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool, error) {
 	inputAmount := tx.GetTotalInputSatoshis()
 	outputAmount := tx.GetTotalOutputSatoshis()
