@@ -337,11 +337,20 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 		return 0, false, err
 	}
 
+	if available < (preSignedFeeRequired + expectedUnlockingScriptFees) {
+		if newOutput {
+			tx.Outputs = tx.Outputs[:tx.OutputCount()-1]
+		}
+		return 0, false, nil
+	}
 	available -= preSignedFeeRequired + expectedUnlockingScriptFees
 	if available <= DustLimit {
-		tx.Outputs = tx.Outputs[:tx.OutputCount()-1]
+		if newOutput {
+			tx.Outputs = tx.Outputs[:tx.OutputCount()-1]
+		}
 		return available, false, nil
 	}
+
 	return available, true, nil
 }
 
@@ -357,7 +366,7 @@ func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 	changeOutputFee += uint64(changeP2pkhByteLen * standardFees.MiningFee.Satoshis / standardFees.MiningFee.Bytes)
 
 	// not enough change to add a whole change output so don't add anything and return
-	return available >= (changeOutputFee + DustLimit)
+	return available >= changeOutputFee
 }
 
 func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
