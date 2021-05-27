@@ -380,7 +380,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := test.tx.ChangeToOutput(test.index, test.fees)
+			err := test.tx.ChangeToExistingOutput(test.index, test.fees)
 			if test.err != nil {
 				assert.Error(t, err)
 				assert.Equal(t, test.err, err)
