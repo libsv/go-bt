@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
@@ -36,10 +38,64 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 // DO NOT CHANGE ORDER - Optimised memory via malign
 //
 type Tx struct {
-	Inputs   []*Input
-	Outputs  []*Output
-	Version  uint32
-	LockTime uint32
+	Inputs   []*Input  `json:"vin"`
+	Outputs  []*Output `json:"vout"`
+	Version  uint32    `json:"version"`
+	LockTime uint32    `json:"locktime"`
+}
+
+type txJSON struct {
+	Version  uint32    `json:"version"`
+	LockTime uint32    `json:"locktime"`
+	TxID     string    `json:"txid"`
+	Hash     string    `json:"hash"`
+	Size     int       `json:"size"`
+	Hex      string    `json:"hex"`
+	Inputs   []*Input  `json:"vin"`
+	Outputs  []*Output `json:"vout"`
+}
+
+// MarshalJSON will serialise a transaction to json.
+func (tx *Tx) MarshalJSON() ([]byte, error) {
+	if tx == nil {
+		return nil, errors.New("tx is nil so cannot be marshalled")
+	}
+	for i, o := range tx.Outputs {
+		o.index = i
+	}
+	txj := txJSON{
+		Version:  tx.Version,
+		LockTime: tx.LockTime,
+		Inputs:   tx.Inputs,
+		Outputs:  tx.Outputs,
+		TxID:     tx.TxID(),
+		Hash:     tx.TxID(),
+		Size:     len(tx.ToBytes()),
+		Hex:      tx.String(),
+	}
+	return json.Marshal(txj)
+}
+
+// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+func (tx *Tx) UnmarshalJSON(b []byte) error {
+	var txj txJSON
+	if err := json.Unmarshal(b, &txj); err != nil {
+		return err
+	}
+	// quick convert
+	if txj.Hex != "" {
+		t, err := NewTxFromString(txj.Hex)
+		if err != nil {
+			return err
+		}
+		*tx = *t
+		return nil
+	}
+	tx.Inputs = txj.Inputs
+	tx.Outputs = txj.Outputs
+	tx.LockTime = txj.LockTime
+	tx.Version = txj.Version
+	return nil
 }
 
 // NewTx creates a new transaction object with default values.
@@ -115,6 +171,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 		if err != nil {
 			return nil, 0, err
 		}
+		output.index = int(i)
 		offset += size
 		t.Outputs = append(t.Outputs, output)
 	}

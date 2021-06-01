@@ -110,33 +110,6 @@ func (f *FeeQuotes) UpdateMinerFees(minerName string, feeType FeeType, fee *Fee)
 	return m.AddQuote(feeType, fee), nil
 }
 
-// CheapestFee will search all cached mining feeQuotes for the cheapest fee for a given fee type.
-// string will be the miner name, this will allow you to broadcast the transaction
-// to the cheapest miner via mAPI.
-// Fee contains the quote which you can supply to the tx when calculating the change output / fees.
-func (f *FeeQuotes) CheapestFee(feeType FeeType) (string, *Fee, error) {
-	f.mu.RLock()
-	defer f.mu.RUnlock()
-	var fee *Fee
-	var miner string
-	for m, q := range f.quotes {
-		f, err := q.Fee(feeType)
-		if err != nil {
-			return "", nil, err
-		}
-		if fee == nil {
-			miner = m
-			fee = f
-		}
-		if float64(f.MiningFee.Satoshis)/float64(f.MiningFee.Bytes) <
-			float64(fee.MiningFee.Satoshis)/float64(fee.MiningFee.Bytes) {
-			fee = f
-			miner = m
-		}
-	}
-	return miner, fee, nil
-}
-
 // FeeQuote contains a thread safe map of fees for standard and data
 // fees as well as an expiry time for a specific miner.
 //

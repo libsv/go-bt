@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/libsv/go-bt"
 	"github.com/libsv/go-bt/bscript"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewP2PKHOutputFromPubKeyHashStr(t *testing.T) {

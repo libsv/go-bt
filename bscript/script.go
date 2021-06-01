@@ -18,6 +18,15 @@ var (
 	ErrNotP2PKH      = errors.New("not a P2PKH")
 )
 
+// ScriptKey types.
+const (
+	ScriptTypePubKey      = "pubkey"
+	ScriptTypePubKeyHash  = "pubkeyhash"
+	ScriptTypeNonStandard = "nonstandard"
+	ScriptTypeMultiSig    = "multisig"
+	ScriptTypeNullData    = "nulldata"
+)
+
 // Script type
 type Script []byte
 
@@ -87,7 +96,7 @@ func NewP2PKHFromPubKeyHash(pubKeyHash []byte) (*Script, error) {
 	b := []byte{
 		OpDUP,
 		OpHASH160,
-		0x14,
+		OpDATA20,
 	}
 	b = append(b, pubKeyHash...)
 	b = append(b, OpEQUALVERIFY)
@@ -223,7 +232,7 @@ func (s *Script) IsP2PKH() bool {
 	return len(b) == 25 &&
 		b[0] == OpDUP &&
 		b[1] == OpHASH160 &&
-		b[2] == 0x14 &&
+		b[2] == OpDATA20 &&
 		b[23] == OpEQUALVERIFY &&
 		b[24] == OpCHECKSIG
 }
@@ -255,7 +264,7 @@ func (s *Script) IsP2SH() bool {
 
 	return len(b) == 23 &&
 		b[0] == OpHASH160 &&
-		b[1] == 0x14 &&
+		b[1] == OpDATA20 &&
 		b[22] == OpEQUAL
 }
 
@@ -264,8 +273,8 @@ func (s *Script) IsP2SH() bool {
 func (s *Script) IsData() bool {
 	b := []byte(*s)
 
-	return b[0] == 0x6a ||
-		b[0] == 0x00 && b[1] == 0x6a
+	return b[0] == OpRETURN ||
+		b[0] == OpFALSE && b[1] == OpRETURN
 }
 
 // IsMultiSigOut returns true if this is a multisig output script.
@@ -303,7 +312,7 @@ func (s *Script) PublicKeyHash() ([]byte, error) {
 		return nil, ErrEmptyScript
 	}
 
-	if (*s)[0] != 0x76 || (*s)[1] != 0xa9 {
+	if (*s)[0] != OpDUP || (*s)[1] != OpHASH160 {
 		return nil, ErrNotP2PKH
 	}
 
@@ -313,6 +322,42 @@ func (s *Script) PublicKeyHash() ([]byte, error) {
 	}
 
 	return parts[0], nil
+}
+
+// ScriptType returns the type of script this is as a string.
+func (s *Script) ScriptType() string {
+	if s.IsP2PKH() {
+		return ScriptTypePubKeyHash
+	}
+	if s.IsP2PK() {
+		return ScriptTypePubKey
+	}
+	if s.IsMultiSigOut() {
+		return ScriptTypeMultiSig
+	}
+	if s.IsData() {
+		return ScriptTypeNullData
+	}
+	return ScriptTypeNonStandard
+}
+
+// Addresses will return all addresses found in the script, if any.
+func (s *Script) Addresses() ([]string, error) {
+	addresses := make([]string, 0)
+	if s.IsP2PKH() {
+		pkh, err := s.PublicKeyHash()
+		if err != nil {
+			return nil, err
+		}
+		a, err := NewAddressFromPublicKeyHash(pkh, true)
+		if err != nil {
+			return nil, err
+		}
+		addresses = []string{a.AddressString}
+	}
+	// TODO: handle multisig, and other outputs
+	// https://github.com/libsv/go-bt/issues/6
+	return addresses, nil
 }
 
 // Equals will compare the script to b and return true if they match.

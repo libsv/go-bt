@@ -31,9 +31,9 @@ func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
 	return nil
 }
 
-// ChangeToOutput will calculate fees and add them to an output at the index specified (0 based).
+// ChangeToExistingOutput will calculate fees and add them to an output at the index specified (0 based).
 // If an invalid index is supplied and error is returned.
-func (tx *Tx) ChangeToOutput(index uint, f *FeeQuote) error {
+func (tx *Tx) ChangeToExistingOutput(index uint, f *FeeQuote) error {
 	if int(index) > len(tx.Outputs)-1 {
 		return errors.New("index is greater than number of inputs in transaction")
 	}
