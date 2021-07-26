@@ -109,7 +109,7 @@ func TestDecodeBIP276(t *testing.T) {
 		assert.Equal(t, `"bitcoin-script"`, fmt.Sprintf("%q", prefix))
 		assert.Equal(t, 1, network)
 		assert.Equal(t, 1, version)
-		assert.Equal(t, "fake script", fmt.Sprintf("%s", data))
+		assert.Equal(t, "fake script", string(data))
 	})
 
 	t.Run("invalid decode", func(t *testing.T) {
@@ -123,6 +123,6 @@ func TestDecodeBIP276(t *testing.T) {
 		assert.Equal(t, `"bitcoin-script"`, fmt.Sprintf("%q", prefix))
 		assert.Equal(t, 1, network)
 		assert.Equal(t, 1, version)
-		assert.Equal(t, "fake scrip", fmt.Sprintf("%s", data))
+		assert.Equal(t, "fake scrip", string(data))
 	})
 }
