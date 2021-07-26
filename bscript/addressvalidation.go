@@ -53,9 +53,7 @@ func (a *a25) set58(s []byte) error {
 // Checks both mainnet and testnet.
 func ValidateAddress(address string) (bool, error) {
 	if strings.HasPrefix(address, "bitcoin-script:") {
-		_, _, _, _, err := DecodeBIP276(address)
-
-		if err != nil {
+		if _, err := DecodeBIP276(address); err != nil {
 			return false, fmt.Errorf("bitcoin-script invalid [%w]", err)
 		}
 		return true, nil
