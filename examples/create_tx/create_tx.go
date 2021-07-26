@@ -25,5 +25,5 @@ func main() {
 	if err != nil && len(inputsSigned) > 0 {
 		log.Fatal(err.Error())
 	}
-	log.Println("tx: ", tx.String())
+	log.Printf("tx: %s\n", tx)
 }

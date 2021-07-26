@@ -31,9 +31,9 @@ func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 	return nil
 }
 
-// ChangeToOutput will calculate fees and add them to an output at the index specified (0 based).
+// ChangeToExistingOutput will calculate fees and add them to an output at the index specified (0 based).
 // If an invalid index is supplied and error is returned.
-func (tx *Tx) ChangeToOutput(index uint, f []*Fee) error {
+func (tx *Tx) ChangeToExistingOutput(index uint, f []*Fee) error {
 	if int(index) > tx.OutputCount()-1 {
 		return errors.New("index is greater than number of inputs in transaction")
 	}
@@ -106,7 +106,8 @@ func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 
 	changeOutputFee := uint64(varIntUpper)
 
-	changeP2pkhByteLen := 8 + 25 // 8 bytes for satoshi value + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
+	// 8 bytes for satoshi value +1 for varint length + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
+	changeP2pkhByteLen := 8 + 1 + 25
 	changeOutputFee += uint64(changeP2pkhByteLen * standardFees.MiningFee.Satoshis / standardFees.MiningFee.Bytes)
 
 	// not enough change to add a whole change output so don't add anything and return
