@@ -17,7 +17,7 @@ func main() {
 		"76a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac",
 		1000)
 
-	_ = tx.PayTo("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 900)
+	_ = tx.PayToAddress("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 900)
 
 	_ = tx.AddOpReturnOutput([]byte("You are using go-bt!"))
 

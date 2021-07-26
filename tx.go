@@ -75,7 +75,7 @@ func (tx *Tx) MarshalJSON() ([]byte, error) {
 		Outputs:  tx.outputs,
 		TxID:     tx.TxID(),
 		Hash:     tx.TxID(),
-		Size:     len(tx.ToBytes()),
+		Size:     len(tx.Bytes()),
 		Hex:      tx.String(),
 	}
 	return json.Marshal(txj)
@@ -249,21 +249,21 @@ func (tx *Tx) IsCoinbase() bool {
 	return false
 }
 
-// TxIDAsBytes returns the transaction ID of the transaction as bytes
+// TxIDBytes returns the transaction ID of the transaction as bytes
 // (which is also the transaction hash).
-func (tx *Tx) TxIDAsBytes() []byte {
-	return ReverseBytes(crypto.Sha256d(tx.ToBytes()))
+func (tx *Tx) TxIDBytes() []byte {
+	return ReverseBytes(crypto.Sha256d(tx.Bytes()))
 }
 
 // TxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
 func (tx *Tx) TxID() string {
-	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.ToBytes())))
+	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.Bytes())))
 }
 
 // String encodes the transaction into a hex string.
 func (tx *Tx) String() string {
-	return hex.EncodeToString(tx.ToBytes())
+	return hex.EncodeToString(tx.Bytes())
 }
 
 // IsValidTxID will check that the txid bytes are valid.
@@ -279,15 +279,15 @@ func IsValidTxID(txid []byte) bool {
 	return true
 }
 
-// ToBytes encodes the transaction into a byte array.
+// Bytes encodes the transaction into a byte array.
 // See https://chainquery.com/bitcoin-cli/decoderawtransaction
-func (tx *Tx) ToBytes() []byte {
+func (tx *Tx) Bytes() []byte {
 	return tx.toBytesHelper(0, nil)
 }
 
-// ToBytesWithClearedInputs encodes the transaction into a byte array but clears its inputs first.
+// BytesWithClearedInputs encodes the transaction into a byte array but clears its inputs first.
 // This is used when signing transactions.
-func (tx *Tx) ToBytesWithClearedInputs(index int, lockingScript []byte) []byte {
+func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 	return tx.toBytesHelper(index, lockingScript)
 }
 
@@ -310,7 +310,7 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 
 	h = append(h, VarInt(uint64(len(tx.outputs)))...)
 	for _, out := range tx.outputs {
-		h = append(h, out.ToBytes()...)
+		h = append(h, out.Bytes()...)
 	}
 
 	lt := make([]byte, 4)

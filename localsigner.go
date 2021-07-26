@@ -7,8 +7,8 @@ import (
 	"github.com/libsv/go-bt/sighash"
 )
 
-// LocalSigner implements the Signer interface. It is used to sign a Tx locally
-// using a bkec PrivateKey.
+// LocalSigner implements the Signer interface. It is used to sign Tx inputs locally
+// using a bkec PrivateKey, any input found that can be signed by the key will be signed.
 type LocalSigner struct {
 	PrivateKey *bec.PrivateKey
 }
@@ -32,8 +32,7 @@ func (is *LocalSigner) Sign(ctx context.Context, unsignedTx *Tx, index uint32,
 
 // SignHash a transaction at a given a hash digest using the PrivateKey passed in through the
 // InternalSigner struct.
-func (is *LocalSigner) SignHash(ctx context.Context, hash []byte) (publicKey []byte, signature []byte, err error) {
-
+func (is *LocalSigner) SignHash(ctx context.Context, hash []byte) (publicKey, signature []byte, err error) {
 	sig, err := is.PrivateKey.Sign(hash)
 	if err != nil {
 		return

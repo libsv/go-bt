@@ -162,6 +162,6 @@ func (tx *Tx) getStandardAndDataBytes() (standardBytes, dataBytes int) {
 		}
 	}
 
-	standardBytes = len(tx.ToBytes()) - dataBytes
+	standardBytes = len(tx.Bytes()) - dataBytes
 	return
 }

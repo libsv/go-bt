@@ -202,7 +202,7 @@ func TestTx_CreateTx(t *testing.T) {
 		2000000)
 	assert.NoError(t, err)
 
-	err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+	err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 	assert.NoError(t, err)
 
 	var wif *WIF
@@ -228,7 +228,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 			2000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+		err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 		assert.NoError(t, err)
 
 		// Add op return data
@@ -260,7 +260,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 			2000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+		err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -296,7 +296,7 @@ func TestTx_JSON(t *testing.T) {
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 					2000000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var wif *WIF
 				wif, err := DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
@@ -314,7 +314,7 @@ func TestTx_JSON(t *testing.T) {
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 					2000000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var wif *WIF
 				wif, err := DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
@@ -415,7 +415,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 					114,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 					10000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var w *wif.WIF
 				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
@@ -658,9 +658,9 @@ func TestTx_OutputIdx(t *testing.T) {
 		"tx with 3 outputs and output idx 0 requested should return output": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
 				return tx
 			}(),
 			idx: 0,
@@ -675,9 +675,9 @@ func TestTx_OutputIdx(t *testing.T) {
 		}, "tx with 3 outputs and output idx 2 requested should return output": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
-				assert.NoError(t, tx.PayTo("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
 				return tx
 			}(),
 			idx: 2,
@@ -692,9 +692,9 @@ func TestTx_OutputIdx(t *testing.T) {
 		}, "tx with 3 outputs and output idx 5 requested should return nil": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.PayTo("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
-				assert.NoError(t, tx.PayTo("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
 				return tx
 			}(),
 			idx:       5,
