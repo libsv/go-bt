@@ -152,8 +152,8 @@ sequence:     %x
 	)
 }
 
-// ToBytes encodes the Input into a hex byte array.
-func (i *Input) ToBytes(clear bool) []byte {
+// Bytes encodes the Input into a hex byte array.
+func (i *Input) Bytes(clear bool) []byte {
 	h := make([]byte, 0)
 
 	h = append(h, ReverseBytes(i.previousTxID)...)

@@ -299,7 +299,7 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 	h = append(h, VarInt(uint64(len(tx.inputs)))...)
 
 	for i, in := range tx.inputs {
-		s := in.ToBytes(lockingScript != nil)
+		s := in.Bytes(lockingScript != nil)
 		if i == index && lockingScript != nil {
 			h = append(h, VarInt(uint64(len(lockingScript)))...)
 			h = append(h, lockingScript...)
