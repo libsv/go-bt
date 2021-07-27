@@ -117,11 +117,7 @@ func (i *Input) PreviousTxIDAddStr(txID string) error {
 	if err != nil {
 		return err
 	}
-	if !IsValidTxID(bb) {
-		return ErrInvalidTxID
-	}
-	i.previousTxID = bb
-	return nil
+	return i.PreviousTxIDAdd(bb)
 }
 
 // PreviousTxID will return the PreviousTxID if set.

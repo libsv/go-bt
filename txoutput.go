@@ -36,7 +36,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 
 // TotalOutputSatoshis returns the total Satoshis outputted from the transaction.
 func (tx *Tx) TotalOutputSatoshis() (total uint64) {
-	for _, o := range tx.outputs {
+	for _, o := range tx.Outputs {
 		total += o.Satoshis
 	}
 	return
@@ -178,14 +178,14 @@ func createOpReturnOutput(data [][]byte) (*Output, error) {
 	return &Output{LockingScript: s}, nil
 }
 
-// OutputCount returns the number of transaction inputs.
+// OutputCount returns the number of transaction Inputs.
 func (tx *Tx) OutputCount() int {
-	return len(tx.outputs)
+	return len(tx.Outputs)
 }
 
 // AddOutput adds a new output to the transaction.
 func (tx *Tx) AddOutput(output *Output) {
-	tx.outputs = append(tx.outputs, output)
+	tx.Outputs = append(tx.Outputs, output)
 }
 
 // PayTo creates a new P2PKH output from a BitCoin address (base58)

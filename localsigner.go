@@ -7,8 +7,8 @@ import (
 	"github.com/libsv/go-bt/sighash"
 )
 
-// LocalSigner implements the Signer interface. It is used to sign Tx inputs locally
-// using a bkec PrivateKey, any input found that can be signed by the key will be signed.
+// LocalSigner implements the Signer interface. It is used to sign Tx Inputs locally
+// using a bkec PrivateKey.
 type LocalSigner struct {
 	PrivateKey *bec.PrivateKey
 }

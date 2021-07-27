@@ -34,7 +34,7 @@ func TestNewTx(t *testing.T) {
 func TestNewTxFromString(t *testing.T) {
 	t.Parallel()
 
-	t.Run("valid tx no inputs", func(t *testing.T) {
+	t.Run("valid tx no Inputs", func(t *testing.T) {
 		tx, err := bt.NewTxFromString("01000000000100000000000000001a006a07707265666978310c6578616d706c65206461746102133700000000")
 		assert.NoError(t, err)
 		assert.NotNil(t, tx)
@@ -58,10 +58,10 @@ func TestNewTxFromString(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, tx)
 
-		// Check version, locktime, inputs
+		// Check version, locktime, Inputs
 		assert.Equal(t, uint32(2), tx.Version)
 		assert.Equal(t, uint32(0), tx.LockTime)
-		assert.Equal(t, 1, len(tx.Inputs()))
+		assert.Equal(t, 1, len(tx.Inputs))
 
 		// Create a new unlocking script
 		//ptid, _ := hex.DecodeString("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
@@ -78,7 +78,7 @@ func TestNewTxFromString(t *testing.T) {
 		assert.Equal(t, tx.InputIdx(0), i)
 
 		// Check output
-		assert.Equal(t, 1, len(tx.Outputs()))
+		assert.Equal(t, 1, len(tx.Outputs))
 
 		// New output
 		var ls *bscript.Script
@@ -88,7 +88,7 @@ func TestNewTxFromString(t *testing.T) {
 
 		// Check the type
 		o := bt.Output{Satoshis: 4999000000, LockingScript: ls}
-		assert.Equal(t, true, reflect.DeepEqual(*tx.Outputs()[0], o))
+		assert.Equal(t, true, reflect.DeepEqual(*tx.Outputs[0], o))
 	})
 }
 
@@ -148,7 +148,7 @@ func TestVersion(t *testing.T) {
 func TestTx_IsCoinbase(t *testing.T) {
 	t.Parallel()
 
-	t.Run("invalid number of inputs", func(t *testing.T) {
+	t.Run("invalid number of Inputs", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 		assert.Equal(t, false, tx.IsCoinbase())
@@ -217,7 +217,7 @@ func TestTx_CreateTx(t *testing.T) {
 func TestTx_HasDataOutputs(t *testing.T) {
 	t.Parallel()
 
-	t.Run("has data outputs", func(t *testing.T) {
+	t.Run("has data Outputs", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
@@ -249,7 +249,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.Equal(t, true, tx.HasDataOutputs())
 	})
 
-	t.Run("no data outputs", func(t *testing.T) {
+	t.Run("no data Outputs", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
@@ -397,7 +397,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 		}
 	]
 }`,
-		}, "transaction with multiple inputs": {
+		}, "transaction with multiple Inputs": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
@@ -655,7 +655,7 @@ func TestTx_OutputIdx(t *testing.T) {
 		idx       int
 		expOutput *bt.Output
 	}{
-		"tx with 3 outputs and output idx 0 requested should return output": {
+		"tx with 3 Outputs and output idx 0 requested should return output": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
@@ -672,7 +672,7 @@ func TestTx_OutputIdx(t *testing.T) {
 					return s
 				}(),
 			},
-		}, "tx with 3 outputs and output idx 2 requested should return output": {
+		}, "tx with 3 Outputs and output idx 2 requested should return output": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
@@ -689,7 +689,7 @@ func TestTx_OutputIdx(t *testing.T) {
 					return s
 				}(),
 			},
-		}, "tx with 3 outputs and output idx 5 requested should return nil": {
+		}, "tx with 3 Outputs and output idx 5 requested should return nil": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
@@ -699,7 +699,7 @@ func TestTx_OutputIdx(t *testing.T) {
 			}(),
 			idx:       5,
 			expOutput: nil,
-		}, "tx with 0 outputs and output idx 5 requested should return nil": {
+		}, "tx with 0 Outputs and output idx 5 requested should return nil": {
 			tx: func() *bt.Tx {
 				return bt.NewTx()
 			}(),
@@ -722,7 +722,7 @@ func TestTx_InputIdx(t *testing.T) {
 		idx      int
 		expInput *bt.Input
 	}{
-		"tx with 3 inputs and input idx 0 requested should return correct input": {
+		"tx with 3 Inputs and input idx 0 requested should return correct input": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
@@ -757,7 +757,7 @@ func TestTx_InputIdx(t *testing.T) {
 				_ = in.PreviousTxIDAddStr("3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5")
 				return in
 			}(),
-		}, "tx with 3 outputs and output idx 2 requested should return output": {
+		}, "tx with 3 Outputs and output idx 2 requested should return output": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
@@ -792,7 +792,7 @@ func TestTx_InputIdx(t *testing.T) {
 				_ = in.PreviousTxIDAddStr("3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdac4")
 				return in
 			}(),
-		}, "tx with 3 outputs and output idx 5 requested should return nil": {
+		}, "tx with 3 Outputs and output idx 5 requested should return nil": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
@@ -814,7 +814,7 @@ func TestTx_InputIdx(t *testing.T) {
 			}(),
 			idx:      5,
 			expInput: nil,
-		}, "tx with 0 outputs and output idx 5 requested should return nil": {
+		}, "tx with 0 Outputs and output idx 5 requested should return nil": {
 			tx: func() *bt.Tx {
 				return bt.NewTx()
 			}(),

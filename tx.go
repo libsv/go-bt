@@ -20,12 +20,12 @@ Version no	     currently 1	                                                    
 
 In-counter  	 positive integer VI = VarInt                                              1 - 9 bytes
 
-list of inputs	 the first input of the first transaction is also called "coinbase"        <in-counter>-many inputs
+list of Inputs	 the first input of the first transaction is also called "coinbase"        <in-counter>-many Inputs
                  (its content was ignored in earlier versions)
 
 Out-counter    	 positive integer VI = VarInt                                              1 - 9 bytes
 
-list of outputs  the outputs of the first transaction spend the mined                      <out-counter>-many outputs
+list of Outputs  the Outputs of the first transaction spend the mined                      <out-counter>-many Outputs
 								 bitcoins for the block
 
 lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height or        4 bytes
@@ -43,8 +43,8 @@ var (
 // DO NOT CHANGE ORDER - Optimised memory via malign
 //
 type Tx struct {
-	inputs   []*Input
-	outputs  []*Output
+	Inputs   []*Input
+	Outputs  []*Output
 	Version  uint32
 	LockTime uint32
 }
@@ -65,14 +65,14 @@ func (tx *Tx) MarshalJSON() ([]byte, error) {
 	if tx == nil {
 		return nil, errors.New("tx is nil so cannot be marshalled")
 	}
-	for i, o := range tx.outputs {
+	for i, o := range tx.Outputs {
 		o.index = i
 	}
 	txj := txJSON{
 		Version:  tx.Version,
 		LockTime: tx.LockTime,
-		Inputs:   tx.inputs,
-		Outputs:  tx.outputs,
+		Inputs:   tx.Inputs,
+		Outputs:  tx.Outputs,
 		TxID:     tx.TxID(),
 		Hash:     tx.TxID(),
 		Size:     len(tx.Bytes()),
@@ -96,8 +96,8 @@ func (tx *Tx) UnmarshalJSON(b []byte) error {
 		*tx = *t
 		return nil
 	}
-	tx.inputs = txj.Inputs
-	tx.outputs = txj.Outputs
+	tx.Inputs = txj.Inputs
+	tx.Outputs = txj.Outputs
 	tx.LockTime = txj.LockTime
 	tx.Version = txj.Version
 	return nil
@@ -152,7 +152,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	inputCount, size := DecodeVarInt(b[offset:])
 	offset += size
 
-	// create inputs
+	// create Inputs
 	var i uint64
 	var err error
 	var input *Input
@@ -165,7 +165,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 		t.addInput(input)
 	}
 
-	// create outputs
+	// create Outputs
 	var outputCount uint64
 	var output *Output
 	outputCount, size = DecodeVarInt(b[offset:])
@@ -189,17 +189,12 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 // HasDataOutputs returns true if the transaction has
 // at least one data (OP_RETURN) output in it.
 func (tx *Tx) HasDataOutputs() bool {
-	for _, out := range tx.Outputs() {
+	for _, out := range tx.Outputs {
 		if out.LockingScript.IsData() {
 			return true
 		}
 	}
 	return false
-}
-
-// Inputs returns the inputs for the transaction.
-func (tx *Tx) Inputs() []*Input {
-	return tx.inputs
 }
 
 // InputIdx will return the input at the specified index.
@@ -210,12 +205,7 @@ func (tx *Tx) InputIdx(i int) *Input {
 	if i > tx.InputCount()-1 {
 		return nil
 	}
-	return tx.inputs[i]
-}
-
-// Outputs returns the outputs for the transaction.
-func (tx *Tx) Outputs() []*Output {
-	return tx.outputs
+	return tx.Inputs[i]
 }
 
 // OutputIdx will return the output at the specified index.
@@ -226,23 +216,23 @@ func (tx *Tx) OutputIdx(i int) *Output {
 	if i > tx.OutputCount()-1 {
 		return nil
 	}
-	return tx.outputs[i]
+	return tx.Outputs[i]
 }
 
 // IsCoinbase determines if this transaction is a coinbase by
 // checking if the tx input is a standard coinbase input.
 func (tx *Tx) IsCoinbase() bool {
-	if len(tx.inputs) != 1 {
+	if len(tx.Inputs) != 1 {
 		return false
 	}
 
 	cbi := make([]byte, 32)
 
-	if !bytes.Equal(tx.inputs[0].PreviousTxID(), cbi) {
+	if !bytes.Equal(tx.Inputs[0].PreviousTxID(), cbi) {
 		return false
 	}
 
-	if tx.inputs[0].PreviousTxOutIndex == DefaultSequenceNumber || tx.inputs[0].SequenceNumber == DefaultSequenceNumber {
+	if tx.Inputs[0].PreviousTxOutIndex == DefaultSequenceNumber || tx.Inputs[0].SequenceNumber == DefaultSequenceNumber {
 		return true
 	}
 
@@ -268,15 +258,9 @@ func (tx *Tx) String() string {
 
 // IsValidTxID will check that the txid bytes are valid.
 //
-// A txid should be in hexadecimal and be of 32 bytes length.
+// A txid should be of 32 bytes length.
 func IsValidTxID(txid []byte) bool {
-	if len(txid) != 32 {
-		return false
-	}
-	if s := hex.EncodeToString(txid); s == "" {
-		return false
-	}
-	return true
+	return len(txid) == 32
 }
 
 // Bytes encodes the transaction into a byte array.
@@ -285,7 +269,7 @@ func (tx *Tx) Bytes() []byte {
 	return tx.toBytesHelper(0, nil)
 }
 
-// BytesWithClearedInputs encodes the transaction into a byte array but clears its inputs first.
+// BytesWithClearedInputs encodes the transaction into a byte array but clears its Inputs first.
 // This is used when signing transactions.
 func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 	return tx.toBytesHelper(index, lockingScript)
@@ -296,9 +280,9 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 
 	h = append(h, LittleEndianBytes(tx.Version, 4)...)
 
-	h = append(h, VarInt(uint64(len(tx.inputs)))...)
+	h = append(h, VarInt(uint64(len(tx.Inputs)))...)
 
-	for i, in := range tx.inputs {
+	for i, in := range tx.Inputs {
 		s := in.Bytes(lockingScript != nil)
 		if i == index && lockingScript != nil {
 			h = append(h, VarInt(uint64(len(lockingScript)))...)
@@ -308,8 +292,8 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 		}
 	}
 
-	h = append(h, VarInt(uint64(len(tx.outputs)))...)
-	for _, out := range tx.outputs {
+	h = append(h, VarInt(uint64(len(tx.Outputs)))...)
+	for _, out := range tx.Outputs {
 		h = append(h, out.Bytes()...)
 	}
 

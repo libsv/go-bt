@@ -115,7 +115,7 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 func (tx *Tx) getPreviousOutHash() []byte {
 	buf := make([]byte, 0)
 
-	for _, in := range tx.Inputs() {
+	for _, in := range tx.Inputs {
 		buf = append(buf, ReverseBytes(in.PreviousTxID())...)
 		oi := make([]byte, 4)
 		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
@@ -128,7 +128,7 @@ func (tx *Tx) getPreviousOutHash() []byte {
 func (tx *Tx) getSequenceHash() []byte {
 	buf := make([]byte, 0)
 
-	for _, in := range tx.Inputs() {
+	for _, in := range tx.Inputs {
 		oi := make([]byte, 4)
 		binary.LittleEndian.PutUint32(oi, in.SequenceNumber)
 		buf = append(buf, oi...)
@@ -141,11 +141,11 @@ func (tx *Tx) getOutputsHash(n int32) []byte {
 	buf := make([]byte, 0)
 
 	if n == -1 {
-		for _, out := range tx.Outputs() {
+		for _, out := range tx.Outputs {
 			buf = append(buf, out.BytesForSigHash()...)
 		}
 	} else {
-		buf = append(buf, tx.Outputs()[n].BytesForSigHash()...)
+		buf = append(buf, tx.Outputs[n].BytesForSigHash()...)
 	}
 
 	return crypto.Sha256d(buf)

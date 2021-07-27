@@ -53,7 +53,7 @@ func TestTx_ChangeToAddress(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, tx.OutputCount())
-		assert.Equal(t, "76a914a7a1a7fd7d279b57b84e596cbbf82608efdb441a88ac", tx.Outputs()[0].LockingScript.String())
+		assert.Equal(t, "76a914a7a1a7fd7d279b57b84e596cbbf82608efdb441a88ac", tx.Outputs[0].LockingScript.String())
 	})
 }
 
@@ -113,7 +113,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Correct fee for the tx
-		assert.Equal(t, uint64(3999904), tx.Outputs()[0].Satoshis)
+		assert.Equal(t, uint64(3999904), tx.Outputs[0].Satoshis)
 
 		// Correct script hex string
 		assert.Equal(t,
@@ -193,7 +193,7 @@ func TestTx_Change(t *testing.T) {
 
 		assert.Equal(t, "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a473044022049ee0c0f26c00e6a6b3af5990fc8296c66eab3e3e42ab075069b89b1be6fefec02206079e49dd8c9e1117ef06fbe99714d822620b1f0f5d19f32a1128f5d29b7c3c4412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff01a0083d00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000", tx.String())
 
-		assert.Equal(t, uint64(3999904), tx.Outputs()[0].Satoshis)
+		assert.Equal(t, uint64(3999904), tx.Outputs[0].Satoshis)
 	})
 
 	t.Run("spend entire utxo - multi payouts - expected fee", func(t *testing.T) {
@@ -226,8 +226,8 @@ func TestTx_Change(t *testing.T) {
 
 		assert.Equal(t, "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a47304402206bbb4b23349bdf86e6fbc9067226e9a7b15c977fa530999b39cd0a6d9c83360d02202dd8ffdc610e58b3fc92b44400d99e38c78866765f31acb40d98007a52e7a826412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff0240420f00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88acc0c62d00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac00000000", tx.String())
 
-		assert.Equal(t, uint64(1000000), tx.Outputs()[0].Satoshis)
-		assert.Equal(t, uint64(3000000), tx.Outputs()[1].Satoshis)
+		assert.Equal(t, uint64(1000000), tx.Outputs[0].Satoshis)
+		assert.Equal(t, uint64(3000000), tx.Outputs[1].Satoshis)
 	})
 
 	t.Run("spend entire utxo - multi payouts - incorrect fee", func(t *testing.T) {
@@ -260,13 +260,13 @@ func TestTx_Change(t *testing.T) {
 
 		assert.Equal(t, "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006b483045022100fd07316603e9abf393e695192e8ce1e7f808d2735cc57039109a2210ad32d9a7022000e301e2a988b23ab3872b041df8b6eb0315238e0918944cbaf8b6abdde75cac412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff023b420f00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88acc0c62d00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac00000000", tx.String())
 
-		// todo: expected the pay-to inputs to change based on the fee :P
+		// todo: expected the pay-to Inputs to change based on the fee :P
 
-		assert.Equal(t, uint64(999995), tx.Outputs()[0].Satoshis)
-		assert.Equal(t, uint64(3000000), tx.Outputs()[1].Satoshis)
+		assert.Equal(t, uint64(999995), tx.Outputs[0].Satoshis)
+		assert.Equal(t, uint64(3000000), tx.Outputs[1].Satoshis)
 	})
 
-	t.Run("multiple inputs, spend all", func(t *testing.T) {
+	t.Run("multiple Inputs, spend all", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
@@ -375,7 +375,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			}(),
 			index: 1,
 			fees:  bt.DefaultFees(),
-			err:   errors.New("index is greater than number of inputs in transaction"),
+			err:   errors.New("index is greater than number of Inputs in transaction"),
 		},
 	}
 	for name, test := range tests {
@@ -387,7 +387,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return
 			}
 			assert.Equal(t, test.expOutputTotal, test.tx.TotalOutputSatoshis())
-			assert.Equal(t, test.expChangeOutput, test.tx.Outputs()[test.index].Satoshis)
+			assert.Equal(t, test.expChangeOutput, test.tx.Outputs[test.index].Satoshis)
 		})
 	}
 }
@@ -412,7 +412,7 @@ func TestTx_CalculateChange(t *testing.T) {
 			}(),
 			fees:    bt.DefaultFees(),
 			expFees: 96,
-		}, "Transaction with one input 4 outputs should return 147": {
+		}, "Transaction with one input 4 Outputs should return 147": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(

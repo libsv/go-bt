@@ -124,8 +124,8 @@ func TestTx_CalcInputSignatureHash(t *testing.T) {
 			assert.NotNil(t, tx)
 
 			// Add the UTXO amount and script (PreviousTxScript already in unsiged tx)
-			tx.Inputs()[test.index].PreviousTxSatoshis = test.previousTxSatoshis
-			tx.Inputs()[test.index].PreviousTxScript, err = bscript.NewFromHexString(test.previousTxScript)
+			tx.Inputs[test.index].PreviousTxSatoshis = test.previousTxSatoshis
+			tx.Inputs[test.index].PreviousTxScript, err = bscript.NewFromHexString(test.previousTxScript)
 			assert.NoError(t, err)
 
 			var actualSigHash []byte

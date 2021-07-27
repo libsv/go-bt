@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bk/crypto"
+	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/sighash"
 )
 
@@ -66,15 +66,15 @@ func (tx *Tx) ApplyP2PKHUnlockingScript(index uint32, pubKey []byte, sig []byte,
 // ApplyUnlockingScript applies a script to the transaction at a specific index in
 // unlocking script field.
 func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
-	if tx.inputs[index] != nil {
-		tx.inputs[index].UnlockingScript = s
+	if tx.Inputs[index] != nil {
+		tx.Inputs[index].UnlockingScript = s
 		return nil
 	}
 
 	return fmt.Errorf("no input at index %d", index)
 }
 
-// SignAuto is used to automatically check which P2PKH inputs are
+// SignAuto is used to automatically check which P2PKH Inputs are
 // able to be signed (match the public key) and then sign them.
 // It takes a Signed interface as a parameter so that different
 // signing implementations can be used to sign the transaction -
@@ -82,7 +82,7 @@ func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
 func (tx *Tx) SignAuto(ctx context.Context, s AutoSigner) (inputsSigned []int, err error) {
 	shf := sighash.AllForkID // use SIGHASHALLFORFORKID to sign automatically
 
-	for i, in := range tx.inputs {
+	for i, in := range tx.Inputs {
 		pubKeyHash, _ := in.PreviousTxScript.PublicKeyHash() // doesn't matter if returns error (not p2pkh)
 		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
 
