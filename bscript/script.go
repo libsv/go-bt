@@ -47,11 +47,9 @@ func NewFromBytes(b []byte) *Script {
 
 // NewFromASM creates a new script from a BitCoin ASM formatted string.
 func NewFromASM(str string) (*Script, error) {
-	sections := strings.Split(str, " ")
+	s := Script{}
 
-	s := &Script{}
-
-	for _, section := range sections {
+	for _, section := range strings.Split(str, " ") {
 		if val, ok := opCodeStrings[section]; ok {
 			s.AppendOpCode(val)
 		} else {
@@ -61,14 +59,13 @@ func NewFromASM(str string) (*Script, error) {
 		}
 	}
 
-	return s, nil
+	return &s, nil
 }
 
 // NewP2PKHFromPubKeyEC takes a public key hex string (in
 // compressed format) and creates a P2PKH script from it.
 func NewP2PKHFromPubKeyEC(pubKey *bec.PublicKey) (*Script, error) {
-	pubKeyBytes := pubKey.SerialiseCompressed()
-	return NewP2PKHFromPubKeyBytes(pubKeyBytes)
+	return NewP2PKHFromPubKeyBytes(pubKey.SerialiseCompressed())
 }
 
 // NewP2PKHFromPubKeyStr takes a public key hex string (in
@@ -200,8 +197,8 @@ func (s *Script) AppendOpCode(o uint8) *Script {
 	return s
 }
 
-// ToString returns hex string of script.
-func (s *Script) String() string { // TODO: change to HexString?
+// String implements the stringer interface and returns the hex string of script.
+func (s *Script) String() string {
 	return hex.EncodeToString(*s)
 }
 

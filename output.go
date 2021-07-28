@@ -113,8 +113,8 @@ script:    %s
 `, o.Satoshis, len(*o.LockingScript), o.LockingScript)
 }
 
-// ToBytes encodes the Output into a byte array.
-func (o *Output) ToBytes() []byte {
+// Bytes encodes the Output into a byte array.
+func (o *Output) Bytes() []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, o.Satoshis)
 

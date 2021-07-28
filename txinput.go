@@ -3,7 +3,6 @@ package bt
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
@@ -28,7 +27,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 	}
 
 	return &Input{
-		PreviousTxIDBytes:  ReverseBytes(bytes[0:32]),
+		previousTxID:       ReverseBytes(bytes[0:32]),
 		PreviousTxOutIndex: binary.LittleEndian.Uint32(bytes[32:36]),
 		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
 		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
@@ -47,9 +46,9 @@ func (tx *Tx) addInput(input *Input) {
 	tx.Inputs = append(tx.Inputs, input)
 }
 
-// AddInputFromTx will add all outputs of given previous transaction
+// AddP2PKHInputsFromTx will add all Outputs of given previous transaction
 // that match a specific public key to your transaction.
-func (tx *Tx) AddInputFromTx(pvsTx *Tx, matchPK []byte) error {
+func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 	for i, utxo := range pvsTx.Outputs {
 		utxoPkHASH160, err := utxo.LockingScript.PublicKeyHash()
 		if err != nil {
@@ -75,23 +74,21 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 		return err
 	}
 
-	ptxid, err := hex.DecodeString(prevTxID)
-	if err != nil {
-		return err
-	}
-
-	tx.addInput(&Input{
-		PreviousTxIDBytes:  ptxid,
+	i := &Input{
 		PreviousTxOutIndex: vout,
 		PreviousTxSatoshis: satoshis,
 		PreviousTxScript:   pts,
 		SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
-	})
+	}
+	if err := i.PreviousTxIDAddStr(prevTxID); err != nil {
+		return err
+	}
+	tx.addInput(i)
 
 	return nil
 }
 
-// InputCount returns the number of transaction inputs.
+// InputCount returns the number of transaction Inputs.
 func (tx *Tx) InputCount() int {
 	return len(tx.Inputs)
 }

@@ -118,7 +118,7 @@ func TestTx_Change(t *testing.T) {
 		// Correct script hex string
 		assert.Equal(t,
 			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			tx.Outputs[0].LockingScriptHexString(),
+			tx.OutputIdx(0).LockingScriptHexString(),
 		)
 	})
 
@@ -136,7 +136,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 
 		// pay to
-		err = tx.PayTo("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 500)
+		err = tx.PayToAddress("1C8bzHM8XFBHZ2ZZVvFy2NSoAZbwCXAicL", 500)
 		assert.NoError(t, err)
 
 		// add some op return
@@ -162,7 +162,7 @@ func TestTx_Change(t *testing.T) {
 		feePaid := tx.TotalInputSatoshis() - tx.TotalOutputSatoshis()
 		assert.Equal(t, uint64(122), feePaid)
 
-		txSize := len(tx.ToBytes())
+		txSize := len(tx.Bytes())
 		assert.Equal(t, 251, txSize)
 
 		feeRate := float64(feePaid) / float64(txSize)
@@ -207,10 +207,10 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 1000000)
+		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 1000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
+		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
@@ -241,10 +241,10 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 999995)
+		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 999995)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
+		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
@@ -260,13 +260,13 @@ func TestTx_Change(t *testing.T) {
 
 		assert.Equal(t, "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006b483045022100fd07316603e9abf393e695192e8ce1e7f808d2735cc57039109a2210ad32d9a7022000e301e2a988b23ab3872b041df8b6eb0315238e0918944cbaf8b6abdde75cac412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff023b420f00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88acc0c62d00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac00000000", tx.String())
 
-		// todo: expected the pay-to inputs to change based on the fee :P
+		// todo: expected the pay-to Inputs to change based on the fee :P
 
 		assert.Equal(t, uint64(999995), tx.Outputs[0].Satoshis)
 		assert.Equal(t, uint64(3000000), tx.Outputs[1].Satoshis)
 	})
 
-	t.Run("multiple inputs, spend all", func(t *testing.T) {
+	t.Run("multiple Inputs, spend all", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
@@ -319,7 +319,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 					0,
 					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 					1000))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 1000))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 1000))
 				return tx
 			}(),
 			index:           0,
@@ -335,7 +335,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 					0,
 					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 					1000))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
 			index:           0,
@@ -351,10 +351,10 @@ func TestTx_ChangeToOutput(t *testing.T) {
 					0,
 					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 					2500))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
 			index:           3,
@@ -370,12 +370,12 @@ func TestTx_ChangeToOutput(t *testing.T) {
 					0,
 					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 					1000))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
 			index: 1,
 			fees:  bt.DefaultFees(),
-			err:   errors.New("index is greater than number of inputs in transaction"),
+			err:   errors.New("index is greater than number of Inputs in transaction"),
 		},
 	}
 	for name, test := range tests {
@@ -407,12 +407,12 @@ func TestTx_CalculateChange(t *testing.T) {
 					0,
 					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 					1000))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
 			fees:    bt.DefaultFees(),
 			expFees: 96,
-		}, "Transaction with one input 4 outputs should return 147": {
+		}, "Transaction with one input 4 Outputs should return 147": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
@@ -420,10 +420,10 @@ func TestTx_CalculateChange(t *testing.T) {
 					0,
 					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 					2500))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
-				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
 			fees:    bt.DefaultFees(),
