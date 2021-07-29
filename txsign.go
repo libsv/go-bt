@@ -86,12 +86,16 @@ func (tx *Tx) SignAuto(ctx context.Context, s AutoSigner) (inputsSigned []int, e
 		pubKeyHash, _ := in.PreviousTxScript.PublicKeyHash() // doesn't matter if returns error (not p2pkh)
 		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
 
-		pubKeyHashStrFromPriv := hex.EncodeToString(crypto.Hash160(s.PublicKey(ctx)))
+		pubKey, err := s.PublicKey(ctx)
+		if err != nil {
+			return nil, err
+		}
+		pubKeyHashStrFromPriv := hex.EncodeToString(crypto.Hash160(pubKey))
 
 		// check if able to sign (public key matches pubKeyHash in script)
 		if pubKeyHashStr == pubKeyHashStrFromPriv {
-			if err = tx.Sign(ctx, s, uint32(i), shf); err != nil {
-				return
+			if err := tx.Sign(ctx, s, uint32(i), shf); err != nil {
+				return nil, err
 			}
 			inputsSigned = append(inputsSigned, i)
 		}
