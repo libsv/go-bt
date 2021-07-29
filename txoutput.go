@@ -3,10 +3,11 @@ package bt
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
-	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bk/crypto"
+	"github.com/libsv/go-bt/bscript"
 )
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
@@ -97,6 +98,18 @@ func (tx *Tx) AddP2PKHOutputFromAddress(addr string, satoshis uint64) error {
 	return nil
 }
 
+// AddP2PKHOutputFromScript makes an output to a P2PKH script paid to the provided locking script with a value.
+func (tx *Tx) AddP2PKHOutputFromScript(script *bscript.Script, satoshis uint64) error {
+	if !script.IsP2PKH() {
+		return errors.New("script is not a valid P2PKH script")
+	}
+	tx.AddOutput(&Output{
+		Satoshis:      satoshis,
+		LockingScript: script,
+	})
+	return nil
+}
+
 // AddHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
 func (tx *Tx) AddHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) error {
 	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
@@ -165,7 +178,7 @@ func createOpReturnOutput(data [][]byte) (*Output, error) {
 	return &Output{LockingScript: s}, nil
 }
 
-// OutputCount returns the number of transaction inputs.
+// OutputCount returns the number of transaction Inputs.
 func (tx *Tx) OutputCount() int {
 	return len(tx.Outputs)
 }
@@ -177,6 +190,12 @@ func (tx *Tx) AddOutput(output *Output) {
 
 // PayTo creates a new P2PKH output from a BitCoin address (base58)
 // and the satoshis amount and adds that to the transaction.
-func (tx *Tx) PayTo(addr string, satoshis uint64) error {
+func (tx *Tx) PayTo(script *bscript.Script, satoshis uint64) error {
+	return tx.AddP2PKHOutputFromScript(script, satoshis)
+}
+
+// PayToAddress creates a new P2PKH output from a BitCoin address (base58)
+// and the satoshis amount and adds that to the transaction.
+func (tx *Tx) PayToAddress(addr string, satoshis uint64) error {
 	return tx.AddP2PKHOutputFromAddress(addr, satoshis)
 }

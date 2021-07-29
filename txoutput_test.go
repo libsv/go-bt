@@ -2,6 +2,7 @@ package bt_test
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -127,14 +128,14 @@ func TestTx_TotalOutputSatoshis(t *testing.T) {
 		assert.Equal(t, uint64((29.89999582+20.00)*1e8), tx.TotalOutputSatoshis())
 	})
 
-	t.Run("zero outputs", func(t *testing.T) {
+	t.Run("zero Outputs", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 		assert.Equal(t, uint64(0), tx.TotalOutputSatoshis())
 	})
 }
 
-func TestTx_PayTo(t *testing.T) {
+func TestTx_PayToAddress(t *testing.T) {
 	t.Run("missing pay to address", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
@@ -145,7 +146,7 @@ func TestTx_PayTo(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("", 100)
+		err = tx.PayToAddress("", 100)
 		assert.Error(t, err)
 	})
 
@@ -159,7 +160,7 @@ func TestTx_PayTo(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("1234567", 100)
+		err = tx.PayToAddress("1234567", 100)
 		assert.Error(t, err)
 	})
 
@@ -173,8 +174,51 @@ func TestTx_PayTo(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", 100)
+		err = tx.PayToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", 100)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, tx.OutputCount())
 	})
+}
+
+func TestTx_PayTo(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		script *bscript.Script
+		err    error
+	}{
+		"valid p2pkh script should create valid output": {
+			script: func() *bscript.Script {
+				s, err := bscript.NewP2PKHFromAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi")
+				assert.NoError(t, err)
+				return s
+			}(),
+			err: nil,
+		}, "empty p2pkh script should return error": {
+			script: &bscript.Script{},
+			err:    errors.New("script is not a valid P2PKH script"),
+		}, "non p2pkh script should return error": {
+			script: bscript.NewFromBytes([]byte("test")),
+			err:    errors.New("script is not a valid P2PKH script"),
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			tx := bt.NewTx()
+			assert.NotNil(t, tx)
+			err := tx.From(
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000)
+			assert.NoError(t, err)
+			err = tx.PayTo(test.script, 100)
+			if test.err == nil {
+				assert.NoError(t, err)
+				assert.Equal(t, 1, tx.OutputCount())
+				return
+			}
+			assert.EqualError(t, err, test.err.Error())
+			assert.Equal(t, 0, tx.OutputCount())
+		})
+	}
 }

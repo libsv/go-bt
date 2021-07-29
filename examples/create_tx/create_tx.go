@@ -17,7 +17,7 @@ func main() {
 		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac6a0568656c6c6f",
 		1500)
 
-	_ = tx.PayTo("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
+	_ = tx.PayToAddress("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
 
 	wif, _ := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
@@ -25,5 +25,5 @@ func main() {
 	if err != nil && len(inputsSigned) > 0 {
 		log.Fatal(err.Error())
 	}
-	log.Println("tx: ", tx.String())
+	log.Printf("tx: %s\n", tx)
 }

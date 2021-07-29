@@ -26,7 +26,7 @@ func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
 	}
 	if hasChange {
 		// add rest of available sats to the change output
-		tx.Outputs[len(tx.Outputs)-1].Satoshis = available
+		tx.Outputs[tx.OutputCount()-1].Satoshis = available
 	}
 	return nil
 }
@@ -34,8 +34,8 @@ func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
 // ChangeToExistingOutput will calculate fees and add them to an output at the index specified (0 based).
 // If an invalid index is supplied and error is returned.
 func (tx *Tx) ChangeToExistingOutput(index uint, f *FeeQuote) error {
-	if int(index) > len(tx.Outputs)-1 {
-		return errors.New("index is greater than number of inputs in transaction")
+	if int(index) > tx.OutputCount()-1 {
+		return errors.New("index is greater than number of Inputs in transaction")
 	}
 	available, hasChange, err := tx.change(tx.Outputs[index].LockingScript, f, false)
 	if err != nil {
@@ -99,12 +99,13 @@ func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 
 	varIntUpper := VarIntUpperLimitInc(uint64(tx.OutputCount()))
 	if varIntUpper == -1 {
-		return false // upper limit of outputs in one tx reached
+		return false // upper limit of Outputs in one tx reached
 	}
 
 	changeOutputFee := uint64(varIntUpper)
 
-	changeP2pkhByteLen := 8 + 25 // 8 bytes for satoshi value + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
+	// 8 bytes for satoshi value +1 for varint length + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
+	changeP2pkhByteLen := 8 + 1 + 25
 	changeOutputFee += uint64(changeP2pkhByteLen * standardFees.MiningFee.Satoshis / standardFees.MiningFee.Bytes)
 
 	// not enough change to add a whole change output so don't add anything and return
@@ -146,13 +147,13 @@ func (tx *Tx) getExpectedUnlockingScriptFees(f *FeeQuote) (uint64, error) {
 }
 
 func (tx *Tx) getStandardAndDataBytes() (standardBytes, dataBytes int) {
-	// Subtract the value of each output as well as keeping track of data outputs
+	// Subtract the value of each output as well as keeping track of data Outputs
 	for _, out := range tx.Outputs {
 		if out.LockingScript.IsData() && len(*out.LockingScript) > 0 {
 			dataBytes += len(*out.LockingScript)
 		}
 	}
 
-	standardBytes = len(tx.ToBytes()) - dataBytes
+	standardBytes = len(tx.Bytes()) - dataBytes
 	return
 }

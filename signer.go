@@ -25,8 +25,8 @@ type Signer interface {
 // canonical in accordance with RFC6979 and BIP0062.
 //
 // To automatically sign, the PublicKey() method must also be implemented in order to
-// use the public key to check which inputs can be signed for before signing.
+// use the public key to check which Inputs can be signed for before signing.
 type AutoSigner interface {
 	Signer
-	PublicKey(ctx context.Context ) (publicKey []byte)
+	PublicKey(ctx context.Context) (publicKey []byte)
 }

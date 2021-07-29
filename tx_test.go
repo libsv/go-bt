@@ -34,7 +34,7 @@ func TestNewTx(t *testing.T) {
 func TestNewTxFromString(t *testing.T) {
 	t.Parallel()
 
-	t.Run("valid tx no inputs", func(t *testing.T) {
+	t.Run("valid tx no Inputs", func(t *testing.T) {
 		tx, err := bt.NewTxFromString("01000000000100000000000000001a006a07707265666978310c6578616d706c65206461746102133700000000")
 		assert.NoError(t, err)
 		assert.NotNil(t, tx)
@@ -58,24 +58,24 @@ func TestNewTxFromString(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, tx)
 
-		// Check version, locktime, inputs
+		// Check version, locktime, Inputs
 		assert.Equal(t, uint32(2), tx.Version)
 		assert.Equal(t, uint32(0), tx.LockTime)
 		assert.Equal(t, 1, len(tx.Inputs))
 
 		// Create a new unlocking script
-		ptid, _ := hex.DecodeString("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
-		i := bt.Input{
-			PreviousTxIDBytes:  ptid,
+		//ptid, _ := hex.DecodeString("9c5b1428aaad5e9b0196c89be8628b366f33c7b22933da0489b921d487a7cb1c")
+		i := &bt.Input{
 			PreviousTxOutIndex: 0,
 			SequenceNumber:     bt.DefaultSequenceNumber,
 		}
+		assert.NoError(t, i.PreviousTxIDAdd(tx.InputIdx(0).PreviousTxID()))
 		i.UnlockingScript, err = bscript.NewFromHexString("47304402205cc711985ce2a6d61eece4f9b6edd6337bad3b7eca3aa3ce59bc15620d8de2a80220410c92c48a226ba7d5a9a01105524097f673f31320d46c3b61d2378e6f05320041")
 		assert.NoError(t, err)
 		assert.NotNil(t, i.UnlockingScript)
 
 		// Check input type
-		assert.Equal(t, true, reflect.DeepEqual(*tx.Inputs[0], i))
+		assert.Equal(t, tx.InputIdx(0), i)
 
 		// Check output
 		assert.Equal(t, 1, len(tx.Outputs))
@@ -148,7 +148,7 @@ func TestVersion(t *testing.T) {
 func TestTx_IsCoinbase(t *testing.T) {
 	t.Parallel()
 
-	t.Run("invalid number of inputs", func(t *testing.T) {
+	t.Run("invalid number of Inputs", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 		assert.Equal(t, false, tx.IsCoinbase())
@@ -202,7 +202,7 @@ func TestTx_CreateTx(t *testing.T) {
 		2000000)
 	assert.NoError(t, err)
 
-	err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+	err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 	assert.NoError(t, err)
 
 	var wif *WIF
@@ -217,7 +217,7 @@ func TestTx_CreateTx(t *testing.T) {
 func TestTx_HasDataOutputs(t *testing.T) {
 	t.Parallel()
 
-	t.Run("has data outputs", func(t *testing.T) {
+	t.Run("has data Outputs", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
@@ -228,7 +228,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 			2000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+		err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 		assert.NoError(t, err)
 
 		// Add op return data
@@ -249,7 +249,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.Equal(t, true, tx.HasDataOutputs())
 	})
 
-	t.Run("no data outputs", func(t *testing.T) {
+	t.Run("no data Outputs", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 
@@ -260,7 +260,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 			2000000)
 		assert.NoError(t, err)
 
-		err = tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
+		err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -296,7 +296,7 @@ func TestTx_JSON(t *testing.T) {
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 					2000000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var wif *WIF
 				wif, err := DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
@@ -314,7 +314,7 @@ func TestTx_JSON(t *testing.T) {
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 					2000000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var wif *WIF
 				wif, err := DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
@@ -397,7 +397,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 		}
 	]
 }`,
-		}, "transaction with multiple inputs": {
+		}, "transaction with multiple Inputs": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
@@ -415,7 +415,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 					114,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 					10000))
-				assert.NoError(t, tx.PayTo("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var w *wif.WIF
 				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
@@ -644,6 +644,214 @@ func TestTx_UnmarshalJSON(t *testing.T) {
 			err := json.Unmarshal([]byte(test.json), &tx)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expTX, tx)
+		})
+	}
+}
+
+func TestTx_OutputIdx(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		tx        *bt.Tx
+		idx       int
+		expOutput *bt.Output
+	}{
+		"tx with 3 Outputs and output idx 0 requested should return output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx: 0,
+			expOutput: &bt.Output{
+				Satoshis: 1000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewP2PKHFromAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh")
+					assert.NoError(t, err)
+					return s
+				}(),
+			},
+		}, "tx with 3 Outputs and output idx 2 requested should return output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx: 2,
+			expOutput: &bt.Output{
+				Satoshis: 1000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewP2PKHFromAddress("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz")
+					assert.NoError(t, err)
+					return s
+				}(),
+			},
+		}, "tx with 3 Outputs and output idx 5 requested should return nil": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayToAddress("myUmQeCYxQECGHXbupe539n41u6BTBz1Eh", 1000))
+				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				assert.NoError(t, tx.PayToAddress("mywmGVP89x3DsLNqk3NvctfQy9m9pvt7mz", 1000))
+				return tx
+			}(),
+			idx:       5,
+			expOutput: nil,
+		}, "tx with 0 Outputs and output idx 5 requested should return nil": {
+			tx: func() *bt.Tx {
+				return bt.NewTx()
+			}(),
+			idx:       5,
+			expOutput: nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := test.tx.OutputIdx(test.idx)
+			assert.Equal(t, test.expOutput, o)
+		})
+	}
+}
+
+func TestTx_InputIdx(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		tx       *bt.Tx
+		idx      int
+		expInput *bt.Input
+	}{
+		"tx with 3 Inputs and input idx 0 requested should return correct input": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				return tx
+			}(),
+			idx: 0,
+			expInput: func() *bt.Input {
+				in := &bt.Input{
+					PreviousTxSatoshis: 1000,
+					PreviousTxScript: func() *bscript.Script {
+						b, err := bscript.NewFromHexString("76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac")
+						assert.NoError(t, err)
+						return b
+					}(),
+					PreviousTxOutIndex: 0,
+					SequenceNumber:     bt.DefaultSequenceNumber,
+				}
+				_ = in.PreviousTxIDAddStr("3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5")
+				return in
+			}(),
+		}, "tx with 3 Outputs and output idx 2 requested should return output": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdac4",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					999))
+				return tx
+			}(),
+			idx: 2,
+			expInput: func() *bt.Input {
+				in := &bt.Input{
+					PreviousTxSatoshis: 999,
+					PreviousTxScript: func() *bscript.Script {
+						b, err := bscript.NewFromHexString("76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac")
+						assert.NoError(t, err)
+						return b
+					}(),
+					PreviousTxOutIndex: 0,
+					SequenceNumber:     bt.DefaultSequenceNumber,
+				}
+				_ = in.PreviousTxIDAddStr("3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdac4")
+				return in
+			}(),
+		}, "tx with 3 Outputs and output idx 5 requested should return nil": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					1000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					2000000))
+				assert.NoError(t, tx.From(
+					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
+					0,
+					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+					999))
+				return tx
+			}(),
+			idx:      5,
+			expInput: nil,
+		}, "tx with 0 Outputs and output idx 5 requested should return nil": {
+			tx: func() *bt.Tx {
+				return bt.NewTx()
+			}(),
+			idx:      5,
+			expInput: nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := test.tx.InputIdx(test.idx)
+			assert.Equal(t, test.expInput, o)
+		})
+	}
+}
+
+func Test_IsValidTxID(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		txid string
+		exp  bool
+	}{
+		"valid txID should return true": {
+			txid: "a2a55ecc61f418e300888b1f82eaf84024496b34e3e538f3d32d342fd753adab",
+			exp:  true,
+		},
+		"invalid txID should return false": {
+			txid: "a2a55ecc61f418e300888b1f82eaf84024496b34e3e538f3d32d342fd753adZZ",
+			exp:  false,
+		}, "empty txID should return false": {
+			txid: "",
+			exp:  false,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			bb, _ := hex.DecodeString(test.txid)
+			assert.Equal(t, test.exp, bt.IsValidTxID(bb))
 		})
 	}
 }
