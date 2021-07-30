@@ -8,7 +8,7 @@ import (
 	"github.com/libsv/go-bk/bec"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 func TestNewP2PKHFromPubKeyStr(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 func TestNewP2PKHOutputFromPubKeyHashStr(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
-	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/sighash"
+	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/sighash"
 )
 
 // Sign is used to sign the transaction at a specific input index.

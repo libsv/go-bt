@@ -3,7 +3,7 @@ package bt
 import (
 	"errors"
 
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction

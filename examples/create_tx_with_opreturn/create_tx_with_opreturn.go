@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/libsv/go-bk/wif"
-	"github.com/libsv/go-bt"
+	"github.com/libsv/go-bt/v2"
 )
 
 func main() {

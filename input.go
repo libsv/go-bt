@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 /*

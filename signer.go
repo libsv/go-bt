@@ -3,7 +3,7 @@ package bt
 import (
 	"context"
 
-	"github.com/libsv/go-bt/sighash"
+	"github.com/libsv/go-bt/v2/sighash"
 )
 
 // Signer interface to allow custom implementations of different signing mechanisms.

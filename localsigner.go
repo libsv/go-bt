@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/libsv/go-bk/bec"
-	"github.com/libsv/go-bt/sighash"
+	"github.com/libsv/go-bt/v2/sighash"
 )
 
 // LocalSigner implements the Signer interface. It is used to sign Tx Inputs locally

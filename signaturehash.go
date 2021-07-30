@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/libsv/go-bk/crypto"
-	"github.com/libsv/go-bt/sighash"
+	"github.com/libsv/go-bt/v2/sighash"
 )
 
 // CalcInputSignatureHash serialised the transaction and returns the hash digest
