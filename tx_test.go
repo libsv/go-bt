@@ -429,7 +429,7 @@ func TestTx_Change(t *testing.T) {
 		assert.Equal(t, expectedTx.ToString(), tx.ToString())
 	})
 
-	t.Run("change output is added correctly - fee removed", func(t *testing.T) {
+	t.Run("change output is added correctly - fee subtracted from single input", func(t *testing.T) {
 
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
@@ -642,6 +642,39 @@ func TestTx_Change(t *testing.T) {
 		assert.Equal(t, 2, len(is))
 
 		assert.Equal(t, "01000000028ee20a442cdbcc9f9f927d9c2c9370e611675ebc24c064e8e94508ec8eca889e000000006b483045022100fa52a44cd8010ba646a8df6bac6e5e8aa93f24439521c2ce1c8fe6550e73c1750220636e30d757702a6777d8310090962d4bac2b3fd634127856d51b184f5c702c8f4121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff42eaf7bdddc797a0beb97717ff8846f03c963fb5fe15a2b555b9cbd477b0254e000000006b483045022100c201fd55ef33525b3eb0557fac77408b8ec7f6ea5b00d08512df105172f992d60220753b21519a416dcbeaf1a501d9c36de2aea9c83c6d258320500371819d0758e14121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff01c62b0000000000001976a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac00000000", tx.ToString())
+	})
+	t.Run("insufficient funds to add change", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		err := tx.From(
+			"9e88ca8eec0845e9e864c024bc5e6711e670932c9c7d929f9fccdb2c440ae28e",
+			0,
+			"76a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac",
+			1000)
+		assert.NoError(t, err)
+		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.DefaultFees())
+		assert.NoError(t, err)
+		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.DefaultFees())
+		assert.NoError(t, err)
+		assert.Equal(t, 1, tx.OutputCount())
+	})
+	t.Run("not enough to cover fees and change should not add change (751 would be 136 sats change after fees)", func(t *testing.T) {
+		tx := bt.NewTx()
+		assert.NotNil(t, tx)
+
+		err := tx.From(
+			"9e88ca8eec0845e9e864c024bc5e6711e670932c9c7d929f9fccdb2c440ae28e",
+			0,
+			"76a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac",
+			1000)
+		assert.NoError(t, err)
+		// 751 takes us JUST below the threshold with a change amount of 136 (dust limit)
+		assert.NoError(t, tx.PayTo("1BxGFoR7YDgYxoAStEncL6HuELqPkV3JVj", 751))
+		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.DefaultFees())
+		assert.NoError(t, err)
+
+		assert.Equal(t, 1, tx.OutputCount())
 	})
 }
 
@@ -856,6 +889,38 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			index: 1,
 			fees:  bt.DefaultFees(),
 			err:   errors.New("index is greater than number of inputs in transaction"),
+		}, "change smaller than dust limit should return 0 change (change should match output)": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 870))
+				return tx
+			}(),
+			index:           0,
+			fees:            bt.DefaultFees(),
+			expOutputTotal:  870,
+			expChangeOutput: 870,
+			err:             nil,
+		}, "change equal to dust limit should return 0 change (change should match output)": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 864))
+				return tx
+			}(),
+			index:           0,
+			fees:            bt.DefaultFees(),
+			expOutputTotal:  864,
+			expChangeOutput: 864,
+			err:             nil,
 		},
 	}
 	for name, test := range tests {
@@ -872,7 +937,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 	}
 }
 
-func TestTx_CalculateChange(t *testing.T) {
+func TestTx_CalculateFee(t *testing.T) {
 	tests := map[string]struct {
 		tx      *bt.Tx
 		fees    []*bt.Fee
@@ -915,6 +980,81 @@ func TestTx_CalculateChange(t *testing.T) {
 			fee, err := test.tx.CalculateFee(test.fees)
 			assert.Equal(t, test.err, err)
 			assert.Equal(t, test.expFees, fee)
+		})
+	}
+}
+
+func TestTx_HasOutputsWithAddress(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		addr     string
+		tx       *bt.Tx
+		expIdxs  []int
+		expFound bool
+		err      error
+	}{
+		"single output with address found, should return correct index": {
+			addr: "mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ17f",
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", 1000))
+				assert.NoError(t, tx.PayTo("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", 1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ17f", 1000))
+				return tx
+			}(),
+			expIdxs:  []int{2},
+			expFound: true,
+			err:      nil,
+		}, "multiple outputs with address found, should return correct indexes": {
+			addr: "mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M",
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", 1000))
+				assert.NoError(t, tx.PayTo("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", 1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ17f", 1000))
+				return tx
+			}(),
+			expIdxs:  []int{0, 1},
+			expFound: true,
+			err:      nil,
+		}, "no output with address found, should return 0 and false": {
+			addr: "mwV3YgnowbJJA4McyCuqiKpdivvNNFiK7M",
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", 1000))
+				assert.NoError(t, tx.PayTo("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", 1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ17f", 1000))
+				return tx
+			}(),
+			expIdxs:  []int{},
+			expFound: false,
+			err:      nil,
+		}, "invalid address should return error": {
+			addr: "i'm not an address",
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.PayTo("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", 1000))
+				assert.NoError(t, tx.PayTo("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", 1000))
+				assert.NoError(t, tx.PayTo("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ17f", 1000))
+				return tx
+			}(),
+			expFound: false,
+			err:      errors.New("invalid address length for 'i'm not an address'"),
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			ii, found, err := test.tx.HasOutputsWithAddress(test.addr)
+			if test.err != nil {
+				assert.Nil(t, ii)
+				assert.False(t, found)
+				assert.Error(t, err)
+				assert.EqualError(t, err, test.err.Error())
+				return
+			}
+			assert.Equal(t, test.expFound, found)
+			assert.NoError(t, err)
+			assert.Equal(t, test.expIdxs, ii)
 		})
 	}
 }
