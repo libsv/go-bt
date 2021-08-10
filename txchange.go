@@ -82,17 +82,11 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 		tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
 	}
 
-	var preSignedFeeRequired uint64
-	if preSignedFeeRequired, err = tx.getPreSignedFeeRequired(f); err != nil {
+	var txFee uint64
+	if txFee, err = tx.getTransactionFees(f); err != nil {
 		return 0, false, err
 	}
-
-	var expectedUnlockingScriptFees uint64
-	if expectedUnlockingScriptFees, err = tx.getExpectedUnlockingScriptFees(f); err != nil {
-		return 0, false, err
-	}
-
-	available -= preSignedFeeRequired + expectedUnlockingScriptFees
+	available -= txFee
 
 	return available, true, nil
 }
@@ -114,44 +108,27 @@ func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 	return available >= changeOutputFee
 }
 
-func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
+func (tx *Tx) getTransactionFees(f []*Fee) (uint64, error) {
 
 	standardBytes, dataBytes := tx.getStandardAndDataBytes()
-
 	standardFee, err := ExtractStandardFee(f)
 	if err != nil {
 		return 0, err
 	}
-
-	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
-
-	var dataFee *Fee
-	if dataFee, err = ExtractDataFee(f); err != nil {
-		return 0, err
-	}
-
-	fr += dataBytes * dataFee.MiningFee.Satoshis / dataFee.MiningFee.Bytes
-
-	return uint64(fr), nil
-}
-
-func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
-
-	standardFee, err := ExtractStandardFee(f)
-	if err != nil {
-		return 0, err
-	}
-
-	var expectedBytes int
-
 	for _, in := range tx.Inputs {
 		if !in.PreviousTxScript.IsP2PKH() {
 			return 0, errors.New("non-P2PKH input used in the tx - unsupported")
 		}
-		expectedBytes += 109 // = 1 oppushdata + 70-73 sig + 1 sighash + 1 oppushdata + 33 public key
+		standardBytes += 107 // = 1 oppushdata + 70-71 sig + 1 sighash + 1 oppushdata + 33 public key
 	}
+	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
+	var dataFee *Fee
+	if dataFee, err = ExtractDataFee(f); err != nil {
+		return 0, err
+	}
+	fr += dataBytes * dataFee.MiningFee.Satoshis / dataFee.MiningFee.Bytes
 
-	return uint64(expectedBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes), nil
+	return uint64(fr), nil
 }
 
 func (tx *Tx) getStandardAndDataBytes() (standardBytes, dataBytes int) {
