@@ -450,25 +450,6 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 
 // TestScripts ensures all of the tests in script_tests.json execute with the
 // expected results as defined in the test data.
-func TestMyCoolTest(t *testing.T) {
-	file, err := ioutil.ReadFile("data/mycooltest.json")
-	if err != nil {
-		t.Fatalf("TestScripts: %v\n", err)
-	}
-
-	var tests [][]interface{}
-	err = json.Unmarshal(file, &tests)
-	if err != nil {
-		t.Fatalf("TestScripts couldn't Unmarshal: %v", err)
-	}
-
-	// Run all script tests with and without the signature cache.
-	testScripts(t, tests, true)
-	testScripts(t, tests, false)
-}
-
-// TestScripts ensures all of the tests in script_tests.json execute with the
-// expected results as defined in the test data.
 func TestScripts(t *testing.T) {
 	file, err := ioutil.ReadFile("data/script_tests.json")
 	if err != nil {
