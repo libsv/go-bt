@@ -15,3 +15,6 @@ dist
 
 # Converage
 coverage.txt
+
+# vim
+*.swp

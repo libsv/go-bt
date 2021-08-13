@@ -56,7 +56,6 @@ func TestBadPC(t *testing.T) {
 			Tx:            tx,
 			InputIdx:      0,
 		})
-		//vm, err := NewEngine(pkScript, tx, 0, 0, nil, nil, -1)
 		if err != nil {
 			t.Errorf("Failed to create script: %v", err)
 		}
@@ -181,10 +180,9 @@ func TestInvalidFlagCombinations(t *testing.T) {
 	for i, test := range tests {
 		_, err := NewEngine(EngineOpts{
 			Tx:            tx,
-			Flags:         test,
 			InputIdx:      0,
 			PreviousTxOut: txOut,
-		})
+		}, WithFlags(test))
 		if !IsErrorCode(err, ErrInvalidFlags) {
 			t.Fatalf("TestInvalidFlagCombinations #%d unexpected "+
 				"error: %v", i, err)

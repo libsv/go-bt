@@ -399,8 +399,8 @@ func (e Error) Error() string {
 }
 
 // scriptError creates an Error given a set of arguments.
-func scriptError(c ErrorCode, desc string) Error {
-	return Error{ErrorCode: c, Description: desc}
+func scriptError(c ErrorCode, desc string, fmtArgs ...interface{}) Error {
+	return Error{ErrorCode: c, Description: fmt.Sprintf(desc, fmtArgs...)}
 }
 
 // IsErrorCode returns whether or not the provided error is a script error with

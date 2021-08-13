@@ -321,9 +321,9 @@ type scriptWithInputVal struct {
 // parameter.
 func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 	// Create a signature cache to use only if requested.
-	var sigCache *SigCache
+	var engineOpts []EngineOptFunc
 	if useSigCache {
-		sigCache = NewSigCache(10)
+		engineOpts = append(engineOpts, WithSignatureCache(NewSigCache(10)))
 	}
 
 	for i, test := range tests {
@@ -408,12 +408,10 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 			inputAmt)
 
 		vm, err := NewEngine(EngineOpts{
-			PreviousTxOut:  &bt.Output{LockingScript: scriptPubKey},
-			Tx:             tx,
-			InputIdx:       0,
-			Flags:          flags,
-			SignatureCache: sigCache,
-		})
+			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey},
+			Tx:            tx,
+			InputIdx:      0,
+		}, append(engineOpts, WithFlags(flags))...)
 		if err == nil {
 			err = vm.Execute()
 		}
@@ -621,8 +619,7 @@ testloop:
 				PreviousTxOut: prevOut,
 				Tx:            tx,
 				InputIdx:      k,
-				Flags:         flags,
-			})
+			}, WithFlags(flags))
 			if err != nil {
 				continue testloop
 			}
@@ -770,8 +767,7 @@ testloop:
 				PreviousTxOut: prevOut,
 				Tx:            tx,
 				InputIdx:      k,
-				Flags:         flags,
-			})
+			}, WithFlags(flags))
 			if err != nil {
 				t.Errorf("test (%d:%v:%d) failed to create "+
 					"script: %v", i, test, k, err)

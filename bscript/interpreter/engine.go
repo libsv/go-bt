@@ -8,6 +8,7 @@ package interpreter
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bt/v2"
@@ -121,6 +122,115 @@ type Engine struct {
 	inputAmount     int64
 }
 
+type EngineOpts struct {
+	PreviousTxOut *bt.Output
+	Tx            *bt.Tx
+	InputIdx      int
+}
+
+// NewEngine returns a new script engine for the provided public key script,
+// transaction, and input index.  The flags modify the behavior of the script
+// engine according to the description provided by each flag.
+func NewEngine(opts EngineOpts, oo ...EngineOptFunc) (*Engine, error) {
+	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
+	// either the pay-to-script-hash (P2SH) evaluation (ScriptBip16)
+	// flag or the Segregated Witness (ScriptVerifyWitness) flag.
+	//
+	// Recall that evaluating a P2SH script without the flag set results in
+	// non-P2SH evaluation which leaves the P2SH inputs on the stack.
+	// Thus, allowing the clean stack flag without the P2SH flag would make
+	// it possible to have a situation where P2SH would not be a soft fork
+	// when it should be.
+	vm := &Engine{
+		inputAmount: int64(opts.Tx.Inputs[opts.InputIdx].PreviousTxSatoshis),
+	}
+
+	for _, o := range oo {
+		o(vm)
+	}
+
+	if vm.scriptParser == nil {
+		WithDefaultParser()(vm)
+	}
+
+	// The provided transaction input index must refer to a valid input.
+	if opts.InputIdx < 0 || opts.InputIdx > len(opts.Tx.Inputs)-1 {
+		return nil, scriptError(
+			ErrInvalidIndex,
+			"transaction input index %d is negative or >= %d", opts.InputIdx, len(opts.Tx.Inputs),
+		)
+	}
+
+	uls := opts.Tx.Inputs[opts.InputIdx].UnlockingScript
+	ls := opts.PreviousTxOut.LockingScript
+
+	// When both the signature script and public key script are empty the
+	// result is necessarily an error since the stack would end up being
+	// empty which is equivalent to a false top element.  Thus, just return
+	// the relevant error now as an optimization.
+	if (uls == nil || len(*uls) == 0) && (ls == nil || len(*ls) == 0) {
+		return nil, scriptError(ErrEvalFalse, "false stack entry at end of script execution")
+	}
+
+	if vm.hasFlag(ScriptVerifyCleanStack) && (!vm.hasFlag(ScriptBip16)) {
+		return nil, scriptError(ErrInvalidFlags, "invalid flags combination")
+	}
+
+	// The engine stores the scripts in parsed form using a slice.  This
+	// allows multiple scripts to be executed in sequence.  For example,
+	// with a pay-to-script-hash transaction, there will be ultimately be
+	// a third script to execute.
+	scripts := []*bscript.Script{uls, ls}
+	vm.scripts = make([]ParsedScript, len(scripts))
+	for i, script := range scripts {
+		if len(*script) > MaxScriptSize {
+			return nil, scriptError(
+				ErrScriptTooBig,
+				"script size %d is larger than max allowed size %d", len(*script), MaxScriptSize,
+			)
+		}
+
+		var err error
+		if vm.scripts[i], err = vm.scriptParser.Parse(script); err != nil {
+			return nil, err
+		}
+	}
+
+	// The signature script must only contain data pushes when the
+	// associated flag is set.
+	if vm.hasFlag(ScriptVerifySigPushOnly) && !vm.scripts[0].IsPushOnly() {
+		return nil, scriptError(ErrNotPushOnly, "signature script is not push only")
+	}
+
+	// Advance the program counter to the public key script if the signature
+	// script is empty since there is nothing to execute for it in that
+	// case.
+	if len(*scripts[0]) == 0 {
+		vm.scriptIdx++
+	}
+
+	if vm.hasFlag(ScriptBip16) && ls.IsP2SH() {
+		// Only accept input scripts that push data for P2SH.
+		if !vm.scripts[0].IsPushOnly() {
+			return nil, scriptError(ErrNotPushOnly, "pay to script hash is not push only")
+		}
+		vm.bip16 = true
+	}
+	if vm.hasFlag(ScriptVerifyMinimalData) {
+		vm.dstack.verifyMinimalData = true
+		vm.astack.verifyMinimalData = true
+	}
+
+	vm.tx = opts.Tx
+	vm.txIdx = opts.InputIdx
+
+	if vm.tx.InputIdx(opts.InputIdx).PreviousTxScript == nil {
+		vm.tx.InputIdx(opts.InputIdx).PreviousTxScript = opts.PreviousTxOut.LockingScript
+	}
+
+	return vm, nil
+}
+
 // hasFlag returns whether the script engine instance has the passed flag set.
 func (vm *Engine) hasFlag(flag ScriptFlags) bool {
 	return vm.flags.HasFlag(flag)
@@ -143,31 +253,23 @@ func (vm *Engine) isBranchExecuting() bool {
 func (vm *Engine) executeOpcode(pop ParsedOp) error {
 	// Disabled opcodes are fail on program counter.
 	if pop.IsDisabled() {
-		str := fmt.Sprintf("attempt to execute disabled opcode %s",
-			pop.Name())
-		return scriptError(ErrDisabledOpcode, str)
+		return scriptError(ErrDisabledOpcode, "attempt to execute disabled opcode %s", pop.Name())
 	}
 
 	// Always-illegal opcodes are fail on program counter.
 	if pop.AlwaysIllegal() {
-		str := fmt.Sprintf("attempt to execute reserved opcode %s",
-			pop.Name())
-		return scriptError(ErrReservedOpcode, str)
+		return scriptError(ErrReservedOpcode, "attempt to execute reserved opcode %s", pop.Name())
 	}
 
 	// Note that this includes OP_RESERVED which counts as a push operation.
 	if pop.Op.val > bscript.Op16 {
 		vm.numOps++
 		if vm.numOps > bscript.MaxOps {
-			str := fmt.Sprintf("exceeded max operation limit of %d",
-				bscript.MaxOps)
-			return scriptError(ErrTooManyOperations, str)
+			return scriptError(ErrTooManyOperations, "exceeded max operation limit of %d", bscript.MaxOps)
 		}
 
 	} else if len(pop.Data) > bscript.MaxScriptElementSize {
-		str := fmt.Sprintf("element size %d exceeds max allowed size %d",
-			len(pop.Data), bscript.MaxScriptElementSize)
-		return scriptError(ErrElementTooBig, str)
+		return scriptError(ErrElementTooBig, "element size %d exceeds max allowed size %d", len(pop.Data), bscript.MaxScriptElementSize)
 	}
 
 	// Nothing left to do when this is not a conditional opcode and it is
@@ -194,23 +296,18 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 // provided position in the script.  It does no error checking and leaves that
 // to the caller to provide a valid offset.
 func (vm *Engine) disasm(scriptIdx int, scriptOff int) string {
-	return fmt.Sprintf("%02x:%04x: %s", scriptIdx, scriptOff,
-		vm.scripts[scriptIdx][scriptOff].print(false))
+	return fmt.Sprintf("%02x:%04x: %s", scriptIdx, scriptOff, vm.scripts[scriptIdx][scriptOff].print(false))
 }
 
 // validPC returns an error if the current script position is valid for
 // execution, nil otherwise.
 func (vm *Engine) validPC() error {
 	if vm.scriptIdx >= len(vm.scripts) {
-		str := fmt.Sprintf("past input scripts %v:%v %v:xxxx",
-			vm.scriptIdx, vm.scriptOff, len(vm.scripts))
-		return scriptError(ErrInvalidProgramCounter, str)
+		return scriptError(ErrInvalidProgramCounter, "past input scripts %v:%v %v:xxxx", vm.scriptIdx, vm.scriptOff, len(vm.scripts))
 	}
 	if vm.scriptOff >= len(vm.scripts[vm.scriptIdx]) {
-		str := fmt.Sprintf("past input scripts %v:%v %v:%04d",
-			vm.scriptIdx, vm.scriptOff, vm.scriptIdx,
-			len(vm.scripts[vm.scriptIdx]))
-		return scriptError(ErrInvalidProgramCounter, str)
+		return scriptError(ErrInvalidProgramCounter, "past input scripts %v:%v %v:%04d", vm.scriptIdx, vm.scriptOff,
+			vm.scriptIdx, len(vm.scripts[vm.scriptIdx]))
 	}
 	return nil
 }
@@ -240,16 +337,16 @@ func (vm *Engine) DisasmPC() (string, error) {
 // script.
 func (vm *Engine) DisasmScript(idx int) (string, error) {
 	if idx >= len(vm.scripts) {
-		str := fmt.Sprintf("script index %d >= total scripts %d", idx,
-			len(vm.scripts))
-		return "", scriptError(ErrInvalidIndex, str)
+		return "", scriptError(ErrInvalidIndex, "script index %d >= total scripts %d", idx, len(vm.scripts))
 	}
 
-	var disstr string
+	//var disstr string
+	var b strings.Builder
 	for i := range vm.scripts[idx] {
-		disstr = disstr + vm.disasm(idx, i) + "\n"
+		b.WriteString(vm.disasm(idx, i))
+		b.WriteRune('\n')
 	}
-	return disstr, nil
+	return b.String(), nil
 }
 
 // CheckErrorCondition returns nil if the running script has ended and was
@@ -259,19 +356,13 @@ func (vm *Engine) CheckErrorCondition(finalScript bool) error {
 	// Check execution is actually done.  When pc is past the end of script
 	// array there are no more scripts to run.
 	if vm.scriptIdx < len(vm.scripts) {
-		return scriptError(ErrScriptUnfinished,
-			"error check when script unfinished")
+		return scriptError(ErrScriptUnfinished, "error check when script unfinished")
 	}
-
-	if finalScript && vm.hasFlag(ScriptVerifyCleanStack) &&
-		vm.dstack.Depth() != 1 {
-
-		str := fmt.Sprintf("stack contains %d unexpected items",
-			vm.dstack.Depth()-1)
-		return scriptError(ErrCleanStack, str)
-	} else if vm.dstack.Depth() < 1 {
-		return scriptError(ErrEmptyStack,
-			"stack empty at end of script execution")
+	if finalScript && vm.hasFlag(ScriptVerifyCleanStack) && vm.dstack.Depth() != 1 {
+		return scriptError(ErrCleanStack, "stack contains %d unexpected items", vm.dstack.Depth()-1)
+	}
+	if vm.dstack.Depth() < 1 {
+		return scriptError(ErrEmptyStack, "stack empty at end of script execution")
 	}
 
 	v, err := vm.dstack.PopBool()
@@ -282,12 +373,12 @@ func (vm *Engine) CheckErrorCondition(finalScript bool) error {
 		log.Tracef("%v", newLogClosure(func() string {
 			dis0, _ := vm.DisasmScript(0)
 			dis1, _ := vm.DisasmScript(1)
-			return fmt.Sprintf("scripts failed: script0: %s\n"+
-				"script1: %s", dis0, dis1)
+			return fmt.Sprintf("scripts failed: script0: %s\nscript1: %s\n", dis0, dis1)
 		}))
-		return scriptError(ErrEvalFalse,
-			"false stack entry at end of script execution")
+
+		return scriptError(ErrEvalFalse, "false stack entry at end of script execution")
 	}
+
 	return nil
 }
 
@@ -299,18 +390,17 @@ func (vm *Engine) CheckErrorCondition(finalScript bool) error {
 // returned.
 func (vm *Engine) Step() (done bool, err error) {
 	// Verify that it is pointing to a valid script address.
-	err = vm.validPC()
-	if err != nil {
+	if err = vm.validPC(); err != nil {
 		return true, err
 	}
+
 	opcode := vm.scripts[vm.scriptIdx][vm.scriptOff]
 	vm.scriptOff++
 
 	// Execute the opcode while taking into account several things such as
 	// disabled opcodes, illegal opcodes, maximum allowed operations per
 	// script, maximum script element sizes, and conditionals.
-	err = vm.executeOpcode(opcode)
-	if err != nil {
+	if err = vm.executeOpcode(opcode); err != nil {
 		return true, err
 	}
 
@@ -318,66 +408,66 @@ func (vm *Engine) Step() (done bool, err error) {
 	// must not exceed the maximum number of stack elements allowed.
 	combinedStackSize := vm.dstack.Depth() + vm.astack.Depth()
 	if combinedStackSize > MaxStackSize {
-		str := fmt.Sprintf("combined stack size %d > max allowed %d",
-			combinedStackSize, MaxStackSize)
-		return false, scriptError(ErrStackOverflow, str)
+		return false, scriptError(ErrStackOverflow, "combined stack size %d > max allowed %d", combinedStackSize, MaxStackSize)
+	}
+
+	if vm.scriptOff < len(vm.scripts[vm.scriptIdx]) {
+		return false, nil
 	}
 
 	// Prepare for next instruction.
-	if vm.scriptOff >= len(vm.scripts[vm.scriptIdx]) {
-		// Illegal to have an `if' that straddles two scripts.
-		if err == nil && len(vm.condStack) != 0 {
-			return false, scriptError(ErrUnbalancedConditional,
-				"end of script reached in conditional execution")
-		}
-
-		// Alt stack doesn't persist.
-		_ = vm.astack.DropN(vm.astack.Depth())
-
-		vm.numOps = 0 // number of ops is per script.
-		vm.scriptOff = 0
-		if vm.scriptIdx == 0 && vm.bip16 {
-			vm.scriptIdx++
-			vm.savedFirstStack = vm.GetStack()
-		} else if vm.scriptIdx == 1 && vm.bip16 {
-			// Put us past the end for CheckErrorCondition()
-			vm.scriptIdx++
-			// Check script ran successfully and pull the script
-			// out of the first stack and execute that.
-			err := vm.CheckErrorCondition(false)
-			if err != nil {
-				return false, err
-			}
-
-			script := vm.savedFirstStack[len(vm.savedFirstStack)-1]
-			pops, err := vm.scriptParser.Parse(bscript.NewFromBytes(script))
-			if err != nil {
-				return false, err
-			}
-			vm.scripts = append(vm.scripts, pops)
-
-			// Set stack to be the stack from first script minus the
-			// script itself
-			vm.SetStack(vm.savedFirstStack[:len(vm.savedFirstStack)-1])
-		} else {
-			vm.scriptIdx++
-		}
-		// there are zero length scripts in the wild
-		if vm.scriptIdx < len(vm.scripts) && vm.scriptOff >= len(vm.scripts[vm.scriptIdx]) {
-			vm.scriptIdx++
-		}
-		vm.lastCodeSep = 0
-		if vm.scriptIdx >= len(vm.scripts) {
-			return true, nil
-		}
+	// Illegal to have an `if' that straddles two scripts.
+	if len(vm.condStack) != 0 {
+		return false, scriptError(ErrUnbalancedConditional, "end of script reached in conditional execution")
 	}
+
+	// Alt stack doesn't persist.
+	_ = vm.astack.DropN(vm.astack.Depth())
+
+	vm.numOps = 0 // number of ops is per script.
+	vm.scriptOff = 0
+	vm.scriptIdx++
+	if vm.scriptIdx == 1 && vm.bip16 {
+		vm.savedFirstStack = vm.GetStack()
+	}
+
+	if vm.scriptIdx == 2 && vm.bip16 {
+		// Put us past the end for CheckErrorCondition()
+		// Check script ran successfully and pull the script
+		// out of the first stack and execute that.
+		if err := vm.CheckErrorCondition(false); err != nil {
+			return false, err
+		}
+
+		script := vm.savedFirstStack[len(vm.savedFirstStack)-1]
+		pops, err := vm.scriptParser.Parse(bscript.NewFromBytes(script))
+		if err != nil {
+			return false, err
+		}
+		vm.scripts = append(vm.scripts, pops)
+
+		// Set stack to be the stack from first script minus the
+		// script itself
+		vm.SetStack(vm.savedFirstStack[:len(vm.savedFirstStack)-1])
+	}
+
+	// there are zero length scripts in the wild
+	if vm.scriptIdx < len(vm.scripts) && vm.scriptOff >= len(vm.scripts[vm.scriptIdx]) {
+		vm.scriptIdx++
+	}
+
+	vm.lastCodeSep = 0
+	if vm.scriptIdx >= len(vm.scripts) {
+		return true, nil
+	}
+
 	return false, nil
 }
 
 // Execute will execute all scripts in the script engine and return either nil
 // for successful validation or an error if one occurred.
 func (vm *Engine) Execute() (err error) {
-	done := false
+	var done bool
 	for !done {
 		log.Tracef("%v", newLogClosure(func() string {
 			dis, err := vm.DisasmPC()
@@ -387,10 +477,10 @@ func (vm *Engine) Execute() (err error) {
 			return fmt.Sprintf("stepping %v", dis)
 		}))
 
-		done, err = vm.Step()
-		if err != nil {
+		if done, err = vm.Step(); err != nil {
 			return err
 		}
+
 		log.Tracef("%v", newLogClosure(func() string {
 			var dstr, astr string
 
@@ -425,14 +515,12 @@ func (vm *Engine) checkHashTypeEncoding(shf sighash.Flag) error {
 	if vm.hasFlag(ScriptVerifyBip143SigHash) {
 		sigHashType ^= sighash.ForkID
 		if shf&sighash.ForkID == 0 {
-			str := fmt.Sprintf("hash type does not contain uahf forkID 0x%x", shf)
-			return scriptError(ErrInvalidSigHashType, str)
+			return scriptError(ErrInvalidSigHashType, "hash type does not contain uahf forkID 0x%x", shf)
 		}
 	}
 
 	if sigHashType < sighash.All || sigHashType > sighash.Single {
-		str := fmt.Sprintf("invalid hash type 0x%x", shf)
-		return scriptError(ErrInvalidSigHashType, str)
+		return scriptError(ErrInvalidSigHashType, "invalid hash type 0x%x", shf)
 	}
 	return nil
 }
@@ -459,10 +547,7 @@ func (vm *Engine) checkPubKeyEncoding(pubKey []byte) error {
 // checkSignatureEncoding returns whether or not the passed signature adheres to
 // the strict encoding requirements if enabled.
 func (vm *Engine) checkSignatureEncoding(sig []byte) error {
-	if !vm.hasFlag(ScriptVerifyDERSignatures) &&
-		!vm.hasFlag(ScriptVerifyLowS) &&
-		!vm.hasFlag(ScriptVerifyStrictEncoding) {
-
+	if !vm.hasFlag(ScriptVerifyDERSignatures) && !vm.hasFlag(ScriptVerifyLowS) && !vm.hasFlag(ScriptVerifyStrictEncoding) {
 		return nil
 	}
 
@@ -525,29 +610,21 @@ func (vm *Engine) checkSignatureEncoding(sig []byte) error {
 	// The signature must adhere to the minimum and maximum allowed length.
 	sigLen := len(sig)
 	if sigLen < minSigLen {
-		str := fmt.Sprintf("malformed signature: too short: %d < %d", sigLen,
-			minSigLen)
-		return scriptError(ErrSigTooShort, str)
+		return scriptError(ErrSigTooShort, "malformed signature: too short: %d < %d", sigLen, minSigLen)
 	}
 	if sigLen > maxSigLen {
-		str := fmt.Sprintf("malformed signature: too long: %d > %d", sigLen,
-			maxSigLen)
-		return scriptError(ErrSigTooLong, str)
+		return scriptError(ErrSigTooLong, "malformed signature: too long: %d > %d", sigLen, maxSigLen)
 	}
 
 	// The signature must start with the ASN.1 sequence identifier.
 	if sig[sequenceOffset] != asn1SequenceID {
-		str := fmt.Sprintf("malformed signature: format has wrong type: %#x",
-			sig[sequenceOffset])
-		return scriptError(ErrSigInvalidSeqID, str)
+		return scriptError(ErrSigInvalidSeqID, "malformed signature: format has wrong type: %#x", sig[sequenceOffset])
 	}
 
 	// The signature must indicate the correct amount of data for all elements
 	// related to R and S.
 	if int(sig[dataLenOffset]) != sigLen-2 {
-		str := fmt.Sprintf("malformed signature: bad length: %d != %d",
-			sig[dataLenOffset], sigLen-2)
-		return scriptError(ErrSigInvalidDataLen, str)
+		return scriptError(ErrSigInvalidDataLen, "malformed signature: bad length: %d != %d", sig[dataLenOffset], sigLen-2)
 	}
 
 	// Calculate the offsets of the elements related to S and ensure S is inside
@@ -565,12 +642,10 @@ func (vm *Engine) checkSignatureEncoding(sig []byte) error {
 	sTypeOffset := rOffset + rLen
 	sLenOffset := sTypeOffset + 1
 	if sTypeOffset >= sigLen {
-		str := "malformed signature: S type indicator missing"
-		return scriptError(ErrSigMissingSTypeID, str)
+		return scriptError(ErrSigMissingSTypeID, "malformed signature: S type indicator missing")
 	}
 	if sLenOffset >= sigLen {
-		str := "malformed signature: S length missing"
-		return scriptError(ErrSigMissingSLen, str)
+		return scriptError(ErrSigMissingSLen, "malformed signature: S length missing")
 	}
 
 	// The lengths of R and S must match the overall length of the signature.
@@ -580,60 +655,49 @@ func (vm *Engine) checkSignatureEncoding(sig []byte) error {
 	sOffset := sLenOffset + 1
 	sLen := int(sig[sLenOffset])
 	if sOffset+sLen != sigLen {
-		str := "malformed signature: invalid S length"
-		return scriptError(ErrSigInvalidSLen, str)
+		return scriptError(ErrSigInvalidSLen, "malformed signature: invalid S length")
 	}
 
 	// R elements must be ASN.1 integers.
 	if sig[rTypeOffset] != asn1IntegerID {
-		str := fmt.Sprintf("malformed signature: R integer marker: %#x != %#x",
-			sig[rTypeOffset], asn1IntegerID)
-		return scriptError(ErrSigInvalidRIntID, str)
+		return scriptError(ErrSigInvalidRIntID, "malformed signature: R integer marker: %#x != %#x", sig[rTypeOffset], asn1IntegerID)
 	}
 
 	// Zero-length integers are not allowed for R.
 	if rLen == 0 {
-		str := "malformed signature: R length is zero"
-		return scriptError(ErrSigZeroRLen, str)
+		return scriptError(ErrSigZeroRLen, "malformed signature: R length is zero")
 	}
 
 	// R must not be negative.
 	if sig[rOffset]&0x80 != 0 {
-		str := "malformed signature: R is negative"
-		return scriptError(ErrSigNegativeR, str)
+		return scriptError(ErrSigNegativeR, "malformed signature: R is negative")
 	}
 
 	// Null bytes at the start of R are not allowed, unless R would otherwise be
 	// interpreted as a negative number.
 	if rLen > 1 && sig[rOffset] == 0x00 && sig[rOffset+1]&0x80 == 0 {
-		str := "malformed signature: R value has too much padding"
-		return scriptError(ErrSigTooMuchRPadding, str)
+		return scriptError(ErrSigTooMuchRPadding, "malformed signature: R value has too much padding")
 	}
 
 	// S elements must be ASN.1 integers.
 	if sig[sTypeOffset] != asn1IntegerID {
-		str := fmt.Sprintf("malformed signature: S integer marker: %#x != %#x",
-			sig[sTypeOffset], asn1IntegerID)
-		return scriptError(ErrSigInvalidSIntID, str)
+		return scriptError(ErrSigInvalidSIntID, "malformed signature: S integer marker: %#x != %#x", sig[sTypeOffset], asn1IntegerID)
 	}
 
 	// Zero-length integers are not allowed for S.
 	if sLen == 0 {
-		str := "malformed signature: S length is zero"
-		return scriptError(ErrSigZeroSLen, str)
+		return scriptError(ErrSigZeroSLen, "malformed signature: S length is zero")
 	}
 
 	// S must not be negative.
 	if sig[sOffset]&0x80 != 0 {
-		str := "malformed signature: S is negative"
-		return scriptError(ErrSigNegativeS, str)
+		return scriptError(ErrSigNegativeS, "malformed signature: S is negative")
 	}
 
 	// Null bytes at the start of S are not allowed, unless S would otherwise be
 	// interpreted as a negative number.
 	if sLen > 1 && sig[sOffset] == 0x00 && sig[sOffset+1]&0x80 == 0 {
-		str := "malformed signature: S value has too much padding"
-		return scriptError(ErrSigTooMuchSPadding, str)
+		return scriptError(ErrSigTooMuchSPadding, "malformed signature: S value has too much padding")
 	}
 
 	// Verify the S value is <= half the order of the curve.  This check is done
@@ -646,8 +710,7 @@ func (vm *Engine) checkSignatureEncoding(sig []byte) error {
 	if vm.hasFlag(ScriptVerifyLowS) {
 		sValue := new(big.Int).SetBytes(sig[sOffset : sOffset+sLen])
 		if sValue.Cmp(halfOrder) > 0 {
-			return scriptError(ErrSigHighS, "signature is not canonical due "+
-				"to unnecessarily high S value")
+			return scriptError(ErrSigHighS, "signature is not canonical due to unnecessarily high S value")
 		}
 	}
 
@@ -697,114 +760,4 @@ func (vm *Engine) GetAltStack() [][]byte {
 // provided array where the last item in the array will be the top of the stack.
 func (vm *Engine) SetAltStack(data [][]byte) {
 	setStack(&vm.astack, data)
-}
-
-type EngineOpts struct {
-	PreviousTxOut  *bt.Output
-	Tx             *bt.Tx
-	InputIdx       int
-	Flags          ScriptFlags
-	SignatureCache *SigCache
-}
-
-// NewEngine returns a new script engine for the provided public key script,
-// transaction, and input index.  The flags modify the behavior of the script
-// engine according to the description provided by each flag.
-func NewEngine(opts EngineOpts) (*Engine, error) {
-
-	// The provided transaction input index must refer to a valid input.
-	if opts.InputIdx < 0 || opts.InputIdx >= len(opts.Tx.Inputs) {
-		str := fmt.Sprintf("transaction input index %d is negative or "+
-			">= %d", opts.InputIdx, len(opts.Tx.Inputs))
-		return nil, scriptError(ErrInvalidIndex, str)
-	}
-
-	uls := opts.Tx.Inputs[opts.InputIdx].UnlockingScript
-	ls := opts.PreviousTxOut.LockingScript
-
-	// When both the signature script and public key script are empty the
-	// result is necessarily an error since the stack would end up being
-	// empty which is equivalent to a false top element.  Thus, just return
-	// the relevant error now as an optimization.
-	if (uls == nil || len(*uls) == 0) && (ls == nil || len(*ls) == 0) {
-		return nil, scriptError(ErrEvalFalse,
-			"false stack entry at end of script execution")
-	}
-
-	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
-	// either the pay-to-script-hash (P2SH) evaluation (ScriptBip16)
-	// flag or the Segregated Witness (ScriptVerifyWitness) flag.
-	//
-	// Recall that evaluating a P2SH script without the flag set results in
-	// non-P2SH evaluation which leaves the P2SH inputs on the stack.
-	// Thus, allowing the clean stack flag without the P2SH flag would make
-	// it possible to have a situation where P2SH would not be a soft fork
-	// when it should be.
-	vm := &Engine{
-		flags:    opts.Flags,
-		sigCache: opts.SignatureCache,
-		//hashCache:    NewTxSigHashes(opts.Tx),
-		inputAmount:  int64(opts.Tx.Inputs[opts.InputIdx].PreviousTxSatoshis),
-		scriptParser: NewOpCodeParser(),
-	}
-
-	if vm.hasFlag(ScriptVerifyCleanStack) && (!vm.hasFlag(ScriptBip16)) {
-		return nil, scriptError(ErrInvalidFlags,
-			"invalid flags combination")
-	}
-
-	// The engine stores the scripts in parsed form using a slice.  This
-	// allows multiple scripts to be executed in sequence.  For example,
-	// with a pay-to-script-hash transaction, there will be ultimately be
-	// a third script to execute.
-	scripts := []*bscript.Script{uls, ls}
-	vm.scripts = make([]ParsedScript, len(scripts))
-	for i, script := range scripts {
-		if len(*script) > MaxScriptSize {
-			str := fmt.Sprintf("script size %d is larger than max "+
-				"allowed size %d", len(*script), MaxScriptSize)
-			return nil, scriptError(ErrScriptTooBig, str)
-		}
-		var err error
-		vm.scripts[i], err = vm.scriptParser.Parse(script)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// The signature script must only contain data pushes when the
-	// associated flag is set.
-	if vm.hasFlag(ScriptVerifySigPushOnly) && !vm.scripts[0].IsPushOnly() {
-		return nil, scriptError(ErrNotPushOnly,
-			"signature script is not push only")
-	}
-
-	// Advance the program counter to the public key script if the signature
-	// script is empty since there is nothing to execute for it in that
-	// case.
-	if len(*scripts[0]) == 0 {
-		vm.scriptIdx++
-	}
-
-	if vm.hasFlag(ScriptBip16) && ls.IsP2SH() {
-		// Only accept input scripts that push data for P2SH.
-		if !vm.scripts[0].IsPushOnly() {
-			return nil, scriptError(ErrNotPushOnly,
-				"pay to script hash is not push only")
-		}
-		vm.bip16 = true
-	}
-	if vm.hasFlag(ScriptVerifyMinimalData) {
-		vm.dstack.verifyMinimalData = true
-		vm.astack.verifyMinimalData = true
-	}
-
-	vm.tx = opts.Tx
-	vm.txIdx = opts.InputIdx
-
-	if vm.tx.InputIdx(opts.InputIdx).PreviousTxScript == nil {
-		vm.tx.InputIdx(opts.InputIdx).PreviousTxScript = opts.PreviousTxOut.LockingScript
-	}
-
-	return vm, nil
 }
