@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/libsv/go-bc/chainhash"
 	"github.com/libsv/go-bk/crypto"
 )
 
@@ -245,6 +246,14 @@ func (tx *Tx) TxIDBytes() []byte {
 	return ReverseBytes(crypto.Sha256d(tx.Bytes()))
 }
 
+// TxIDByteArray returns the transaction ID of the transcation a byte array
+// (which is also the transaction hash).
+func (tx *Tx) TxIDByteArray() chainhash.Hash {
+	var h chainhash.Hash
+	copy(h[:], tx.TxIDBytes())
+	return h
+}
+
 // TxID returns the transaction ID of the transaction
 // (which is also the transaction hash).
 func (tx *Tx) TxID() string {
@@ -273,6 +282,13 @@ func (tx *Tx) Bytes() []byte {
 // This is used when signing transactions.
 func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 	return tx.toBytesHelper(index, lockingScript)
+}
+
+// Clone returns a clone of the tx
+func (tx *Tx) Clone() *Tx {
+	// Ignore err as byte slice passed in is created from valid tx
+	clone, _ := NewTxFromBytes(tx.Bytes())
+	return clone
 }
 
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {

@@ -92,3 +92,19 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 func (tx *Tx) InputCount() int {
 	return len(tx.Inputs)
 }
+
+func (tx *Tx) InputPreviousTxBytes() []byte {
+	b := make([]byte, 0)
+	for _, in := range tx.Inputs {
+		b = append(b, in.PreviousTxBytes()...)
+	}
+	return b
+}
+
+func (tx *Tx) InputSequenceNumberBytes() []byte {
+	b := make([]byte, 0)
+	for _, in := range tx.Inputs {
+		b = append(b, in.SequenceNumberBytes()...)
+	}
+	return b
+}

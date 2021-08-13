@@ -25,6 +25,10 @@ const (
 	ScriptTypeNonStandard = "nonstandard"
 	ScriptTypeMultiSig    = "multisig"
 	ScriptTypeNullData    = "nulldata"
+
+	MaxOps                = 201
+	MaxPubKeysPerMultiSig = 20
+	MaxScriptElementSize  = 100000
 )
 
 // Script type
@@ -210,7 +214,7 @@ func (s *Script) ToASM() (string, error) {
 	var asmScript string
 	for _, p := range parts {
 		if len(p) == 1 {
-			asmScript = asmScript + " " + opCodeValues[p[0]]
+			asmScript = asmScript + " " + OpCodeValues[p[0]]
 		} else {
 			asmScript = asmScript + " " + hex.EncodeToString(p)
 		}
@@ -372,4 +376,26 @@ func (s *Script) EqualsBytes(b []byte) bool {
 // if they match then true is returned otherwise false.
 func (s *Script) EqualsHex(h string) bool {
 	return s.String() == h
+}
+
+func (s *Script) Strip(o byte) (*Script, error) {
+	pp, err := DecodeParts(*s)
+	if err != nil {
+		return nil, err
+	}
+
+	i := 0
+	for _, p := range pp {
+		if len(p) > 1 || p[0] != o {
+			pp[i] = p
+			i++
+		}
+	}
+
+	b, err := EncodeParts(pp[:i])
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFromBytes(b), nil
 }

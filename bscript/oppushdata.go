@@ -137,6 +137,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			b = b[l:]
 
 		default:
+
 			if b[0] >= 0x01 && b[0] <= OpPUSHDATA4 {
 				l := b[0]
 				if len(b) < int(1+l) {
@@ -150,6 +151,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 				b = b[1:]
 			}
 		}
+
 	}
 
 	return r, nil

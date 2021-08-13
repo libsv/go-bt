@@ -1,0 +1,303 @@
+package interpreter
+
+import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
+
+	"github.com/libsv/go-bt/v2/bscript"
+)
+
+type OpCodeParser interface {
+	Parse(*bscript.Script) (ParsedScript, error)
+	Unparse(ParsedScript) (*bscript.Script, error)
+}
+
+type ParsedScript []ParsedOp
+
+type parser struct{}
+
+func NewOpCodeParser() *parser {
+	return &parser{}
+}
+
+type ParsedOp struct {
+	Op   opcode
+	Data []byte
+}
+
+func (o *ParsedOp) Name() string {
+	return o.Op.name
+}
+
+func (o *ParsedOp) IsDisabled() bool {
+	switch o.Op.val {
+	case bscript.Op2MUL, bscript.Op2DIV, bscript.OpINVERT, bscript.OpMUL,
+		bscript.OpLSHIFT, bscript.OpRSHIFT:
+		return true
+	default:
+		return false
+	}
+}
+
+func (o *ParsedOp) AlwaysIllegal() bool {
+	switch o.Op.val {
+	case bscript.OpVERIF, bscript.OpVERNOTIF:
+		return true
+	default:
+		return false
+	}
+}
+
+func (o *ParsedOp) IsConditional() bool {
+	switch o.Op.val {
+	case bscript.OpIF, bscript.OpNOTIF, bscript.OpELSE, bscript.OpENDIF:
+		return true
+	default:
+		return false
+	}
+}
+
+func (o *ParsedOp) EnforceMinimumDataPush() error {
+	dataLen := len(o.Data)
+	if dataLen == 0 && o.Op.val != bscript.Op0 {
+		return NewErrMinimalDataPush(o.Op.val, bscript.Op0, 0)
+	}
+	if dataLen == 1 && (1 <= o.Data[0] && o.Data[0] <= 16) && o.Op.val != bscript.Op1+o.Data[0]-1 {
+		return NewErrMinimalDataPush(o.Op.val, bscript.Op1+o.Data[0]-1, int(o.Data[0]))
+	}
+	if dataLen == 1 && o.Data[0] == 0x81 && o.Op.val != bscript.Op1NEGATE {
+		return NewErrMinimalDataPush(o.Op.val, bscript.Op1NEGATE, -1)
+	}
+	if dataLen <= 75 {
+		if int(o.Op.val) != dataLen {
+			return NewErrMinimalDataPush(o.Op.val, byte(dataLen), dataLen)
+		}
+	} else if dataLen <= 255 {
+		if o.Op.val != bscript.OpPUSHDATA1 {
+			return NewErrMinimalDataPush(o.Op.val, bscript.OpPUSHDATA1, dataLen)
+		}
+	} else if dataLen <= 65535 {
+		if o.Op.val != bscript.OpPUSHDATA2 {
+			return NewErrMinimalDataPush(o.Op.val, bscript.OpPUSHDATA2, dataLen)
+		}
+	}
+	return nil
+}
+
+// print returns a human-readable string representation of the opcode for use
+// in script disassembly.
+func (o *ParsedOp) print(oneline bool) string {
+	// The reference implementation one-line disassembly replaces opcodes
+	// which represent values (e.g. OP_0 through OP_16 and OP_1NEGATE)
+	// with the raw value.  However, when not doing a one-line dissassembly,
+	// we prefer to show the actual opcode names.  Thus, only replace the
+	// opcodes in question when the oneline flag is set.
+	opcodeName := o.Name()
+	if oneline {
+		if replName, ok := opcodeOnelineRepls[opcodeName]; ok {
+			opcodeName = replName
+		}
+
+		// Nothing more to do for non-data push opcodes.
+		if o.Op.length == 1 {
+			return opcodeName
+		}
+
+		return fmt.Sprintf("%x", o.Data)
+	}
+
+	// Nothing more to do for non-data push opcodes.
+	if o.Op.length == 1 {
+		return opcodeName
+	}
+
+	// Add length for the OP_PUSHDATA# opcodes.
+	retString := opcodeName
+	switch o.Op.length {
+	case -1:
+		retString += fmt.Sprintf(" 0x%02x", len(o.Data))
+	case -2:
+		retString += fmt.Sprintf(" 0x%04x", len(o.Data))
+	case -4:
+		retString += fmt.Sprintf(" 0x%08x", len(o.Data))
+	}
+
+	return fmt.Sprintf("%s 0x%02x", retString, o.Data)
+}
+
+func (p *parser) Parse(s *bscript.Script) (ParsedScript, error) {
+	script := *s
+	parsedOps := make([]ParsedOp, 0, len(script))
+
+	for i := 0; i < len(script); {
+		instruction := script[i]
+
+		parsedOp := ParsedOp{Op: opcodeArray[instruction]}
+
+		switch {
+		case parsedOp.Op.length == 1:
+			i++
+		case parsedOp.Op.length > 1:
+			if len(script[i:]) < parsedOp.Op.length {
+				return nil, scriptError(ErrMalformedPush, fmt.Sprintf("opcode %s required %d bytes, script has %d remaining",
+					parsedOp.Name(), parsedOp.Op.length, len(script[i:])))
+			}
+			parsedOp.Data = script[i+1 : i+parsedOp.Op.length]
+			i += parsedOp.Op.length
+		case parsedOp.Op.length < 0:
+			var l uint
+			offset := i + 1
+			if len(script[offset:]) < -parsedOp.Op.length {
+				return nil, scriptError(ErrMalformedPush, fmt.Sprintf("opcode %s required %d bytes, script has %d remaining",
+					parsedOp.Name(), parsedOp.Op.length, len(script[offset:])))
+			}
+			// Next -length bytes are little endian length of data.
+			switch parsedOp.Op.length {
+			case -1:
+				l = uint(script[offset])
+			case -2:
+				l = ((uint(script[offset+1]) << 8) |
+					uint(script[offset]))
+			case -4:
+				l = ((uint(script[offset+3]) << 24) |
+					(uint(script[offset+2]) << 16) |
+					(uint(script[offset+1]) << 8) |
+					uint(script[offset]))
+			default:
+				return nil, scriptError(ErrMalformedPush, fmt.Sprintf("invalid opcode length %d", parsedOp.Op.length))
+			}
+
+			offset += -parsedOp.Op.length
+			if int(l) > len(script[offset:]) || int(l) < 0 {
+				return nil, scriptError(ErrMalformedPush, fmt.Sprintf("opcode %s pushes %d bytes, script has %d remaining",
+					parsedOp.Name(), l, len(script[offset:])))
+			}
+
+			parsedOp.Data = script[offset : offset+int(l)]
+			i += 1 - parsedOp.Op.length + int(l)
+		}
+
+		parsedOps = append(parsedOps, parsedOp)
+	}
+	return parsedOps, nil
+}
+
+// unparseScript reversed the action of parseScript and returns the
+// parsedOpcodes as a list of bytes
+func (p *parser) Unparse(pscr ParsedScript) (*bscript.Script, error) {
+	script := make(bscript.Script, 0, len(pscr))
+	for _, pop := range pscr {
+		b, err := pop.bytes()
+		if err != nil {
+			return nil, err
+		}
+		script = append(script, b...)
+	}
+	return &script, nil
+}
+
+func (p ParsedScript) IsPushOnly() bool {
+	for _, op := range p {
+		if op.Op.val > bscript.Op16 {
+			return false
+		}
+	}
+
+	return true
+}
+
+// removeOpcodeByData will return the script minus any opcodes that would push
+// the passed data to the stack.
+func (p ParsedScript) removeOpcodeByData(data []byte) ParsedScript {
+	retScript := make(ParsedScript, 0, len(p))
+	for _, pop := range p {
+		if !pop.canonicalPush() || !bytes.Contains(pop.Data, data) {
+			retScript = append(retScript, pop)
+		}
+	}
+
+	return retScript
+}
+
+// canonicalPush returns true if the object is either not a push instruction
+// or the push instruction contained wherein is matches the canonical form
+// or using the smallest instruction to do the job. False otherwise.
+func (p ParsedOp) canonicalPush() bool {
+	opcode := p.Op.val
+	data := p.Data
+	dataLen := len(p.Data)
+	if opcode > bscript.Op16 {
+		return true
+	}
+
+	if opcode < bscript.OpPUSHDATA1 && opcode > bscript.Op0 && (dataLen == 1 && data[0] <= 16) {
+		return false
+	}
+	if opcode == bscript.OpPUSHDATA1 && dataLen < int(bscript.OpPUSHDATA1) {
+		return false
+	}
+	if opcode == bscript.OpPUSHDATA2 && dataLen <= 0xff {
+		return false
+	}
+	if opcode == bscript.OpPUSHDATA4 && dataLen <= 0xffff {
+		return false
+	}
+	return true
+}
+
+// bytes returns any data associated with the opcode encoded as it would be in
+// a script.  This is used for unparsing scripts from parsed opcodes.
+func (p *ParsedOp) bytes() ([]byte, error) {
+	var retbytes []byte
+	if p.Op.length > 0 {
+		retbytes = make([]byte, 1, p.Op.length)
+	} else {
+		retbytes = make([]byte, 1, 1+len(p.Data)-
+			p.Op.length)
+	}
+
+	retbytes[0] = p.Op.val
+	if p.Op.length == 1 {
+		if len(p.Data) != 0 {
+			str := fmt.Sprintf("internal consistency error - "+
+				"parsed opcode %s has data length %d when %d "+
+				"was expected", p.Name(), len(p.Data),
+				0)
+			return nil, scriptError(ErrInternal, str)
+		}
+		return retbytes, nil
+	}
+	nbytes := p.Op.length
+	if p.Op.length < 0 {
+		l := len(p.Data)
+		// tempting just to hardcode to avoid the complexity here.
+		switch p.Op.length {
+		case -1:
+			retbytes = append(retbytes, byte(l))
+			nbytes = int(retbytes[1]) + len(retbytes)
+		case -2:
+			retbytes = append(retbytes, byte(l&0xff),
+				byte(l>>8&0xff))
+			nbytes = int(binary.LittleEndian.Uint16(retbytes[1:])) +
+				len(retbytes)
+		case -4:
+			retbytes = append(retbytes, byte(l&0xff),
+				byte((l>>8)&0xff), byte((l>>16)&0xff),
+				byte((l>>24)&0xff))
+			nbytes = int(binary.LittleEndian.Uint32(retbytes[1:])) +
+				len(retbytes)
+		}
+	}
+
+	retbytes = append(retbytes, p.Data...)
+
+	if len(retbytes) != nbytes {
+		str := fmt.Sprintf("internal consistency error - "+
+			"parsed opcode %s has data length %d when %d was "+
+			"expected", p.Name(), len(retbytes), nbytes)
+		return nil, scriptError(ErrInternal, str)
+	}
+
+	return retbytes, nil
+}

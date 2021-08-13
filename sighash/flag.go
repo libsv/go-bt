@@ -26,3 +26,11 @@ const (
 	// to identify which outputs are signed.
 	Mask = 0x1f
 )
+
+func (f Flag) Has(shf Flag) bool {
+	return f&shf == shf
+}
+
+func (f Flag) HasWithMask(shf Flag) bool {
+	return f&Mask == shf
+}
