@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"hash"
 
-	"github.com/libsv/go-bc/chainhash"
+	"github.com/libsv/go-bk/chaincfg/chainhash"
 	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"

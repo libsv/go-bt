@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/libsv/go-bc/chainhash"
+	"github.com/libsv/go-bk/chaincfg/chainhash"
 	"github.com/libsv/go-bk/crypto"
 )
 
