@@ -6,8 +6,6 @@ package interpreter
 
 import (
 	"crypto/rand"
-	"encoding/hex"
-	"fmt"
 	"testing"
 
 	"github.com/libsv/go-bk/bec"
@@ -71,8 +69,6 @@ func TestSigCacheAddEvictEntry(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unable to generate random signature test data")
 		}
-
-		fmt.Println(hex.EncodeToString(msg))
 
 		sigCache.Add(msg, sig, key)
 

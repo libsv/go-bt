@@ -279,6 +279,12 @@ func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 func (tx *Tx) Clone() *Tx {
 	// Ignore err as byte slice passed in is created from valid tx
 	clone, _ := NewTxFromBytes(tx.Bytes())
+
+	for i, input := range tx.Inputs {
+		clone.Inputs[i].PreviousTxSatoshis = input.PreviousTxSatoshis
+		clone.Inputs[i].PreviousTxScript = input.PreviousTxScript
+	}
+
 	return clone
 }
 

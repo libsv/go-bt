@@ -103,23 +103,26 @@ var halfOrder = new(big.Int).Rsh(bec.S256().N, 1)
 
 // Engine is the virtual machine that executes scripts.
 type Engine struct {
-	scripts         []ParsedScript
-	scriptIdx       int
-	scriptOff       int
-	scriptParser    OpCodeParser
-	lastCodeSep     int
-	dstack          stack // data stack
-	astack          stack // alt stack
-	tx              *bt.Tx
-	txIdx           int
-	condStack       []int
+	scripts      []ParsedScript
+	scriptIdx    int
+	scriptOff    int
+	scriptParser OpCodeParser
+	lastCodeSep  int
+
+	dstack    stack // data stack
+	astack    stack // alt stack
+	condStack []int
+
+	tx         *bt.Tx
+	txIdx      int
+	prevOutput *bt.Output
+
 	numOps          int
 	flags           ScriptFlags
 	sigCache        *SigCache
 	hashCache       *TxSigHashes
 	bip16           bool     // treat execution as pay-to-script-hash
 	savedFirstStack [][]byte // stack from first script for bip16 scripts
-	inputAmount     int64
 }
 
 type EngineOpts struct {
@@ -142,7 +145,9 @@ func NewEngine(opts EngineOpts, oo ...EngineOptFunc) (*Engine, error) {
 	// it possible to have a situation where P2SH would not be a soft fork
 	// when it should be.
 	vm := &Engine{
-		inputAmount: int64(opts.Tx.Inputs[opts.InputIdx].PreviousTxSatoshis),
+		prevOutput: opts.PreviousTxOut,
+		tx:         opts.Tx,
+		txIdx:      opts.InputIdx,
 	}
 
 	for _, o := range oo {
@@ -221,12 +226,8 @@ func NewEngine(opts EngineOpts, oo ...EngineOptFunc) (*Engine, error) {
 		vm.astack.verifyMinimalData = true
 	}
 
-	vm.tx = opts.Tx
-	vm.txIdx = opts.InputIdx
-
-	if vm.tx.InputIdx(opts.InputIdx).PreviousTxScript == nil {
-		vm.tx.InputIdx(opts.InputIdx).PreviousTxScript = opts.PreviousTxOut.LockingScript
-	}
+	vm.tx.InputIdx(opts.InputIdx).PreviousTxScript = opts.PreviousTxOut.LockingScript
+	vm.tx.InputIdx(opts.InputIdx).PreviousTxSatoshis = opts.PreviousTxOut.Satoshis
 
 	return vm, nil
 }
