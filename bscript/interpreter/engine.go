@@ -280,9 +280,7 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 
 	// Ensure all executed data push opcodes use the minimal encoding when
 	// the minimal data verification flag is set.
-	if vm.dstack.verifyMinimalData && vm.isBranchExecuting() &&
-		pop.Op.val >= 0 && pop.Op.val <= bscript.OpPUSHDATA4 {
-
+	if vm.dstack.verifyMinimalData && vm.isBranchExecuting() && pop.Op.val <= bscript.OpPUSHDATA4 {
 		if err := pop.EnforceMinimumDataPush(); err != nil {
 			return err
 		}

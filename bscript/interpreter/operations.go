@@ -935,12 +935,12 @@ func opcodeNot(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if m == 0 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1547,13 +1547,13 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 	// requirements enabled by the flags.
 	shf := sighash.Flag(fullSigBytes[len(fullSigBytes)-1])
 	sigBytes := fullSigBytes[:len(fullSigBytes)-1]
-	if err := vm.checkHashTypeEncoding(shf); err != nil {
+	if err = vm.checkHashTypeEncoding(shf); err != nil {
 		return err
 	}
-	if err := vm.checkSignatureEncoding(sigBytes); err != nil {
+	if err = vm.checkSignatureEncoding(sigBytes); err != nil {
 		return err
 	}
-	if err := vm.checkPubKeyEncoding(pkBytes); err != nil {
+	if err = vm.checkPubKeyEncoding(pkBytes); err != nil {
 		return err
 	}
 
@@ -1685,7 +1685,7 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 
 	pubKeys := make([][]byte, 0, numPubKeys)
 	for i := 0; i < numPubKeys; i++ {
-		pubKey, err := vm.dstack.PopByteArray()
+		pubKey, err := vm.dstack.PopByteArray() //nolint:govet // ignore shadowed error
 		if err != nil {
 			return err
 		}
@@ -1696,10 +1696,10 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 	if err != nil {
 		return err
 	}
+
 	numSignatures := int(numSigs.Int32())
 	if numSignatures < 0 {
 		return scriptError(ErrInvalidSignatureCount, "number of signatures %d is negative", numSignatures)
-
 	}
 	if numSignatures > numPubKeys {
 		return scriptError(ErrInvalidSignatureCount, "more signatures than pubkeys: %d > %d", numSignatures, numPubKeys)
@@ -1707,7 +1707,7 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 
 	signatures := make([]*parsedSigInfo, 0, numSignatures)
 	for i := 0; i < numSignatures; i++ {
-		signature, err := vm.dstack.PopByteArray()
+		signature, err := vm.dstack.PopByteArray() //nolint:govet // ignore shadowed error
 		if err != nil {
 			return err
 		}
@@ -1743,9 +1743,9 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 	pubKeyIdx := -1
 	signatureIdx := 0
 	//var sigHashes *TxSigHashes
-	if vm.hasFlag(ScriptVerifyBip143SigHash) {
-		//sigHashes = NewTxSigHashes(vm.tx)
-	}
+	//if vm.hasFlag(ScriptVerifyBip143SigHash) {
+	//	//sigHashes = NewTxSigHashes(vm.tx)
+	//}
 	for numSignatures > 0 {
 		// When there are more signatures than public keys remaining,
 		// there is no way to succeed since too many signatures are

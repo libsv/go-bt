@@ -5,6 +5,7 @@
 package interpreter
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/libsv/go-bt/v2/bscript"
@@ -406,8 +407,9 @@ func scriptError(c ErrorCode, desc string, fmtArgs ...interface{}) Error {
 // IsErrorCode returns whether or not the provided error is a script error with
 // the provided error code.
 func IsErrorCode(err error, c ErrorCode) bool {
-	serr, ok := err.(Error)
-	return ok && serr.ErrorCode == c
+	e := &Error{}
+	ok := errors.As(err, e)
+	return ok && e.ErrorCode == c
 }
 
 type ErrMinimalDataPushh struct {

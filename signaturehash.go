@@ -158,7 +158,7 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 		}
 	}
 
-	switch shf & sighash.Mask {
+	switch shf & sighash.Mask { // nolint:exhaustive // no need
 	case sighash.None:
 		txCopy.Outputs = txCopy.Outputs[0:0]
 		for i := range txCopy.Inputs {
