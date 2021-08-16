@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/libsv/go-bk/chaincfg/chainhash"
 	"github.com/libsv/go-bk/crypto"
 )
 
@@ -244,14 +243,6 @@ func (tx *Tx) IsCoinbase() bool {
 // (which is also the transaction hash).
 func (tx *Tx) TxIDBytes() []byte {
 	return ReverseBytes(crypto.Sha256d(tx.Bytes()))
-}
-
-// TxIDByteArray returns the transaction ID of the transcation a byte array
-// (which is also the transaction hash).
-func (tx *Tx) TxIDByteArray() chainhash.Hash {
-	var h chainhash.Hash
-	copy(h[:], tx.TxIDBytes())
-	return h
 }
 
 // TxID returns the transaction ID of the transaction

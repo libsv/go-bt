@@ -6,23 +6,24 @@ package interpreter
 
 import (
 	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"testing"
 
-	"github.com/libsv/go-bk/chaincfg/chainhash"
 	"github.com/libsv/go-bk/bec"
 )
 
 // genRandomSig returns a random message, a signature of the message under the
 // public key and the public key. This function is used to generate randomized
 // test data.
-func genRandomSig() (*chainhash.Hash, *bec.Signature, *bec.PublicKey, error) {
+func genRandomSig() ([]byte, *bec.Signature, *bec.PublicKey, error) {
 	privKey, err := bec.NewPrivateKey(bec.S256())
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	var msgHash chainhash.Hash
-	if _, err := rand.Read(msgHash[:]); err != nil {
+	msgHash := make([]byte, 32)
+	if _, err := rand.Read(msgHash); err != nil {
 		return nil, nil, nil, err
 	}
 
@@ -31,7 +32,7 @@ func genRandomSig() (*chainhash.Hash, *bec.Signature, *bec.PublicKey, error) {
 		return nil, nil, nil, err
 	}
 
-	return &msgHash, sig, privKey.PubKey(), nil
+	return msgHash, sig, privKey.PubKey(), nil
 }
 
 // TestSigCacheAddExists tests the ability to add, and later check the
@@ -46,12 +47,12 @@ func TestSigCacheAddExists(t *testing.T) {
 	}
 
 	// Add the triplet to the signature cache.
-	sigCache.Add(*msg1, sig1, key1)
+	sigCache.Add(msg1, sig1, key1)
 
 	// The previously added triplet should now be found within the sigcache.
 	sig1Copy, _ := bec.ParseSignature(sig1.Serialise(), bec.S256())
 	key1Copy, _ := bec.ParsePubKey(key1.SerialiseCompressed(), bec.S256())
-	if !sigCache.Exists(*msg1, sig1Copy, key1Copy) {
+	if !sigCache.Exists(msg1, sig1Copy, key1Copy) {
 		t.Errorf("previously added item not found in signature cache")
 	}
 }
@@ -71,11 +72,13 @@ func TestSigCacheAddEvictEntry(t *testing.T) {
 			t.Fatalf("unable to generate random signature test data")
 		}
 
-		sigCache.Add(*msg, sig, key)
+		fmt.Println(hex.EncodeToString(msg))
+
+		sigCache.Add(msg, sig, key)
 
 		sigCopy, _ := bec.ParseSignature(sig.Serialise(), bec.S256())
 		keyCopy, _ := bec.ParsePubKey(key.SerialiseCompressed(), bec.S256())
-		if !sigCache.Exists(*msg, sigCopy, keyCopy) {
+		if !sigCache.Exists(msg, sigCopy, keyCopy) {
 			t.Errorf("previously added item not found in signature" +
 				"cache")
 		}
@@ -93,7 +96,7 @@ func TestSigCacheAddEvictEntry(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to generate random signature test data")
 	}
-	sigCache.Add(*msgNew, sigNew, keyNew)
+	sigCache.Add(msgNew, sigNew, keyNew)
 
 	// The sigcache should still have sigCache entries.
 	if uint(len(sigCache.validSigs)) != sigCacheSize {
@@ -104,7 +107,7 @@ func TestSigCacheAddEvictEntry(t *testing.T) {
 	// The entry added above should be found within the sigcache.
 	sigNewCopy, _ := bec.ParseSignature(sigNew.Serialise(), bec.S256())
 	keyNewCopy, _ := bec.ParsePubKey(keyNew.SerialiseCompressed(), bec.S256())
-	if !sigCache.Exists(*msgNew, sigNewCopy, keyNewCopy) {
+	if !sigCache.Exists(msgNew, sigNewCopy, keyNewCopy) {
 		t.Fatalf("previously added item not found in signature cache")
 	}
 }
@@ -122,12 +125,12 @@ func TestSigCacheAddMaxEntriesZeroOrNegative(t *testing.T) {
 	}
 
 	// Add the triplet to the signature cache.
-	sigCache.Add(*msg1, sig1, key1)
+	sigCache.Add(msg1, sig1, key1)
 
 	// The generated triplet should not be found.
 	sig1Copy, _ := bec.ParseSignature(sig1.Serialise(), bec.S256())
 	key1Copy, _ := bec.ParsePubKey(key1.SerialiseCompressed(), bec.S256())
-	if sigCache.Exists(*msg1, sig1Copy, key1Copy) {
+	if sigCache.Exists(msg1, sig1Copy, key1Copy) {
 		t.Errorf("previously added signature found in sigcache, but" +
 			"shouldn't have been")
 	}

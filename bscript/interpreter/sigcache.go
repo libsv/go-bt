@@ -7,7 +7,6 @@ package interpreter
 import (
 	"sync"
 
-	"github.com/libsv/go-bk/chaincfg/chainhash"
 	"github.com/libsv/go-bk/bec"
 )
 
@@ -34,7 +33,7 @@ type sigCacheEntry struct {
 // if they've already been seen and verified within the mempool.
 type SigCache struct {
 	sync.RWMutex
-	validSigs  map[chainhash.Hash]sigCacheEntry
+	validSigs  map[[32]byte]sigCacheEntry
 	maxEntries uint
 }
 
@@ -45,7 +44,7 @@ type SigCache struct {
 // cache to exceed the max.
 func NewSigCache(maxEntries uint) *SigCache {
 	return &SigCache{
-		validSigs:  make(map[chainhash.Hash]sigCacheEntry, maxEntries),
+		validSigs:  make(map[[32]byte]sigCacheEntry, maxEntries),
 		maxEntries: maxEntries,
 	}
 }
@@ -55,10 +54,14 @@ func NewSigCache(maxEntries uint) *SigCache {
 //
 // NOTE: This function is safe for concurrent access. Readers won't be blocked
 // unless there exists a writer, adding an entry to the SigCache.
-func (s *SigCache) Exists(sigHash chainhash.Hash, sig *bec.Signature, pubKey *bec.PublicKey) bool {
+func (s *SigCache) Exists(sigHash []byte, sig *bec.Signature, pubKey *bec.PublicKey) bool {
+	var h [32]byte
+	copy(h[:], sigHash)
+
 	s.RLock()
 	defer s.RUnlock()
-	entry, ok := s.validSigs[sigHash]
+
+	entry, ok := s.validSigs[h]
 
 	return ok && entry.pubKey.IsEqual(pubKey) && entry.sig.IsEqual(sig)
 }
@@ -70,7 +73,10 @@ func (s *SigCache) Exists(sigHash chainhash.Hash, sig *bec.Signature, pubKey *be
 //
 // NOTE: This function is safe for concurrent access. Writers will block
 // simultaneous readers until function execution has concluded.
-func (s *SigCache) Add(sigHash chainhash.Hash, sig *bec.Signature, pubKey *bec.PublicKey) {
+func (s *SigCache) Add(sigHash []byte, sig *bec.Signature, pubKey *bec.PublicKey) {
+	var h [32]byte
+	copy(h[:], sigHash)
+
 	s.Lock()
 	defer s.Unlock()
 
@@ -95,5 +101,5 @@ func (s *SigCache) Add(sigHash chainhash.Hash, sig *bec.Signature, pubKey *bec.P
 			break
 		}
 	}
-	s.validSigs[sigHash] = sigCacheEntry{sig, pubKey}
+	s.validSigs[h] = sigCacheEntry{sig, pubKey}
 }

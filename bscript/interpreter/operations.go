@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"hash"
 
-	"github.com/libsv/go-bk/chaincfg/chainhash"
 	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
@@ -1487,7 +1487,7 @@ func opcodeHash256(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	vm.dstack.PushByteArray(chainhash.DoubleHashB(buf))
+	vm.dstack.PushByteArray(crypto.Sha256d(buf))
 	return nil
 }
 
@@ -1604,12 +1604,9 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 
 	var valid bool
 	if vm.sigCache != nil {
-		var sigHash chainhash.Hash
-		copy(sigHash[:], hash)
-
-		valid = vm.sigCache.Exists(sigHash, signature, pubKey)
+		valid = vm.sigCache.Exists(hash, signature, pubKey)
 		if !valid && signature.Verify(hash, pubKey) {
-			vm.sigCache.Add(sigHash, signature, pubKey)
+			vm.sigCache.Add(hash, signature, pubKey)
 			valid = true
 		}
 	} else {
@@ -1838,12 +1835,9 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 
 		var valid bool
 		if vm.sigCache != nil {
-			var sigHash chainhash.Hash
-			copy(sigHash[:], signatureHash)
-
-			valid = vm.sigCache.Exists(sigHash, parsedSig, parsedPubKey)
+			valid = vm.sigCache.Exists(signatureHash, parsedSig, parsedPubKey)
 			if !valid && parsedSig.Verify(signatureHash, parsedPubKey) {
-				vm.sigCache.Add(sigHash, parsedSig, parsedPubKey)
+				vm.sigCache.Add(signatureHash, parsedSig, parsedPubKey)
 				valid = true
 			}
 		} else {

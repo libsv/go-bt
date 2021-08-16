@@ -7,7 +7,7 @@ package interpreter
 import (
 	"sync"
 
-	"github.com/libsv/go-bk/chaincfg/chainhash"
+	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2"
 )
 
@@ -16,18 +16,18 @@ import (
 // transaction when validating all inputs. As a result, validation complexity
 // for SigHashAll can be reduced by a polynomial factor.
 type TxSigHashes struct {
-	HashPrevOuts chainhash.Hash
-	HashSequence chainhash.Hash
-	HashOutputs  chainhash.Hash
+	HashPrevOuts [32]byte
+	HashSequence [32]byte
+	HashOutputs  [32]byte
 }
 
 // NewTxSigHashes computes, and returns the cached sighashes of the given
 // transaction.
 func NewTxSigHashes(tx *bt.Tx) *TxSigHashes {
 	return &TxSigHashes{
-		HashPrevOuts: chainhash.DoubleHashH(tx.InputPreviousTxBytes()),
-		HashSequence: chainhash.DoubleHashH(tx.InputSequenceNumberBytes()),
-		HashOutputs:  chainhash.DoubleHashH(tx.OutputBytesForSignHash()),
+		HashPrevOuts: sha256dh(tx.InputPreviousTxBytes()),
+		HashSequence: sha256dh(tx.InputSequenceNumberBytes()),
+		HashOutputs:  sha256dh(tx.OutputBytesForSignHash()),
 	}
 }
 
@@ -37,7 +37,7 @@ func NewTxSigHashes(tx *bt.Tx) *TxSigHashes {
 // multiple goroutines can safely re-use the pre-computed partial sighashes
 // speeding up validation time amongst all inputs found within a block.
 type HashCache struct {
-	sigHashes map[chainhash.Hash]*TxSigHashes
+	sigHashes map[[32]byte]*TxSigHashes
 
 	sync.RWMutex
 }
@@ -46,7 +46,7 @@ type HashCache struct {
 // of entries which may exist within it at anytime.
 func NewHashCache(maxSize uint) *HashCache {
 	return &HashCache{
-		sigHashes: make(map[chainhash.Hash]*TxSigHashes, maxSize),
+		sigHashes: make(map[[32]byte]*TxSigHashes, maxSize),
 	}
 }
 
@@ -55,15 +55,21 @@ func NewHashCache(maxSize uint) *HashCache {
 func (h *HashCache) AddSigHashes(tx *bt.Tx) {
 	h.Lock()
 	defer h.Unlock()
-	h.sigHashes[tx.TxIDByteArray()] = NewTxSigHashes(tx)
+	var hash [32]byte
+	copy(hash[:], tx.TxIDBytes())
+	h.sigHashes[hash] = NewTxSigHashes(tx)
 }
 
 // ContainsHashes returns true if the partial sighashes for the passed
 // transaction currently exist within the HashCache, and false otherwise.
-func (h *HashCache) ContainsHashes(txid *chainhash.Hash) bool {
+func (h *HashCache) ContainsHashes(txid []byte) bool {
 	h.RLock()
 	defer h.RUnlock()
-	_, found := h.sigHashes[*txid]
+
+	var hash [32]byte
+	copy(hash[:], txid)
+
+	_, found := h.sigHashes[hash]
 
 	return found
 }
@@ -72,18 +78,33 @@ func (h *HashCache) ContainsHashes(txid *chainhash.Hash) bool {
 // the passed transaction. This function also returns an additional boolean
 // value indicating if the sighashes for the passed transaction were found to
 // be present within the HashCache.
-func (h *HashCache) GetSigHashes(txid *chainhash.Hash) (*TxSigHashes, bool) {
+func (h *HashCache) GetSigHashes(txid []byte) (*TxSigHashes, bool) {
 	h.RLock()
 	defer h.RUnlock()
-	item, found := h.sigHashes[*txid]
+
+	var hash [32]byte
+	copy(hash[:], txid)
+
+	item, found := h.sigHashes[hash]
 
 	return item, found
 }
 
 // PurgeSigHashes removes all partial sighashes from the HashCache belonging to
 // the passed transaction.
-func (h *HashCache) PurgeSigHashes(txid *chainhash.Hash) {
+func (h *HashCache) PurgeSigHashes(txid []byte) {
 	h.Lock()
 	defer h.Unlock()
-	delete(h.sigHashes, *txid)
+
+	var hash [32]byte
+	copy(hash[:], txid)
+
+	delete(h.sigHashes, hash)
+}
+
+func sha256dh(b []byte) [32]byte {
+	var h [32]byte
+	copy(h[:], crypto.Sha256d(b))
+
+	return h
 }

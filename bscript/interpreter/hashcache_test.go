@@ -85,8 +85,8 @@ func TestHashCacheAddContainsHashes(t *testing.T) {
 	// Next, we'll ensure that each of the transactions inserted into the
 	// cache are properly located by the ContainsHashes method.
 	for _, tx := range txns {
-		txid := tx.TxIDByteArray()
-		if ok := cache.ContainsHashes(&txid); !ok {
+		txid := tx.TxIDBytes()
+		if ok := cache.ContainsHashes(txid); !ok {
 			t.Fatalf("txid %v not found in cache but should be: ",
 				txid)
 		}
@@ -100,8 +100,8 @@ func TestHashCacheAddContainsHashes(t *testing.T) {
 	// Finally, we'll assert that a transaction that wasn't added to the
 	// cache won't be reported as being present by the ContainsHashes
 	// method.
-	randTxid := randTx.TxIDByteArray()
-	if ok := cache.ContainsHashes(&randTxid); ok {
+	randTxid := randTx.TxIDBytes()
+	if ok := cache.ContainsHashes(randTxid); ok {
 		t.Fatalf("txid %v wasn't inserted into cache but was found",
 			randTxid)
 	}
@@ -128,8 +128,8 @@ func TestHashCacheAddGet(t *testing.T) {
 	cache.AddSigHashes(randTx)
 
 	// The transaction inserted into the cache above should be found.
-	txid := randTx.TxIDByteArray()
-	cacheHashes, ok := cache.GetSigHashes(&txid)
+	txid := randTx.TxIDBytes()
+	cacheHashes, ok := cache.GetSigHashes(txid)
 	if !ok {
 		t.Fatalf("tx %v wasn't found in cache", txid)
 	}
@@ -169,15 +169,15 @@ func TestHashCachePurge(t *testing.T) {
 	// Once all the transactions have been inserted, we'll purge them from
 	// the hash cache.
 	for _, tx := range txns {
-		txid := tx.TxIDByteArray()
-		cache.PurgeSigHashes(&txid)
+		txid := tx.TxIDBytes()
+		cache.PurgeSigHashes(txid)
 	}
 
 	// At this point, none of the transactions inserted into the hash cache
 	// should be found within the cache.
 	for _, tx := range txns {
-		txid := tx.TxIDByteArray()
-		if ok := cache.ContainsHashes(&txid); ok {
+		txid := tx.TxIDBytes()
+		if ok := cache.ContainsHashes(txid); ok {
 			t.Fatalf("tx %v found in cache but should have "+
 				"been purged: ", txid)
 		}
