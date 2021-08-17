@@ -154,6 +154,15 @@ func opcodeNotIf(op *ParsedOp, vm *Engine) error {
 			return err
 		}
 
+		if vm.hasFlag(ScriptVerifyMinimalIf) {
+			if len(op.Data) > 1 {
+				return scriptError(ErrMinimalIf, "conditionl has data of length %d", len(op.Data))
+			}
+			if len(op.Data) == 1 && op.Data[0] != 1 {
+				return scriptError(ErrMinimalIf, "conditional failed")
+			}
+		}
+
 		if !ok {
 			condVal = OpCondTrue
 		}
@@ -296,7 +305,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, vm *Engine) error {
 
 	// The lock time field of a transaction is either a block height at
 	// which the transaction is finalised or a timestamp depending on if the
-	// value is before the txscript.LockTimeThreshold.  When it is under the
+	// value is before the interpreter.LockTimeThreshold.  When it is under the
 	// threshold it is a block height.
 	if err = verifyLockTime(int64(vm.tx.LockTime), LockTimeThreshold, int64(lockTime)); err != nil {
 		return err

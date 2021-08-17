@@ -186,6 +186,11 @@ const (
 	// the minimal opcode required.
 	ErrMinimalData
 
+	// ErrMinimalIf is returned when the ScriptVerifyMinimalIf flag
+	// is set and the script contains if operations that do not use
+	// the minimal opcode required.
+	ErrMinimalIf
+
 	// ErrInvalidSigHashType is returned when a signature hash type is not
 	// one of the supported types.
 	ErrInvalidSigHashType
@@ -343,6 +348,7 @@ var errorCodeStrings = map[ErrorCode]string{
 	ErrUnbalancedConditional:    "ErrUnbalancedConditional",
 	ErrInvalidInputLength:       "ErrInvalidInputLength",
 	ErrMinimalData:              "ErrMinimalData",
+	ErrMinimalIf:                "ErrMinimalIf",
 	ErrInvalidSigHashType:       "ErrInvalidSigHashType",
 	ErrSigTooShort:              "ErrSigTooShort",
 	ErrSigTooLong:               "ErrSigTooLong",

@@ -32,9 +32,9 @@ what conditions must be met in order to spend bitcoins.
 
 Errors
 
-Errors returned by this package are of type txscript.Error.  This allows the
+Errors returned by this package are of type interpreter.Error.  This allows the
 caller to programmatically determine the specific error by examining the
-ErrorCode field of the type asserted txscript.Error while still providing rich
+ErrorCode field of the type asserted interpreter.Error while still providing rich
 error messages with contextual information.  A convenience function named
 IsErrorCode is also provided to allow callers to easily check for a specific
 error code.  See ErrorCode in the package documentation for a full list.

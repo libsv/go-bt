@@ -86,6 +86,9 @@ const (
 	// ScriptAfterGenesis defines that the utxo was created after
 	// genesis
 	ScriptAfterGenesis
+
+	// ScriptVerifyMinimalIf
+	ScriptVerifyMinimalIf
 )
 
 // HasFlag returns whether the ScriptFlags has the passed flag set.

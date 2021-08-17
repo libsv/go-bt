@@ -377,7 +377,7 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 		// Extract and parse the expected result from the test fields.
 		//
 		// Convert the expected result string into the allowed script
-		// error codes.  This is necessary because txscript is more
+		// error codes.  This is necessary because interpreter is more
 		// fine grained with its errors than the reference test data, so
 		// some of the reference test data errors map to more than one
 		// possibility.
