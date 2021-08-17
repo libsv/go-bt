@@ -1599,15 +1599,11 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 		return nil //nolint:nilerr // unexpected behaviour
 	}
 
-	var valid bool
-	if vm.sigCache != nil {
-		valid = vm.sigCache.Exists(hash, signature, pubKey)
-		if !valid && signature.Verify(hash, pubKey) {
+	valid := vm.sigCache.Exists(hash, signature, pubKey)
+	if !valid {
+		if valid = signature.Verify(hash, pubKey); valid {
 			vm.sigCache.Add(hash, signature, pubKey)
-			valid = true
 		}
-	} else {
-		valid = signature.Verify(hash, pubKey)
 	}
 
 	if !valid && vm.hasFlag(ScriptVerifyNullFail) && len(sigBytes) > 0 {
@@ -1830,15 +1826,11 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 			return nil //nolint:nilerr // unexpected behaviour
 		}
 
-		var valid bool
-		if vm.sigCache != nil {
-			valid = vm.sigCache.Exists(signatureHash, parsedSig, parsedPubKey)
-			if !valid && parsedSig.Verify(signatureHash, parsedPubKey) {
+		valid := vm.sigCache.Exists(signatureHash, parsedSig, parsedPubKey)
+		if !valid {
+			if valid = parsedSig.Verify(signatureHash, parsedPubKey); valid {
 				vm.sigCache.Add(signatureHash, parsedSig, parsedPubKey)
-				valid = true
 			}
-		} else {
-			valid = parsedSig.Verify(signatureHash, parsedPubKey)
 		}
 
 		if valid {

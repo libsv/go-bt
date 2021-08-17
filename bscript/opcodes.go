@@ -532,8 +532,7 @@ var opCodeStrings = map[string]byte{
 	"OP_INVALIDOPCODE":       OpINVALIDOPCODE,
 }
 
-// OpCodeValues maps an opcode to its name
-var OpCodeValues = map[byte]string{
+var opCodeValues = map[byte]string{
 	OpFALSE:               "OP_FALSE",
 	OpDATA1:               "OP_DATA_1",
 	OpDATA2:               "OP_DATA_2",

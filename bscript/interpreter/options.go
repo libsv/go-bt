@@ -4,9 +4,16 @@ package interpreter
 type EngineOptFunc func(*Engine)
 
 // WithSignatureCache sets a SigCache
-func WithSignatureCache(s *SigCache) EngineOptFunc {
+func WithSignatureCache(s SigCache) EngineOptFunc {
 	return func(e *Engine) {
 		e.sigCache = s
+	}
+}
+
+// WithNopSignatureCache sets a nop SigCache, effectively not using one
+func WithNopSignatureCache() EngineOptFunc {
+	return func(e *Engine) {
+		e.sigCache = &nopSigCache{}
 	}
 }
 
@@ -24,14 +31,14 @@ func WithFlags(s ScriptFlags) EngineOptFunc {
 	}
 }
 
-// WithParser sets a custom OpCodeParser
+// WithParser sets a custom OpcodeParser
 func WithParser(o OpcodeParser) EngineOptFunc {
 	return func(e *Engine) {
 		e.scriptParser = o
 	}
 }
 
-// WithDefaultParser sets the internal OpCodeParser
+// WithDefaultParser sets the internal OpcodeParser
 func WithDefaultParser() EngineOptFunc {
 	return func(e *Engine) {
 		e.scriptParser = NewOpcodeParser()

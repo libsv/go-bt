@@ -61,7 +61,10 @@ func TestSigCacheAddExists(t *testing.T) {
 func TestSigCacheAddEvictEntry(t *testing.T) {
 	// Create a sigcache that can hold up to 100 entries.
 	sigCacheSize := uint(100)
-	sigCache := NewSigCache(sigCacheSize)
+	sigCache := &sigCache{
+		validSigs:  make(map[[32]byte]sigCacheEntry, sigCacheSize),
+		maxEntries: sigCacheSize,
+	}
 
 	// Fill the sigcache up with some random sig triplets.
 	for i := uint(0); i < sigCacheSize; i++ {
@@ -112,7 +115,10 @@ func TestSigCacheAddEvictEntry(t *testing.T) {
 // with a max size <= 0, then no entries are added to the sigcache at all.
 func TestSigCacheAddMaxEntriesZeroOrNegative(t *testing.T) {
 	// Create a sigcache that can hold up to 0 entries.
-	sigCache := NewSigCache(0)
+	sigCache := &sigCache{
+		validSigs:  make(map[[32]byte]sigCacheEntry),
+		maxEntries: 0,
+	}
 
 	// Generate a random sigCache entry triplet.
 	msg1, sig1, key1, err := genRandomSig()

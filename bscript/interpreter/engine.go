@@ -124,7 +124,7 @@ type Engine struct {
 	prevOutput *bt.Output
 
 	numOps    int
-	sigCache  *SigCache
+	sigCache  SigCache
 	hashCache *TxSigHashes
 
 	flags        ScriptFlags
@@ -164,6 +164,10 @@ func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 
 	if vm.scriptParser == nil {
 		WithDefaultParser()(vm)
+	}
+
+	if vm.sigCache == nil {
+		WithNopSignatureCache()(vm)
 	}
 
 	// The provided transaction input index must refer to a valid input.

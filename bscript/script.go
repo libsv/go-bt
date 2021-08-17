@@ -214,7 +214,7 @@ func (s *Script) ToASM() (string, error) {
 	var asmScript string
 	for _, p := range parts {
 		if len(p) == 1 {
-			asmScript = asmScript + " " + OpCodeValues[p[0]]
+			asmScript = asmScript + " " + opCodeValues[p[0]]
 		} else {
 			asmScript = asmScript + " " + hex.EncodeToString(p)
 		}

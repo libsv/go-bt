@@ -32,7 +32,12 @@ type sigCacheEntry struct {
 // Secondly, usage of the SigCache introduces a signature verification
 // optimization which speeds up the validation of transactions within a block,
 // if they've already been seen and verified within the mempool.
-type SigCache struct {
+type SigCache interface {
+	Exists([]byte, *bec.Signature, *bec.PublicKey) bool
+	Add([]byte, *bec.Signature, *bec.PublicKey)
+}
+
+type sigCache struct {
 	sync.RWMutex
 	validSigs  map[[32]byte]sigCacheEntry
 	maxEntries uint
@@ -43,8 +48,8 @@ type SigCache struct {
 // exist in the SigCache at any particular moment. Random entries are evicted
 // to make room for new entries that would cause the number of entries in the
 // cache to exceed the max.
-func NewSigCache(maxEntries uint) *SigCache {
-	return &SigCache{
+func NewSigCache(maxEntries uint) SigCache {
+	return &sigCache{
 		validSigs:  make(map[[32]byte]sigCacheEntry, maxEntries),
 		maxEntries: maxEntries,
 	}
@@ -55,7 +60,7 @@ func NewSigCache(maxEntries uint) *SigCache {
 //
 // NOTE: This function is safe for concurrent access. Readers won't be blocked
 // unless there exists a writer, adding an entry to the SigCache.
-func (s *SigCache) Exists(sigHash []byte, sig *bec.Signature, pubKey *bec.PublicKey) bool {
+func (s *sigCache) Exists(sigHash []byte, sig *bec.Signature, pubKey *bec.PublicKey) bool {
 	var h [32]byte
 	copy(h[:], sigHash)
 
@@ -74,7 +79,7 @@ func (s *SigCache) Exists(sigHash []byte, sig *bec.Signature, pubKey *bec.Public
 //
 // NOTE: This function is safe for concurrent access. Writers will block
 // simultaneous readers until function execution has concluded.
-func (s *SigCache) Add(sigHash []byte, sig *bec.Signature, pubKey *bec.PublicKey) {
+func (s *sigCache) Add(sigHash []byte, sig *bec.Signature, pubKey *bec.PublicKey) {
 	var h [32]byte
 	copy(h[:], sigHash)
 
@@ -104,3 +109,11 @@ func (s *SigCache) Add(sigHash []byte, sig *bec.Signature, pubKey *bec.PublicKey
 	}
 	s.validSigs[h] = sigCacheEntry{sig, pubKey}
 }
+
+type nopSigCache struct{}
+
+func (n *nopSigCache) Exists([]byte, *bec.Signature, *bec.PublicKey) bool {
+	return false
+}
+
+func (n *nopSigCache) Add([]byte, *bec.Signature, *bec.PublicKey) {}
