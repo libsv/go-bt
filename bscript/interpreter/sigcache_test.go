@@ -12,7 +12,7 @@ import (
 )
 
 // genRandomSig returns a random message, a signature of the message under the
-// public key and the public key. This function is used to generate randomized
+// public key and the public key. This function is used to generate randomised
 // test data.
 func genRandomSig() ([]byte, *bec.Signature, *bec.PublicKey, error) {
 	privKey, err := bec.NewPrivateKey(bec.S256())
@@ -21,7 +21,7 @@ func genRandomSig() ([]byte, *bec.Signature, *bec.PublicKey, error) {
 	}
 
 	msgHash := make([]byte, 32)
-	if _, err := rand.Read(msgHash); err != nil {
+	if _, err = rand.Read(msgHash); err != nil {
 		return nil, nil, nil, err
 	}
 
@@ -56,7 +56,7 @@ func TestSigCacheAddExists(t *testing.T) {
 }
 
 // TestSigCacheAddEvictEntry tests the eviction case where a new signature
-// triplet is added to a full signature cache which should trigger randomized
+// triplet is added to a full signature cache which should trigger randomised
 // eviction, followed by adding the new element to the cache.
 func TestSigCacheAddEvictEntry(t *testing.T) {
 	// Create a sigcache that can hold up to 100 entries.

@@ -82,6 +82,10 @@ const (
 	// ScriptVerifyBip143SigHash defines that signature hashes should
 	// be calculated using the bip0143 signature hashing algorithm.
 	ScriptVerifyBip143SigHash
+
+	// ScriptAfterGenesis defines that the utxo was created after
+	// genesis
+	ScriptAfterGenesis
 )
 
 // HasFlag returns whether the ScriptFlags has the passed flag set.
@@ -103,38 +107,42 @@ var halfOrder = new(big.Int).Rsh(bec.S256().N, 1)
 
 // Engine is the virtual machine that executes scripts.
 type Engine struct {
-	scripts      []ParsedScript
+	dstack stack // data stack
+	astack stack // alt stack
+
+	scripts         []ParsedScript
+	condStack       []int
+	savedFirstStack [][]byte // stack from first script for bip16 scripts
+
+	scriptParser OpcodeParser
 	scriptIdx    int
 	scriptOff    int
-	scriptParser OpCodeParser
 	lastCodeSep  int
 
-	dstack    stack // data stack
-	astack    stack // alt stack
-	condStack []int
-
 	tx         *bt.Tx
-	txIdx      int
+	inputIdx   int
 	prevOutput *bt.Output
 
-	numOps          int
-	flags           ScriptFlags
-	sigCache        *SigCache
-	hashCache       *TxSigHashes
-	bip16           bool     // treat execution as pay-to-script-hash
-	savedFirstStack [][]byte // stack from first script for bip16 scripts
+	numOps    int
+	sigCache  *SigCache
+	hashCache *TxSigHashes
+
+	flags        ScriptFlags
+	bip16        bool // treat execution as pay-to-script-hash
+	afterGenesis bool
 }
 
-type EngineOpts struct {
+// EngineParams are the params required for building an Engine
+type EngineParams struct {
 	PreviousTxOut *bt.Output
 	Tx            *bt.Tx
 	InputIdx      int
 }
 
 // NewEngine returns a new script engine for the provided public key script,
-// transaction, and input index.  The flags modify the behavior of the script
+// transaction, and input index.  The flags modify the behaviour of the script
 // engine according to the description provided by each flag.
-func NewEngine(opts EngineOpts, oo ...EngineOptFunc) (*Engine, error) {
+func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
 	// either the pay-to-script-hash (P2SH) evaluation (ScriptBip16)
 	// flag or the Segregated Witness (ScriptVerifyWitness) flag.
@@ -147,7 +155,7 @@ func NewEngine(opts EngineOpts, oo ...EngineOptFunc) (*Engine, error) {
 	vm := &Engine{
 		prevOutput: opts.PreviousTxOut,
 		tx:         opts.Tx,
-		txIdx:      opts.InputIdx,
+		inputIdx:   opts.InputIdx,
 	}
 
 	for _, o := range oo {
@@ -159,15 +167,15 @@ func NewEngine(opts EngineOpts, oo ...EngineOptFunc) (*Engine, error) {
 	}
 
 	// The provided transaction input index must refer to a valid input.
-	if opts.InputIdx < 0 || opts.InputIdx > len(opts.Tx.Inputs)-1 {
+	if vm.inputIdx < 0 || vm.inputIdx > vm.tx.InputCount()-1 {
 		return nil, scriptError(
 			ErrInvalidIndex,
 			"transaction input index %d is negative or >= %d", opts.InputIdx, len(opts.Tx.Inputs),
 		)
 	}
 
-	uls := opts.Tx.Inputs[opts.InputIdx].UnlockingScript
-	ls := opts.PreviousTxOut.LockingScript
+	uls := vm.tx.Inputs[opts.InputIdx].UnlockingScript
+	ls := vm.prevOutput.LockingScript
 
 	// When both the signature script and public key script are empty the
 	// result is necessarily an error since the stack would end up being
@@ -226,8 +234,12 @@ func NewEngine(opts EngineOpts, oo ...EngineOptFunc) (*Engine, error) {
 		vm.astack.verifyMinimalData = true
 	}
 
-	vm.tx.InputIdx(opts.InputIdx).PreviousTxScript = opts.PreviousTxOut.LockingScript
-	vm.tx.InputIdx(opts.InputIdx).PreviousTxSatoshis = opts.PreviousTxOut.Satoshis
+	if vm.hasFlag(ScriptAfterGenesis) {
+		vm.afterGenesis = true
+	}
+
+	vm.tx.InputIdx(vm.inputIdx).PreviousTxScript = vm.prevOutput.LockingScript
+	vm.tx.InputIdx(vm.inputIdx).PreviousTxSatoshis = vm.prevOutput.Satoshis
 
 	return vm, nil
 }
@@ -270,7 +282,8 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 		}
 
 	} else if len(pop.Data) > bscript.MaxScriptElementSize {
-		return scriptError(ErrElementTooBig, "element size %d exceeds max allowed size %d", len(pop.Data), bscript.MaxScriptElementSize)
+		return scriptError(ErrElementTooBig,
+			"element size %d exceeds max allowed size %d", len(pop.Data), bscript.MaxScriptElementSize)
 	}
 
 	// Nothing left to do when this is not a conditional opcode and it is
@@ -302,7 +315,8 @@ func (vm *Engine) disasm(scriptIdx int, scriptOff int) string {
 // execution, nil otherwise.
 func (vm *Engine) validPC() error {
 	if vm.scriptIdx >= len(vm.scripts) {
-		return scriptError(ErrInvalidProgramCounter, "past input scripts %v:%v %v:xxxx", vm.scriptIdx, vm.scriptOff, len(vm.scripts))
+		return scriptError(ErrInvalidProgramCounter,
+			"past input scripts %v:%v %v:xxxx", vm.scriptIdx, vm.scriptOff, len(vm.scripts))
 	}
 	if vm.scriptOff >= len(vm.scripts[vm.scriptIdx]) {
 		return scriptError(ErrInvalidProgramCounter, "past input scripts %v:%v %v:%04d", vm.scriptIdx, vm.scriptOff,
@@ -407,7 +421,8 @@ func (vm *Engine) Step() (done bool, err error) {
 	// must not exceed the maximum number of stack elements allowed.
 	combinedStackSize := vm.dstack.Depth() + vm.astack.Depth()
 	if combinedStackSize > MaxStackSize {
-		return false, scriptError(ErrStackOverflow, "combined stack size %d > max allowed %d", combinedStackSize, MaxStackSize)
+		return false, scriptError(ErrStackOverflow,
+			"combined stack size %d > max allowed %d", combinedStackSize, MaxStackSize)
 	}
 
 	if vm.scriptOff < len(vm.scripts[vm.scriptIdx]) {
@@ -469,8 +484,8 @@ func (vm *Engine) Execute() (err error) {
 	var done bool
 	for !done {
 		log.Tracef("%v", newLogClosure(func() string {
-			dis, err := vm.DisasmPC()
-			if err != nil {
+			var dis string
+			if dis, err = vm.DisasmPC(); err != nil {
 				return fmt.Sprintf("stepping (%v)", err)
 			}
 			return fmt.Sprintf("stepping %v", dis)
@@ -659,7 +674,8 @@ func (vm *Engine) checkSignatureEncoding(sig []byte) error {
 
 	// R elements must be ASN.1 integers.
 	if sig[rTypeOffset] != asn1IntegerID {
-		return scriptError(ErrSigInvalidRIntID, "malformed signature: R integer marker: %#x != %#x", sig[rTypeOffset], asn1IntegerID)
+		return scriptError(ErrSigInvalidRIntID,
+			"malformed signature: R integer marker: %#x != %#x", sig[rTypeOffset], asn1IntegerID)
 	}
 
 	// Zero-length integers are not allowed for R.
@@ -680,7 +696,8 @@ func (vm *Engine) checkSignatureEncoding(sig []byte) error {
 
 	// S elements must be ASN.1 integers.
 	if sig[sTypeOffset] != asn1IntegerID {
-		return scriptError(ErrSigInvalidSIntID, "malformed signature: S integer marker: %#x != %#x", sig[sTypeOffset], asn1IntegerID)
+		return scriptError(ErrSigInvalidSIntID,
+			"malformed signature: S integer marker: %#x != %#x", sig[sTypeOffset], asn1IntegerID)
 	}
 
 	// Zero-length integers are not allowed for S.

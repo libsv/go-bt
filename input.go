@@ -167,19 +167,3 @@ func (i *Input) Bytes(clear bool) []byte {
 
 	return append(h, LittleEndianBytes(i.SequenceNumber, 4)...)
 }
-
-func (i *Input) PreviousTxBytes() []byte {
-	h := make([]byte, 0)
-
-	h = append(h, ReverseBytes(i.previousTxID)...)
-	h = append(h, LittleEndianBytes(i.PreviousTxOutIndex, 4)...)
-
-	return h
-}
-
-func (i *Input) SequenceNumberBytes() []byte {
-	h := make([]byte, 4)
-	h = append(h, LittleEndianBytes(i.SequenceNumber, 4)...)
-
-	return h
-}

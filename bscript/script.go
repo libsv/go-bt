@@ -377,25 +377,3 @@ func (s *Script) EqualsBytes(b []byte) bool {
 func (s *Script) EqualsHex(h string) bool {
 	return s.String() == h
 }
-
-func (s *Script) Strip(o byte) (*Script, error) {
-	pp, err := DecodeParts(*s)
-	if err != nil {
-		return nil, err
-	}
-
-	i := 0
-	for _, p := range pp {
-		if len(p) > 1 || p[0] != o {
-			pp[i] = p
-			i++
-		}
-	}
-
-	b, err := EncodeParts(pp[:i])
-	if err != nil {
-		return nil, err
-	}
-
-	return NewFromBytes(b), nil
-}

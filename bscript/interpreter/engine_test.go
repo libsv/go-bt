@@ -51,7 +51,7 @@ func TestBadPC(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		vm, err := NewEngine(EngineOpts{
+		vm, err := NewEngine(EngineParams{
 			PreviousTxOut: txOut,
 			Tx:            tx,
 			InputIdx:      0,
@@ -104,7 +104,7 @@ func TestCheckErrorCondition(t *testing.T) {
 		LockingScript: ls,
 	}
 
-	vm, err := NewEngine(EngineOpts{
+	vm, err := NewEngine(EngineParams{
 		Tx:            tx,
 		PreviousTxOut: txOut,
 		InputIdx:      0,
@@ -113,8 +113,9 @@ func TestCheckErrorCondition(t *testing.T) {
 		t.Errorf("failed to create script: %v", err)
 	}
 
+	var done bool
 	for i := 0; i < len(*ls)-1; i++ {
-		done, err := vm.Step()
+		done, err = vm.Step()
 		if err != nil {
 			t.Fatalf("failed to step %dth time: %v", i, err)
 		}
@@ -128,7 +129,7 @@ func TestCheckErrorCondition(t *testing.T) {
 				err, i)
 		}
 	}
-	done, err := vm.Step()
+	done, err = vm.Step()
 	if err != nil {
 		t.Fatalf("final step failed %v", err)
 	}
@@ -178,7 +179,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		_, err := NewEngine(EngineOpts{
+		_, err := NewEngine(EngineParams{
 			Tx:            tx,
 			InputIdx:      0,
 			PreviousTxOut: txOut,

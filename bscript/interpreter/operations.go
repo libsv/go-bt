@@ -2,7 +2,7 @@ package interpreter
 
 import (
 	"bytes"
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec // OP_SHA1 support requires this
 	"crypto/sha256"
 	"fmt"
 	"hash"
@@ -14,8 +14,6 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 	"golang.org/x/crypto/ripemd160"
 )
-
-type OpCodeFunc func(*ParsedOp, *Engine) error
 
 // *******************************************
 // Opcode implementation functions start here.
@@ -60,7 +58,7 @@ func opcodePushData(op *ParsedOp, vm *Engine) error {
 
 // opcode1Negate pushes -1, encoded as a number, to the data stack.
 func opcode1Negate(op *ParsedOp, vm *Engine) error {
-	vm.dstack.PushInt(scriptNum(-1))
+	vm.dstack.PushInt(-1)
 	return nil
 }
 
@@ -248,7 +246,8 @@ func verifyLockTime(txLockTime, threshold, lockTime int64) error {
 
 	if lockTime > txLockTime {
 		return scriptError(ErrUnsatisfiedLockTime,
-			"locktime requirement not satisfied -- locktime is greater than the transaction locktime: %d > %d", lockTime, txLockTime)
+			"locktime requirement not satisfied -- locktime is greater than the transaction locktime: %d > %d",
+			lockTime, txLockTime)
 	}
 
 	return nil
@@ -296,7 +295,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, vm *Engine) error {
 	}
 
 	// The lock time field of a transaction is either a block height at
-	// which the transaction is finalized or a timestamp depending on if the
+	// which the transaction is finalised or a timestamp depending on if the
 	// value is before the txscript.LockTimeThreshold.  When it is under the
 	// threshold it is a block height.
 	if err = verifyLockTime(int64(vm.tx.LockTime), LockTimeThreshold, int64(lockTime)); err != nil {
@@ -304,7 +303,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, vm *Engine) error {
 	}
 
 	// The lock time feature can also be disabled, thereby bypassing
-	// bscript.OpCHECKLOCKTIMEVERIFY, if every transaction input has been finalized by
+	// bscript.OpCHECKLOCKTIMEVERIFY, if every transaction input has been finalised by
 	// setting its sequence to the maximum value (bt.MaxTxInSequenceNum).  This
 	// condition would result in the transaction being allowed into the blockchain
 	// making the opcode ineffective.
@@ -314,11 +313,11 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, vm *Engine) error {
 	// value).  This is sufficient to prove correctness without having to
 	// check every input.
 	//
-	// NOTE: This implies that even if the transaction is not finalized due to
+	// NOTE: This implies that even if the transaction is not finalised due to
 	// another input being unlocked, the opcode execution will still fail when the
 	// input being used by the opcode is locked.
-	if vm.tx.Inputs[vm.txIdx].SequenceNumber == bt.MaxTxInSequenceNum {
-		return scriptError(ErrUnsatisfiedLockTime, "transaction input is finalized")
+	if vm.tx.Inputs[vm.inputIdx].SequenceNumber == bt.MaxTxInSequenceNum {
+		return scriptError(ErrUnsatisfiedLockTime, "transaction input is finalised")
 	}
 
 	return nil
@@ -384,7 +383,7 @@ func opcodeCheckSequenceVerify(op *ParsedOp, vm *Engine) error {
 	// consensus constrained. Testing that the transaction's sequence
 	// number does not have this bit set prevents using this property
 	// to get around a CHECKSEQUENCEVERIFY check.
-	txSequence := int64(vm.tx.Inputs[vm.txIdx].SequenceNumber)
+	txSequence := int64(vm.tx.Inputs[vm.inputIdx].SequenceNumber)
 	if txSequence&int64(bt.SequenceLockTimeDisabled) != 0 {
 		return scriptError(ErrUnsatisfiedLockTime,
 			"transaction sequence has sequence locktime disabled bit set: 0x%x", txSequence)
@@ -1017,7 +1016,7 @@ func opcodeMul(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	n3 := int32(n1.Int32() * n2.Int32())
+	n3 := n1.Int32() * n2.Int32()
 	vm.dstack.PushInt(scriptNum(n3))
 
 	return nil
@@ -1084,7 +1083,7 @@ func opcodeLShift(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	d := int32(x.Int32() << uint32(n.Int32()))
+	d := x.Int32() << uint32(n.Int32())
 	vm.dstack.PushInt(scriptNum(d))
 
 	return nil
@@ -1105,7 +1104,7 @@ func opcodeRShift(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	d := int32(x.Int32() >> uint32(n.Int32()))
+	d := x.Int32() >> uint32(n.Int32())
 	vm.dstack.PushInt(scriptNum(d))
 
 	return nil
@@ -1129,12 +1128,12 @@ func opcodeBoolAnd(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if v0 != 0 && v1 != 0 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1156,12 +1155,12 @@ func opcodeBoolOr(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if v0 != 0 || v1 != 0 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1181,12 +1180,12 @@ func opcodeNumEqual(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if v0 == v1 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1222,12 +1221,12 @@ func opcodeNumNotEqual(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if v0 != v1 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1247,12 +1246,12 @@ func opcodeLessThan(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if v1 < v0 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1272,12 +1271,12 @@ func opcodeGreaterThan(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if v1 > v0 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1297,12 +1296,12 @@ func opcodeLessThanOrEqual(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if v1 <= v0 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1322,12 +1321,12 @@ func opcodeGreaterThanOrEqual(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	var n int
+	var n scriptNum
 	if v1 >= v0 {
 		n = 1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1351,7 +1350,7 @@ func opcodeMin(op *ParsedOp, vm *Engine) error {
 		n = v1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1375,7 +1374,7 @@ func opcodeMax(op *ParsedOp, vm *Engine) error {
 		n = v1
 	}
 
-	vm.dstack.PushInt(scriptNum(n))
+	vm.dstack.PushInt(n)
 	return nil
 }
 
@@ -1414,7 +1413,7 @@ func opcodeWithin(op *ParsedOp, vm *Engine) error {
 
 // calcHash calculates the hash of hasher over buf.
 func calcHash(buf []byte, hasher hash.Hash) []byte {
-	hasher.Write(buf)
+	hasher.Write(buf) // nolint:gosec // guaranteed to be hashable
 	return hasher.Sum(nil)
 }
 
@@ -1442,7 +1441,7 @@ func opcodeSha1(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	hash := sha1.Sum(buf)
+	hash := sha1.Sum(buf) // nolint:gosec // operation is for sha1
 	vm.dstack.PushByteArray(hash[:])
 	return nil
 }
@@ -1575,9 +1574,9 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 	//sigHashes := NewTxSigHashes(vm.tx)
 
 	txCopy := vm.tx.Clone()
-	txCopy.Inputs[vm.txIdx].PreviousTxScript = up
+	txCopy.Inputs[vm.inputIdx].PreviousTxScript = up
 
-	hash, err = txCopy.CalcInputSignatureHash(uint32(vm.txIdx), shf)
+	hash, err = txCopy.CalcInputSignatureHash(uint32(vm.inputIdx), shf)
 	if err != nil {
 		vm.dstack.PushBool(false)
 		return err
@@ -1586,20 +1585,18 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 	pubKey, err := bec.ParsePubKey(pkBytes, bec.S256())
 	if err != nil {
 		vm.dstack.PushBool(false)
-		return nil
+		return nil //nolint:nilerr // unexpected behaviour
 	}
 
 	var signature *bec.Signature
-	if vm.hasFlag(ScriptVerifyStrictEncoding) ||
-		vm.hasFlag(ScriptVerifyDERSignatures) {
-
+	if vm.hasFlag(ScriptVerifyStrictEncoding) || vm.hasFlag(ScriptVerifyDERSignatures) {
 		signature, err = bec.ParseDERSignature(sigBytes, bec.S256())
 	} else {
 		signature, err = bec.ParseSignature(sigBytes, bec.S256())
 	}
 	if err != nil {
 		vm.dstack.PushBool(false)
-		return nil
+		return nil //nolint:nilerr // unexpected behaviour
 	}
 
 	var valid bool
@@ -1714,7 +1711,7 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 
 	// A bug in the original Satoshi client implementation means one more
 	// stack value than should be used must be popped.  Unfortunately, this
-	// buggy behavior is now part of the consensus and a hard fork would be
+	// buggy behaviour is now part of the consensus and a hard fork would be
 	// required to fix it.
 	dummy, err := vm.dstack.PopByteArray()
 	if err != nil {
@@ -1820,17 +1817,17 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 		up, err := vm.scriptParser.Unparse(script)
 		if err != nil {
 			vm.dstack.PushBool(false)
-			return nil
+			return nil //nolint:nilerr // unexpected behaviour
 		}
 
 		// Generate the signature hash based on the signature hash type.
 		txCopy := vm.tx.Clone()
-		txCopy.Inputs[vm.txIdx].PreviousTxScript = up
+		txCopy.Inputs[vm.inputIdx].PreviousTxScript = up
 
-		signatureHash, err := txCopy.CalcInputSignatureHash(uint32(vm.txIdx), shf)
+		signatureHash, err := txCopy.CalcInputSignatureHash(uint32(vm.inputIdx), shf)
 		if err != nil {
 			vm.dstack.PushBool(false)
-			return nil
+			return nil //nolint:nilerr // unexpected behaviour
 		}
 
 		var valid bool

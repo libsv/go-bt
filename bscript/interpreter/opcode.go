@@ -42,7 +42,7 @@ type opcode struct {
 	val    byte
 	name   string
 	length int
-	exec   OpCodeFunc
+	exec   func(*ParsedOp, *Engine) error
 }
 
 func (o opcode) Name() string {

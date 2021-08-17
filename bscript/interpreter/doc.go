@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package txscript implements the bitcoin transaction script language.
+Package interpreter implements the bitcoin transaction script language.
 
 A complete description of the script language used by bitcoin cash can be found at
 https://en.bitcoin.it/wiki/Script.  The following only serves as a quick

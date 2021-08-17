@@ -71,7 +71,7 @@ func VarIntUpperLimitInc(length uint64) int {
 	return 0
 }
 
-// VarIntSerializeSize returns the number of bytes it would take to serialize
+// VarIntSerializeSize returns the number of bytes it would take to serialise
 // val as a variable length integer.
 func VarIntSerializeSize(val uint64) int {
 	// The value is small enough to be represented by itself, so it's

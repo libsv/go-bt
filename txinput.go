@@ -93,18 +93,29 @@ func (tx *Tx) InputCount() int {
 	return len(tx.Inputs)
 }
 
-func (tx *Tx) InputPreviousTxBytes() []byte {
-	b := make([]byte, 0)
+// PreviousOutHash returns a byte slice of inputs outpoints, for creating a signature hash
+func (tx *Tx) PreviousOutHash() []byte {
+	buf := make([]byte, 0)
+
 	for _, in := range tx.Inputs {
-		b = append(b, in.PreviousTxBytes()...)
+		buf = append(buf, ReverseBytes(in.PreviousTxID())...)
+		oi := make([]byte, 4)
+		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
+		buf = append(buf, oi...)
 	}
-	return b
+
+	return crypto.Sha256d(buf)
 }
 
-func (tx *Tx) InputSequenceNumberBytes() []byte {
-	b := make([]byte, 0)
+// SequenceHash returns a byte slice of inputs SequenceNumber, for creating a signature hash
+func (tx *Tx) SequenceHash() []byte {
+	buf := make([]byte, 0)
+
 	for _, in := range tx.Inputs {
-		b = append(b, in.SequenceNumberBytes()...)
+		oi := make([]byte, 4)
+		binary.LittleEndian.PutUint32(oi, in.SequenceNumber)
+		buf = append(buf, oi...)
 	}
-	return b
+
+	return crypto.Sha256d(buf)
 }

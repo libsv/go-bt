@@ -199,11 +199,3 @@ func (tx *Tx) PayTo(script *bscript.Script, satoshis uint64) error {
 func (tx *Tx) PayToAddress(addr string, satoshis uint64) error {
 	return tx.AddP2PKHOutputFromAddress(addr, satoshis)
 }
-
-func (tx *Tx) OutputBytesForSignHash() []byte {
-	b := make([]byte, 0)
-	for _, out := range tx.Outputs {
-		b = append(b, out.BytesForSigHash()...)
-	}
-	return b
-}

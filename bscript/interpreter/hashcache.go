@@ -25,9 +25,9 @@ type TxSigHashes struct {
 // transaction.
 func NewTxSigHashes(tx *bt.Tx) *TxSigHashes {
 	return &TxSigHashes{
-		HashPrevOuts: sha256dh(tx.InputPreviousTxBytes()),
-		HashSequence: sha256dh(tx.InputSequenceNumberBytes()),
-		HashOutputs:  sha256dh(tx.OutputBytesForSignHash()),
+		HashPrevOuts: sha256dh(tx.PreviousOutHash()),
+		HashSequence: sha256dh(tx.SequenceHash()),
+		HashOutputs:  sha256dh(tx.OutputsHash(-1)),
 	}
 }
 

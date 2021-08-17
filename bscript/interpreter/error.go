@@ -412,38 +412,11 @@ func IsErrorCode(err error, c ErrorCode) bool {
 	return ok && e.ErrorCode == c
 }
 
-type ErrMinimalDataPushh struct {
-	op       byte
-	expected byte
-	length   int
-}
-
-func (e ErrMinimalDataPushh) Error() string {
+// NewErrMinimalDataPush returns an Error with code ErrMinimalData
+func NewErrMinimalDataPush(op, expected opcode, length int) Error {
 	fmtStr := "data push of %d bytes encoded with opcode %s, use %s instead"
-	if (bscript.Op1 <= e.op && e.op <= bscript.Op16) || e.op == bscript.Op1NEGATE {
+	if (bscript.Op1 <= op.val && op.val <= bscript.Op16) || op.val == bscript.Op1NEGATE {
 		fmtStr = "data push of value %d encoded with opcode %s, use %s instead"
 	}
-	return fmt.Sprintf(fmtStr, e.length, bscript.OpCodeValues[e.op], bscript.OpCodeValues[e.expected])
-}
-
-func NewErrMinimalDataPush(op, expected byte, length int) Error {
-	fmtStr := "data push of %d bytes encoded with opcode %s, use %s instead"
-	if (bscript.Op1 <= op && op <= bscript.Op16) || op == bscript.Op1NEGATE {
-		fmtStr = "data push of value %d encoded with opcode %s, use %s instead"
-	}
-	return scriptError(ErrMinimalData, fmt.Sprintf(fmtStr, length, bscript.OpCodeValues[op], bscript.OpCodeValues[expected]))
-}
-
-type ErrMalformedPushh struct {
-	msg string
-}
-
-func (e ErrMalformedPushh) Error() string {
-	return e.msg
-}
-
-func NewErrMalformedPush(fmtStr string, args ...interface{}) ErrMalformedPushh {
-	return ErrMalformedPushh{
-		msg: fmt.Sprintf(fmtStr, args...),
-	}
+	return scriptError(ErrMinimalData, fmt.Sprintf(fmtStr, length, op.Name(), expected.Name()))
 }

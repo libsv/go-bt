@@ -18,24 +18,21 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// fixedExcessiveBlockSize should not be the default -we want to ensure it will work in all cases
-const fixedExcessiveBlockSize uint32 = 42111000
-
-var OpcodeByName = make(map[string]byte)
+var opcodeByName = make(map[string]byte)
 
 func init() {
-	// Initialize the opcode name to value map using the contents of the
+	// Initialise the opcode name to value map using the contents of the
 	// opcode array.  Also add entries for "OP_FALSE", "OP_TRUE", and
 	// "OP_NOP2" since they are aliases for "OP_0", "OP_1",
 	// and "OP_CHECKLOCKTIMEVERIFY" respectively.
 	for _, op := range &opcodeArray {
-		OpcodeByName[op.Name()] = op.val
+		opcodeByName[op.Name()] = op.val
 	}
-	OpcodeByName["OP_0"] = bscript.Op0
-	OpcodeByName["OP_1"] = bscript.Op1
-	OpcodeByName["OP_CHECKLOCKTIMEVERIFY"] = bscript.OpCHECKLOCKTIMEVERIFY
-	OpcodeByName["OP_CHECKSEQUENCEVERIFY"] = bscript.OpCHECKSEQUENCEVERIFY
-	OpcodeByName["OP_RESERVED"] = bscript.OpRESERVED
+	opcodeByName["OP_0"] = bscript.Op0
+	opcodeByName["OP_1"] = bscript.Op1
+	opcodeByName["OP_CHECKLOCKTIMEVERIFY"] = bscript.OpCHECKLOCKTIMEVERIFY
+	opcodeByName["OP_CHECKSEQUENCEVERIFY"] = bscript.OpCHECKSEQUENCEVERIFY
+	opcodeByName["OP_RESERVED"] = bscript.OpRESERVED
 
 }
 
@@ -54,7 +51,7 @@ func parseShortForm(script string) (*bscript.Script, error) {
 	// Only create the short form opcode map once.
 	if shortFormOps == nil {
 		ops := make(map[string]byte)
-		for opcodeName, opcodeValue := range OpcodeByName {
+		for opcodeName, opcodeValue := range opcodeByName {
 			if strings.Contains(opcodeName, "OP_UNKNOWN") {
 				continue
 			}
@@ -91,7 +88,7 @@ func parseShortForm(script string) (*bscript.Script, error) {
 			if num == 0 {
 				scr.AppendOpCode(bscript.Op0)
 			} else if num == -1 || (1 <= num && num <= 16) {
-				scr.AppendOpCode(byte((bscript.Op1 - 1) + byte(num)))
+				scr.AppendOpCode((bscript.Op1 - 1) + byte(num))
 			} else {
 				scr.AppendPushData(scriptNum(num).Bytes())
 			}
@@ -186,6 +183,8 @@ func parseScriptFlags(flagStr string) (ScriptFlags, error) {
 			flags |= ScriptVerifySigPushOnly
 		case "STRICTENC":
 			flags |= ScriptVerifyStrictEncoding
+		case "UTXO_AFTER_GENESIS":
+			flags |= ScriptAfterGenesis
 		default:
 			return flags, fmt.Errorf("invalid flag: %s", flag)
 		}
@@ -265,7 +264,7 @@ func parseExpectedResult(expected string) ([]ErrorCode, error) {
 		return []ErrorCode{ErrUnsatisfiedLockTime}, nil
 	}
 
-	return nil, fmt.Errorf("unrecognized expected result in test data: %v",
+	return nil, fmt.Errorf("unrecognised expected result in test data: %v",
 		expected)
 }
 
@@ -306,14 +305,6 @@ func createSpendingTx(sigScript, pkScript *bscript.Script,
 	spendingTx.Inputs[0].PreviousTxIDAdd(coinbaseTx.TxIDBytes())
 
 	return spendingTx
-}
-
-// scriptWithInputVal wraps a target pkScript with the value of the output in
-// which it is contained. The inputVal is necessary in order to properly
-// validate inputs which spend nested, or native witness programs.
-type scriptWithInputVal struct {
-	inputVal int64
-	pkScript []byte
 }
 
 // testScripts ensures all of the passed script tests execute with the expected
@@ -407,7 +398,7 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 		tx := createSpendingTx(scriptSig, scriptPubKey,
 			inputAmt)
 
-		vm, err := NewEngine(EngineOpts{
+		vm, err := NewEngine(EngineParams{
 			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey},
 			Tx:            tx,
 			InputIdx:      0,
@@ -434,13 +425,12 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 			}
 		}
 		if !success {
-			if serr, ok := err.(Error); ok {
-				t.Errorf("%s: want error codes %v, got %v", name,
-					allowedErrorCodes, serr.ErrorCode)
+			serr := &Error{}
+			if ok := errors.As(err, serr); ok {
+				t.Errorf("%s: want error codes %v, got %v", name, allowedErrorCodes, serr.ErrorCode)
 				continue
 			}
-			t.Errorf("%s: want error codes %v, got err: %v (%T)",
-				name, allowedErrorCodes, err, err)
+			t.Errorf("%s: want error codes %v, got err: %v (%T)", name, allowedErrorCodes, err, err)
 			continue
 		}
 	}
@@ -471,7 +461,7 @@ func TestScripts(t *testing.T) {
 // negative float to an unsigned int is implementation dependent and therefore
 // doesn't result in the expected value on all platforms.  This function woks
 // around that limitation by converting to a 32-bit signed integer first and
-// then to a 32-bit unsigned integer which results in the expected behavior on
+// then to a 32-bit unsigned integer which results in the expected behaviour on
 // all platforms.
 func testVecF64ToUint32(f float64) uint32 {
 	return uint32(int32(f))
@@ -615,7 +605,7 @@ testloop:
 			// These are meant to fail, so as soon as the first
 			// input fails the transaction has failed. (some of the
 			// test txns have good inputs, too..
-			vm, err := NewEngine(EngineOpts{
+			vm, err := NewEngine(EngineParams{
 				PreviousTxOut: prevOut,
 				Tx:            tx,
 				InputIdx:      k,
@@ -763,7 +753,7 @@ testloop:
 					k, i, test)
 				continue testloop
 			}
-			vm, err := NewEngine(EngineOpts{
+			vm, err := NewEngine(EngineParams{
 				PreviousTxOut: prevOut,
 				Tx:            tx,
 				InputIdx:      k,

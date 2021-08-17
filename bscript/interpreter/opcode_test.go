@@ -123,14 +123,13 @@ func TestOpcodeDisasm(t *testing.T) {
 
 		// OP_UNKNOWN#.
 		case opcodeVal >= 0xba && opcodeVal <= 0xf9 || opcodeVal == 0xfc:
-			expectedStr = "OP_UNKNOWN" + strconv.Itoa(int(opcodeVal))
+			expectedStr = "OP_UNKNOWN" + strconv.Itoa(opcodeVal)
 		}
 
 		pop := ParsedOp{Op: opcodeArray[opcodeVal], Data: data}
 		gotStr := pop.print(true)
 		if gotStr != expectedStr {
-			t.Errorf("pop.print(true) (opcode %x): Unexpected disasm "+
-				"string - got %v, want %v", opcodeVal, gotStr,
+			t.Errorf("pop.print(true) (opcode %x): Unexpected disasm string - got %v, want %v", opcodeVal, gotStr,
 				expectedStr)
 			continue
 		}
@@ -189,7 +188,7 @@ func TestOpcodeDisasm(t *testing.T) {
 
 		// OP_UNKNOWN#.
 		case opcodeVal >= 0xba && opcodeVal <= 0xf9 || opcodeVal == 0xfc:
-			expectedStr = "OP_UNKNOWN" + strconv.Itoa(int(opcodeVal))
+			expectedStr = "OP_UNKNOWN" + strconv.Itoa(opcodeVal)
 		}
 
 		pop := ParsedOp{Op: opcodeArray[opcodeVal], Data: data}

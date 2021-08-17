@@ -19,26 +19,24 @@ func tstCheckScriptError(gotErr, wantErr error) error {
 	// Ensure the error code is of the expected type and the error
 	// code matches the value specified in the test instance.
 	if reflect.TypeOf(gotErr) != reflect.TypeOf(wantErr) {
-		return fmt.Errorf("wrong error - got %T (%[1]v), want %T",
-			gotErr, wantErr)
+		return fmt.Errorf("wrong error - got %T (%[1]v), want %T", gotErr, wantErr) //nolint:errorlint // test code
 	}
 	if gotErr == nil {
 		return nil
 	}
 
 	// Ensure the want error type is a script error.
-	werr, ok := wantErr.(Error)
-	if !ok {
-		return fmt.Errorf("unexpected test error type %T", wantErr)
+	werr := &Error{}
+	if ok := errors.As(wantErr, werr); !ok {
+		return fmt.Errorf("unexpected test error type %T", wantErr) //nolint:errorlint // test code
 	}
 
 	// Ensure the error codes match.  It's safe to use a raw type assert
 	// here since the code above already proved they are the same type and
 	// the want error is a script error.
-	gotErrorCode := gotErr.(Error).ErrorCode
+	gotErrorCode := gotErr.(Error).ErrorCode //nolint:errorlint // test code
 	if gotErrorCode != werr.ErrorCode {
-		return fmt.Errorf("mismatched error code - got %v (%v), want %v",
-			gotErrorCode, gotErr, werr.ErrorCode)
+		return fmt.Errorf("mismatched error code - got %v (%w), want %v", gotErrorCode, gotErr, werr.ErrorCode)
 	}
 
 	return nil

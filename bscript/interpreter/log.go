@@ -8,7 +8,7 @@ import (
 	"github.com/bitcoinsv/bsvlog"
 )
 
-// log is a logger that is initialized with no output filters.  This
+// log is a logger that is initialised with no output filters.  This
 // means the package will not perform any logging by default until the caller
 // requests it.
 var log bsvlog.Logger

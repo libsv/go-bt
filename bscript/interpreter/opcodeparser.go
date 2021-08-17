@@ -8,28 +8,34 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-type OpCodeParser interface {
+// OpcodeParser parses *bscript.Script into a ParsedScript, and unparsing back
+type OpcodeParser interface {
 	Parse(*bscript.Script) (ParsedScript, error)
 	Unparse(ParsedScript) (*bscript.Script, error)
 }
 
+// ParsedScript is a slice of ParsedOp
 type ParsedScript []ParsedOp
 
 type parser struct{}
 
-func NewOpCodeParser() *parser {
+// NewOpcodeParser returns an OpcodeParser
+func NewOpcodeParser() OpcodeParser {
 	return &parser{}
 }
 
+// ParsedOp is a parsed opcode
 type ParsedOp struct {
 	Op   opcode
 	Data []byte
 }
 
+// Name returns the human readible name for the current opcode
 func (o *ParsedOp) Name() string {
 	return o.Op.name
 }
 
+// IsDisabled returns true if the op is disabled
 func (o *ParsedOp) IsDisabled() bool {
 	switch o.Op.val {
 	case bscript.Op2MUL, bscript.Op2DIV, bscript.OpINVERT, bscript.OpMUL,
@@ -40,6 +46,7 @@ func (o *ParsedOp) IsDisabled() bool {
 	}
 }
 
+// AlwaysIllegal returns true if the op is always illegal
 func (o *ParsedOp) AlwaysIllegal() bool {
 	switch o.Op.val {
 	case bscript.OpVERIF, bscript.OpVERNOTIF:
@@ -49,6 +56,7 @@ func (o *ParsedOp) AlwaysIllegal() bool {
 	}
 }
 
+// IsConditional returns true if the op is a conditional
 func (o *ParsedOp) IsConditional() bool {
 	switch o.Op.val {
 	case bscript.OpIF, bscript.OpNOTIF, bscript.OpELSE, bscript.OpENDIF:
@@ -58,28 +66,30 @@ func (o *ParsedOp) IsConditional() bool {
 	}
 }
 
+// EnforceMinimumDataPush checks that the op is pushing only the needed amount of data.
+// Errs if not the case.
 func (o *ParsedOp) EnforceMinimumDataPush() error {
 	dataLen := len(o.Data)
 	if dataLen == 0 && o.Op.val != bscript.Op0 {
-		return NewErrMinimalDataPush(o.Op.val, bscript.Op0, 0)
+		return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.Op0], 0)
 	}
 	if dataLen == 1 && (1 <= o.Data[0] && o.Data[0] <= 16) && o.Op.val != bscript.Op1+o.Data[0]-1 {
-		return NewErrMinimalDataPush(o.Op.val, bscript.Op1+o.Data[0]-1, int(o.Data[0]))
+		return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.Op1+o.Data[0]-1], int(o.Data[0]))
 	}
 	if dataLen == 1 && o.Data[0] == 0x81 && o.Op.val != bscript.Op1NEGATE {
-		return NewErrMinimalDataPush(o.Op.val, bscript.Op1NEGATE, -1)
+		return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.Op1NEGATE], -1)
 	}
 	if dataLen <= 75 {
 		if int(o.Op.val) != dataLen {
-			return NewErrMinimalDataPush(o.Op.val, byte(dataLen), dataLen)
+			return NewErrMinimalDataPush(o.Op, opcodeArray[byte(dataLen)], dataLen)
 		}
 	} else if dataLen <= 255 {
 		if o.Op.val != bscript.OpPUSHDATA1 {
-			return NewErrMinimalDataPush(o.Op.val, bscript.OpPUSHDATA1, dataLen)
+			return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.OpPUSHDATA1], dataLen)
 		}
 	} else if dataLen <= 65535 {
 		if o.Op.val != bscript.OpPUSHDATA2 {
-			return NewErrMinimalDataPush(o.Op.val, bscript.OpPUSHDATA2, dataLen)
+			return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.OpPUSHDATA2], dataLen)
 		}
 	}
 	return nil
@@ -197,6 +207,7 @@ func (p *parser) Unparse(pscr ParsedScript) (*bscript.Script, error) {
 	return &script, nil
 }
 
+// IsPushOnly returns true if the ParsedScript only contains push commands
 func (p ParsedScript) IsPushOnly() bool {
 	for _, op := range p {
 		if op.Op.val > bscript.Op16 {
@@ -223,10 +234,10 @@ func (p ParsedScript) removeOpcodeByData(data []byte) ParsedScript {
 // canonicalPush returns true if the object is either not a push instruction
 // or the push instruction contained wherein is matches the canonical form
 // or using the smallest instruction to do the job. False otherwise.
-func (p ParsedOp) canonicalPush() bool {
-	opcode := p.Op.val
-	data := p.Data
-	dataLen := len(p.Data)
+func (o ParsedOp) canonicalPush() bool {
+	opcode := o.Op.val
+	data := o.Data
+	dataLen := len(o.Data)
 	if opcode > bscript.Op16 {
 		return true
 	}
@@ -248,31 +259,31 @@ func (p ParsedOp) canonicalPush() bool {
 
 // bytes returns any data associated with the opcode encoded as it would be in
 // a script.  This is used for unparsing scripts from parsed opcodes.
-func (p *ParsedOp) bytes() ([]byte, error) {
+func (o *ParsedOp) bytes() ([]byte, error) {
 	var retbytes []byte
-	if p.Op.length > 0 {
-		retbytes = make([]byte, 1, p.Op.length)
+	if o.Op.length > 0 {
+		retbytes = make([]byte, 1, o.Op.length)
 	} else {
-		retbytes = make([]byte, 1, 1+len(p.Data)-
-			p.Op.length)
+		retbytes = make([]byte, 1, 1+len(o.Data)-
+			o.Op.length)
 	}
 
-	retbytes[0] = p.Op.val
-	if p.Op.length == 1 {
-		if len(p.Data) != 0 {
+	retbytes[0] = o.Op.val
+	if o.Op.length == 1 {
+		if len(o.Data) != 0 {
 			str := fmt.Sprintf("internal consistency error - "+
 				"parsed opcode %s has data length %d when %d "+
-				"was expected", p.Name(), len(p.Data),
+				"was expected", o.Name(), len(o.Data),
 				0)
 			return nil, scriptError(ErrInternal, str)
 		}
 		return retbytes, nil
 	}
-	nbytes := p.Op.length
-	if p.Op.length < 0 {
-		l := len(p.Data)
+	nbytes := o.Op.length
+	if o.Op.length < 0 {
+		l := len(o.Data)
 		// tempting just to hardcode to avoid the complexity here.
-		switch p.Op.length {
+		switch o.Op.length {
 		case -1:
 			retbytes = append(retbytes, byte(l))
 			nbytes = int(retbytes[1]) + len(retbytes)
@@ -290,12 +301,12 @@ func (p *ParsedOp) bytes() ([]byte, error) {
 		}
 	}
 
-	retbytes = append(retbytes, p.Data...)
+	retbytes = append(retbytes, o.Data...)
 
 	if len(retbytes) != nbytes {
 		str := fmt.Sprintf("internal consistency error - "+
 			"parsed opcode %s has data length %d when %d was "+
-			"expected", p.Name(), len(retbytes), nbytes)
+			"expected", o.Name(), len(retbytes), nbytes)
 		return nil, scriptError(ErrInternal, str)
 	}
 

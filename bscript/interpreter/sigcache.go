@@ -21,13 +21,14 @@ type sigCacheEntry struct {
 	pubKey *bec.PublicKey
 }
 
-// SigCache implements an ECDSA signature verification cache with a randomized
+// SigCache implements an ECDSA signature verification cache with a randomised
 // entry eviction policy. Only valid signatures will be added to the cache. The
 // benefits of SigCache are two fold. Firstly, usage of SigCache mitigates a DoS
 // attack wherein an attack causes a victim's client to hang due to worst-case
-// behavior triggered while processing attacker crafted invalid transactions. A
+// behaviour triggered while processing attacker crafted invalid transactions. A
 // detailed description of the mitigated DoS attack can be found here:
-// https://bitslog.wordpress.com/2013/01/23/fixed-bitcoin-vulnerability-explanation-why-the-signature-cache-is-a-dos-protection/.
+// nolint:lll // url
+// https://bitslog.wordpress.com/2013/01/23/fixed-bitcoin-vulnerability-explanation-why-the-signature-cache-is-a-dos-protection/
 // Secondly, usage of the SigCache introduces a signature verification
 // optimization which speeds up the validation of transactions within a block,
 // if they've already been seen and verified within the mempool.
@@ -37,7 +38,7 @@ type SigCache struct {
 	maxEntries uint
 }
 
-// NewSigCache creates and initializes a new instance of SigCache. Its sole
+// NewSigCache creates and initialises a new instance of SigCache. Its sole
 // parameter 'maxEntries' represents the maximum number of entries allowed to
 // exist in the SigCache at any particular moment. Random entries are evicted
 // to make room for new entries that would cause the number of entries in the

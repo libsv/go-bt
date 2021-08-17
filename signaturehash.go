@@ -62,22 +62,22 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 
 	if sigHashFlag&sighash.AnyOneCanPay == 0 {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashPreviousOuts = tx.getPreviousOutHash()
+		hashPreviousOuts = tx.PreviousOutHash()
 	}
 
 	if sigHashFlag&sighash.AnyOneCanPay == 0 &&
 		(sigHashFlag&31) != sighash.Single &&
 		(sigHashFlag&31) != sighash.None {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashSequence = tx.getSequenceHash()
+		hashSequence = tx.SequenceHash()
 	}
 
 	if (sigHashFlag&31) != sighash.Single && (sigHashFlag&31) != sighash.None {
 		// This will be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashOutputs = tx.getOutputsHash(-1)
+		hashOutputs = tx.OutputsHash(-1)
 	} else if (sigHashFlag&31) == sighash.Single && inputNumber < uint32(tx.OutputCount()) {
 		// This will *not* be executed in the usual BSV case (where sigHashType = SighashAllForkID)
-		hashOutputs = tx.getOutputsHash(int32(inputNumber))
+		hashOutputs = tx.OutputsHash(int32(inputNumber))
 	}
 
 	buf := make([]byte, 0)
@@ -128,6 +128,10 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 	return buf, nil
 }
 
+// CalcInputPreimageLegacy serialises the transaction based on the input index and the SIGHASH flag
+// and returns the preimage before double hashing (SHA256d), in the legacy format.
+//
+// see https://wiki.bitcoinsv.io/index.php/Legacy_Sighash_Algorithm
 func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]byte, error) {
 	if tx.InputIdx(int(inputNumber)) == nil {
 		return nil, errors.New("specified input does not exist")
@@ -230,32 +234,9 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 	return append(buf, sh...), nil
 }
 
-func (tx *Tx) getPreviousOutHash() []byte {
-	buf := make([]byte, 0)
-
-	for _, in := range tx.Inputs {
-		buf = append(buf, ReverseBytes(in.PreviousTxID())...)
-		oi := make([]byte, 4)
-		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
-		buf = append(buf, oi...)
-	}
-
-	return crypto.Sha256d(buf)
-}
-
-func (tx *Tx) getSequenceHash() []byte {
-	buf := make([]byte, 0)
-
-	for _, in := range tx.Inputs {
-		oi := make([]byte, 4)
-		binary.LittleEndian.PutUint32(oi, in.SequenceNumber)
-		buf = append(buf, oi...)
-	}
-
-	return crypto.Sha256d(buf)
-}
-
-func (tx *Tx) getOutputsHash(n int32) []byte {
+// OutputsHash returns a bytes slice of the requested output, used for generating
+// the txs signature hash. If n is -1, it will create the byte slice from all outputs.
+func (tx *Tx) OutputsHash(n int32) []byte {
 	buf := make([]byte, 0)
 
 	if n == -1 {

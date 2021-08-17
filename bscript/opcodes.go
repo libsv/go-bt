@@ -1,11 +1,5 @@
 package bscript
 
-// Op type
-type Op byte
-
-type OpCode struct {
-}
-
 // BitCoin Script constants.
 // See https://wiki.bitcoinsv.io/index.php/Opcodes_used_in_Bitcoin_Script
 const (
@@ -538,6 +532,7 @@ var opCodeStrings = map[string]byte{
 	"OP_INVALIDOPCODE":       OpINVALIDOPCODE,
 }
 
+// OpCodeValues maps an opcode to its name
 var OpCodeValues = map[byte]string{
 	OpFALSE:               "OP_FALSE",
 	OpDATA1:               "OP_DATA_1",
