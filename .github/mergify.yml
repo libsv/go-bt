@@ -206,6 +206,8 @@ pull_request_rules:
       close:
         message: |
           This pull request looks stale. Feel free to reopen it if you think it's a mistake.
+      label:
+        add: [ "stale" ]
   # ===============================================================================
   # BRANCHES
   # ===============================================================================
