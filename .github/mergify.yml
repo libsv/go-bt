@@ -79,7 +79,8 @@ pull_request_rules:
       - "#assignee=0"
     actions:
       assign:
-        users: [ "@{{author}}" ]
+        add_users:
+          - "{{author}}"
 
   # ===============================================================================
   # ALERTS
