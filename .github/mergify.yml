@@ -79,7 +79,7 @@ pull_request_rules:
       - "#assignee=0"
     actions:
       assign:
-        users: [ "theflyingcodr" ]
+        users: [ "@{{author}}" ]
 
   # ===============================================================================
   # ALERTS
