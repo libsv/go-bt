@@ -49,7 +49,7 @@ func TestTx_ChangeToAddress(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", bt.DefaultFees())
+		err = tx.ChangeToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, tx.OutputCount())
@@ -75,7 +75,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -101,7 +101,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -143,7 +143,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.AddOpReturnPartsOutput([][]byte{[]byte("hi"), []byte("how"), []byte("are"), []byte("you")})
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", bt.DefaultFees())
+		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -180,7 +180,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -213,7 +213,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -247,7 +247,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -284,7 +284,7 @@ func TestTx_Change(t *testing.T) {
 			5689)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.DefaultFees())
+		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -306,7 +306,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 	tests := map[string]struct {
 		tx              *bt.Tx
 		index           uint
-		fees            []*bt.Fee
+		fees            *bt.FeeQuote
 		expOutputTotal  uint64
 		expChangeOutput uint64
 		err             error
@@ -323,7 +323,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           0,
-			fees:            bt.DefaultFees(),
+			fees:            bt.NewFeeQuote(),
 			expOutputTotal:  1000,
 			expChangeOutput: 1000,
 			err:             nil,
@@ -339,7 +339,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           0,
-			fees:            bt.DefaultFees(),
+			fees:            bt.NewFeeQuote(),
 			expOutputTotal:  904,
 			expChangeOutput: 904,
 			err:             nil,
@@ -358,7 +358,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           3,
-			fees:            bt.DefaultFees(),
+			fees:            bt.NewFeeQuote(),
 			expOutputTotal:  2353,
 			expChangeOutput: 853,
 			err:             nil,
@@ -374,7 +374,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index: 1,
-			fees:  bt.DefaultFees(),
+			fees:  bt.NewFeeQuote(),
 			err:   errors.New("index is greater than number of Inputs in transaction"),
 		},
 	}
@@ -395,7 +395,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 func TestTx_CalculateChange(t *testing.T) {
 	tests := map[string]struct {
 		tx      *bt.Tx
-		fees    []*bt.Fee
+		fees    *bt.FeeQuote
 		expFees uint64
 		err     error
 	}{
@@ -410,7 +410,7 @@ func TestTx_CalculateChange(t *testing.T) {
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
-			fees:    bt.DefaultFees(),
+			fees:    bt.NewFeeQuote(),
 			expFees: 96,
 		}, "Transaction with one input 4 Outputs should return 147": {
 			tx: func() *bt.Tx {
@@ -426,7 +426,7 @@ func TestTx_CalculateChange(t *testing.T) {
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
-			fees:    bt.DefaultFees(),
+			fees:    bt.NewFeeQuote(),
 			expFees: 147,
 		},
 	}
