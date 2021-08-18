@@ -1,6 +1,8 @@
 package bt
 
 import (
+	"encoding/json"
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -536,6 +538,87 @@ func TestFeeQuotes_Fee(t *testing.T) {
 			assert.NoError(t, err)
 			assert.NotNil(t, fee)
 			assert.Equal(t, test.expFee, fee)
+		})
+	}
+}
+
+func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		quote *FeeQuote
+		err   error
+	}{
+		"successful run should return no errors": {
+			quote: &FeeQuote{
+				fees: map[FeeType]*Fee{
+					FeeTypeStandard: {
+						FeeType: FeeTypeStandard,
+						MiningFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    10,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 10,
+							Bytes:    5},
+					}, FeeTypeData: {
+						FeeType: FeeTypeData,
+						MiningFee: FeeUnit{
+							Satoshis: 5,
+							Bytes:    2,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 8,
+							Bytes:    4},
+					},
+				},
+			},
+			err: nil,
+		},
+		"empty key should error": {
+			quote: &FeeQuote{
+				fees: map[FeeType]*Fee{
+					"": {
+						FeeType: FeeTypeStandard,
+						MiningFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    10,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 10,
+							Bytes:    5},
+					},
+				},
+			},
+			err: errors.New("unknown feetype supplied ''"),
+		}, "random key should error": {
+			quote: &FeeQuote{
+				fees: map[FeeType]*Fee{
+					"idunno": {
+						FeeType: FeeTypeStandard,
+						MiningFee: FeeUnit{
+							Satoshis: 100,
+							Bytes:    10,
+						},
+						RelayFee: FeeUnit{
+							Satoshis: 10,
+							Bytes:    5},
+					},
+				},
+			},
+			err: errors.New("unknown feetype supplied 'idunno'"),
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			bb, _ := json.Marshal(test.quote)
+			var quote *FeeQuote
+			err := json.Unmarshal(bb, &quote)
+			if test.err != nil {
+				assert.Error(t, err)
+				assert.EqualError(t, err, test.err.Error())
+				return
+			}
+			assert.Equal(t, test.quote, quote)
 		})
 	}
 }

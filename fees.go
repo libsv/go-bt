@@ -1,7 +1,9 @@
 package bt
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -13,6 +15,7 @@ var (
 	ErrFeeTypeNotFound  = errors.New("feetype not found")
 	ErrFeeQuoteNotInit  = errors.New("feeQuote has not been initialised, call NewFeeQuote()")
 	ErrEmptyValues      = errors.New("empty value or values passed, all arguments are required and cannot be empty")
+	ErrUnknownFeeType   = "unknown feetype supplied '%s'"
 )
 
 // FeeType is used to specify which
@@ -225,6 +228,52 @@ func (f *FeeQuote) Expired() bool {
 	return f.expiryTime.Before(time.Now().UTC())
 }
 
+// MarshalJSON will convert the FeeQuote to a json object
+// with the format as shown:
+//  {
+//	 "data": {
+//		 "miningFee": {
+//			 "satoshis": 5,
+//			 "bytes": 2
+//		 },
+//		 "relayFee": {
+//			 "satoshis": 8,
+//			 "bytes": 4
+//		 }
+//	 },
+//	 "standard": {
+//		 "miningFee": {
+//			 "satoshis": 100,
+//			 "bytes": 10
+//		 },
+//		 "relayFee": {
+//			 "satoshis": 10,
+//			 "bytes": 5
+//		 }
+//	 }
+//  }
+func (f *FeeQuote) MarshalJSON() ([]byte, error) {
+	return json.Marshal(f.fees)
+}
+
+// UnmarshalJSON will convert a json encoded FeeQuote back into a fee quote type, the expected
+// JSON format is shown above in the MarshalJSON function.
+// If the fee type supplied is unknown an ErrUnknownFeeType will be returned.
+func (f *FeeQuote) UnmarshalJSON(body []byte) error {
+	fees := map[FeeType]*Fee{}
+	if err := json.Unmarshal(body, &fees); err != nil {
+		return err
+	}
+	for k, v := range fees {
+		if k != FeeTypeData && k != FeeTypeStandard {
+			return fmt.Errorf(ErrUnknownFeeType, k)
+		}
+		v.FeeType = k
+	}
+	f.fees = fees
+	return nil
+}
+
 // FeeUnit displays the amount of Satoshis needed
 // for a specific amount of Bytes in a transaction
 // see https://github.com/bitcoin-sv-specs/brfc-misc/tree/master/feespec
@@ -237,7 +286,7 @@ type FeeUnit struct {
 // FeeType, for example 'standard' or 'data'
 // see https://github.com/bitcoin-sv-specs/brfc-misc/tree/master/feespec
 type Fee struct {
-	FeeType   FeeType `json:"feeType"` // standard || data
+	FeeType   FeeType `json:"-"` // standard || data
 	MiningFee FeeUnit `json:"miningFee"`
 	RelayFee  FeeUnit `json:"relayFee"` // Fee for retaining Tx in secondary mempool
 }
