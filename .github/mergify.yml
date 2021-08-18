@@ -167,7 +167,7 @@ pull_request_rules:
       - "head~=(?i)^enhancement?" # if the PR branch starts with enhancement/
     actions:
       label:
-        add: ["feature"]
+        add: ["enhancement"]
   - name: Chore label
     conditions:
       - "head~=(?i)^chore" # if the PR branch starts with chore/
