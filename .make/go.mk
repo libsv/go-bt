@@ -57,6 +57,9 @@ test: ## Runs vet, lint and ALL tests
 	@echo "running tests..."
 	@go test ./... -v
 
+test-unit:
+	@go test ./... -race -coverprofile=coverage.txt -covermode=atomic
+
 test-short: ## Runs vet, lint and tests (excludes integration tests)
 	@$(MAKE) lint
 	@echo "running tests (short)..."

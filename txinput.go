@@ -7,7 +7,7 @@ import (
 
 	"github.com/libsv/go-bk/crypto"
 
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 // NewInputFromBytes returns a transaction input from the bytes provided.

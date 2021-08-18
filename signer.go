@@ -3,7 +3,7 @@ package bt
 import (
 	"context"
 
-	"github.com/libsv/go-bt/sighash"
+	"github.com/libsv/go-bt/v2/sighash"
 )
 
 // Signer interface to allow custom implementations of different signing mechanisms.
@@ -28,5 +28,5 @@ type Signer interface {
 // use the public key to check which Inputs can be signed for before signing.
 type AutoSigner interface {
 	Signer
-	PublicKey(ctx context.Context) (publicKey []byte)
+	PublicKey(ctx context.Context) (publicKey []byte, err error)
 }

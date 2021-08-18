@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
