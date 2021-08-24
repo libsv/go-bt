@@ -359,3 +359,21 @@ func (s *stack) String() string {
 
 	return result
 }
+
+type boolStack interface {
+	PushBool(b bool)
+	PopBool() (bool, error)
+	PeekBool(int32) (bool, error)
+}
+
+type nopBoolStack struct{}
+
+func (n *nopBoolStack) PushBool(bool) {}
+
+func (n *nopBoolStack) PopBool() (bool, error) {
+	return false, nil
+}
+
+func (n *nopBoolStack) PeekBool(int32) (bool, error) {
+	return false, nil
+}

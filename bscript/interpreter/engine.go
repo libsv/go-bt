@@ -83,9 +83,9 @@ const (
 	// be calculated using the bip0143 signature hashing algorithm.
 	ScriptVerifyBip143SigHash
 
-	// ScriptAfterGenesis defines that the utxo was created after
+	// ScriptUTXOAfterGenesis defines that the utxo was created after
 	// genesis
-	ScriptAfterGenesis
+	ScriptUTXOAfterGenesis
 
 	// ScriptVerifyMinimalIf
 	ScriptVerifyMinimalIf
@@ -113,7 +113,10 @@ type Engine struct {
 	dstack stack // data stack
 	astack stack // alt stack
 
+	elseStack boolStack
+
 	scripts         []ParsedScript
+	scriptsFinished []bool
 	condStack       []int
 	savedFirstStack [][]byte // stack from first script for bip16 scripts
 
@@ -241,12 +244,16 @@ func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 		vm.astack.verifyMinimalData = true
 	}
 
-	if vm.hasFlag(ScriptAfterGenesis) {
+	vm.elseStack = &nopBoolStack{}
+	if vm.hasFlag(ScriptUTXOAfterGenesis) {
+		vm.elseStack = &stack{}
 		vm.afterGenesis = true
 	}
 
 	vm.tx.InputIdx(vm.inputIdx).PreviousTxScript = vm.prevOutput.LockingScript
 	vm.tx.InputIdx(vm.inputIdx).PreviousTxSatoshis = vm.prevOutput.Satoshis
+
+	vm.scriptsFinished = make([]bool, len(vm.scripts))
 
 	return vm, nil
 }
@@ -277,9 +284,9 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 	}
 
 	// Always-illegal opcodes are fail on program counter.
-	if pop.AlwaysIllegal() {
-		return scriptError(ErrReservedOpcode, "attempt to execute reserved opcode %s", pop.Name())
-	}
+	//if pop.AlwaysIllegal() {
+	//	return scriptError(ErrReservedOpcode, "attempt to execute reserved opcode %s", pop.Name())
+	//}
 
 	// Note that this includes OP_RESERVED which counts as a push operation.
 	if pop.Op.val > bscript.Op16 {
@@ -466,6 +473,7 @@ func (vm *Engine) Step() (done bool, err error) {
 			return false, err
 		}
 		vm.scripts = append(vm.scripts, pops)
+		vm.scriptsFinished = append(vm.scriptsFinished, false)
 
 		// Set stack to be the stack from first script minus the
 		// script itself
@@ -783,4 +791,11 @@ func (vm *Engine) GetAltStack() [][]byte {
 // provided array where the last item in the array will be the top of the stack.
 func (vm *Engine) SetAltStack(data [][]byte) {
 	setStack(&vm.astack, data)
+}
+
+func (vm *Engine) ShouldExecute() bool {
+	if !vm.afterGenesis {
+		return true
+	}
+	return !vm.scriptsFinished[vm.scriptIdx]
 }

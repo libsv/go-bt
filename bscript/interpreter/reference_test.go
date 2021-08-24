@@ -184,7 +184,9 @@ func parseScriptFlags(flagStr string) (ScriptFlags, error) {
 		case "STRICTENC":
 			flags |= ScriptVerifyStrictEncoding
 		case "UTXO_AFTER_GENESIS":
-			flags |= ScriptAfterGenesis
+			flags |= ScriptUTXOAfterGenesis
+		case "MINIMALIF":
+			flags |= ScriptVerifyMinimalIf
 		default:
 			return flags, fmt.Errorf("invalid flag: %s", flag)
 		}
@@ -200,7 +202,9 @@ func parseExpectedResult(expected string) ([]ErrorCode, error) {
 	case "OK":
 		return nil, nil
 	case "UNKNOWN_ERROR":
-		return []ErrorCode{ErrNumberTooBig, ErrNumberTooSmall, ErrMinimalData, ErrInvalidInputLength}, nil
+		return []ErrorCode{ErrMinimalData, ErrInvalidInputLength}, nil
+	case "INVALID_NUMBER_RANGE":
+		return []ErrorCode{ErrNumberTooBig, ErrNumberTooSmall}, nil
 	case "PUBKEYTYPE":
 		return []ErrorCode{ErrPubKeyType}, nil
 	case "SIG_DER":
@@ -258,6 +262,8 @@ func parseExpectedResult(expected string) ([]ErrorCode, error) {
 		return []ErrorCode{ErrInvalidSignatureCount}, nil
 	case "MINIMALDATA":
 		return []ErrorCode{ErrMinimalData}, nil
+	case "MINIMALIF":
+		return []ErrorCode{ErrMinimalIf}, nil
 	case "NEGATIVE_LOCKTIME":
 		return []ErrorCode{ErrNegativeLockTime}, nil
 	case "UNSATISFIED_LOCKTIME":
@@ -452,6 +458,25 @@ func TestScripts(t *testing.T) {
 
 	// Run all script tests with and without the signature cache.
 	testScripts(t, tests, true)
+	testScripts(t, tests, false)
+}
+
+// TestScripts ensures all of the tests in script_tests.json execute with the
+// expected results as defined in the test data.
+func TestMyCoolTest(t *testing.T) {
+	file, err := ioutil.ReadFile("data/mycooltests.json")
+	if err != nil {
+		t.Fatalf("TestScripts: %v\n", err)
+	}
+
+	var tests [][]interface{}
+	err = json.Unmarshal(file, &tests)
+	if err != nil {
+		t.Fatalf("TestScripts couldn't Unmarshal: %v", err)
+	}
+
+	// Run all script tests with and without the signature cache.
+	//testScripts(t, tests, true)
 	testScripts(t, tests, false)
 }
 

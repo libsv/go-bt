@@ -38,8 +38,7 @@ func (o *ParsedOp) Name() string {
 // IsDisabled returns true if the op is disabled
 func (o *ParsedOp) IsDisabled() bool {
 	switch o.Op.val {
-	case bscript.Op2MUL, bscript.Op2DIV, bscript.OpINVERT, bscript.OpMUL,
-		bscript.OpLSHIFT, bscript.OpRSHIFT:
+	case bscript.Op2MUL, bscript.Op2DIV:
 		return true
 	default:
 		return false
@@ -59,7 +58,7 @@ func (o *ParsedOp) AlwaysIllegal() bool {
 // IsConditional returns true if the op is a conditional
 func (o *ParsedOp) IsConditional() bool {
 	switch o.Op.val {
-	case bscript.OpIF, bscript.OpNOTIF, bscript.OpELSE, bscript.OpENDIF:
+	case bscript.OpIF, bscript.OpNOTIF, bscript.OpELSE, bscript.OpENDIF, bscript.OpVERIF, bscript.OpVERNOTIF:
 		return true
 	default:
 		return false

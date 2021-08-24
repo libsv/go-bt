@@ -29,6 +29,14 @@ func opcodeDisabled(op *ParsedOp, vm *Engine) error {
 	return scriptError(ErrDisabledOpcode, "attempt to execute disabled opcode %s", op.Name())
 }
 
+func opcodeVerConditional(op *ParsedOp, vm *Engine) error {
+	if !vm.ShouldExecute() {
+		return nil
+	}
+
+	return opcodeReserved(op, vm)
+}
+
 // opcodeReserved is a common handler for all reserved opcodes.  It returns an
 // appropriate error indicating the opcode is reserved.
 func opcodeReserved(op *ParsedOp, vm *Engine) error {
@@ -93,6 +101,22 @@ func opcodeNop(op *ParsedOp, vm *Engine) error {
 
 // popIfBool pops the top item off the stack and returns a bool
 func popIfBool(vm *Engine) (bool, error) {
+	if vm.hasFlag(ScriptVerifyMinimalIf) {
+		b, err := vm.dstack.PopByteArray()
+		if err != nil {
+			return false, err
+		}
+
+		if len(b) > 1 {
+			return false, scriptError(ErrMinimalIf, "conditionl has data of length %d", len(b))
+		}
+		if len(b) == 1 && b[0] != 1 {
+			return false, scriptError(ErrMinimalIf, "conditional failed")
+		}
+
+		return asBool(b), nil
+	}
+
 	return vm.dstack.PopBool()
 }
 
@@ -127,6 +151,7 @@ func opcodeIf(op *ParsedOp, vm *Engine) error {
 	}
 
 	vm.condStack = append(vm.condStack, condVal)
+	vm.elseStack.PushBool(false)
 	return nil
 }
 
@@ -154,15 +179,6 @@ func opcodeNotIf(op *ParsedOp, vm *Engine) error {
 			return err
 		}
 
-		if vm.hasFlag(ScriptVerifyMinimalIf) {
-			if len(op.Data) > 1 {
-				return scriptError(ErrMinimalIf, "conditionl has data of length %d", len(op.Data))
-			}
-			if len(op.Data) == 1 && op.Data[0] != 1 {
-				return scriptError(ErrMinimalIf, "conditional failed")
-			}
-		}
-
 		if !ok {
 			condVal = OpCondTrue
 		}
@@ -171,6 +187,7 @@ func opcodeNotIf(op *ParsedOp, vm *Engine) error {
 	}
 
 	vm.condStack = append(vm.condStack, condVal)
+	vm.elseStack.PushBool(false)
 	return nil
 }
 
@@ -185,6 +202,16 @@ func opcodeElse(op *ParsedOp, vm *Engine) error {
 			"encountered opcode %s with no matching opcode to begin conditional execution", op.Name())
 	}
 
+	// Only one ELSE allowed in IF after genesis
+	ok, err := vm.elseStack.PopBool()
+	if err != nil {
+		return err
+	}
+	if ok {
+		return scriptError(ErrUnbalancedConditional,
+			"encountered opcode %s with no matching opcode to begin conditional execution", op.Name())
+	}
+
 	conditionalIdx := len(vm.condStack) - 1
 	switch vm.condStack[conditionalIdx] {
 	case OpCondTrue:
@@ -195,6 +222,8 @@ func opcodeElse(op *ParsedOp, vm *Engine) error {
 		// Value doesn't change in skip since it indicates this opcode
 		// is nested in a non-executed branch.
 	}
+
+	vm.elseStack.PushBool(true)
 	return nil
 }
 
@@ -211,6 +240,10 @@ func opcodeEndif(op *ParsedOp, vm *Engine) error {
 	}
 
 	vm.condStack = vm.condStack[:len(vm.condStack)-1]
+	if _, err := vm.elseStack.PopBool(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -1087,14 +1120,18 @@ func opcodeLShift(op *ParsedOp, vm *Engine) error {
 		return scriptError(ErrNumberTooSmall, "n less than 0")
 	}
 
-	x, err := vm.dstack.PopInt()
+	x, err := vm.dstack.PopByteArray()
 	if err != nil {
 		return err
 	}
 
-	d := x.Int32() << uint32(n.Int32())
-	vm.dstack.PushInt(scriptNum(d))
+	l := len(x)
+	for i := 0; i < l-1; i++ {
+		x[i] = x[i]<<n | x[i+1]>>(8-n)
+	}
+	x[l-1] <<= n
 
+	vm.dstack.PushByteArray(x)
 	return nil
 }
 
@@ -1108,14 +1145,18 @@ func opcodeRShift(op *ParsedOp, vm *Engine) error {
 		return scriptError(ErrNumberTooSmall, "n less than 0")
 	}
 
-	x, err := vm.dstack.PopInt()
+	x, err := vm.dstack.PopByteArray()
 	if err != nil {
 		return err
 	}
 
-	d := x.Int32() >> uint32(n.Int32())
-	vm.dstack.PushInt(scriptNum(d))
+	l := len(x)
+	for i := l - 1; i > 0; i-- {
+		x[i] = x[i]>>n | x[i-1]<<(8-n)
+	}
+	x[0] >>= n
 
+	vm.dstack.PushByteArray(x)
 	return nil
 }
 
