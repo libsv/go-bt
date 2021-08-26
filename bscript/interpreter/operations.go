@@ -30,6 +30,9 @@ func opcodeDisabled(op *ParsedOp, vm *Engine) error {
 }
 
 func opcodeVerConditional(op *ParsedOp, vm *Engine) error {
+	if vm.afterGenesis && !vm.ShouldExec(*op) {
+		return nil
+	}
 	return opcodeReserved(op, vm)
 }
 
@@ -133,17 +136,19 @@ func popIfBool(vm *Engine) (bool, error) {
 // Conditional stack transformation: [...] -> [... OpCondValue]
 func opcodeIf(op *ParsedOp, vm *Engine) error {
 	condVal := OpCondFalse
-	if vm.isBranchExecuting() {
-		ok, err := popIfBool(vm)
-		if err != nil {
-			return err
-		}
+	if vm.ShouldExec(*op) {
+		if vm.isBranchExecuting() {
+			ok, err := popIfBool(vm)
+			if err != nil {
+				return err
+			}
 
-		if ok {
-			condVal = OpCondTrue
+			if ok {
+				condVal = OpCondTrue
+			}
+		} else {
+			condVal = OpCondSkip
 		}
-	} else {
-		condVal = OpCondSkip
 	}
 
 	vm.condStack = append(vm.condStack, condVal)
@@ -169,17 +174,19 @@ func opcodeIf(op *ParsedOp, vm *Engine) error {
 // Conditional stack transformation: [...] -> [... OpCondValue]
 func opcodeNotIf(op *ParsedOp, vm *Engine) error {
 	condVal := OpCondFalse
-	if vm.isBranchExecuting() {
-		ok, err := popIfBool(vm)
-		if err != nil {
-			return err
-		}
+	if vm.ShouldExec(*op) {
+		if vm.isBranchExecuting() {
+			ok, err := popIfBool(vm)
+			if err != nil {
+				return err
+			}
 
-		if !ok {
-			condVal = OpCondTrue
+			if !ok {
+				condVal = OpCondTrue
+			}
+		} else {
+			condVal = OpCondSkip
 		}
-	} else {
-		condVal = OpCondSkip
 	}
 
 	vm.condStack = append(vm.condStack, condVal)
@@ -269,7 +276,17 @@ func opcodeVerify(op *ParsedOp, vm *Engine) error {
 // opcodeReturn returns an appropriate error since it is always an error to
 // return early from a script.
 func opcodeReturn(op *ParsedOp, vm *Engine) error {
-	return scriptError(ErrEarlyReturn, "script returned early")
+	if !vm.afterGenesis {
+		return scriptError(ErrEarlyReturn, "script returned early")
+	}
+	vm.topLevelReturnAfterGenesis = false
+	if len(vm.condStack) == 0 {
+		// Terminate the execution as successful. The remaining of the script does not affect the validity (even in
+		// presence of unbalanced IFs, invalid opcodes etc)
+		return success()
+	}
+
+	return nil
 }
 
 // verifyLockTime is a helper function used to validate locktimes.
@@ -1908,4 +1925,8 @@ func opcodeCheckMultiSigVerify(op *ParsedOp, vm *Engine) error {
 	}
 
 	return abstractVerify(op, vm, ErrCheckMultiSigVerify)
+}
+
+func success() Error {
+	return scriptError(ErrOK, "success")
 }

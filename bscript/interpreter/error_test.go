@@ -17,6 +17,7 @@ func TestErrorCodeStringer(t *testing.T) {
 		want string
 	}{
 		{ErrInternal, "ErrInternal"},
+		{ErrOK, "ErrOK"},
 		{ErrInvalidFlags, "ErrInvalidFlags"},
 		{ErrInvalidIndex, "ErrInvalidIndex"},
 		{ErrUnsupportedAddress, "ErrUnsupportedAddress"},

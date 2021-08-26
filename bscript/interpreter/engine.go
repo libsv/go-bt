@@ -134,9 +134,11 @@ type Engine struct {
 	sigCache  SigCache
 	hashCache *TxSigHashes
 
-	flags        ScriptFlags
-	bip16        bool // treat execution as pay-to-script-hash
-	afterGenesis bool
+	flags ScriptFlags
+	bip16 bool // treat execution as pay-to-script-hash
+
+	afterGenesis               bool
+	topLevelReturnAfterGenesis bool
 }
 
 // EngineParams are the params required for building an Engine
@@ -185,6 +187,7 @@ func NewEngine(params EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 	if vm.hasFlag(ScriptUTXOAfterGenesis) {
 		vm.elseStack = &stack{}
 		vm.afterGenesis = true
+		vm.topLevelReturnAfterGenesis = true
 	}
 
 	vm.cfg = buildConfig(vm.afterGenesis)
@@ -292,12 +295,12 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 		return scriptError(ErrElementTooBig, "element size %d exceeds max allowed size %d", len(pop.Data), vm.cfg.MaxScriptElementSize())
 	}
 	// Disabled opcodes are fail on program counter.
-	if pop.IsDisabled() && !vm.afterGenesis {
+	if pop.IsDisabled() && (!vm.afterGenesis || vm.ShouldExec(pop)) {
 		return scriptError(ErrDisabledOpcode, "attempt to execute disabled opcode %s", pop.Name())
 	}
 
 	// Always-illegal opcodes are fail on program counter.
-	if pop.AlwaysIllegal() {
+	if pop.AlwaysIllegal() && !vm.afterGenesis {
 		return scriptError(ErrReservedOpcode, "attempt to execute reserved opcode %s", pop.Name())
 	}
 
@@ -321,13 +324,17 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 
 	// Ensure all executed data push opcodes use the minimal encoding when
 	// the minimal data verification flag is set.
-	if vm.dstack.verifyMinimalData && vm.isBranchExecuting() && pop.Op.val <= bscript.OpPUSHDATA4 {
+	if vm.dstack.verifyMinimalData && vm.isBranchExecuting() && pop.Op.val <= bscript.OpPUSHDATA4 && vm.ShouldExec(pop) {
 		if err := pop.EnforceMinimumDataPush(); err != nil {
 			return err
 		}
 	}
 
-	return pop.Op.exec(&pop, vm)
+	if vm.ShouldExec(pop) || pop.IsConditional() {
+		return pop.Op.exec(&pop, vm)
+	}
+
+	return nil
 }
 
 // disasm is a helper function to produce the output for DisasmPC and
@@ -393,16 +400,12 @@ func (vm *Engine) DisasmScript(idx int) (string, error) {
 // successful, leaving a a true boolean on the stack.  An error otherwise,
 // including if the script has not finished.
 func (vm *Engine) CheckErrorCondition(finalScript bool) error {
-	// Check execution is actually done.  When pc is past the end of script
-	// array there are no more scripts to run.
-	if vm.scriptIdx < len(vm.scripts) {
-		return scriptError(ErrScriptUnfinished, "error check when script unfinished")
-	}
-	if finalScript && vm.hasFlag(ScriptVerifyCleanStack) && vm.dstack.Depth() != 1 {
-		return scriptError(ErrCleanStack, "stack contains %d unexpected items", vm.dstack.Depth()-1)
-	}
 	if vm.dstack.Depth() < 1 {
 		return scriptError(ErrEmptyStack, "stack empty at end of script execution")
+	}
+
+	if finalScript && vm.hasFlag(ScriptVerifyCleanStack) && vm.dstack.Depth() != 1 {
+		return scriptError(ErrCleanStack, "stack contains %d unexpected items", vm.dstack.Depth()-1)
 	}
 
 	v, err := vm.dstack.PopBool()
@@ -441,6 +444,12 @@ func (vm *Engine) Step() (done bool, err error) {
 	// disabled opcodes, illegal opcodes, maximum allowed operations per
 	// script, maximum script element sizes, and conditionals.
 	if err = vm.executeOpcode(opcode); err != nil {
+		if ok := IsErrorCode(err, ErrOK); ok {
+			vm.scriptOff = 0
+			vm.scriptIdx++
+			vm.topLevelReturnAfterGenesis = true
+			return vm.scriptIdx >= len(vm.scripts), nil
+		}
 		return true, err
 	}
 
@@ -467,6 +476,7 @@ func (vm *Engine) Step() (done bool, err error) {
 
 	vm.numOps = 0 // number of ops is per script.
 	vm.scriptOff = 0
+	vm.topLevelReturnAfterGenesis = true
 	vm.scriptIdx++
 	if vm.scriptIdx == 1 && vm.bip16 && !vm.afterGenesis {
 		vm.savedFirstStack = vm.GetStack()
@@ -817,4 +827,18 @@ func (vm *Engine) GetAltStack() [][]byte {
 // provided array where the last item in the array will be the top of the stack.
 func (vm *Engine) SetAltStack(data [][]byte) {
 	setStack(&vm.astack, data)
+}
+
+func (vm *Engine) ShouldExec(pop ParsedOp) bool {
+	if !vm.afterGenesis {
+		return true
+	}
+	var count int
+	for _, v := range vm.condStack {
+		if v == OpCondFalse {
+			count++
+		}
+	}
+
+	return count == 0 && (vm.topLevelReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
 }

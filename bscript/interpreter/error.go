@@ -21,6 +21,10 @@ const (
 	// error in the engine logic.
 	ErrInternal ErrorCode = iota
 
+	// ErrOK represents successful execution. It should be treated similar to that
+	// ok io.EOF
+	ErrOK
+
 	// ---------------------------------------
 	// Failures related to improper API usage.
 	// ---------------------------------------
@@ -326,6 +330,7 @@ const (
 // Map of ErrorCode values back to their constant names for pretty printing.
 var errorCodeStrings = map[ErrorCode]string{
 	ErrInternal:                 "ErrInternal",
+	ErrOK:                       "ErrOK",
 	ErrInvalidFlags:             "ErrInvalidFlags",
 	ErrInvalidIndex:             "ErrInvalidIndex",
 	ErrUnsupportedAddress:       "ErrUnsupportedAddress",
