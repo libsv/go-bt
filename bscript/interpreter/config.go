@@ -10,6 +10,7 @@ type config interface {
 	MaxPubKeysPerMultiSig() int
 }
 
+// Limits applied to transactions before genesis
 const (
 	MaxOpsBeforeGenesis                = 500
 	MaxStackSizeBeforeGenesis          = 1000

@@ -114,29 +114,15 @@ func TestCheckErrorCondition(t *testing.T) {
 	}
 
 	var done bool
-	for i := 0; i < len(*ls)-1; i++ {
+	for i := 0; i < len(*ls); i++ {
 		done, err = vm.Step()
 		if err != nil {
 			t.Fatalf("failed to step %dth time: %v", i, err)
 		}
-		if done {
+		if done && i != len(*ls)-1 {
 			t.Fatalf("finshed early on %dth time", i)
 		}
-
-		err = vm.CheckErrorCondition(false)
-		if !IsErrorCode(err, ErrScriptUnfinished) {
-			t.Fatalf("got unexepected error %v on %dth iteration",
-				err, i)
-		}
 	}
-	done, err = vm.Step()
-	if err != nil {
-		t.Fatalf("final step failed %v", err)
-	}
-	if !done {
-		t.Fatalf("final step isn't done!")
-	}
-
 	err = vm.CheckErrorCondition(false)
 	if err != nil {
 		t.Errorf("unexpected error %v on final check", err)

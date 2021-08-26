@@ -88,16 +88,17 @@ const (
 	ScriptVerifyBip143SigHash
 
 	// ScriptUTXOAfterGenesis defines that the utxo was created after
-	// genesis
+	// genesis.
 	ScriptUTXOAfterGenesis
 
-	// ScriptVerifyMinimalIf
+	// ScriptVerifyMinimalIf defines the enforcement of any conditional statement using the
+	// minimum required data.
 	ScriptVerifyMinimalIf
 )
 
 // HasFlag returns whether the ScriptFlags has the passed flag set.
-func (sf ScriptFlags) HasFlag(flag ScriptFlags) bool {
-	return sf&flag == flag
+func (s ScriptFlags) HasFlag(flag ScriptFlags) bool {
+	return s&flag == flag
 }
 
 // AddFlag adds the passed flag to ScriptFlags
@@ -292,7 +293,8 @@ func (vm *Engine) isBranchExecuting() bool {
 // tested in this case.
 func (vm *Engine) executeOpcode(pop ParsedOp) error {
 	if len(pop.Data) > vm.cfg.MaxScriptElementSize() {
-		return scriptError(ErrElementTooBig, "element size %d exceeds max allowed size %d", len(pop.Data), vm.cfg.MaxScriptElementSize())
+		return scriptError(ErrElementTooBig,
+			"element size %d exceeds max allowed size %d", len(pop.Data), vm.cfg.MaxScriptElementSize())
 	}
 	// Disabled opcodes are fail on program counter.
 	if pop.IsDisabled() && (!vm.afterGenesis || vm.ShouldExec(pop)) {
@@ -829,6 +831,8 @@ func (vm *Engine) SetAltStack(data [][]byte) {
 	setStack(&vm.astack, data)
 }
 
+// ShouldExec returns true if the engine should execute the passed in operation,
+// based on its own internal state.
 func (vm *Engine) ShouldExec(pop ParsedOp) bool {
 	if !vm.afterGenesis {
 		return true
