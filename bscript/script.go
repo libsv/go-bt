@@ -25,10 +25,6 @@ const (
 	ScriptTypeNonStandard = "nonstandard"
 	ScriptTypeMultiSig    = "multisig"
 	ScriptTypeNullData    = "nulldata"
-
-	MaxOps                = 201
-	MaxPubKeysPerMultiSig = 20
-	MaxScriptElementSize  = 100000
 )
 
 // Script type

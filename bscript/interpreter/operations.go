@@ -30,10 +30,6 @@ func opcodeDisabled(op *ParsedOp, vm *Engine) error {
 }
 
 func opcodeVerConditional(op *ParsedOp, vm *Engine) error {
-	if !vm.ShouldExecute() {
-		return nil
-	}
-
 	return opcodeReserved(op, vm)
 }
 
@@ -637,9 +633,9 @@ func opcodeCat(op *ParsedOp, vm *Engine) error {
 	}
 
 	c := append(a, b...)
-	if len(c) > bscript.MaxScriptElementSize {
+	if len(c) > vm.cfg.MaxScriptElementSize() {
 		return scriptError(ErrElementTooBig,
-			"concatenated size %d exceeds max allowed size %d", len(c), bscript.MaxScriptElementSize)
+			"concatenated size %d exceeds max allowed size %d", len(c), vm.cfg.MaxScriptElementSize())
 	}
 
 	vm.dstack.PushByteArray(c)
@@ -693,7 +689,7 @@ func opcodeNum2bin(op *ParsedOp, vm *Engine) error {
 	}
 
 	size := int(n.Int32())
-	if size > bscript.MaxScriptElementSize {
+	if size > vm.cfg.MaxScriptElementSize() {
 		return scriptError(ErrNumberTooBig, "n is larger than the max of %d", defaultScriptNumLen)
 	}
 
@@ -1058,9 +1054,9 @@ func opcodeMul(op *ParsedOp, vm *Engine) error {
 		return err
 	}
 
-	n3 := n1.Int32() * n2.Int32()
-	vm.dstack.PushInt(scriptNum(n3))
+	n3 := n1.Int64() * n2.Int64()
 
+	vm.dstack.PushInt(scriptNum(n3))
 	return nil
 }
 
@@ -1080,7 +1076,7 @@ func opcodeDiv(op *ParsedOp, vm *Engine) error {
 	}
 
 	if b == 0 {
-		return scriptError(ErrNumberTooSmall, "divide by zero")
+		return scriptError(ErrDivideByZero, "divide by zero")
 	}
 
 	vm.dstack.PushInt(a / b)
@@ -1103,7 +1099,7 @@ func opcodeMod(op *ParsedOp, vm *Engine) error {
 	}
 
 	if b == 0 {
-		return scriptError(ErrNumberTooSmall, "mod by zero")
+		return scriptError(ErrDivideByZero, "mod by zero")
 	}
 
 	vm.dstack.PushInt(a % b)
@@ -1614,14 +1610,15 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 
 	// Remove the signature since there is no way for a signature
 	// to sign itself.
-	subScript = subScript.removeOpcodeByData(fullSigBytes)
+	if !vm.hasFlag(ScriptEnableSighashForkID) || !shf.Has(sighash.ForkID) {
+		subScript = subScript.removeOpcodeByData(fullSigBytes)
+		subScript = subScript.removeOpcode(bscript.OpCODESEPARATOR)
+	}
 
 	up, err := vm.scriptParser.Unparse(subScript)
 	if err != nil {
 		return err
 	}
-
-	//sigHashes := NewTxSigHashes(vm.tx)
 
 	txCopy := vm.tx.Clone()
 	txCopy.Inputs[vm.inputIdx].PreviousTxScript = up
@@ -1715,12 +1712,12 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 	if numPubKeys < 0 {
 		return scriptError(ErrInvalidPubKeyCount, "number of pubkeys %d is negative", numPubKeys)
 	}
-	if numPubKeys > bscript.MaxPubKeysPerMultiSig {
-		return scriptError(ErrInvalidPubKeyCount, "too many pubkeys: %d > %d", numPubKeys, bscript.MaxPubKeysPerMultiSig)
+	if numPubKeys > vm.cfg.MaxPubKeysPerMultiSig() {
+		return scriptError(ErrInvalidPubKeyCount, "too many pubkeys: %d > %d", numPubKeys, vm.cfg.MaxPubKeysPerMultiSig())
 	}
 	vm.numOps += numPubKeys
-	if vm.numOps > bscript.MaxOps {
-		return scriptError(ErrTooManyOperations, "exceeded max operation limit of %d", bscript.MaxOps)
+	if vm.numOps > vm.cfg.MaxOps() {
+		return scriptError(ErrTooManyOperations, "exceeded max operation limit of %d", vm.cfg.MaxOps())
 	}
 
 	pubKeys := make([][]byte, 0, numPubKeys)
@@ -1776,16 +1773,13 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 
 	for _, sigInfo := range signatures {
 		script = script.removeOpcodeByData(sigInfo.signature)
+		script = script.removeOpcode(bscript.OpCODESEPARATOR)
 	}
 
 	success := true
 	numPubKeys++
 	pubKeyIdx := -1
 	signatureIdx := 0
-	//var sigHashes *TxSigHashes
-	//if vm.hasFlag(ScriptVerifyBip143SigHash) {
-	//	//sigHashes = NewTxSigHashes(vm.tx)
-	//}
 	for numSignatures > 0 {
 		// When there are more signatures than public keys remaining,
 		// there is no way to succeed since too many signatures are

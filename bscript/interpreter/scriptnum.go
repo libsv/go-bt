@@ -156,6 +156,10 @@ func (n scriptNum) Int32() int32 {
 	return int32(n)
 }
 
+func (n scriptNum) Int64() int64 {
+	return int64(n.Int32())
+}
+
 // makeScriptNum interprets the passed serialised bytes as an encoded integer
 // and returns the result as a script number.
 //

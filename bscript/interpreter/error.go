@@ -120,6 +120,10 @@ const (
 	// input may fail with this code.
 	ErrNumberTooSmall
 
+	// ErrDivideByZero is returned when OP_DIV is invoked to divide a number
+	// by zero
+	ErrDivideByZero
+
 	// --------------------------------------------
 	// Failures related to verification operations.
 	// --------------------------------------------
@@ -309,6 +313,11 @@ const (
 	// reached.
 	ErrUnsatisfiedLockTime
 
+	// ErrIllegalForkID is returned when either the ScriptEnableSighashForkID flag is set, but
+	// the transaction doesn't have a ForkID sighash flag, or when the transaction does have the ForkID
+	// set, but the ScriptEnableSighashForkID flag is not set.
+	ErrIllegalForkID
+
 	// numErrorCodes is the maximum error code number used in tests.  This
 	// entry MUST be the last entry in the enum.
 	numErrorCodes
@@ -336,6 +345,7 @@ var errorCodeStrings = map[ErrorCode]string{
 	ErrInvalidSignatureCount:    "ErrInvalidSignatureCount",
 	ErrNumberTooBig:             "ErrNumberTooBig",
 	ErrNumberTooSmall:           "ErrNumberTooSmall",
+	ErrDivideByZero:             "ErrDivideByZero",
 	ErrVerify:                   "ErrVerify",
 	ErrEqualVerify:              "ErrEqualVerify",
 	ErrNumEqualVerify:           "ErrNumEqualVerify",
@@ -374,6 +384,7 @@ var errorCodeStrings = map[ErrorCode]string{
 	ErrDiscourageUpgradableNOPs: "ErrDiscourageUpgradableNOPs",
 	ErrNegativeLockTime:         "ErrNegativeLockTime",
 	ErrUnsatisfiedLockTime:      "ErrUnsatisfiedLockTime",
+	ErrIllegalForkID:            "ErrIllegalForkID",
 }
 
 // String returns the ErrorCode as a human-readable name.

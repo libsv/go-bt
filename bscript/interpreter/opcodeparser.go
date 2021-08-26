@@ -230,6 +230,17 @@ func (p ParsedScript) removeOpcodeByData(data []byte) ParsedScript {
 	return retScript
 }
 
+func (p ParsedScript) removeOpcode(opcode byte) ParsedScript {
+	retScript := make(ParsedScript, 0, len(p))
+	for _, pop := range p {
+		if pop.Op.val != opcode {
+			retScript = append(retScript, pop)
+		}
+	}
+
+	return retScript
+}
+
 // canonicalPush returns true if the object is either not a push instruction
 // or the push instruction contained wherein is matches the canonical form
 // or using the smallest instruction to do the job. False otherwise.

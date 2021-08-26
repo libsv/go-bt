@@ -36,6 +36,7 @@ func TestErrorCodeStringer(t *testing.T) {
 		{ErrInvalidSignatureCount, "ErrInvalidSignatureCount"},
 		{ErrNumberTooBig, "ErrNumberTooBig"},
 		{ErrNumberTooSmall, "ErrNumberTooSmall"},
+		{ErrDivideByZero, "ErrDivideByZero"},
 		{ErrVerify, "ErrVerify"},
 		{ErrEqualVerify, "ErrEqualVerify"},
 		{ErrNumEqualVerify, "ErrNumEqualVerify"},
@@ -74,6 +75,7 @@ func TestErrorCodeStringer(t *testing.T) {
 		{ErrDiscourageUpgradableNOPs, "ErrDiscourageUpgradableNOPs"},
 		{ErrNegativeLockTime, "ErrNegativeLockTime"},
 		{ErrUnsatisfiedLockTime, "ErrUnsatisfiedLockTime"},
+		{ErrIllegalForkID, "ErrIllegalForkID"},
 		{0xffff, "Unknown ErrorCode (65535)"},
 	}
 

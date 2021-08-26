@@ -118,7 +118,8 @@ func scriptTestName(test []interface{}) (string, error) {
 
 	// The test must consist of at least a signature script, public key script,
 	// flags, and expected error.  Finally, it may optionally contain a comment.
-	if len(test) < 4 || len(test) > 5 {
+	if len(test) < 4 || 6 < len(test) {
+		fmt.Printf("%#v\n", test)
 		return "", fmt.Errorf("invalid test length %d", len(test))
 	}
 
@@ -126,8 +127,8 @@ func scriptTestName(test []interface{}) (string, error) {
 	// construct the name based on the signature script, public key script,
 	// and flags.
 	var name string
-	if len(test) == 5 {
-		name = fmt.Sprintf("test (%s)", test[4])
+	if len(test) >= 5 {
+		name = fmt.Sprintf("test (%s)", test[len(test)-1])
 	} else {
 		name = fmt.Sprintf("test ([%s, %s, %s])", test[0],
 			test[1], test[2])
@@ -187,6 +188,8 @@ func parseScriptFlags(flagStr string) (ScriptFlags, error) {
 			flags |= ScriptUTXOAfterGenesis
 		case "MINIMALIF":
 			flags |= ScriptVerifyMinimalIf
+		case "SIGHASH_FORKID":
+			flags |= ScriptEnableSighashForkID
 		default:
 			return flags, fmt.Errorf("invalid flag: %s", flag)
 		}
@@ -201,10 +204,10 @@ func parseExpectedResult(expected string) ([]ErrorCode, error) {
 	switch expected {
 	case "OK":
 		return nil, nil
-	case "UNKNOWN_ERROR":
-		return []ErrorCode{ErrMinimalData, ErrInvalidInputLength}, nil
-	case "INVALID_NUMBER_RANGE":
+	case "INVALID_NUMBER_RANGE", "SPLIT_RANGE":
 		return []ErrorCode{ErrNumberTooBig, ErrNumberTooSmall}, nil
+	case "OPERAND_SIZE":
+		return []ErrorCode{ErrInvalidInputLength}, nil
 	case "PUBKEYTYPE":
 		return []ErrorCode{ErrPubKeyType}, nil
 	case "SIG_DER":
@@ -246,6 +249,10 @@ func parseExpectedResult(expected string) ([]ErrorCode, error) {
 		return []ErrorCode{ErrDisabledOpcode}, nil
 	case "DISCOURAGE_UPGRADABLE_NOPS":
 		return []ErrorCode{ErrDiscourageUpgradableNOPs}, nil
+	case "SCRIPTNUM_OVERFLOW":
+		return []ErrorCode{ErrNumberTooBig}, nil
+	case "NUMBER_SIZE":
+		return []ErrorCode{ErrNumberTooBig, ErrNumberTooSmall}, nil
 	case "PUSH_SIZE":
 		return []ErrorCode{ErrElementTooBig}, nil
 	case "OP_COUNT":
@@ -268,6 +275,14 @@ func parseExpectedResult(expected string) ([]ErrorCode, error) {
 		return []ErrorCode{ErrNegativeLockTime}, nil
 	case "UNSATISFIED_LOCKTIME":
 		return []ErrorCode{ErrUnsatisfiedLockTime}, nil
+	case "SCRIPTNUM_MINENCODE":
+		return []ErrorCode{ErrMinimalData}, nil
+	case "DIV_BY_ZERO", "MOD_BY_ZERO":
+		return []ErrorCode{ErrDivideByZero}, nil
+	case "CHECKSIGVERIFY":
+		return []ErrorCode{ErrCheckSigVerify}, nil
+	case "ILLEGAL_FORKID":
+		return []ErrorCode{ErrIllegalForkID}, nil
 	}
 
 	return nil, fmt.Errorf("unrecognised expected result in test data: %v",
@@ -341,6 +356,13 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 		}
 
 		var inputAmt int64
+		if v, ok := test[0].([]interface{}); ok {
+			if f, ok := v[0].(float64); ok {
+				inputAmt = int64(f * 100000000)
+			}
+
+			test = test[1:]
+		}
 
 		// Extract and parse the signature script from the test fields.
 		scriptSigStr, ok := test[0].(string)
@@ -405,7 +427,7 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 			inputAmt)
 
 		vm, err := NewEngine(EngineParams{
-			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey},
+			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)},
 			Tx:            tx,
 			InputIdx:      0,
 		}, append(engineOpts, WithFlags(flags))...)
@@ -458,7 +480,7 @@ func TestScripts(t *testing.T) {
 
 	// Run all script tests with and without the signature cache.
 	testScripts(t, tests, true)
-	testScripts(t, tests, false)
+	//testScripts(t, tests, false)
 }
 
 // TestScripts ensures all of the tests in script_tests.json execute with the

@@ -75,6 +75,10 @@ const (
 	// only pushed data.  This is rule 2 of BIP0062.
 	ScriptVerifySigPushOnly
 
+	// ScriptEnableSighashForkID defined that signature scripts have forkid
+	// enabled.
+	ScriptEnableSighashForkID
+
 	// ScriptVerifyStrictEncoding defines that signature scripts and
 	// public keys must follow the strict encoding requirements.
 	ScriptVerifyStrictEncoding
@@ -92,18 +96,14 @@ const (
 )
 
 // HasFlag returns whether the ScriptFlags has the passed flag set.
-func (scriptFlags ScriptFlags) HasFlag(flag ScriptFlags) bool {
-	return scriptFlags&flag == flag
+func (sf ScriptFlags) HasFlag(flag ScriptFlags) bool {
+	return sf&flag == flag
 }
 
-const (
-	// MaxStackSize is the maximum combined height of stack and alt stack
-	// during execution.
-	MaxStackSize = 1000
-
-	// MaxScriptSize is the maximum allowed length of a raw script.
-	MaxScriptSize = 110000
-)
+// AddFlag adds the passed flag to ScriptFlags
+func (s *ScriptFlags) AddFlag(flag ScriptFlags) {
+	*s |= flag
+}
 
 // halforder is used to tame ECDSA malleability (see BIP0062).
 var halfOrder = new(big.Int).Rsh(bec.S256().N, 1)
@@ -115,8 +115,9 @@ type Engine struct {
 
 	elseStack boolStack
 
+	cfg config
+
 	scripts         []ParsedScript
-	scriptsFinished []bool
 	condStack       []int
 	savedFirstStack [][]byte // stack from first script for bip16 scripts
 
@@ -148,7 +149,7 @@ type EngineParams struct {
 // NewEngine returns a new script engine for the provided public key script,
 // transaction, and input index.  The flags modify the behaviour of the script
 // engine according to the description provided by each flag.
-func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
+func NewEngine(params EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
 	// either the pay-to-script-hash (P2SH) evaluation (ScriptBip16)
 	// flag or the Segregated Witness (ScriptVerifyWitness) flag.
@@ -159,9 +160,9 @@ func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 	// it possible to have a situation where P2SH would not be a soft fork
 	// when it should be.
 	vm := &Engine{
-		prevOutput: opts.PreviousTxOut,
-		tx:         opts.Tx,
-		inputIdx:   opts.InputIdx,
+		prevOutput: params.PreviousTxOut,
+		tx:         params.Tx,
+		inputIdx:   params.InputIdx,
 	}
 
 	for _, o := range oo {
@@ -176,15 +177,27 @@ func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 		WithNopSignatureCache()(vm)
 	}
 
+	if vm.hasFlag(ScriptEnableSighashForkID) {
+		vm.addFlag(ScriptVerifyStrictEncoding)
+	}
+
+	vm.elseStack = &nopBoolStack{}
+	if vm.hasFlag(ScriptUTXOAfterGenesis) {
+		vm.elseStack = &stack{}
+		vm.afterGenesis = true
+	}
+
+	vm.cfg = buildConfig(vm.afterGenesis)
+
 	// The provided transaction input index must refer to a valid input.
 	if vm.inputIdx < 0 || vm.inputIdx > vm.tx.InputCount()-1 {
 		return nil, scriptError(
 			ErrInvalidIndex,
-			"transaction input index %d is negative or >= %d", opts.InputIdx, len(opts.Tx.Inputs),
+			"transaction input index %d is negative or >= %d", params.InputIdx, len(params.Tx.Inputs),
 		)
 	}
 
-	uls := vm.tx.Inputs[opts.InputIdx].UnlockingScript
+	uls := vm.tx.Inputs[params.InputIdx].UnlockingScript
 	ls := vm.prevOutput.LockingScript
 
 	// When both the signature script and public key script are empty the
@@ -206,10 +219,10 @@ func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 	scripts := []*bscript.Script{uls, ls}
 	vm.scripts = make([]ParsedScript, len(scripts))
 	for i, script := range scripts {
-		if len(*script) > MaxScriptSize {
+		if len(*script) > vm.cfg.MaxScriptSize() {
 			return nil, scriptError(
 				ErrScriptTooBig,
-				"script size %d is larger than max allowed size %d", len(*script), MaxScriptSize,
+				"script size %d is larger than max allowed size %d", len(*script), vm.cfg.MaxScriptSize(),
 			)
 		}
 
@@ -239,21 +252,14 @@ func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 		}
 		vm.bip16 = true
 	}
+
 	if vm.hasFlag(ScriptVerifyMinimalData) {
 		vm.dstack.verifyMinimalData = true
 		vm.astack.verifyMinimalData = true
 	}
 
-	vm.elseStack = &nopBoolStack{}
-	if vm.hasFlag(ScriptUTXOAfterGenesis) {
-		vm.elseStack = &stack{}
-		vm.afterGenesis = true
-	}
-
 	vm.tx.InputIdx(vm.inputIdx).PreviousTxScript = vm.prevOutput.LockingScript
 	vm.tx.InputIdx(vm.inputIdx).PreviousTxSatoshis = vm.prevOutput.Satoshis
-
-	vm.scriptsFinished = make([]bool, len(vm.scripts))
 
 	return vm, nil
 }
@@ -261,6 +267,10 @@ func NewEngine(opts EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 // hasFlag returns whether the script engine instance has the passed flag set.
 func (vm *Engine) hasFlag(flag ScriptFlags) bool {
 	return vm.flags.HasFlag(flag)
+}
+
+func (vm *Engine) addFlag(flag ScriptFlags) {
+	vm.flags.AddFlag(flag)
 }
 
 // isBranchExecuting returns whether or not the current conditional branch is
@@ -278,26 +288,29 @@ func (vm *Engine) isBranchExecuting() bool {
 // whether or not it is hidden by conditionals, but some rules still must be
 // tested in this case.
 func (vm *Engine) executeOpcode(pop ParsedOp) error {
+	if len(pop.Data) > vm.cfg.MaxScriptElementSize() {
+		return scriptError(ErrElementTooBig, "element size %d exceeds max allowed size %d", len(pop.Data), vm.cfg.MaxScriptElementSize())
+	}
 	// Disabled opcodes are fail on program counter.
-	if pop.IsDisabled() {
+	if pop.IsDisabled() && !vm.afterGenesis {
 		return scriptError(ErrDisabledOpcode, "attempt to execute disabled opcode %s", pop.Name())
 	}
 
 	// Always-illegal opcodes are fail on program counter.
-	//if pop.AlwaysIllegal() {
-	//	return scriptError(ErrReservedOpcode, "attempt to execute reserved opcode %s", pop.Name())
-	//}
+	if pop.AlwaysIllegal() {
+		return scriptError(ErrReservedOpcode, "attempt to execute reserved opcode %s", pop.Name())
+	}
 
 	// Note that this includes OP_RESERVED which counts as a push operation.
 	if pop.Op.val > bscript.Op16 {
 		vm.numOps++
-		if vm.numOps > bscript.MaxOps {
-			return scriptError(ErrTooManyOperations, "exceeded max operation limit of %d", bscript.MaxOps)
+		if vm.numOps > vm.cfg.MaxOps() {
+			return scriptError(ErrTooManyOperations, "exceeded max operation limit of %d", vm.cfg.MaxOps())
 		}
 
-	} else if len(pop.Data) > bscript.MaxScriptElementSize {
+	} else if len(pop.Data) > vm.cfg.MaxScriptElementSize() {
 		return scriptError(ErrElementTooBig,
-			"element size %d exceeds max allowed size %d", len(pop.Data), bscript.MaxScriptElementSize)
+			"element size %d exceeds max allowed size %d", len(pop.Data), vm.cfg.MaxScriptElementSize())
 	}
 
 	// Nothing left to do when this is not a conditional opcode and it is
@@ -434,9 +447,9 @@ func (vm *Engine) Step() (done bool, err error) {
 	// The number of elements in the combination of the data and alt stacks
 	// must not exceed the maximum number of stack elements allowed.
 	combinedStackSize := vm.dstack.Depth() + vm.astack.Depth()
-	if combinedStackSize > MaxStackSize {
+	if combinedStackSize > int32(vm.cfg.MaxStackSize()) {
 		return false, scriptError(ErrStackOverflow,
-			"combined stack size %d > max allowed %d", combinedStackSize, MaxStackSize)
+			"combined stack size %d > max allowed %d", combinedStackSize, vm.cfg.MaxStackSize())
 	}
 
 	if vm.scriptOff < len(vm.scripts[vm.scriptIdx]) {
@@ -455,11 +468,11 @@ func (vm *Engine) Step() (done bool, err error) {
 	vm.numOps = 0 // number of ops is per script.
 	vm.scriptOff = 0
 	vm.scriptIdx++
-	if vm.scriptIdx == 1 && vm.bip16 {
+	if vm.scriptIdx == 1 && vm.bip16 && !vm.afterGenesis {
 		vm.savedFirstStack = vm.GetStack()
 	}
 
-	if vm.scriptIdx == 2 && vm.bip16 {
+	if vm.scriptIdx == 2 && vm.bip16 && !vm.afterGenesis {
 		// Put us past the end for CheckErrorCondition()
 		// Check script ran successfully and pull the script
 		// out of the first stack and execute that.
@@ -473,7 +486,6 @@ func (vm *Engine) Step() (done bool, err error) {
 			return false, err
 		}
 		vm.scripts = append(vm.scripts, pops)
-		vm.scriptsFinished = append(vm.scriptsFinished, false)
 
 		// Set stack to be the stack from first script minus the
 		// script itself
@@ -548,9 +560,24 @@ func (vm *Engine) checkHashTypeEncoding(shf sighash.Flag) error {
 		}
 	}
 
-	if sigHashType < sighash.All || sigHashType > sighash.Single {
+	if !sigHashType.Has(sighash.ForkID) {
+		if sigHashType < sighash.All || sigHashType > sighash.Single {
+			return scriptError(ErrInvalidSigHashType, "invalid hash type 0x%x", shf)
+		}
+		return nil
+	}
+
+	if sigHashType < sighash.AllForkID || sigHashType > sighash.SingleForkID {
 		return scriptError(ErrInvalidSigHashType, "invalid hash type 0x%x", shf)
 	}
+
+	if !vm.hasFlag(ScriptEnableSighashForkID) && shf.Has(sighash.ForkID) {
+		return scriptError(ErrIllegalForkID, "fork id sighash set without flag")
+	}
+	if vm.hasFlag(ScriptEnableSighashForkID) && !shf.Has(sighash.ForkID) {
+		return scriptError(ErrIllegalForkID, "fork id sighash not set with flag")
+	}
+
 	return nil
 }
 
@@ -744,7 +771,6 @@ func (vm *Engine) checkSignatureEncoding(sig []byte) error {
 			return scriptError(ErrSigHighS, "signature is not canonical due to unnecessarily high S value")
 		}
 	}
-
 	return nil
 }
 
@@ -791,11 +817,4 @@ func (vm *Engine) GetAltStack() [][]byte {
 // provided array where the last item in the array will be the top of the stack.
 func (vm *Engine) SetAltStack(data [][]byte) {
 	setStack(&vm.astack, data)
-}
-
-func (vm *Engine) ShouldExecute() bool {
-	if !vm.afterGenesis {
-		return true
-	}
-	return !vm.scriptsFinished[vm.scriptIdx]
 }
