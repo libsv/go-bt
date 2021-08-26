@@ -1,0 +1,250 @@
+pull_request_rules:
+
+  # ===============================================================================
+  # DEPENDABOT
+  # ===============================================================================
+
+  - name: Automatic Merge for Dependabot Minor Version Pull Requests
+    conditions:
+      - -draft
+      - author~=^dependabot(|-preview)\[bot\]$
+      - check-success='build (1.14.x, ubuntu-latest)'
+      - check-success='build (1.15.x, ubuntu-latest)'
+      - check-success='build (1.16.x, ubuntu-latest)'
+      - check-success='build (1.14.x, macos-latest)'
+      - check-success='build (1.15.x, macos-latest)'
+      - check-success='build (1.16.x, macos-latest)'
+      - check-success='lint (1.15.x, ubuntu-latest)'
+      - check-success='lint (1.16.x, ubuntu-latest)'
+      - check-success='lint (1.15.x, macos-latest)'
+      - check-success='lint (1.16.x, macos-latest)'
+      - check-success='Analyze (go)'
+      - title~=^Bump [^\s]+ from ([\d]+)\..+ to \1\.
+    actions:
+      review:
+        type: APPROVE
+        message: Automatically approving dependabot pull request
+      merge:
+        method: merge
+  - name: Alert on major version detection
+    conditions:
+      - author~=^dependabot(|-preview)\[bot\]$
+      - check-success='build (1.14.x, ubuntu-latest)'
+      - check-success='build (1.15.x, ubuntu-latest)'
+      - check-success='build (1.16.x, ubuntu-latest)'
+      - check-success='build (1.14.x, macos-latest)'
+      - check-success='build (1.15.x, macos-latest)'
+      - check-success='build (1.16.x, macos-latest)'
+      - check-success='lint (1.15.x, ubuntu-latest)'
+      - check-success='lint (1.16.x, ubuntu-latest)'
+      - check-success='lint (1.15.x, macos-latest)'
+      - check-success='lint (1.16.x, macos-latest)'
+      - check-success='Analyze (go)'
+      - -title~=^Bump [^\s]+ from ([\d]+)\..+ to \1\.
+    actions:
+      comment:
+        message: "⚠️ @theflyingcodr @jadwahab: this is a major version bump and requires your attention"
+
+
+  # ===============================================================================
+  # AUTOMATIC MERGE (APPROVALS)
+  # ===============================================================================
+
+  - name: Automatic Merge ⬇️ on Approval ✔
+    conditions:
+      - "#approved-reviews-by>=1"
+      - check-success='build (1.14.x, ubuntu-latest)'
+      - check-success='build (1.15.x, ubuntu-latest)'
+      - check-success='build (1.16.x, ubuntu-latest)'
+      - check-success='build (1.14.x, macos-latest)'
+      - check-success='build (1.15.x, macos-latest)'
+      - check-success='build (1.16.x, macos-latest)'
+      - check-success='lint (1.15.x, ubuntu-latest)'
+      - check-success='lint (1.16.x, ubuntu-latest)'
+      - check-success='lint (1.15.x, macos-latest)'
+      - check-success='lint (1.16.x, macos-latest)'
+      - check-success='Analyze (go)'
+      - label!=work-in-progress
+      - -draft
+    actions:
+      merge:
+        method: merge
+
+  # ===============================================================================
+  # AUTHOR
+  # ===============================================================================
+
+  - name: Auto-Assign Author
+    conditions:
+      - "#assignee=0"
+    actions:
+      assign:
+        add_users:
+          - "{{author}}"
+
+  # ===============================================================================
+  # ALERTS
+  # ===============================================================================
+
+  - name: Notify on merge
+    conditions:
+      - merged
+      - label=automerge
+    actions:
+      comment:
+        message: "✅ @{{author}}: **{{title}}** has been merged successfully."
+  - name: Alert on merge conflict
+    conditions:
+      - conflict
+      - label=automerge
+    actions:
+      comment:
+        message: "🆘 @{{author}}: `{{head}}` has conflicts with `{{base}}` that must be resolved."
+      label:
+        add:
+          - conflict
+  - name: Alert on tests failure for automerge
+    conditions:
+      - label=automerge
+      - status-failure=commit
+    actions:
+      comment:
+        message: "🆘 @{{author}}: unable to merge due to CI failure."
+
+  - name: remove conflict label if not needed
+    conditions:
+      - -conflict
+    actions:
+      label:
+        remove:
+          - conflict
+
+  # ===============================================================================
+  # LABELS
+  # ===============================================================================
+  # Automatically add labels when PRs match certain patterns
+  #
+  # NOTE:
+  # - single quotes for regex to avoid accidental escapes
+  # - Mergify leverages Python regular expressions to match rules.
+  #
+  # Semantic commit messages
+  # - chore:     updating grunt tasks etc.; no production code change
+  # - docs:      changes to the documentation
+  # - feat:      feature or story
+  # - enhancement: an improvement to an existing feature
+  # - feat:      new feature for the user, not a new feature for build script
+  # - fix:       bug fix for the user, not a fix to a build script
+  # - idea:      general idea or suggestion
+  # - test:      test related changes
+  # ===============================================================================
+
+  - name: Hotfix label
+    conditions:
+      - "head~=(?i)^hotfix" # if the PR branch starts with hotfix/
+    actions:
+      label:
+        add: ["hot-fix"]
+  - name: Bug / Fix label
+    conditions:
+      - "head~=(?i)^(bug)?fix" # if the PR branch starts with (bug)?fix/
+    actions:
+      label:
+        add: [ "bug-P3" ]
+  - name: Documentation label
+    conditions:
+      - "head~=(?i)^docs" # if the PR branch starts with docs/
+    actions:
+      label:
+        add: [ "documentation" ]
+  - name: Feature label
+    conditions:
+      - "head~=(?i)^feat(ure)?" # if the PR branch starts with feat(ure)?/
+    actions:
+      label:
+        add: ["feature"]
+  - name: Enhancement label
+    conditions:
+      - "head~=(?i)^enhancement?" # if the PR branch starts with enhancement/
+    actions:
+      label:
+        add: ["enhancement"]
+  - name: Chore label
+    conditions:
+      - "head~=(?i)^chore" # if the PR branch starts with chore/
+    actions:
+      label:
+        add: ["update"]
+  - name: Question label
+    conditions:
+      - "head~=(?i)^question" # if the PR branch starts with question/
+    actions:
+      label:
+        add: ["question"]
+  - name: Test label
+    conditions:
+      - "head~=(?i)^test" # if the PR branch starts with test/
+    actions:
+      label:
+        add: ["test"]
+  - name: Idea label
+    conditions:
+      - "head~=(?i)^idea" # if the PR branch starts with idea/
+    actions:
+      label:
+        add: ["idea"]
+
+  # ===============================================================================
+  # STALE BRANCHES
+  # ===============================================================================
+
+  - name: Close stale pull request
+    conditions:
+      - base=master
+      - -closed
+      - updated-at<21 days ago
+    actions:
+      close:
+        message: |
+          This pull request looks stale. Feel free to reopen it if you think it's a mistake.
+      label:
+        add: [ "stale" ]
+  # ===============================================================================
+  # BRANCHES
+  # ===============================================================================
+
+  - name: Delete head branch after merge
+    conditions:
+      - merged
+    actions:
+      delete_head_branch:
+
+  #- name: automatic update for PR marked as “Ready-to-Go“
+  #  conditions:
+  #    - -conflict # skip PRs with conflicts
+  #    - -draft # filter-out GH draft PRs
+  #    - label="Ready-to-Go"
+  #  actions:
+  #    update:
+
+  # ===============================================================================
+  # CONVENTION
+  # ===============================================================================
+  # https://www.conventionalcommits.org/en/v1.0.0/
+  # Premium feature only
+
+  #- name: Conventional Commit
+  #  conditions:
+  #    - "title~=^(fix|feat|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\\(.+\\))?:"
+  #  actions:
+  #    post_check:
+  #      title: |
+  #        {% if check_succeed %}
+  #        Title follows Conventional Commit
+  #        {% else %}
+  #        Title does not follow Conventional Commit
+  #        {% endif %}
+  #      summary: |
+  #        {% if not check_succeed %}
+  #        Your pull request title must follow [Conventional Commit](https://www.conventionalcommits.org/en/v1.0.0/).
+  #        {% endif %}

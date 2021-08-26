@@ -1,6 +1,6 @@
 module github.com/libsv/go-bt/v2
 
-go 1.15
+go 1.16
 
 require (
 	github.com/bitcoinsv/bsvlog v0.0.0-20181216181007-cb81b076bf2e

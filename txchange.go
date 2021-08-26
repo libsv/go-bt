@@ -8,7 +8,7 @@ import (
 
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new P2PKH output using the address provided.
-func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
+func (tx *Tx) ChangeToAddress(addr string, f *FeeQuote) error {
 	s, err := bscript.NewP2PKHFromAddress(addr)
 	if err != nil {
 		return err
@@ -19,7 +19,7 @@ func (tx *Tx) ChangeToAddress(addr string, f []*Fee) error {
 
 // Change calculates the amount of fees needed to cover the transaction
 //  and adds the left over change in a new output using the script provided.
-func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
+func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
 	available, hasChange, err := tx.change(s, f, true)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func (tx *Tx) Change(s *bscript.Script, f []*Fee) error {
 
 // ChangeToExistingOutput will calculate fees and add them to an output at the index specified (0 based).
 // If an invalid index is supplied and error is returned.
-func (tx *Tx) ChangeToExistingOutput(index uint, f []*Fee) error {
+func (tx *Tx) ChangeToExistingOutput(index uint, f *FeeQuote) error {
 	if int(index) > tx.OutputCount()-1 {
 		return errors.New("index is greater than number of Inputs in transaction")
 	}
@@ -49,7 +49,7 @@ func (tx *Tx) ChangeToExistingOutput(index uint, f []*Fee) error {
 
 // CalculateFee will return the amount of fees the current transaction will
 // require.
-func (tx *Tx) CalculateFee(f []*Fee) (uint64, error) {
+func (tx *Tx) CalculateFee(f *FeeQuote) (uint64, error) {
 	total := tx.TotalInputSatoshis() - tx.TotalOutputSatoshis()
 	sats, _, err := tx.change(nil, f, false)
 	if err != nil {
@@ -60,7 +60,7 @@ func (tx *Tx) CalculateFee(f []*Fee) (uint64, error) {
 
 // change will return the amount of satoshis to add to an input after fees are removed.
 // True will be returned if change has been added.
-func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool, error) {
+func (tx *Tx) change(s *bscript.Script, f *FeeQuote, newOutput bool) (uint64, bool, error) {
 	inputAmount := tx.TotalInputSatoshis()
 	outputAmount := tx.TotalOutputSatoshis()
 
@@ -70,11 +70,10 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 
 	available := inputAmount - outputAmount
 
-	standardFees, err := ExtractStandardFee(f)
+	standardFees, err := f.Fee(FeeTypeStandard)
 	if err != nil {
-		return 0, false, err
+		return 0, false, errors.New("standard fees not found")
 	}
-
 	if !tx.canAddChange(available, standardFees) {
 		return 0, false, err
 	}
@@ -82,17 +81,11 @@ func (tx *Tx) change(s *bscript.Script, f []*Fee, newOutput bool) (uint64, bool,
 		tx.AddOutput(&Output{Satoshis: 0, LockingScript: s})
 	}
 
-	var preSignedFeeRequired uint64
-	if preSignedFeeRequired, err = tx.getPreSignedFeeRequired(f); err != nil {
+	var txFee uint64
+	if txFee, err = tx.getTransactionFees(f); err != nil {
 		return 0, false, err
 	}
-
-	var expectedUnlockingScriptFees uint64
-	if expectedUnlockingScriptFees, err = tx.getExpectedUnlockingScriptFees(f); err != nil {
-		return 0, false, err
-	}
-
-	available -= preSignedFeeRequired + expectedUnlockingScriptFees
+	available -= txFee
 
 	return available, true, nil
 }
@@ -114,44 +107,26 @@ func (tx *Tx) canAddChange(available uint64, standardFees *Fee) bool {
 	return available >= changeOutputFee
 }
 
-func (tx *Tx) getPreSignedFeeRequired(f []*Fee) (uint64, error) {
-
+func (tx *Tx) getTransactionFees(f *FeeQuote) (uint64, error) {
 	standardBytes, dataBytes := tx.getStandardAndDataBytes()
-
-	standardFee, err := ExtractStandardFee(f)
+	standardFee, err := f.Fee(FeeTypeStandard)
 	if err != nil {
 		return 0, err
 	}
-
-	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
-
-	var dataFee *Fee
-	if dataFee, err = ExtractDataFee(f); err != nil {
-		return 0, err
-	}
-
-	fr += dataBytes * dataFee.MiningFee.Satoshis / dataFee.MiningFee.Bytes
-
-	return uint64(fr), nil
-}
-
-func (tx *Tx) getExpectedUnlockingScriptFees(f []*Fee) (uint64, error) {
-
-	standardFee, err := ExtractStandardFee(f)
-	if err != nil {
-		return 0, err
-	}
-
-	var expectedBytes int
-
 	for _, in := range tx.Inputs {
 		if !in.PreviousTxScript.IsP2PKH() {
 			return 0, errors.New("non-P2PKH input used in the tx - unsupported")
 		}
-		expectedBytes += 109 // = 1 oppushdata + 70-73 sig + 1 sighash + 1 oppushdata + 33 public key
+		standardBytes += 107 // = 1 oppushdata + 70-71 sig + 1 sighash + 1 oppushdata + 33 public key
 	}
+	fr := standardBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes
+	dataFee, err := f.Fee(FeeTypeData)
+	if err != nil {
+		return 0, err
+	}
+	fr += dataBytes * dataFee.MiningFee.Satoshis / dataFee.MiningFee.Bytes
 
-	return uint64(expectedBytes * standardFee.MiningFee.Satoshis / standardFee.MiningFee.Bytes), nil
+	return uint64(fr), nil
 }
 
 func (tx *Tx) getStandardAndDataBytes() (standardBytes, dataBytes int) {

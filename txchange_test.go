@@ -49,7 +49,7 @@ func TestTx_ChangeToAddress(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", bt.DefaultFees())
+		err = tx.ChangeToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		assert.Equal(t, 1, tx.OutputCount())
@@ -75,7 +75,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -101,7 +101,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -143,7 +143,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.AddOpReturnPartsOutput([][]byte{[]byte("hi"), []byte("how"), []byte("are"), []byte("you")})
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", bt.DefaultFees())
+		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -155,18 +155,18 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 
 		assert.Equal(t,
-			"0100000001760595866e99c1ce920197844740f5598b34763878696371d41b3a7c0a65b0b7000000006a473044022054ec562aefb1d5b4483906b0fa728a951b81944d8a82c2be1c6e7ea67e8c34b702200c2657c5d2a744d138bfb4204c579de20e984d680695823cba3fb7a0346b3c19412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff03f4010000000000001976a9147a1980655efbfec416b2b0c663a7b3ac0b6a25d288ac000000000000000011006a02686903686f770361726503796f757a010000000000001976a91484e50b300b009833b297dc671817c79b5459da1d88ac00000000",
+			"0100000001760595866e99c1ce920197844740f5598b34763878696371d41b3a7c0a65b0b7000000006a473044022034d403376154060bbbb4f828df545bfc23dd1174ef5ea626668ea31cec860b4702206a95c559bc612e7fc3746ce18456a6301ff16fd285798d4fbcfbd1c71e34047e412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff03f4010000000000001976a9147a1980655efbfec416b2b0c663a7b3ac0b6a25d288ac000000000000000011006a02686903686f770361726503796f757b010000000000001976a91484e50b300b009833b297dc671817c79b5459da1d88ac00000000",
 			tx.String(),
 		)
 
 		feePaid := tx.TotalInputSatoshis() - tx.TotalOutputSatoshis()
-		assert.Equal(t, uint64(122), feePaid)
+		assert.Equal(t, uint64(121), feePaid)
 
 		txSize := len(tx.Bytes())
 		assert.Equal(t, 251, txSize)
 
 		feeRate := float64(feePaid) / float64(txSize)
-		assert.Equal(t, 0.4860557768924303, feeRate)
+		assert.Equal(t, 0.4820717131474104, feeRate)
 	})
 
 	t.Run("spend entire utxo - basic - change address", func(t *testing.T) {
@@ -180,7 +180,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -213,7 +213,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -247,7 +247,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.DefaultFees())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -284,7 +284,7 @@ func TestTx_Change(t *testing.T) {
 			5689)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.DefaultFees())
+		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.NewFeeQuote())
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -298,7 +298,7 @@ func TestTx_Change(t *testing.T) {
 		assert.ElementsMatch(t, []int{0, 1}, is)
 		assert.Equal(t, 2, len(is))
 
-		assert.Equal(t, "01000000028ee20a442cdbcc9f9f927d9c2c9370e611675ebc24c064e8e94508ec8eca889e000000006b483045022100fa52a44cd8010ba646a8df6bac6e5e8aa93f24439521c2ce1c8fe6550e73c1750220636e30d757702a6777d8310090962d4bac2b3fd634127856d51b184f5c702c8f4121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff42eaf7bdddc797a0beb97717ff8846f03c963fb5fe15a2b555b9cbd477b0254e000000006b483045022100c201fd55ef33525b3eb0557fac77408b8ec7f6ea5b00d08512df105172f992d60220753b21519a416dcbeaf1a501d9c36de2aea9c83c6d258320500371819d0758e14121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff01c62b0000000000001976a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac00000000", tx.String())
+		assert.Equal(t, "01000000028ee20a442cdbcc9f9f927d9c2c9370e611675ebc24c064e8e94508ec8eca889e000000006b483045022100f88298f5a380244dd5b91f70be99394f8e562d2a61976ca8cf2aaeb381ee6e6a0220069243fc951061b624cf96124263b857a65a53400846080b543e4a8c16e097ce4121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff42eaf7bdddc797a0beb97717ff8846f03c963fb5fe15a2b555b9cbd477b0254e000000006b483045022100afa7a986e6e0faf725a9779fe8e61fd19b5973544dc7707fd758cdd45912332a0220760fe07fc8610d867be5281f29778e3cd1a18a6eef74470d0f1a4ede95c848924121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff01c82b0000000000001976a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac00000000", tx.String())
 	})
 }
 
@@ -306,7 +306,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 	tests := map[string]struct {
 		tx              *bt.Tx
 		index           uint
-		fees            []*bt.Fee
+		fees            *bt.FeeQuote
 		expOutputTotal  uint64
 		expChangeOutput uint64
 		err             error
@@ -323,7 +323,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           0,
-			fees:            bt.DefaultFees(),
+			fees:            bt.NewFeeQuote(),
 			expOutputTotal:  1000,
 			expChangeOutput: 1000,
 			err:             nil,
@@ -339,7 +339,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           0,
-			fees:            bt.DefaultFees(),
+			fees:            bt.NewFeeQuote(),
 			expOutputTotal:  904,
 			expChangeOutput: 904,
 			err:             nil,
@@ -358,7 +358,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           3,
-			fees:            bt.DefaultFees(),
+			fees:            bt.NewFeeQuote(),
 			expOutputTotal:  2353,
 			expChangeOutput: 853,
 			err:             nil,
@@ -374,7 +374,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index: 1,
-			fees:  bt.DefaultFees(),
+			fees:  bt.NewFeeQuote(),
 			err:   errors.New("index is greater than number of Inputs in transaction"),
 		},
 	}
@@ -395,7 +395,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 func TestTx_CalculateChange(t *testing.T) {
 	tests := map[string]struct {
 		tx      *bt.Tx
-		fees    []*bt.Fee
+		fees    *bt.FeeQuote
 		expFees uint64
 		err     error
 	}{
@@ -410,7 +410,7 @@ func TestTx_CalculateChange(t *testing.T) {
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
-			fees:    bt.DefaultFees(),
+			fees:    bt.NewFeeQuote(),
 			expFees: 96,
 		}, "Transaction with one input 4 Outputs should return 147": {
 			tx: func() *bt.Tx {
@@ -426,7 +426,7 @@ func TestTx_CalculateChange(t *testing.T) {
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
-			fees:    bt.DefaultFees(),
+			fees:    bt.NewFeeQuote(),
 			expFees: 147,
 		},
 	}
