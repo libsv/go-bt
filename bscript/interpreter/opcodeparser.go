@@ -119,47 +119,6 @@ func (o *ParsedOp) EnforceMinimumDataPush() error {
 	return nil
 }
 
-// print returns a human-readable string representation of the opcode for use
-// in script disassembly.
-func (o *ParsedOp) print(oneline bool) string {
-	// The reference implementation one-line disassembly replaces opcodes
-	// which represent values (e.g. OP_0 through OP_16 and OP_1NEGATE)
-	// with the raw value.  However, when not doing a one-line dissassembly,
-	// we prefer to show the actual opcode names.  Thus, only replace the
-	// opcodes in question when the oneline flag is set.
-	opcodeName := o.Name()
-	if oneline {
-		if replName, ok := opcodeOnelineRepls[opcodeName]; ok {
-			opcodeName = replName
-		}
-
-		// Nothing more to do for non-data push opcodes.
-		if o.Op.length == 1 {
-			return opcodeName
-		}
-
-		return fmt.Sprintf("%x", o.Data)
-	}
-
-	// Nothing more to do for non-data push opcodes.
-	if o.Op.length == 1 {
-		return opcodeName
-	}
-
-	// Add length for the OP_PUSHDATA# opcodes.
-	retString := opcodeName
-	switch o.Op.length {
-	case -1:
-		retString += fmt.Sprintf(" 0x%02x", len(o.Data))
-	case -2:
-		retString += fmt.Sprintf(" 0x%04x", len(o.Data))
-	case -4:
-		retString += fmt.Sprintf(" 0x%08x", len(o.Data))
-	}
-
-	return fmt.Sprintf("%s 0x%02x", retString, o.Data)
-}
-
 func (p *parser) Parse(s *bscript.Script) (ParsedScript, error) {
 	script := *s
 	parsedOps := make([]ParsedOp, 0, len(script))

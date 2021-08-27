@@ -6,9 +6,7 @@
 package interpreter
 
 import (
-	"fmt"
 	"math/big"
-	"strings"
 
 	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bt/v2"
@@ -333,14 +331,6 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 	return nil
 }
 
-// disasm is a helper function to produce the output for DisasmPC and
-// DisasmScript.  It produces the opcode prefixed by the program counter at the
-// provided position in the script.  It does no error checking and leaves that
-// to the caller to provide a valid offset.
-func (vm *Engine) disasm(scriptIdx int, scriptOff int) string {
-	return fmt.Sprintf("%02x:%04x: %s", scriptIdx, scriptOff, vm.scripts[scriptIdx][scriptOff].print(false))
-}
-
 // validPC returns an error if the current script position is valid for
 // execution, nil otherwise.
 func (vm *Engine) validPC() error {
@@ -363,33 +353,6 @@ func (vm *Engine) curPC() (script int, off int, err error) {
 		return 0, 0, err
 	}
 	return vm.scriptIdx, vm.scriptOff, nil
-}
-
-// DisasmPC returns the string for the disassembly of the opcode that will be
-// next to execute when Step() is called.
-func (vm *Engine) DisasmPC() (string, error) {
-	scriptIdx, scriptOff, err := vm.curPC()
-	if err != nil {
-		return "", err
-	}
-	return vm.disasm(scriptIdx, scriptOff), nil
-}
-
-// DisasmScript returns the disassembly string for the script at the requested
-// offset index.  Index 0 is the signature script and 1 is the public key
-// script.
-func (vm *Engine) DisasmScript(idx int) (string, error) {
-	if idx >= len(vm.scripts) {
-		return "", scriptError(ErrInvalidIndex, "script index %d >= total scripts %d", idx, len(vm.scripts))
-	}
-
-	//var disstr string
-	var b strings.Builder
-	for i := range vm.scripts[idx] {
-		b.WriteString(vm.disasm(idx, i))
-		b.WriteRune('\n')
-	}
-	return b.String(), nil
 }
 
 // CheckErrorCondition returns nil if the running script has ended and was

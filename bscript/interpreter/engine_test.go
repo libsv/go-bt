@@ -70,7 +70,6 @@ func TestBadPC(t *testing.T) {
 			continue
 		}
 
-		_, err = vm.DisasmPC()
 		if err == nil {
 			t.Errorf("DisasmPC with invalid pc (%v) succeeds!",
 				test)
