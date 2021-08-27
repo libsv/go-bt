@@ -328,16 +328,21 @@ func createSpendingTx(sigScript, pkScript *bscript.Script,
 	return spendingTx
 }
 
-// testScripts ensures all of the passed script tests execute with the expected
-// results with or without using a signature cache, as specified by the
-// parameter.
-func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
-	// Create a signature cache to use only if requested.
-	var engineOpts []EngineOptFunc
-	if useSigCache {
-		engineOpts = append(engineOpts, WithSignatureCache(NewSigCache(10)))
+// TestScripts ensures all of the tests in script_tests.json execute with the
+// expected results as defined in the test data.
+func TestScripts(t *testing.T) {
+	file, err := ioutil.ReadFile("data/script_tests.json")
+	if err != nil {
+		t.Fatalf("TestScripts: %v\n", err)
 	}
 
+	var tests [][]interface{}
+	err = json.Unmarshal(file, &tests)
+	if err != nil {
+		t.Fatalf("TestScripts couldn't Unmarshal: %v", err)
+	}
+
+	// Create a signature cache to use only if requested.
 	for i, test := range tests {
 		// "Format is: [[wit..., amount]?, scriptSig, scriptPubKey,
 		//    flags, expected_scripterror, ... comments]"
@@ -430,7 +435,7 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)},
 			Tx:            tx,
 			InputIdx:      0,
-		}, append(engineOpts, WithFlags(flags))...)
+		}, WithFlags(flags))
 		if err == nil {
 			err = vm.Execute()
 		}
@@ -462,44 +467,6 @@ func testScripts(t *testing.T, tests [][]interface{}, useSigCache bool) {
 			continue
 		}
 	}
-}
-
-// TestScripts ensures all of the tests in script_tests.json execute with the
-// expected results as defined in the test data.
-func TestScripts(t *testing.T) {
-	file, err := ioutil.ReadFile("data/script_tests.json")
-	if err != nil {
-		t.Fatalf("TestScripts: %v\n", err)
-	}
-
-	var tests [][]interface{}
-	err = json.Unmarshal(file, &tests)
-	if err != nil {
-		t.Fatalf("TestScripts couldn't Unmarshal: %v", err)
-	}
-
-	// Run all script tests with and without the signature cache.
-	testScripts(t, tests, true)
-	//testScripts(t, tests, false)
-}
-
-// TestScripts ensures all of the tests in script_tests.json execute with the
-// expected results as defined in the test data.
-func TestMyCoolTest(t *testing.T) {
-	file, err := ioutil.ReadFile("data/mycooltests.json")
-	if err != nil {
-		t.Fatalf("TestScripts: %v\n", err)
-	}
-
-	var tests [][]interface{}
-	err = json.Unmarshal(file, &tests)
-	if err != nil {
-		t.Fatalf("TestScripts couldn't Unmarshal: %v", err)
-	}
-
-	// Run all script tests with and without the signature cache.
-	//testScripts(t, tests, true)
-	testScripts(t, tests, false)
 }
 
 // testVecF64ToUint32 properly handles conversion of float64s read from the JSON

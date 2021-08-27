@@ -14,7 +14,7 @@ bitcoin transaction scripts.
 
 Script Overview
 
-Bitcoin Cash transaction scripts are written in a stack-base, FORTH-like language.
+Bitcoin transaction scripts are written in a stack-base, FORTH-like language.
 
 The bitcoin cash script language consists of a number of opcodes which fall into
 several categories such pushing and popping data to and from the stack,
@@ -22,7 +22,7 @@ performing basic and bitwise arithmetic, conditional branching, comparing
 hashes, and checking cryptographic signatures.  Scripts are processed from left
 to right and intentionally do not provide loops.
 
-The vast majority of Bitcoin Cash scripts at the time of this writing are of several
+The vast majority of Bitcoin scripts at the time of this writing are of several
 standard forms which consist of a spender providing a public key and a signature
 which proves the spender owns the associated private key.  This information
 is used to prove the the spender is authorized to perform the transaction.

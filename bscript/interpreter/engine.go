@@ -131,9 +131,7 @@ type Engine struct {
 	inputIdx   int
 	prevOutput *bt.Output
 
-	numOps    int
-	sigCache  SigCache
-	hashCache *TxSigHashes
+	numOps int
 
 	flags ScriptFlags
 	bip16 bool // treat execution as pay-to-script-hash
@@ -174,10 +172,6 @@ func NewEngine(params EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 
 	if vm.scriptParser == nil {
 		WithDefaultParser()(vm)
-	}
-
-	if vm.sigCache == nil {
-		WithNopSignatureCache()(vm)
 	}
 
 	if vm.hasFlag(ScriptEnableSighashForkID) {

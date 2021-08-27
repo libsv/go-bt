@@ -316,7 +316,7 @@ func verifyLockTime(txLockTime, threshold, lockTime int64) error {
 func opcodeCheckLockTimeVerify(op *ParsedOp, vm *Engine) error {
 	// If the ScriptVerifyCheckLockTimeVerify script flag is not set, treat
 	// opcode as bscript.OpNOP2 instead.
-	if !vm.hasFlag(ScriptVerifyCheckLockTimeVerify) {
+	if !vm.hasFlag(ScriptVerifyCheckLockTimeVerify) || vm.afterGenesis {
 		if vm.hasFlag(ScriptDiscourageUpgradableNops) {
 			return scriptError(ErrDiscourageUpgradableNOPs, "bscript.OpNOP2 reserved for soft-fork upgrades")
 		}
@@ -386,7 +386,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, vm *Engine) error {
 func opcodeCheckSequenceVerify(op *ParsedOp, vm *Engine) error {
 	// If the ScriptVerifyCheckSequenceVerify script flag is not set, treat
 	// opcode as bscript.OpNOP3 instead.
-	if !vm.hasFlag(ScriptVerifyCheckSequenceVerify) {
+	if !vm.hasFlag(ScriptVerifyCheckSequenceVerify) || vm.afterGenesis {
 		if vm.hasFlag(ScriptDiscourageUpgradableNops) {
 			return scriptError(ErrDiscourageUpgradableNOPs, "bscript.OpNOP3 reserved for soft-fork upgrades")
 		}
@@ -1663,18 +1663,12 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 		return nil
 	}
 
-	valid := vm.sigCache.Exists(hash, signature, pubKey)
-	if !valid {
-		if valid = signature.Verify(hash, pubKey); valid {
-			vm.sigCache.Add(hash, signature, pubKey)
-		}
-	}
-
-	if !valid && vm.hasFlag(ScriptVerifyNullFail) && len(sigBytes) > 0 {
+	ok := signature.Verify(hash, pubKey)
+	if !ok && vm.hasFlag(ScriptVerifyNullFail) && len(sigBytes) > 0 {
 		return scriptError(ErrNullFail, "signature not empty on failed checksig")
 	}
 
-	vm.dstack.PushBool(valid)
+	vm.dstack.PushBool(ok)
 	return nil
 }
 
@@ -1887,14 +1881,7 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 			return nil
 		}
 
-		valid := vm.sigCache.Exists(signatureHash, parsedSig, parsedPubKey)
-		if !valid {
-			if valid = parsedSig.Verify(signatureHash, parsedPubKey); valid {
-				vm.sigCache.Add(signatureHash, parsedSig, parsedPubKey)
-			}
-		}
-
-		if valid {
+		if ok := parsedSig.Verify(signatureHash, parsedPubKey); ok {
 			// PubKey verified, move on to the next signature.
 			signatureIdx++
 			numSignatures--
