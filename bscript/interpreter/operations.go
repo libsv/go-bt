@@ -1476,7 +1476,7 @@ func opcodeWithin(op *ParsedOp, vm *Engine) error {
 
 // calcHash calculates the hash of hasher over buf.
 func calcHash(buf []byte, hasher hash.Hash) []byte {
-	hasher.Write(buf) // nolint:gosec,errcheck // guaranteed to be hashable
+	hasher.Write(buf)
 	return hasher.Sum(nil)
 }
 
@@ -1649,7 +1649,7 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 	pubKey, err := bec.ParsePubKey(pkBytes, bec.S256())
 	if err != nil {
 		vm.dstack.PushBool(false)
-		return nil
+		return nil //nolint:nilerr // only need a false push in this case
 	}
 
 	var signature *bec.Signature
@@ -1660,7 +1660,7 @@ func opcodeCheckSig(op *ParsedOp, vm *Engine) error {
 	}
 	if err != nil {
 		vm.dstack.PushBool(false)
-		return nil
+		return nil //nolint:nilerr // only need a false push in this case
 	}
 
 	ok := signature.Verify(hash, pubKey)
@@ -1868,7 +1868,7 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 		up, err := vm.scriptParser.Unparse(script)
 		if err != nil {
 			vm.dstack.PushBool(false)
-			return nil
+			return nil //nolint:nilerr // only need a false push in this case
 		}
 
 		// Generate the signature hash based on the signature hash type.
@@ -1878,7 +1878,7 @@ func opcodeCheckMultiSig(op *ParsedOp, vm *Engine) error {
 		signatureHash, err := txCopy.CalcInputSignatureHash(uint32(vm.inputIdx), shf)
 		if err != nil {
 			vm.dstack.PushBool(false)
-			return nil
+			return nil //nolint:nilerr // only need a false push in this case
 		}
 
 		if ok := parsedSig.Verify(signatureHash, parsedPubKey); ok {
