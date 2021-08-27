@@ -157,7 +157,7 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 	// an index that is out of range results in a signature hash of 1 (as a
 	// uint256 little endian).  The original intent appeared to be to
 	// indicate failure, but unfortunately, it was never checked and thus is
-	// treated as the actual signature hash.  This buggy behavior is now
+	// treated as the actual signature hash.  This buggy behaviour is now
 	// part of the consensus and a hard fork would be required to fix it.
 	//
 	// Due to this, care must be taken by software that creates transactions
