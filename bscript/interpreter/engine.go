@@ -175,7 +175,6 @@ func NewEngine(params EngineParams) (*Engine, error) {
 	if vm.hasFlag(ScriptUTXOAfterGenesis) {
 		vm.elseStack = &stack{}
 		vm.afterGenesis = true
-		vm.earlyReturnAfterGenesis = true
 	}
 
 	vm.cfg = buildConfig(vm.afterGenesis)
@@ -387,9 +386,8 @@ func (vm *Engine) Step() (done bool, err error) {
 	// script, maximum script element sizes, and conditionals.
 	if err = vm.executeOpcode(opcode); err != nil {
 		if ok := IsErrorCode(err, ErrOK); ok {
-			vm.scriptOff = 0
-			vm.scriptIdx++
-			vm.earlyReturnAfterGenesis = true
+			// If returned early, move onto the next script
+			vm.shiftScript()
 			return vm.scriptIdx >= len(vm.scripts), nil
 		}
 		return true, err
@@ -416,10 +414,8 @@ func (vm *Engine) Step() (done bool, err error) {
 	// Alt stack doesn't persist.
 	_ = vm.astack.DropN(vm.astack.Depth())
 
-	vm.numOps = 0 // number of ops is per script.
-	vm.scriptOff = 0
-	vm.earlyReturnAfterGenesis = true
-	vm.scriptIdx++
+	// Move onto the next script
+	vm.shiftScript()
 	if vm.scriptIdx == 1 && vm.bip16 && !vm.afterGenesis {
 		vm.savedFirstStack = vm.GetStack()
 	}
@@ -753,5 +749,12 @@ func (vm *Engine) shouldExec(pop ParsedOp) bool {
 		}
 	}
 
-	return count == 0 && (vm.earlyReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
+	return count == 0 && (!vm.earlyReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
+}
+
+func (vm *Engine) shiftScript() {
+	vm.numOps = 0
+	vm.scriptOff = 0
+	vm.scriptIdx++
+	vm.earlyReturnAfterGenesis = false
 }

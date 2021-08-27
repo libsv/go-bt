@@ -578,7 +578,8 @@ func opcodeReturn(op *ParsedOp, vm *Engine) error {
 	if !vm.afterGenesis {
 		return scriptError(ErrEarlyReturn, "script returned early")
 	}
-	vm.earlyReturnAfterGenesis = false
+
+	vm.earlyReturnAfterGenesis = true
 	if len(vm.condStack) == 0 {
 		// Terminate the execution as successful. The remaining of the script does not affect the validity (even in
 		// presence of unbalanced IFs, invalid opcodes etc)
