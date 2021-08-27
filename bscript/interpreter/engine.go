@@ -165,6 +165,7 @@ func NewEngine(params EngineParams) (*Engine, error) {
 		tx:           params.Tx,
 		flags:        params.Flags,
 		scriptParser: &parser{},
+		cfg:          &beforeGenesisConfig{},
 	}
 
 	if vm.hasFlag(ScriptEnableSighashForkID) {
@@ -175,9 +176,8 @@ func NewEngine(params EngineParams) (*Engine, error) {
 	if vm.hasFlag(ScriptUTXOAfterGenesis) {
 		vm.elseStack = &stack{}
 		vm.afterGenesis = true
+		vm.cfg = &afterGenesisConfig{}
 	}
-
-	vm.cfg = buildConfig(vm.afterGenesis)
 
 	// The provided transaction input index must refer to a valid input.
 	if vm.inputIdx < 0 || vm.inputIdx > vm.tx.InputCount()-1 {
@@ -202,24 +202,35 @@ func NewEngine(params EngineParams) (*Engine, error) {
 		return nil, scriptError(ErrInvalidFlags, "invalid flags combination")
 	}
 
+	if len(*uls) > vm.cfg.MaxScriptSize() {
+		return nil, scriptError(
+			ErrScriptTooBig,
+			"unlocking script size %d is larger than the max allowed size %d",
+			len(*uls),
+			vm.cfg.MaxScriptSize(),
+		)
+	}
+	if len(*ls) > vm.cfg.MaxScriptSize() {
+		return nil, scriptError(
+			ErrScriptTooBig,
+			"locking script size %d is larger than the max allowed size %d",
+			len(*uls),
+			vm.cfg.MaxScriptSize(),
+		)
+	}
+
 	// The engine stores the scripts in parsed form using a slice.  This
 	// allows multiple scripts to be executed in sequence.  For example,
 	// with a pay-to-script-hash transaction, there will be ultimately be
 	// a third script to execute.
-	scripts := []*bscript.Script{uls, ls}
-	vm.scripts = make([]ParsedScript, len(scripts))
-	for i, script := range scripts {
-		if len(*script) > vm.cfg.MaxScriptSize() {
-			return nil, scriptError(
-				ErrScriptTooBig,
-				"script size %d is larger than max allowed size %d", len(*script), vm.cfg.MaxScriptSize(),
-			)
-		}
-
-		var err error
-		if vm.scripts[i], err = vm.scriptParser.Parse(script); err != nil {
+	vm.scripts = make([]ParsedScript, 2)
+	for i, script := range []*bscript.Script{uls, ls} {
+		pscript, err := vm.scriptParser.Parse(script)
+		if err != nil {
 			return nil, err
 		}
+
+		vm.scripts[i] = pscript
 	}
 
 	// The signature script must only contain data pushes when the
@@ -231,7 +242,7 @@ func NewEngine(params EngineParams) (*Engine, error) {
 	// Advance the program counter to the public key script if the signature
 	// script is empty since there is nothing to execute for it in that
 	// case.
-	if len(*scripts[0]) == 0 {
+	if len(*uls) == 0 {
 		vm.scriptIdx++
 	}
 
@@ -268,10 +279,7 @@ func (vm *Engine) addFlag(flag ScriptFlags) {
 // and an OP_IF is encountered, the branch is inactive until an OP_ELSE or
 // OP_ENDIF is encountered.  It properly handles nested conditionals.
 func (vm *Engine) isBranchExecuting() bool {
-	if len(vm.condStack) == 0 {
-		return true
-	}
-	return vm.condStack[len(vm.condStack)-1] == OpCondTrue
+	return len(vm.condStack) == 0 || vm.condStack[len(vm.condStack)-1] == OpCondTrue
 }
 
 // executeOpcode performs execution on the passed opcode. It takes into account
@@ -284,6 +292,7 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 	}
 
 	exec := vm.shouldExec(pop)
+
 	// Disabled opcodes are fail on program counter.
 	if pop.IsDisabled() && (!vm.afterGenesis || exec) {
 		return scriptError(ErrDisabledOpcode, "attempt to execute disabled opcode %s", pop.Name())
@@ -301,7 +310,9 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 			return scriptError(ErrTooManyOperations, "exceeded max operation limit of %d", vm.cfg.MaxOps())
 		}
 
-	} else if len(pop.Data) > vm.cfg.MaxScriptElementSize() {
+	}
+
+	if len(pop.Data) > vm.cfg.MaxScriptElementSize() {
 		return scriptError(ErrElementTooBig,
 			"element size %d exceeds max allowed size %d", len(pop.Data), vm.cfg.MaxScriptElementSize())
 	}
@@ -372,9 +383,9 @@ func (vm *Engine) CheckErrorCondition(finalScript bool) error {
 //
 // The result of calling Step or any other method is undefined if an error is
 // returned.
-func (vm *Engine) Step() (done bool, err error) {
+func (vm *Engine) Step() (bool, error) {
 	// Verify that it is pointing to a valid script address.
-	if err = vm.validPC(); err != nil {
+	if err := vm.validPC(); err != nil {
 		return true, err
 	}
 
@@ -384,7 +395,7 @@ func (vm *Engine) Step() (done bool, err error) {
 	// Execute the opcode while taking into account several things such as
 	// disabled opcodes, illegal opcodes, maximum allowed operations per
 	// script, maximum script element sizes, and conditionals.
-	if err = vm.executeOpcode(opcode); err != nil {
+	if err := vm.executeOpcode(opcode); err != nil {
 		if ok := IsErrorCode(err, ErrOK); ok {
 			// If returned early, move onto the next script
 			vm.shiftScript()
@@ -416,28 +427,30 @@ func (vm *Engine) Step() (done bool, err error) {
 
 	// Move onto the next script
 	vm.shiftScript()
-	if vm.scriptIdx == 1 && vm.bip16 && !vm.afterGenesis {
-		vm.savedFirstStack = vm.GetStack()
-	}
 
-	if vm.scriptIdx == 2 && vm.bip16 && !vm.afterGenesis {
-		// Put us past the end for CheckErrorCondition()
-		// Check script ran successfully and pull the script
-		// out of the first stack and execute that.
-		if err := vm.CheckErrorCondition(false); err != nil {
-			return false, err
+	if vm.bip16 && !vm.afterGenesis && vm.scriptIdx <= 2 {
+		switch vm.scriptIdx {
+		case 1:
+			vm.savedFirstStack = vm.GetStack()
+		case 2:
+			// Put us past the end for CheckErrorCondition()
+			// Check script ran successfully and pull the script
+			// out of the first stack and execute that.
+			if err := vm.CheckErrorCondition(false); err != nil {
+				return false, err
+			}
+
+			script := vm.savedFirstStack[len(vm.savedFirstStack)-1]
+			pops, err := vm.scriptParser.Parse(bscript.NewFromBytes(script))
+			if err != nil {
+				return false, err
+			}
+			vm.scripts = append(vm.scripts, pops)
+
+			// Set stack to be the stack from first script minus the
+			// script itself
+			vm.SetStack(vm.savedFirstStack[:len(vm.savedFirstStack)-1])
 		}
-
-		script := vm.savedFirstStack[len(vm.savedFirstStack)-1]
-		pops, err := vm.scriptParser.Parse(bscript.NewFromBytes(script))
-		if err != nil {
-			return false, err
-		}
-		vm.scripts = append(vm.scripts, pops)
-
-		// Set stack to be the stack from first script minus the
-		// script itself
-		vm.SetStack(vm.savedFirstStack[:len(vm.savedFirstStack)-1])
 	}
 
 	// there are zero length scripts in the wild

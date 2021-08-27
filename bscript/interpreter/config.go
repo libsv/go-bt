@@ -22,13 +22,6 @@ const (
 type beforeGenesisConfig struct{}
 type afterGenesisConfig struct{}
 
-func buildConfig(afterGenesis bool) config {
-	if afterGenesis {
-		return &afterGenesisConfig{}
-	}
-	return &beforeGenesisConfig{}
-}
-
 func (a *afterGenesisConfig) MaxStackSize() int {
 	return math.MaxInt32
 }
