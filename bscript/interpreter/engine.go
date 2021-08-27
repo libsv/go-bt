@@ -134,8 +134,8 @@ type Engine struct {
 	flags ScriptFlags
 	bip16 bool // treat execution as pay-to-script-hash
 
-	afterGenesis               bool
-	topLevelReturnAfterGenesis bool
+	afterGenesis            bool
+	earlyReturnAfterGenesis bool
 }
 
 // EngineParams are the params required for building an Engine
@@ -180,7 +180,7 @@ func NewEngine(params EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 	if vm.hasFlag(ScriptUTXOAfterGenesis) {
 		vm.elseStack = &stack{}
 		vm.afterGenesis = true
-		vm.topLevelReturnAfterGenesis = true
+		vm.earlyReturnAfterGenesis = true
 	}
 
 	vm.cfg = buildConfig(vm.afterGenesis)
@@ -288,8 +288,10 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 		return scriptError(ErrElementTooBig,
 			"element size %d exceeds max allowed size %d", len(pop.Data), vm.cfg.MaxScriptElementSize())
 	}
+
+	exec := vm.shouldExec(pop)
 	// Disabled opcodes are fail on program counter.
-	if pop.IsDisabled() && (!vm.afterGenesis || vm.ShouldExec(pop)) {
+	if pop.IsDisabled() && (!vm.afterGenesis || exec) {
 		return scriptError(ErrDisabledOpcode, "attempt to execute disabled opcode %s", pop.Name())
 	}
 
@@ -318,17 +320,19 @@ func (vm *Engine) executeOpcode(pop ParsedOp) error {
 
 	// Ensure all executed data push opcodes use the minimal encoding when
 	// the minimal data verification flag is set.
-	if vm.dstack.verifyMinimalData && vm.isBranchExecuting() && pop.Op.val <= bscript.OpPUSHDATA4 && vm.ShouldExec(pop) {
+	if vm.dstack.verifyMinimalData && vm.isBranchExecuting() && pop.Op.val <= bscript.OpPUSHDATA4 && exec {
 		if err := pop.EnforceMinimumDataPush(); err != nil {
 			return err
 		}
 	}
 
-	if vm.ShouldExec(pop) || pop.IsConditional() {
-		return pop.Op.exec(&pop, vm)
+	// If we have already reached an OP_RETURN, we don't execute the next comment, unless it is a conditional,
+	// in which case we need to evaluate it as to check for correct if/else balances
+	if !exec && !pop.IsConditional() {
+		return nil
 	}
 
-	return nil
+	return pop.Op.exec(&pop, vm)
 }
 
 // validPC returns an error if the current script position is valid for
@@ -343,16 +347,6 @@ func (vm *Engine) validPC() error {
 			vm.scriptIdx, len(vm.scripts[vm.scriptIdx]))
 	}
 	return nil
-}
-
-// curPC returns either the current script and offset, or an error if the
-// position isn't valid.
-func (vm *Engine) curPC() (script int, off int, err error) {
-	err = vm.validPC()
-	if err != nil {
-		return 0, 0, err
-	}
-	return vm.scriptIdx, vm.scriptOff, nil
 }
 
 // CheckErrorCondition returns nil if the running script has ended and was
@@ -400,7 +394,7 @@ func (vm *Engine) Step() (done bool, err error) {
 		if ok := IsErrorCode(err, ErrOK); ok {
 			vm.scriptOff = 0
 			vm.scriptIdx++
-			vm.topLevelReturnAfterGenesis = true
+			vm.earlyReturnAfterGenesis = true
 			return vm.scriptIdx >= len(vm.scripts), nil
 		}
 		return true, err
@@ -429,7 +423,7 @@ func (vm *Engine) Step() (done bool, err error) {
 
 	vm.numOps = 0 // number of ops is per script.
 	vm.scriptOff = 0
-	vm.topLevelReturnAfterGenesis = true
+	vm.earlyReturnAfterGenesis = true
 	vm.scriptIdx++
 	if vm.scriptIdx == 1 && vm.bip16 && !vm.afterGenesis {
 		vm.savedFirstStack = vm.GetStack()
@@ -470,15 +464,30 @@ func (vm *Engine) Step() (done bool, err error) {
 
 // Execute will execute all scripts in the script engine and return either nil
 // for successful validation or an error if one occurred.
-func (vm *Engine) Execute() (err error) {
-	var done bool
-	for !done {
-		if done, err = vm.Step(); err != nil {
+func (vm *Engine) Execute() error {
+	for {
+		done, err := vm.Step()
+		if err != nil {
 			return err
+		}
+		if done {
+			break
 		}
 	}
 
 	return vm.CheckErrorCondition(true)
+}
+
+// GetStack returns the contents of the primary stack as an array. where the
+// last item in the array is the top of the stack.
+func (vm *Engine) GetStack() [][]byte {
+	return getStack(&vm.dstack)
+}
+
+// SetStack sets the contents of the primary stack to the contents of the
+// provided array where the last item in the array will be the top of the stack.
+func (vm *Engine) SetStack(data [][]byte) {
+	setStack(&vm.dstack, data)
 }
 
 // subScript returns the script since the last OP_CODESEPARATOR.
@@ -736,33 +745,9 @@ func setStack(stack *stack, data [][]byte) {
 	}
 }
 
-// GetStack returns the contents of the primary stack as an array. where the
-// last item in the array is the top of the stack.
-func (vm *Engine) GetStack() [][]byte {
-	return getStack(&vm.dstack)
-}
-
-// SetStack sets the contents of the primary stack to the contents of the
-// provided array where the last item in the array will be the top of the stack.
-func (vm *Engine) SetStack(data [][]byte) {
-	setStack(&vm.dstack, data)
-}
-
-// GetAltStack returns the contents of the alternate stack as an array where the
-// last item in the array is the top of the stack.
-func (vm *Engine) GetAltStack() [][]byte {
-	return getStack(&vm.astack)
-}
-
-// SetAltStack sets the contents of the alternate stack to the contents of the
-// provided array where the last item in the array will be the top of the stack.
-func (vm *Engine) SetAltStack(data [][]byte) {
-	setStack(&vm.astack, data)
-}
-
-// ShouldExec returns true if the engine should execute the passed in operation,
+// shouldExec returns true if the engine should execute the passed in operation,
 // based on its own internal state.
-func (vm *Engine) ShouldExec(pop ParsedOp) bool {
+func (vm *Engine) shouldExec(pop ParsedOp) bool {
 	if !vm.afterGenesis {
 		return true
 	}
@@ -773,5 +758,5 @@ func (vm *Engine) ShouldExec(pop ParsedOp) bool {
 		}
 	}
 
-	return count == 0 && (vm.topLevelReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
+	return count == 0 && (vm.earlyReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
 }

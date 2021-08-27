@@ -329,7 +329,7 @@ func opcodeDisabled(op *ParsedOp, vm *Engine) error {
 }
 
 func opcodeVerConditional(op *ParsedOp, vm *Engine) error {
-	if vm.afterGenesis && !vm.ShouldExec(*op) {
+	if vm.afterGenesis && !vm.shouldExec(*op) {
 		return nil
 	}
 	return opcodeReserved(op, vm)
@@ -435,7 +435,7 @@ func popIfBool(vm *Engine) (bool, error) {
 // Conditional stack transformation: [...] -> [... OpCondValue]
 func opcodeIf(op *ParsedOp, vm *Engine) error {
 	condVal := OpCondFalse
-	if vm.ShouldExec(*op) {
+	if vm.shouldExec(*op) {
 		if vm.isBranchExecuting() {
 			ok, err := popIfBool(vm)
 			if err != nil {
@@ -473,7 +473,7 @@ func opcodeIf(op *ParsedOp, vm *Engine) error {
 // Conditional stack transformation: [...] -> [... OpCondValue]
 func opcodeNotIf(op *ParsedOp, vm *Engine) error {
 	condVal := OpCondFalse
-	if vm.ShouldExec(*op) {
+	if vm.shouldExec(*op) {
 		if vm.isBranchExecuting() {
 			ok, err := popIfBool(vm)
 			if err != nil {
@@ -578,7 +578,7 @@ func opcodeReturn(op *ParsedOp, vm *Engine) error {
 	if !vm.afterGenesis {
 		return scriptError(ErrEarlyReturn, "script returned early")
 	}
-	vm.topLevelReturnAfterGenesis = false
+	vm.earlyReturnAfterGenesis = false
 	if len(vm.condStack) == 0 {
 		// Terminate the execution as successful. The remaining of the script does not affect the validity (even in
 		// presence of unbalanced IFs, invalid opcodes etc)
