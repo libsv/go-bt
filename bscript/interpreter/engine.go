@@ -143,12 +143,13 @@ type EngineParams struct {
 	PreviousTxOut *bt.Output
 	Tx            *bt.Tx
 	InputIdx      int
+	Flags         ScriptFlags
 }
 
 // NewEngine returns a new script engine for the provided public key script,
 // transaction, and input index.  The flags modify the behaviour of the script
 // engine according to the description provided by each flag.
-func NewEngine(params EngineParams, oo ...EngineOptFunc) (*Engine, error) {
+func NewEngine(params EngineParams) (*Engine, error) {
 	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
 	// either the pay-to-script-hash (P2SH) evaluation (ScriptBip16)
 	// flag or the Segregated Witness (ScriptVerifyWitness) flag.
@@ -159,17 +160,11 @@ func NewEngine(params EngineParams, oo ...EngineOptFunc) (*Engine, error) {
 	// it possible to have a situation where P2SH would not be a soft fork
 	// when it should be.
 	vm := &Engine{
-		prevOutput: params.PreviousTxOut,
-		tx:         params.Tx,
-		inputIdx:   params.InputIdx,
-	}
-
-	for _, o := range oo {
-		o(vm)
-	}
-
-	if vm.scriptParser == nil {
-		WithDefaultParser()(vm)
+		prevOutput:   params.PreviousTxOut,
+		inputIdx:     params.InputIdx,
+		tx:           params.Tx,
+		flags:        params.Flags,
+		scriptParser: &parser{},
 	}
 
 	if vm.hasFlag(ScriptEnableSighashForkID) {

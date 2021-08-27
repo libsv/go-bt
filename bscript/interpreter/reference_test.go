@@ -435,7 +435,8 @@ func TestScripts(t *testing.T) {
 			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)},
 			Tx:            tx,
 			InputIdx:      0,
-		}, WithFlags(flags))
+			Flags:         flags,
+		})
 		if err == nil {
 			err = vm.Execute()
 		}
@@ -623,7 +624,8 @@ testloop:
 				PreviousTxOut: prevOut,
 				Tx:            tx,
 				InputIdx:      k,
-			}, WithFlags(flags))
+				Flags:         flags,
+			})
 			if err != nil {
 				continue testloop
 			}
@@ -771,7 +773,8 @@ testloop:
 				PreviousTxOut: prevOut,
 				Tx:            tx,
 				InputIdx:      k,
-			}, WithFlags(flags))
+				Flags:         flags,
+			})
 			if err != nil {
 				t.Errorf("test (%d:%v:%d) failed to create "+
 					"script: %v", i, test, k, err)

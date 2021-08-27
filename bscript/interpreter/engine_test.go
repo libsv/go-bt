@@ -168,7 +168,8 @@ func TestInvalidFlagCombinations(t *testing.T) {
 			Tx:            tx,
 			InputIdx:      0,
 			PreviousTxOut: txOut,
-		}, WithFlags(test))
+			Flags:         test,
+		})
 		if !IsErrorCode(err, ErrInvalidFlags) {
 			t.Fatalf("TestInvalidFlagCombinations #%d unexpected "+
 				"error: %v", i, err)

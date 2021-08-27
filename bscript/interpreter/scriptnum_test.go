@@ -287,7 +287,8 @@ func TestDisasmString(t *testing.T) {
 		PreviousTxOut: &bt.Output{LockingScript: prev},
 		Tx:            tx,
 		InputIdx:      0,
-	}, WithFlags(ScriptBip16|ScriptVerifyCleanStack))
+		Flags:         ScriptBip16 | ScriptVerifyCleanStack,
+	})
 	if err != nil {
 		t.Error(err)
 	}
