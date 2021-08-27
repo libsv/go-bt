@@ -8,31 +8,6 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// opcodeOnelineRepls defines opcode names which are replaced when doing a
-// one-line disassembly.  This is done to match the output of the reference
-// implementation while not changing the opcode names in the nicer full
-// disassembly.
-var opcodeOnelineRepls = map[string]string{
-	"OP_1NEGATE": "-1",
-	"OP_0":       "0",
-	"OP_1":       "1",
-	"OP_2":       "2",
-	"OP_3":       "3",
-	"OP_4":       "4",
-	"OP_5":       "5",
-	"OP_6":       "6",
-	"OP_7":       "7",
-	"OP_8":       "8",
-	"OP_9":       "9",
-	"OP_10":      "10",
-	"OP_11":      "11",
-	"OP_12":      "12",
-	"OP_13":      "13",
-	"OP_14":      "14",
-	"OP_15":      "15",
-	"OP_16":      "16",
-}
-
 // OpcodeParser parses *bscript.Script into a ParsedScript, and unparsing back
 type OpcodeParser interface {
 	Parse(*bscript.Script) (ParsedScript, error)
