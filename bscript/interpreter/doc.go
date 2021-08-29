@@ -5,7 +5,7 @@
 /*
 Package interpreter implements the bitcoin transaction script language.
 
-A complete description of the script language used by bitcoin cash can be found at
+A complete description of the script language used by bitcoin can be found at
 https://en.bitcoin.it/wiki/Script.  The following only serves as a quick
 overview to provide information on how to use the package.
 
@@ -16,7 +16,7 @@ Script Overview
 
 Bitcoin transaction scripts are written in a stack-base, FORTH-like language.
 
-The bitcoin cash script language consists of a number of opcodes which fall into
+The bitcoin script language consists of a number of opcodes which fall into
 several categories such pushing and popping data to and from the stack,
 performing basic and bitwise arithmetic, conditional branching, comparing
 hashes, and checking cryptographic signatures.  Scripts are processed from left

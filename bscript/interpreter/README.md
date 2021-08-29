@@ -12,7 +12,7 @@ package for any projects needing to use or validate bitcoin transaction scripts.
 
 ## Bitcoin Scripts
 
-Bitcoinsv provides a stack-based, FORTH-like language for the scripts in
+Bitcoin provides a stack-based, FORTH-like language for the scripts in
 the bitcoin transactions.  This language is not turing complete
 although it is still fairly powerful.  A description of the language
 can be found at https://wiki.bitcoinsv.io/index.php/Script
@@ -26,7 +26,7 @@ $ go get -u github.com/libsv/go-bt/bscript/interpreter
 ## Examples
 
 * [Standard Pay-to-pubkey-hash Script](http://github.com/libsv/go-bt/bscript/interpreter#example-PayToAddrScript)  
-  Demonstrates creating a script which pays to a bitcoinsv address.  It also
+  Demonstrates creating a script which pays to a bitcoin address.  It also
   prints the created script hex and uses the DisasmString function to display
   the disassembled script.
 

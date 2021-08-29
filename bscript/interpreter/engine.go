@@ -48,8 +48,7 @@ const (
 	// ScriptVerifyCleanStack defines that the stack must contain only
 	// one stack element after evaluation and that the element must be
 	// true if interpreted as a boolean.  This is rule 6 of BIP0062.
-	// This flag should never be used without the ScriptBip16 flag nor the
-	// ScriptVerifyWitness flag.
+	// This flag should never be used without the ScriptBip16 flag.
 	ScriptVerifyCleanStack
 
 	// ScriptVerifyDERSignatures defines that signatures are required
@@ -146,13 +145,13 @@ type EngineParams struct {
 	Flags         ScriptFlags
 }
 
-// NewEngine returns a new script engine for the provided public key script,
-// transaction, and input index.  The flags modify the behaviour of the script
-// engine according to the description provided by each flag.
+// NewEngine returns a new script engine for the provided locking script
+// (of a previous transaction out), transaction, and input index.  The
+// flags modify the behaviour of the script engine according to the
+// description provided by each flag.
 func NewEngine(params EngineParams) (*Engine, error) {
 	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
-	// either the pay-to-script-hash (P2SH) evaluation (ScriptBip16)
-	// flag or the Segregated Witness (ScriptVerifyWitness) flag.
+	// the pay-to-script-hash (P2SH) evaluation (ScriptBip16).
 	//
 	// Recall that evaluating a P2SH script without the flag set results in
 	// non-P2SH evaluation which leaves the P2SH inputs on the stack.

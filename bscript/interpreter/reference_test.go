@@ -290,9 +290,8 @@ func parseExpectedResult(expected string) ([]ErrorCode, error) {
 }
 
 // createSpendTx generates a basic spending transaction given the passed
-// signature, witness and public key scripts.
-func createSpendingTx(sigScript, pkScript *bscript.Script,
-	outputValue int64) *bt.Tx {
+// signature and locking scripts.
+func createSpendingTx(sigScript, pkScript *bscript.Script, outputValue int64) *bt.Tx {
 
 	coinbaseTx := &bt.Tx{
 		Version:  1,
