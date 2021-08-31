@@ -10,6 +10,7 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
+// defaultHex is used to fix a bug in the original client (see if statement in the CalcInputSignatureHash func)
 var defaultHex = []byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 type sigHashFunc func(inputIdx uint32, shf sighash.Flag) ([]byte, error)
