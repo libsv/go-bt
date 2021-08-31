@@ -37,6 +37,15 @@ func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Fla
 		return nil, err
 	}
 
+	// A bug in the original Satoshi client implementation means specifying
+	// an index that is out of range results in a signature hash of 1 (as a
+	// uint256 little endian).  The original intent appeared to be to
+	// indicate failure, but unfortunately, it was never checked and thus is
+	// treated as the actual signature hash.  This buggy behaviour is now
+	// part of the consensus and a hard fork would be required to fix it.
+	//
+	// Due to this, if the tx signature returned matches this special case value,
+	// we skip thedouble hashing as to not interfere.
 	if bytes.Equal(defaultHex, buf) {
 		return buf, nil
 	}
