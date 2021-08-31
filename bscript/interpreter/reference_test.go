@@ -430,15 +430,12 @@ func TestScripts(t *testing.T) {
 		tx := createSpendingTx(scriptSig, scriptPubKey,
 			inputAmt)
 
-		vm, err := NewEngine(EngineParams{
+		err = NewEngine().Execute(ExecutionParams{
 			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)},
 			Tx:            tx,
 			InputIdx:      0,
 			Flags:         flags,
 		})
-		if err == nil {
-			err = vm.Execute()
-		}
 
 		// Ensure there were no errors when the expected result is OK.
 		if resultStr == "OK" {
@@ -619,7 +616,7 @@ testloop:
 			// These are meant to fail, so as soon as the first
 			// input fails the transaction has failed. (some of the
 			// test txns have good inputs, too..
-			vm, err := NewEngine(EngineParams{
+			err := NewEngine().Execute(ExecutionParams{
 				PreviousTxOut: prevOut,
 				Tx:            tx,
 				InputIdx:      k,
@@ -628,12 +625,6 @@ testloop:
 			if err != nil {
 				continue testloop
 			}
-
-			err = vm.Execute()
-			if err != nil {
-				continue testloop
-			}
-
 		}
 		t.Errorf("test (%d:%v) succeeded when should fail",
 			i, test)
@@ -768,20 +759,13 @@ testloop:
 					k, i, test)
 				continue testloop
 			}
-			vm, err := NewEngine(EngineParams{
+
+			if err = NewEngine().Execute(ExecutionParams{
 				PreviousTxOut: prevOut,
 				Tx:            tx,
 				InputIdx:      k,
 				Flags:         flags,
-			})
-			if err != nil {
-				t.Errorf("test (%d:%v:%d) failed to create "+
-					"script: %v", i, test, k, err)
-				continue
-			}
-
-			err = vm.Execute()
-			if err != nil {
+			}); err != nil {
 				t.Errorf("test (%d:%v:%d) failed to execute: "+
 					"%v", i, test, k, err)
 				continue

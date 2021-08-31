@@ -51,7 +51,11 @@ func TestBadPC(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		vm, err := NewEngine(EngineParams{
+		vm := &thread{
+			scriptParser: &parser{},
+			cfg:          &beforeGenesisConfig{},
+		}
+		err := vm.apply(ExecutionParams{
 			PreviousTxOut: txOut,
 			Tx:            tx,
 			InputIdx:      0,
@@ -103,13 +107,18 @@ func TestCheckErrorCondition(t *testing.T) {
 		LockingScript: ls,
 	}
 
-	vm, err := NewEngine(EngineParams{
-		Tx:            tx,
+	vm := &thread{
+		scriptParser: &parser{},
+		cfg:          &beforeGenesisConfig{},
+	}
+
+	err = vm.apply(ExecutionParams{
 		PreviousTxOut: txOut,
 		InputIdx:      0,
+		Tx:            tx,
 	})
 	if err != nil {
-		t.Errorf("failed to create script: %v", err)
+		t.Errorf("failed to configure thread %w", err)
 	}
 
 	var done bool
@@ -164,7 +173,11 @@ func TestInvalidFlagCombinations(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		_, err := NewEngine(EngineParams{
+		vm := &thread{
+			scriptParser: &parser{},
+			cfg:          &beforeGenesisConfig{},
+		}
+		err := vm.apply(ExecutionParams{
 			Tx:            tx,
 			InputIdx:      0,
 			PreviousTxOut: txOut,
@@ -222,7 +235,7 @@ func TestCheckPubKeyEncoding(t *testing.T) {
 		},
 	}
 
-	vm := Engine{flags: ScriptVerifyStrictEncoding}
+	vm := thread{flags: ScriptVerifyStrictEncoding}
 	for _, test := range tests {
 		err := vm.checkPubKeyEncoding(test.key)
 		if err != nil && test.isValid {
@@ -394,7 +407,7 @@ func TestCheckSignatureEncoding(t *testing.T) {
 		},
 	}
 
-	vm := Engine{flags: ScriptVerifyStrictEncoding}
+	vm := thread{flags: ScriptVerifyStrictEncoding}
 	for _, test := range tests {
 		err := vm.checkSignatureEncoding(test.sig)
 		if err != nil && test.isValid {
@@ -545,7 +558,7 @@ func TestCheckHashTypeEncoding(t *testing.T) {
 	}
 
 	for i, test := range encodingTests {
-		e := Engine{flags: test.EngineFlags}
+		e := thread{flags: test.EngineFlags}
 		err := e.checkHashTypeEncoding(test.SigHash)
 		if test.ShouldFail && err == nil {
 			t.Errorf("Expected test %d to fail", i)

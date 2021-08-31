@@ -283,16 +283,12 @@ func TestDisasmString(t *testing.T) {
 		UnlockingScript: script,
 	}
 	tx.Inputs = append(tx.Inputs, in)
-	vm, err := NewEngine(EngineParams{
+	err := NewEngine().Execute(ExecutionParams{
 		PreviousTxOut: &bt.Output{LockingScript: prev},
 		Tx:            tx,
 		InputIdx:      0,
 		Flags:         ScriptBip16 | ScriptVerifyCleanStack,
 	})
-	if err != nil {
-		t.Error(err)
-	}
-	err = vm.Execute()
 	if err != nil {
 		t.Error(err)
 	}
