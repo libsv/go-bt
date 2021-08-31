@@ -171,9 +171,7 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 	// cleverly construct transactions which can steal those coins provided
 	// they can reuse signatures.
 	if shf.HasWithMask(sighash.Single) && int(inputNumber) > len(tx.Outputs)-1 {
-		var h [32]byte
-		h[0] = 0x01
-		return h[:], nil
+		return defaultHex, nil
 	}
 
 	txCopy := tx.Clone()
