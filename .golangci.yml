@@ -387,6 +387,7 @@ issues:
         - errcheck
         - dupl
         - gosec
+        - govet
         - maligned
         - lll
 

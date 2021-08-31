@@ -247,11 +247,11 @@ func (t *thread) Step() (bool, error) {
 	return false, nil
 }
 
-func (th *thread) apply(params ExecutionParams) error {
-	th.tx = params.Tx
-	th.flags = params.Flags
-	th.inputIdx = params.InputIdx
-	th.prevOutput = params.PreviousTxOut
+func (t *thread) apply(params ExecutionParams) error {
+	t.tx = params.Tx
+	t.flags = params.Flags
+	t.inputIdx = params.InputIdx
+	t.prevOutput = params.PreviousTxOut
 
 	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
 	// the pay-to-script-hash (P2SH) evaluation (ScriptBip16).
@@ -261,27 +261,27 @@ func (th *thread) apply(params ExecutionParams) error {
 	// Thus, allowing the clean stack flag without the P2SH flag would make
 	// it possible to have a situation where P2SH would not be a soft fork
 	// when it should be.
-	if th.hasFlag(ScriptEnableSighashForkID) {
-		th.addFlag(ScriptVerifyStrictEncoding)
+	if t.hasFlag(ScriptEnableSighashForkID) {
+		t.addFlag(ScriptVerifyStrictEncoding)
 	}
 
-	th.elseStack = &nopBoolStack{}
-	if th.hasFlag(ScriptUTXOAfterGenesis) {
-		th.elseStack = &stack{}
-		th.afterGenesis = true
-		th.cfg = &afterGenesisConfig{}
+	t.elseStack = &nopBoolStack{}
+	if t.hasFlag(ScriptUTXOAfterGenesis) {
+		t.elseStack = &stack{}
+		t.afterGenesis = true
+		t.cfg = &afterGenesisConfig{}
 	}
 
 	// The provided transaction input index must refer to a valid input.
-	if th.inputIdx < 0 || th.inputIdx > th.tx.InputCount()-1 {
+	if t.inputIdx < 0 || t.inputIdx > t.tx.InputCount()-1 {
 		return scriptError(
 			ErrInvalidIndex,
 			"transaction input index %d is negative or >= %d", params.InputIdx, len(params.Tx.Inputs),
 		)
 	}
 
-	uls := th.tx.Inputs[params.InputIdx].UnlockingScript
-	ls := th.prevOutput.LockingScript
+	uls := t.tx.Inputs[params.InputIdx].UnlockingScript
+	ls := t.prevOutput.LockingScript
 
 	// When both the signature script and public key script are empty the
 	// result is necessarily an error since the stack would end up being
@@ -291,24 +291,24 @@ func (th *thread) apply(params ExecutionParams) error {
 		return scriptError(ErrEvalFalse, "false stack entry at end of script execution")
 	}
 
-	if th.hasFlag(ScriptVerifyCleanStack) && (!th.hasFlag(ScriptBip16)) {
+	if t.hasFlag(ScriptVerifyCleanStack) && (!t.hasFlag(ScriptBip16)) {
 		return scriptError(ErrInvalidFlags, "invalid flags combination")
 	}
 
-	if len(*uls) > th.cfg.MaxScriptSize() {
+	if len(*uls) > t.cfg.MaxScriptSize() {
 		return scriptError(
 			ErrScriptTooBig,
 			"unlocking script size %d is larger than the max allowed size %d",
 			len(*uls),
-			th.cfg.MaxScriptSize(),
+			t.cfg.MaxScriptSize(),
 		)
 	}
-	if len(*ls) > th.cfg.MaxScriptSize() {
+	if len(*ls) > t.cfg.MaxScriptSize() {
 		return scriptError(
 			ErrScriptTooBig,
 			"locking script size %d is larger than the max allowed size %d",
 			len(*uls),
-			th.cfg.MaxScriptSize(),
+			t.cfg.MaxScriptSize(),
 		)
 	}
 
@@ -316,19 +316,19 @@ func (th *thread) apply(params ExecutionParams) error {
 	// allows multiple scripts to be executed in sequence.  For example,
 	// with a pay-to-script-hash transaction, there will be ultimately be
 	// a third script to execute.
-	th.scripts = make([]ParsedScript, 2)
+	t.scripts = make([]ParsedScript, 2)
 	for i, script := range []*bscript.Script{uls, ls} {
-		pscript, err := th.scriptParser.Parse(script)
+		pscript, err := t.scriptParser.Parse(script)
 		if err != nil {
 			return err
 		}
 
-		th.scripts[i] = pscript
+		t.scripts[i] = pscript
 	}
 
 	// The signature script must only contain data pushes when the
 	// associated flag is set.
-	if th.hasFlag(ScriptVerifySigPushOnly) && !th.scripts[0].IsPushOnly() {
+	if t.hasFlag(ScriptVerifySigPushOnly) && !t.scripts[0].IsPushOnly() {
 		return scriptError(ErrNotPushOnly, "signature script is not push only")
 	}
 
@@ -336,31 +336,31 @@ func (th *thread) apply(params ExecutionParams) error {
 	// script is empty since there is nothing to execute for it in that
 	// case.
 	if len(*uls) == 0 {
-		th.scriptIdx++
+		t.scriptIdx++
 	}
 
-	if th.hasFlag(ScriptBip16) && ls.IsP2SH() {
+	if t.hasFlag(ScriptBip16) && ls.IsP2SH() {
 		// Only accept input scripts that push data for P2SH.
-		if !th.scripts[0].IsPushOnly() {
+		if !t.scripts[0].IsPushOnly() {
 			return scriptError(ErrNotPushOnly, "pay to script hash is not push only")
 		}
-		th.bip16 = true
+		t.bip16 = true
 	}
 
-	if th.hasFlag(ScriptVerifyMinimalData) {
-		th.dstack.verifyMinimalData = true
-		th.astack.verifyMinimalData = true
+	if t.hasFlag(ScriptVerifyMinimalData) {
+		t.dstack.verifyMinimalData = true
+		t.astack.verifyMinimalData = true
 	}
 
-	th.tx.InputIdx(th.inputIdx).PreviousTxScript = th.prevOutput.LockingScript
-	th.tx.InputIdx(th.inputIdx).PreviousTxSatoshis = th.prevOutput.Satoshis
+	t.tx.InputIdx(t.inputIdx).PreviousTxScript = t.prevOutput.LockingScript
+	t.tx.InputIdx(t.inputIdx).PreviousTxSatoshis = t.prevOutput.Satoshis
 
 	return nil
 }
 
-func (th *thread) execute() error {
+func (t *thread) execute() error {
 	for {
-		done, err := th.Step()
+		done, err := t.Step()
 		if err != nil {
 			return err
 		}
@@ -369,7 +369,7 @@ func (th *thread) execute() error {
 		}
 	}
 
-	return th.CheckErrorCondition(true)
+	return t.CheckErrorCondition(true)
 }
 
 // GetStack returns the contents of the primary stack as an array. where the
