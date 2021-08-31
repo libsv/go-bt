@@ -7,6 +7,9 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# linter binary
+golangci-lint
+
 # Notes
 todo.md
 
@@ -15,3 +18,6 @@ dist
 
 # Converage
 coverage.txt
+
+# vim
+*.swp

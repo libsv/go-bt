@@ -339,9 +339,9 @@ linters:
     - golint
     - unconvert
     - dupl
-    - maligned
     - misspell
     - dogsled
+    - revive
     - prealloc
     - exportloopref
     - exhaustive
@@ -356,6 +356,8 @@ linters:
     - gci
     - wsl
     - goerr113
+    - scopelint
+    - maligned
     - godot
     - testpackage
     - nestif
@@ -385,6 +387,7 @@ issues:
         - errcheck
         - dupl
         - gosec
+        - govet
         - maligned
         - lll
 

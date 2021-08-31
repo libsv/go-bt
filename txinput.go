@@ -92,3 +92,30 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 func (tx *Tx) InputCount() int {
 	return len(tx.Inputs)
 }
+
+// PreviousOutHash returns a byte slice of inputs outpoints, for creating a signature hash
+func (tx *Tx) PreviousOutHash() []byte {
+	buf := make([]byte, 0)
+
+	for _, in := range tx.Inputs {
+		buf = append(buf, ReverseBytes(in.PreviousTxID())...)
+		oi := make([]byte, 4)
+		binary.LittleEndian.PutUint32(oi, in.PreviousTxOutIndex)
+		buf = append(buf, oi...)
+	}
+
+	return crypto.Sha256d(buf)
+}
+
+// SequenceHash returns a byte slice of inputs SequenceNumber, for creating a signature hash
+func (tx *Tx) SequenceHash() []byte {
+	buf := make([]byte, 0)
+
+	for _, in := range tx.Inputs {
+		oi := make([]byte, 4)
+		binary.LittleEndian.PutUint32(oi, in.SequenceNumber)
+		buf = append(buf, oi...)
+	}
+
+	return crypto.Sha256d(buf)
+}
