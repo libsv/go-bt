@@ -30,12 +30,6 @@ $ go get -u github.com/libsv/go-bt/bscript/interpreter
   prints the created script hex and uses the DisasmString function to display
   the disassembled script.
 
-* [Extracting Details from Standard Scripts](http://github.com/libsv/go-bt/bscript/interpreter#example-ExtractPkScriptAddrs)  
-  Demonstrates extracting information from a standard public key script.
-
-* [Manually Signing a Transaction Output](http://github.com/libsv/go-bt/bscript/interpreter#example-SignTxOutput)  
-  Demonstrates manually creating and signing a redeem transaction.
-
 ## License
 
 Package interpreter is licensed under the [copyfree](http://copyfree.org) ISC
