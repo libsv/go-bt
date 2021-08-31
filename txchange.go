@@ -63,7 +63,6 @@ func (tx *Tx) CalculateFee(f *FeeQuote) (uint64, error) {
 func (tx *Tx) change(s *bscript.Script, f *FeeQuote, newOutput bool) (uint64, bool, error) {
 	inputAmount := tx.TotalInputSatoshis()
 	outputAmount := tx.TotalOutputSatoshis()
-
 	if inputAmount < outputAmount {
 		return 0, false, errors.New("satoshis inputted to the tx are less than the outputted satoshis")
 	}
