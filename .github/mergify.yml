@@ -25,7 +25,7 @@ pull_request_rules:
         type: APPROVE
         message: Automatically approving dependabot pull request
       merge:
-        method: merge
+        method: squash
   - name: Alert on major version detection
     conditions:
       - author~=^dependabot(|-preview)\[bot\]$
@@ -68,7 +68,7 @@ pull_request_rules:
       - -draft
     actions:
       merge:
-        method: merge
+        method: squash
 
   # ===============================================================================
   # AUTHOR
