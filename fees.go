@@ -313,12 +313,12 @@ func defaultDataFee() *Fee {
 	return &Fee{
 		FeeType: FeeTypeData,
 		MiningFee: FeeUnit{
-			Satoshis: 25,
-			Bytes:    100,
+			Satoshis: 5,
+			Bytes:    10,
 		},
 		RelayFee: FeeUnit{
-			Satoshis: 25,
-			Bytes:    100,
+			Satoshis: 5,
+			Bytes:    10,
 		},
 	}
 }
