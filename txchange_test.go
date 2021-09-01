@@ -435,7 +435,7 @@ func TestTx_CalculateChange(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fee, err := test.tx.CalculateFee(test.fees)
+			fee, err := test.tx.CalculateFees(test.fees)
 			assert.Equal(t, test.err, err)
 			assert.Equal(t, test.expFees, fee)
 		})

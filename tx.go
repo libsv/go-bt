@@ -315,3 +315,87 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 
 	return append(h, lt...)
 }
+
+// TxFees is returned when CalculateFee is called and contains
+// a breakdown of the fees including the total.
+type TxFees struct {
+	Total       uint64
+	StdFeeSats  uint64
+	StdBytes    uint64
+	DataFeeSats uint64
+	DataBytes   uint64
+}
+
+// CalculateFees will calculate the fees required to cover this transaction and
+// return with total and the individual fee types.
+//
+// There are a few conditions to be aware of:
+//  - if the tx has not been signed, we will add 107 bytes for each unsigned input for the unlocking script
+//  - if the tx has not yet had change added, we will check if change can be added, then add the bytes for the change output
+func (tx *Tx) CalculateFees(fees *FeeQuote) (*TxFees, error) {
+	inputAmount := tx.TotalInputSatoshis()
+	outputAmount := tx.TotalOutputSatoshis()
+	if inputAmount < outputAmount {
+		return nil, errors.New("satoshis inputted to the tx are less than the outputted satoshis")
+	}
+	// calculate the base tx fees (before change)
+	resp, err := tx.calculateTxFees(fees)
+	if err != nil {
+		return nil, err
+	}
+	stdFee, err := fees.Fee(FeeTypeStandard)
+	if err != nil {
+		return nil, err
+	}
+	// add change output if change can be added and a change output has not yet been added
+	// if change has already been added, or we don't need change
+	// as the inputs are exactly fee + outputs then we won't need
+	// to add the bytes on. If we do need change added, we add the bytes.
+	if change, ok := tx.canAddChange(resp, stdFee); ok {
+		resp.StdBytes += 8 + 25 + 1 // 8 bytes for satoshi value + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac) + 1 for varint
+		resp.StdFeeSats += change
+	}
+
+	resp.Total = resp.DataFeeSats + resp.StdFeeSats
+	return resp, nil
+}
+
+// calculateTxFees will calculate the base tx fees (without change)
+func (tx *Tx) calculateTxFees(fees *FeeQuote) (*TxFees, error) {
+	totBytes := len(tx.Bytes())
+	// add (p2pkh) unlockingscript bytes for any inputs that haven't yet been signed.
+	for _, in := range tx.Inputs {
+		if !in.PreviousTxScript.IsP2PKH() {
+			return nil, errors.New("non-P2PKH input used in the tx - unsupported")
+		}
+		if in.UnlockingScript == nil {
+			totBytes += 107 // = 1 oppushdata + 70-71 sig + 1 sighash + 1 oppushdata + 33 public key
+		}
+	}
+
+	// calculate data outputs
+	dataLen := 0
+	for _, d := range tx.Outputs {
+		if d.LockingScript.IsData() {
+			dataLen += len(*d.LockingScript)
+		}
+	}
+	// get fees
+	stdFee, err := fees.Fee(FeeTypeStandard)
+	if err != nil {
+		return nil, err
+	}
+	dataFee, err := fees.Fee(FeeTypeData)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &TxFees{
+		StdFeeSats:  (uint64(totBytes) - uint64(dataLen)) * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
+		StdBytes:    uint64(totBytes) - uint64(dataLen),
+		DataFeeSats: uint64(dataLen) * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
+		DataBytes:   uint64(dataLen),
+	}
+	resp.Total = resp.StdFeeSats + resp.DataFeeSats
+	return resp, nil
+}

@@ -105,7 +105,7 @@ func TestDecodeParts(t *testing.T) {
 		b = append(b, 0xff)
 		b = append(b, 0xff)
 
-		bigScript := make([]byte, 0xffff)
+		bigScript := make([]byte, 0x64)
 
 		b = append(b, bigScript...)
 
