@@ -317,7 +317,8 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 }
 
 // TxFees is returned when CalculateFee is called and contains
-// a breakdown of the fees including the total.
+// a breakdown of the fees including the total and the size breakdown of
+// the tx in bytes.
 type TxFees struct {
 	// TotalFeePaid is the total amount of fees this tx will pay.
 	TotalFeePaid uint64
@@ -325,12 +326,7 @@ type TxFees struct {
 	StdFeePaid uint64
 	// DataFeePaid is the amount of fee to cover the op_return data outputs.
 	DataFeePaid uint64
-	// StdBytes is the number of bytes used by the standard inputs & outputs.
-	StdBytes uint64
-	// TotalBytes is the total tx byte size.
-	TotalBytes uint64
-	// DataBytes is the total amount of bytes used by op_return / data outputs.
-	DataBytes uint64
+	*TxSize
 }
 
 // CalculateFees will calculate the fees required to cover this transaction and
@@ -343,25 +339,10 @@ func (tx *Tx) CalculateFees(fees *FeeQuote) (*TxFees, error) {
 	if inputAmount < outputAmount {
 		return nil, errors.New("satoshis inputted to the tx are less than the outputted satoshis")
 	}
-	totBytes := len(tx.Bytes())
-	// add (p2pkh) unlockingscript bytes for any inputs that haven't yet been signed.
-	for _, in := range tx.Inputs {
-		if !in.PreviousTxScript.IsP2PKH() {
-			return nil, errors.New("non-P2PKH input used in the tx - unsupported")
-		}
-		if in.UnlockingScript == nil {
-			totBytes += 107 // = 1 oppushdata + 70-71 sig + 1 sighash + 1 oppushdata + 33 public key
-		}
+	size, err := tx.Size(true)
+	if err != nil {
+		return nil, err
 	}
-
-	// calculate data outputs
-	dataLen := 0
-	for _, d := range tx.Outputs {
-		if d.LockingScript.IsData() {
-			dataLen += len(*d.LockingScript)
-		}
-	}
-
 	// get fees
 	stdFee, err := fees.Fee(FeeTypeStandard)
 	if err != nil {
@@ -373,13 +354,55 @@ func (tx *Tx) CalculateFees(fees *FeeQuote) (*TxFees, error) {
 	}
 
 	resp := &TxFees{
-		TotalBytes: uint64(totBytes),
-		StdFeePaid: (uint64(totBytes) - uint64(dataLen)) *
+		StdFeePaid: size.TotalStdBytes *
 			uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
-		StdBytes:    uint64(totBytes) - uint64(dataLen),
-		DataFeePaid: uint64(dataLen) * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
-		DataBytes:   uint64(dataLen),
+		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
+		TxSize:      size,
 	}
 	resp.TotalFeePaid = resp.StdFeePaid + resp.DataFeePaid
 	return resp, nil
+}
+
+// TxSize contains the size breakdown of a transaction
+// including the breakdown of data bytes vs standard bytes.
+// This information can be used when calculating fees.
+type TxSize struct {
+	// TotalBytes are the amount of bytes for the entire tx.
+	TotalBytes uint64
+	// TotalStdBytes are the amount of bytes for the tx minus the data bytes.
+	TotalStdBytes uint64
+	// TotalDataBytes is the size in bytes of the op_return / data outputs.
+	TotalDataBytes uint64
+}
+
+// Size will return the total size in bytes of this tx as well as a breakdown
+// of standard bytes vs data op_return bytes.
+//
+// If estimateLocking is true, we will add 107 bytes for each unsigned input found
+// to give the total bytes after signing.
+func (tx *Tx) Size(estimateLockingScript bool) (*TxSize, error) {
+	totBytes := len(tx.Bytes())
+	// add (p2pkh) unlockingscript bytes for any inputs that haven't yet been signed.
+	if estimateLockingScript {
+		for _, in := range tx.Inputs {
+			if !in.PreviousTxScript.IsP2PKH() {
+				return nil, errors.New("non-P2PKH input used in the tx - unsupported")
+			}
+			if in.UnlockingScript == nil {
+				totBytes += 107 // = 1 oppushdata + 70-71 sig + 1 sighash + 1 oppushdata + 33 public key
+			}
+		}
+	}
+	// calculate data outputs
+	dataLen := 0
+	for _, d := range tx.Outputs {
+		if d.LockingScript.IsData() {
+			dataLen += len(*d.LockingScript)
+		}
+	}
+	return &TxSize{
+		TotalBytes:     uint64(totBytes),
+		TotalStdBytes:  uint64(totBytes - dataLen),
+		TotalDataBytes: uint64(dataLen),
+	}, nil
 }
