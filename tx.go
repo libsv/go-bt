@@ -339,7 +339,7 @@ func (tx *Tx) CalculateFees(fees *FeeQuote) (*TxFees, error) {
 	if inputAmount < outputAmount {
 		return nil, errors.New("satoshis inputted to the tx are less than the outputted satoshis")
 	}
-	size, err := tx.Size(true)
+	size, err := tx.SizeUnsigned()
 	if err != nil {
 		return nil, err
 	}
@@ -375,12 +375,25 @@ type TxSize struct {
 	TotalDataBytes uint64
 }
 
+// SizeUnsigned will return the size of tx in bytes and will add 107 bytes
+// for the locking script to any unsigned inputs found to give a final size estimate of the tx.
+func (tx *Tx) SizeUnsigned() (*TxSize, error) {
+	return tx.size(true)
+}
+
+// Size will return the current size of the tx in bytes, unlike SizeUnsigned
+// this method will not add additional bytes for unsigned inputs, it will simply
+// return the tx size as is.
+func (tx *Tx) Size() (*TxSize, error) {
+	return tx.size(false)
+}
+
 // Size will return the total size in bytes of this tx as well as a breakdown
 // of standard bytes vs data op_return bytes.
 //
 // If estimateLocking is true, we will add 107 bytes for each unsigned input found
 // to give the total bytes after signing.
-func (tx *Tx) Size(estimateLockingScript bool) (*TxSize, error) {
+func (tx *Tx) size(estimateLockingScript bool) (*TxSize, error) {
 	totBytes := len(tx.Bytes())
 	// add (p2pkh) unlockingscript bytes for any inputs that haven't yet been signed.
 	if estimateLockingScript {
