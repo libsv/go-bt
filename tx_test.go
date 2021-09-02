@@ -908,7 +908,7 @@ func Test_CalculateFees(t *testing.T) {
 		dataLength uint64
 		expFees    *bt.TxFees
 	}{
-		"226B transaction (1 input 1 P2PKHOutput + auto calc change) no data should return 113 sats fee": {
+		"226B transaction (1 input 1 P2PKHOutput + no change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
@@ -918,10 +918,11 @@ func Test_CalculateFees(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				Total:       113,
-				StdFeeSats:  113,
-				StdBytes:    226,
-				DataFeeSats: 0,
+				TotalFeePaid: 96,
+				TotalBytes:   192,
+				StdFeePaid:   96,
+				StdBytes:     192,
+				DataFeePaid:  0,
 			},
 		}, "226B transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
@@ -934,30 +935,11 @@ func Test_CalculateFees(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				Total:       113,
-				StdFeeSats:  113,
-				StdBytes:    226,
-				DataFeeSats: 0,
-			},
-		}, "226B signed transaction (1 input 1 P2PKHOutput + auto calc change) no data should return 113 sats fee": {
-			tx: func() *bt.Tx {
-				tx := bt.NewTx()
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
-				if err != nil {
-					log.Fatal(err)
-				}
-				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
-					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
-
-				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
-				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
-				return tx
-			}(),
-			expFees: &bt.TxFees{
-				Total:       113,
-				StdFeeSats:  113,
-				StdBytes:    226,
-				DataFeeSats: 0,
+				TotalFeePaid: 113,
+				TotalBytes:   226,
+				StdFeePaid:   113,
+				StdBytes:     226,
+				DataFeePaid:  0,
 			},
 		}, "226B signed transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
@@ -970,18 +952,40 @@ func Test_CalculateFees(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
-				tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote())
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
 				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				Total:       113,
-				StdFeeSats:  113,
-				StdBytes:    226,
-				DataFeeSats: 0,
+				TotalFeePaid: 113,
+				TotalBytes:   226,
+				StdFeePaid:   113,
+				StdBytes:     226,
+				DataFeePaid:  0,
+			},
+		}, "226B signed transaction (1 input 1 P2PKHOutput + no change) no data should return 113 sats fee": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				if err != nil {
+					log.Fatal(err)
+				}
+				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
+
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
+				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				return tx
+			}(),
+			expFees: &bt.TxFees{
+				TotalFeePaid: 96,
+				TotalBytes:   192,
+				StdFeePaid:   96,
+				StdBytes:     192,
+				DataFeePaid:  0,
 			},
 		},
-		"214B transaction (1 input, 1 auto added change output, 1 opreturn) 10 byte of data should return 100 sats fee 6 data fee": {
+		"214B unsigned transaction (1 input, 1 opreturn, no change) 10 byte of data should return 100 sats fee 6 data fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
@@ -990,33 +994,36 @@ func Test_CalculateFees(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				Total:       106,
-				StdFeeSats:  100,
-				StdBytes:    201,
-				DataFeeSats: 6,
-				DataBytes:   13,
+				TotalFeePaid: 89,
+				TotalBytes:   180,
+				StdFeePaid:   83,
+				StdBytes:     167,
+				DataFeePaid:  6,
+				DataBytes:    13,
 			},
-		}, "214B signed transaction (1 input, 1 auto added change output, 1 opreturn) 10 byte of data should return 100 sats fee 6 data fee": {
+		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) 10 byte of data should return 100 sats fee 6 data fee": {
 			tx: func() *bt.Tx {
 				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
 				if err != nil {
 					log.Fatal(err)
 				}
 				tx := bt.NewTx()
-				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+				assert.NoError(t, tx.From("160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
 				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				Total:       106,
-				StdFeeSats:  100,
-				StdBytes:    200,
-				DataFeeSats: 6,
-				DataBytes:   13,
+				TotalFeePaid: 106,
+				TotalBytes:   214,
+				StdFeePaid:   100,
+				StdBytes:     201,
+				DataFeePaid:  6,
+				DataBytes:    13,
 			},
-		}, "556B transaction (3 inputs + 2 outputs + 1 auto change) no data should return 282 sats fee": {
+		}, "556B unsigned transaction (3 inputs + 2 outputs + no change) no data should return 261 sats fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				err := tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
@@ -1032,12 +1039,14 @@ func Test_CalculateFees(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				Total:       278,
-				StdFeeSats:  278,
-				StdBytes:    556,
-				DataFeeSats: 0,
+				TotalFeePaid: 261,
+				StdFeePaid:   261,
+				DataFeePaid:  0,
+				StdBytes:     522,
+				TotalBytes:   522,
+				DataBytes:    0,
 			},
-		}, "556B transaction (3 inputs + 2 outputs + 1 change) no data should return 282 sats fee": {
+		}, "556B unsigned transaction (3 inputs + 2 outputs + 1 change) no data should return 278 sats fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				err := tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
@@ -1054,12 +1063,14 @@ func Test_CalculateFees(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				Total:       278,
-				StdFeeSats:  278,
-				StdBytes:    556,
-				DataFeeSats: 0,
+				TotalFeePaid: 278,
+				StdFeePaid:   278,
+				DataFeePaid:  0,
+				StdBytes:     556,
+				TotalBytes:   556,
+				DataBytes:    0,
 			},
-		}, "565B transaction 100B data should return 63 sats std fee, 50 data fee": {
+		}, "565B unsigned transaction 100B data should return 63 sats std fee, 50 data fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
@@ -1071,14 +1082,16 @@ func Test_CalculateFees(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				assert.NoError(t, tx.AddOpReturnOutput(make([]byte, 0x64)))
+				tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote())
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				Total:       334,
-				StdFeeSats:  282,
-				StdBytes:    565,
-				DataFeeSats: 52,
-				DataBytes:   104,
+				TotalFeePaid: 334,
+				TotalBytes:   669,
+				StdFeePaid:   282,
+				StdBytes:     565,
+				DataFeePaid:  52,
+				DataBytes:    104,
 			},
 		},
 	}

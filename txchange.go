@@ -6,6 +6,11 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
+const (
+	// DustLimit is the current minimum txo output accepted by miners.
+	DustLimit = 136
+)
+
 // ChangeToAddress calculates the amount of fees needed to cover the transaction
 // and adds the left over change in a new P2PKH output using the address provided.
 func (tx *Tx) ChangeToAddress(addr string, f *FeeQuote) error {
@@ -20,11 +25,10 @@ func (tx *Tx) ChangeToAddress(addr string, f *FeeQuote) error {
 // Change calculates the amount of fees needed to cover the transaction
 //  and adds the left over change in a new output using the script provided.
 func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
-	_, _, err := tx.change(f, &changeOutput{
+	if _, _, err := tx.change(f, &changeOutput{
 		lockingScript: s,
 		newOutput:     true,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 	return nil
@@ -61,25 +65,25 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 	}
 
 	available := inputAmount - outputAmount
-
 	standardFees, err := f.Fee(FeeTypeStandard)
 	if err != nil {
 		return 0, false, errors.New("standard fees not found")
 	}
 
 	var txFees *TxFees
-	if txFees, err = tx.calculateTxFees(f); err != nil {
+	if txFees, err = tx.CalculateFees(f); err != nil {
 		return 0, false, err
 	}
 	changeFee, canAdd := tx.canAddChange(txFees, standardFees)
 	if !canAdd {
 		return 0, false, err
 	}
-	available -= txFees.Total + changeFee
+	available -= txFees.TotalFeePaid
 	// if we want to add to a new output, set
 	// newOutput to true, this will add the calculated change
 	// into a new output.
 	if output != nil && output.newOutput {
+		available -= changeFee
 		tx.AddOutput(&Output{Satoshis: available, LockingScript: output.lockingScript})
 	}
 
@@ -105,11 +109,18 @@ func (tx *Tx) canAddChange(txFees *TxFees, standardFees *Fee) (uint64, bool) {
 
 	inputAmount := tx.TotalInputSatoshis()
 	outputAmount := tx.TotalOutputSatoshis()
-	available := inputAmount - outputAmount - txFees.Total
-
-	// not enough change to add a whole change output so don't add anything and return
-	if available >= changeOutputFee && available > 136 {
-		return changeOutputFee, true
+	// shouldn't get this far, but if we do, there's no change to add
+	if inputAmount <= outputAmount {
+		return 0, false
 	}
-	return 0, false
+	available := inputAmount - outputAmount
+	// not enough to add change, no change to add
+	if available <= changeOutputFee+txFees.TotalFeePaid {
+		return 0, false
+	}
+	// after fees the change would be lower than dust limit, don't add change
+	if available-changeOutputFee+txFees.TotalFeePaid <= DustLimit {
+		return 0, false
+	}
+	return changeOutputFee, true
 }
