@@ -334,11 +334,6 @@ type TxFees struct {
 //
 // If the tx has not been signed, we will add 107 bytes for each unsigned input for the unlocking script.
 func (tx *Tx) CalculateFees(fees *FeeQuote) (*TxFees, error) {
-	inputAmount := tx.TotalInputSatoshis()
-	outputAmount := tx.TotalOutputSatoshis()
-	if inputAmount < outputAmount {
-		return nil, errors.New("satoshis inputted to the tx are less than the outputted satoshis")
-	}
 	size, err := tx.SizeUnsigned()
 	if err != nil {
 		return nil, err
