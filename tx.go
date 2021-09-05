@@ -404,7 +404,6 @@ type TxFees struct {
 	StdFeePaid uint64
 	// DataFeePaid is the amount of fee to cover the op_return data outputs.
 	DataFeePaid uint64
-	*TxSize
 }
 
 // FeesPaid will calculate the fees that this transaction is paying
@@ -440,7 +439,6 @@ func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 		StdFeePaid: size.TotalStdBytes *
 			uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
 		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
-		TxSize:      size,
 	}
 	resp.TotalFeePaid = resp.StdFeePaid + resp.DataFeePaid
 	return resp, nil

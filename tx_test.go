@@ -907,6 +907,7 @@ func Test_FeesPaid(t *testing.T) {
 		tx         *bt.Tx
 		dataLength uint64
 		expFees    *bt.TxFees
+		expSize    *bt.TxSize
 	}{
 		"226B transaction (1 input 1 P2PKHOutput + no change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
@@ -921,10 +922,10 @@ func Test_FeesPaid(t *testing.T) {
 				TotalFeePaid: 42,
 				StdFeePaid:   42,
 				DataFeePaid:  0,
-				TxSize: &bt.TxSize{
-					TotalBytes:    85,
-					TotalStdBytes: 85,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:    85,
+				TotalStdBytes: 85,
 			},
 		}, "226B transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
@@ -940,11 +941,11 @@ func Test_FeesPaid(t *testing.T) {
 				TotalFeePaid: 59,
 				StdFeePaid:   59,
 				DataFeePaid:  0,
-				TxSize: &bt.TxSize{
-					TotalBytes:     119,
-					TotalStdBytes:  119,
-					TotalDataBytes: 0,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:     119,
+				TotalStdBytes:  119,
+				TotalDataBytes: 0,
 			},
 		}, "226B signed transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
@@ -963,12 +964,12 @@ func Test_FeesPaid(t *testing.T) {
 			}(),
 			expFees: &bt.TxFees{
 				TotalFeePaid: 113,
-				TxSize: &bt.TxSize{
-					TotalBytes:    226,
-					TotalStdBytes: 226,
-				},
-				StdFeePaid:  113,
-				DataFeePaid: 0,
+				StdFeePaid:   113,
+				DataFeePaid:  0,
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:    226,
+				TotalStdBytes: 226,
 			},
 		}, "226B signed transaction (1 input 1 P2PKHOutput + no change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
@@ -988,10 +989,10 @@ func Test_FeesPaid(t *testing.T) {
 				TotalFeePaid: 96,
 				StdFeePaid:   96,
 				DataFeePaid:  0,
-				TxSize: &bt.TxSize{
-					TotalBytes:    192,
-					TotalStdBytes: 192,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:    192,
+				TotalStdBytes: 192,
 			},
 		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) 10 byte of data should return 100 sats fee 6 data fee": {
 			tx: func() *bt.Tx {
@@ -1013,11 +1014,11 @@ func Test_FeesPaid(t *testing.T) {
 				TotalFeePaid: 106,
 				StdFeePaid:   100,
 				DataFeePaid:  6,
-				TxSize: &bt.TxSize{
-					TotalBytes:     214,
-					TotalStdBytes:  201,
-					TotalDataBytes: 13,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:     214,
+				TotalStdBytes:  201,
+				TotalDataBytes: 13,
 			},
 		},
 	}
@@ -1036,6 +1037,7 @@ func Test_EstimateFeesPaid(t *testing.T) {
 		tx         *bt.Tx
 		dataLength uint64
 		expFees    *bt.TxFees
+		expSize    *bt.TxSize
 	}{
 		"226B transaction (1 input 1 P2PKHOutput + no change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
@@ -1050,10 +1052,10 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				TotalFeePaid: 96,
 				StdFeePaid:   96,
 				DataFeePaid:  0,
-				TxSize: &bt.TxSize{
-					TotalBytes:    192,
-					TotalStdBytes: 192,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:    192,
+				TotalStdBytes: 192,
 			},
 		}, "226B transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
 			tx: func() *bt.Tx {
@@ -1069,11 +1071,11 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				TotalFeePaid: 113,
 				StdFeePaid:   113,
 				DataFeePaid:  0,
-				TxSize: &bt.TxSize{
-					TotalBytes:     226,
-					TotalStdBytes:  226,
-					TotalDataBytes: 0,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:     226,
+				TotalStdBytes:  226,
+				TotalDataBytes: 0,
 			},
 		}, "214B unsigned transaction (1 input, 1 opreturn, no change) 10 byte of data should return 100 sats fee 6 data fee": {
 			tx: func() *bt.Tx {
@@ -1087,11 +1089,11 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				TotalFeePaid: 89,
 				StdFeePaid:   83,
 				DataFeePaid:  6,
-				TxSize: &bt.TxSize{
-					TotalBytes:     180,
-					TotalStdBytes:  167,
-					TotalDataBytes: 13,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:     180,
+				TotalStdBytes:  167,
+				TotalDataBytes: 13,
 			},
 		}, "556B unsigned transaction (3 inputs + 2 outputs + no change) no data should return 261 sats fee": {
 			tx: func() *bt.Tx {
@@ -1112,11 +1114,11 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				TotalFeePaid: 261,
 				StdFeePaid:   261,
 				DataFeePaid:  0,
-				TxSize: &bt.TxSize{
-					TotalBytes:     522,
-					TotalStdBytes:  522,
-					TotalDataBytes: 0,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:     522,
+				TotalStdBytes:  522,
+				TotalDataBytes: 0,
 			},
 		}, "556B unsigned transaction (3 inputs + 2 outputs + 1 change) no data should return 278 sats fee": {
 			tx: func() *bt.Tx {
@@ -1138,11 +1140,11 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				TotalFeePaid: 278,
 				StdFeePaid:   278,
 				DataFeePaid:  0,
-				TxSize: &bt.TxSize{
-					TotalBytes:     556,
-					TotalStdBytes:  556,
-					TotalDataBytes: 0,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:     556,
+				TotalStdBytes:  556,
+				TotalDataBytes: 0,
 			},
 		}, "565B unsigned transaction 100B data should return 63 sats std fee, 50 data fee": {
 			tx: func() *bt.Tx {
@@ -1163,11 +1165,11 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				TotalFeePaid: 334,
 				StdFeePaid:   282,
 				DataFeePaid:  52,
-				TxSize: &bt.TxSize{
-					TotalBytes:     669,
-					TotalStdBytes:  565,
-					TotalDataBytes: 104,
-				},
+			},
+			expSize: &bt.TxSize{
+				TotalBytes:     669,
+				TotalStdBytes:  565,
+				TotalDataBytes: 104,
 			},
 		},
 	}
@@ -1177,6 +1179,10 @@ func Test_EstimateFeesPaid(t *testing.T) {
 			resp, err := test.tx.EstimateFeesPaid(fee)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expFees, resp)
+
+			swt, err := test.tx.EstimateSizeWithTypes()
+			assert.NoError(t, err)
+			assert.Equal(t, test.expSize, swt)
 		})
 	}
 }
