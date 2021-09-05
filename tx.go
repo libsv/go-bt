@@ -317,58 +317,6 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 	return append(h, lt...)
 }
 
-// TxFees is returned when CalculateFee is called and contains
-// a breakdown of the fees including the total and the size breakdown of
-// the tx in bytes.
-type TxFees struct {
-	// TotalFeePaid is the total amount of fees this tx will pay.
-	TotalFeePaid uint64
-	// StdFeePaid is the amount of fee to cover the standard inputs and outputs etc.
-	StdFeePaid uint64
-	// DataFeePaid is the amount of fee to cover the op_return data outputs.
-	DataFeePaid uint64
-	*TxSize
-}
-
-// FeesPaid will calculate the fees that this transaction is paying
-// including the individual fee types (std/data/etc.).
-func (tx *Tx) FeesPaid(fees *FeeQuote) (*TxFees, error) {
-	size := tx.SizeWithTypes()
-	return tx.feesPaid(size, fees)
-}
-
-// EstimateFeesPaid will estimate how big the tx will be when finalised
-// by estimating input unlocking scripts that have not yet been filled
-// including the individual fee types (std/data/etc.).
-func (tx *Tx) EstimateFeesPaid(fees *FeeQuote) (*TxFees, error) {
-	size, err := tx.EstimateSizeWithTypes()
-	if err != nil {
-		return nil, err
-	}
-	return tx.feesPaid(size, fees)
-}
-
-func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
-	// get fees
-	stdFee, err := fees.Fee(FeeTypeStandard)
-	if err != nil {
-		return nil, err
-	}
-	dataFee, err := fees.Fee(FeeTypeData)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := &TxFees{
-		StdFeePaid: size.TotalStdBytes *
-			uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
-		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
-		TxSize:      size,
-	}
-	resp.TotalFeePaid = resp.StdFeePaid + resp.DataFeePaid
-	return resp, nil
-}
-
 // TxSize contains the size breakdown of a transaction
 // including the breakdown of data bytes vs standard bytes.
 // This information can be used when calculating fees.
@@ -446,4 +394,54 @@ func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 	return tempTx, nil
 }
 
-// TODO: swap size and fees place in file
+// TxFees is returned when CalculateFee is called and contains
+// a breakdown of the fees including the total and the size breakdown of
+// the tx in bytes.
+type TxFees struct {
+	// TotalFeePaid is the total amount of fees this tx will pay.
+	TotalFeePaid uint64
+	// StdFeePaid is the amount of fee to cover the standard inputs and outputs etc.
+	StdFeePaid uint64
+	// DataFeePaid is the amount of fee to cover the op_return data outputs.
+	DataFeePaid uint64
+	*TxSize
+}
+
+// FeesPaid will calculate the fees that this transaction is paying
+// including the individual fee types (std/data/etc.).
+func (tx *Tx) FeesPaid(fees *FeeQuote) (*TxFees, error) {
+	size := tx.SizeWithTypes()
+	return tx.feesPaid(size, fees)
+}
+
+// EstimateFeesPaid will estimate how big the tx will be when finalised
+// by estimating input unlocking scripts that have not yet been filled
+// including the individual fee types (std/data/etc.).
+func (tx *Tx) EstimateFeesPaid(fees *FeeQuote) (*TxFees, error) {
+	size, err := tx.EstimateSizeWithTypes()
+	if err != nil {
+		return nil, err
+	}
+	return tx.feesPaid(size, fees)
+}
+
+func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
+	// get fees
+	stdFee, err := fees.Fee(FeeTypeStandard)
+	if err != nil {
+		return nil, err
+	}
+	dataFee, err := fees.Fee(FeeTypeData)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &TxFees{
+		StdFeePaid: size.TotalStdBytes *
+			uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
+		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
+		TxSize:      size,
+	}
+	resp.TotalFeePaid = resp.StdFeePaid + resp.DataFeePaid
+	return resp, nil
+}
