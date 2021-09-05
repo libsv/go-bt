@@ -902,7 +902,7 @@ func TestTx_Clone(t *testing.T) {
 	})
 }
 
-func Test_CalculateFees(t *testing.T) {
+func Test_FeesPaid(t *testing.T) {
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -918,12 +918,12 @@ func Test_CalculateFees(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				TotalFeePaid: 96,
-				StdFeePaid:   96,
+				TotalFeePaid: 42,
+				StdFeePaid:   42,
 				DataFeePaid:  0,
 				TxSize: &bt.TxSize{
-					TotalBytes:    192,
-					TotalStdBytes: 192,
+					TotalBytes:    85,
+					TotalStdBytes: 85,
 				},
 			},
 		}, "226B transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
@@ -937,12 +937,12 @@ func Test_CalculateFees(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				TotalFeePaid: 113,
-				StdFeePaid:   113,
+				TotalFeePaid: 59,
+				StdFeePaid:   59,
 				DataFeePaid:  0,
 				TxSize: &bt.TxSize{
-					TotalBytes:     226,
-					TotalStdBytes:  226,
+					TotalBytes:     119,
+					TotalStdBytes:  119,
 					TotalDataBytes: 0,
 				},
 			},
@@ -993,8 +993,89 @@ func Test_CalculateFees(t *testing.T) {
 					TotalStdBytes: 192,
 				},
 			},
+		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) 10 byte of data should return 100 sats fee 6 data fee": {
+			tx: func() *bt.Tx {
+				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
+				if err != nil {
+					log.Fatal(err)
+				}
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From("160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
+					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
+				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
+				is, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				assert.Nil(t, err)
+				assert.Equal(t, 1, len(is))
+				return tx
+			}(),
+			expFees: &bt.TxFees{
+				TotalFeePaid: 106,
+				StdFeePaid:   100,
+				DataFeePaid:  6,
+				TxSize: &bt.TxSize{
+					TotalBytes:     214,
+					TotalStdBytes:  201,
+					TotalDataBytes: 13,
+				},
+			},
 		},
-		"214B unsigned transaction (1 input, 1 opreturn, no change) 10 byte of data should return 100 sats fee 6 data fee": {
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			fee := bt.NewFeeQuote()
+			resp, err := test.tx.FeesPaid(fee)
+			assert.NoError(t, err)
+			assert.Equal(t, test.expFees, resp)
+		})
+	}
+}
+
+func Test_EstimateFeesPaid(t *testing.T) {
+	tests := map[string]struct {
+		tx         *bt.Tx
+		dataLength uint64
+		expFees    *bt.TxFees
+	}{
+		"226B transaction (1 input 1 P2PKHOutput + no change) no data should return 113 sats fee": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 1000))
+
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
+				return tx
+			}(),
+			expFees: &bt.TxFees{
+				TotalFeePaid: 96,
+				StdFeePaid:   96,
+				DataFeePaid:  0,
+				TxSize: &bt.TxSize{
+					TotalBytes:    192,
+					TotalStdBytes: 192,
+				},
+			},
+		}, "226B transaction (1 input 1 P2PKHOutput + change) no data should return 113 sats fee": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 1000))
+
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
+				return tx
+			}(),
+			expFees: &bt.TxFees{
+				TotalFeePaid: 113,
+				StdFeePaid:   113,
+				DataFeePaid:  0,
+				TxSize: &bt.TxSize{
+					TotalBytes:     226,
+					TotalStdBytes:  226,
+					TotalDataBytes: 0,
+				},
+			},
+		}, "214B unsigned transaction (1 input, 1 opreturn, no change) 10 byte of data should return 100 sats fee 6 data fee": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
@@ -1009,30 +1090,6 @@ func Test_CalculateFees(t *testing.T) {
 				TxSize: &bt.TxSize{
 					TotalBytes:     180,
 					TotalStdBytes:  167,
-					TotalDataBytes: 13,
-				},
-			},
-		}, "214B signed transaction (1 input, 1 change output, 1 opreturn) 10 byte of data should return 100 sats fee 6 data fee": {
-			tx: func() *bt.Tx {
-				w, err := wif.DecodeWIF("cRhdUmZx4MbsjxVxGH4bM4geNLzQEPxspnhGtDCvMmfCLcED8Q6G")
-				if err != nil {
-					log.Fatal(err)
-				}
-				tx := bt.NewTx()
-				assert.NoError(t, tx.From("160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
-					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
-				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
-				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
-				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
-				return tx
-			}(),
-			expFees: &bt.TxFees{
-				TotalFeePaid: 106,
-				StdFeePaid:   100,
-				DataFeePaid:  6,
-				TxSize: &bt.TxSize{
-					TotalBytes:     214,
-					TotalStdBytes:  201,
 					TotalDataBytes: 13,
 				},
 			},
@@ -1117,9 +1174,56 @@ func Test_CalculateFees(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			fee := bt.NewFeeQuote()
-			resp, err := test.tx.CalculateFees(fee)
+			resp, err := test.tx.EstimateFeesPaid(fee)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expFees, resp)
+		})
+	}
+}
+
+func TestTx_EstimateFeesPaidTotal(t *testing.T) {
+	tests := map[string]struct {
+		tx      *bt.Tx
+		fees    *bt.FeeQuote
+		expFees uint64
+		err     error
+	}{
+		"Transaction with one input one output should return 96": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					1000))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			fees:    bt.NewFeeQuote(),
+			expFees: 96,
+		}, "Transaction with one input 4 Outputs should return 147": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From(
+					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+					0,
+					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+					2500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
+				return tx
+			}(),
+			fees:    bt.NewFeeQuote(),
+			expFees: 147,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			fee, err := test.tx.EstimateFeesPaid(test.fees)
+			assert.Equal(t, test.err, err)
+			assert.Equal(t, test.expFees, fee.TotalFeePaid)
 		})
 	}
 }

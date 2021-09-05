@@ -71,7 +71,7 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 	}
 
 	var txFees *TxFees
-	if txFees, err = tx.CalculateFees(f); err != nil {
+	if txFees, err = tx.EstimateFeesPaid(f); err != nil {
 		return 0, false, err
 	}
 	changeFee, canAdd := tx.canAddChange(txFees, standardFees)

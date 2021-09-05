@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 /*
@@ -329,15 +330,25 @@ type TxFees struct {
 	*TxSize
 }
 
-// CalculateFees will calculate the fees required to cover this transaction and
-// return with total and the individual fee types.
-//
-// If the tx has not been signed, we will add 107 bytes for each unsigned input for the unlocking script.
-func (tx *Tx) CalculateFees(fees *FeeQuote) (*TxFees, error) {
-	size, err := tx.SizeUnsigned()
+// FeesPaid will calculate the fees that this transaction is paying
+// including the individual fee types (std/data/etc.).
+func (tx *Tx) FeesPaid(fees *FeeQuote) (*TxFees, error) {
+	size := tx.SizeWithTypes()
+	return tx.feesPaid(size, fees)
+}
+
+// EstimateFeesPaid will estimate how big the tx will be when finalised
+// by estimating input unlocking scripts that have not yet been filled
+// including the individual fee types (std/data/etc.).
+func (tx *Tx) EstimateFeesPaid(fees *FeeQuote) (*TxFees, error) {
+	size, err := tx.EstimateSizeWithTypes()
 	if err != nil {
 		return nil, err
 	}
+	return tx.feesPaid(size, fees)
+}
+
+func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 	// get fees
 	stdFee, err := fees.Fee(FeeTypeStandard)
 	if err != nil {
@@ -370,37 +381,16 @@ type TxSize struct {
 	TotalDataBytes uint64
 }
 
-// SizeUnsigned will return the size of tx in bytes and will add 107 bytes
-// for the locking script to any unsigned inputs found to give a final size estimate of the tx.
-func (tx *Tx) SizeUnsigned() (*TxSize, error) {
-	return tx.size(true)
+// Size will return the size of tx in bytes.
+func (tx *Tx) Size() int {
+	return len(tx.Bytes())
 }
 
-// Size will return the current size of the tx in bytes, unlike SizeUnsigned
-// this method will not add additional bytes for unsigned inputs, it will simply
-// return the tx size as is.
-func (tx *Tx) Size() (*TxSize, error) {
-	return tx.size(false)
-}
+// SizeWithTypes will return the size of tx in bytes
+// and include the different data types (std/data/etc.).
+func (tx *Tx) SizeWithTypes() *TxSize {
+	totBytes := tx.Size()
 
-// Size will return the total size in bytes of this tx as well as a breakdown
-// of standard bytes vs data op_return bytes.
-//
-// If estimateLocking is true, we will add 107 bytes for each unsigned input found
-// to give the total bytes after signing.
-func (tx *Tx) size(estimateLockingScript bool) (*TxSize, error) {
-	totBytes := len(tx.Bytes())
-	// add (p2pkh) unlockingscript bytes for any inputs that haven't yet been signed.
-	if estimateLockingScript {
-		for _, in := range tx.Inputs {
-			if !in.PreviousTxScript.IsP2PKH() {
-				return nil, errors.New("non-P2PKH input used in the tx - unsupported")
-			}
-			if in.UnlockingScript == nil {
-				totBytes += 107 // = 1 oppushdata + 70-71 sig + 1 sighash + 1 oppushdata + 33 public key
-			}
-		}
-	}
 	// calculate data outputs
 	dataLen := 0
 	for _, d := range tx.Outputs {
@@ -412,5 +402,48 @@ func (tx *Tx) size(estimateLockingScript bool) (*TxSize, error) {
 		TotalBytes:     uint64(totBytes),
 		TotalStdBytes:  uint64(totBytes - dataLen),
 		TotalDataBytes: uint64(dataLen),
-	}, nil
+	}
 }
+
+// EstimateSize will return the size of tx in bytes and will add 107 bytes
+// to the unlocking script of any unsigned inputs (only P2PKH for now) found
+// to give a final size estimate of the tx size.
+func (tx *Tx) EstimateSize() (int, error) {
+	tempTx, err := tx.estimatedFinalTx()
+	if err != nil {
+		return 0, err
+	}
+
+	return tempTx.Size(), nil
+}
+
+// EstimateSizeWithTypes will return the size of tx in bytes, including the
+// different data types (std/data/etc.), and will add 107 bytes to the unlocking
+// script of any unsigned inputs (only P2PKH for now) found to give a final size
+// estimate of the tx size.
+func (tx *Tx) EstimateSizeWithTypes() (*TxSize, error) {
+	tempTx, err := tx.estimatedFinalTx()
+	if err != nil {
+		return nil, err
+	}
+
+	return tempTx.SizeWithTypes(), nil
+}
+
+func (tx *Tx) estimatedFinalTx() (*Tx, error) {
+	tempTx := tx.Clone()
+
+	for _, in := range tempTx.Inputs {
+		if !in.PreviousTxScript.IsP2PKH() {
+			return nil, errors.New("non-P2PKH input used in the tx - unsupported")
+		}
+		if in.UnlockingScript == nil || len(*in.UnlockingScript) == 0 {
+			// nolint:lll // insert dummy p2pkh unlocking script (sig + pubkey)
+			dummyUnlockingScript, _ := hex.DecodeString("4830450221009c13cbcbb16f2cfedc7abf3a4af1c3fe77df1180c0e7eee30d9bcc53ebda39da02207b258005f1bc3cf9dffa06edb358d6db2bcfc87f50516fac8e3f4686fc2a03df412103107feff22788a1fc8357240bf450fd7bca4bd45d5f8bac63818c5a7b67b03876")
+			in.UnlockingScript = bscript.NewFromBytes(dummyUnlockingScript)
+		}
+	}
+	return tempTx, nil
+}
+
+// TODO: swap size and fees place in file
