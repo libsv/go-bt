@@ -406,11 +406,15 @@ type TxFees struct {
 	DataFeePaid uint64
 }
 
-// FeesPaid will calculate the fees that this transaction is paying
+// IsFeePaidEnough will calculate the fees that this transaction is paying
 // including the individual fee types (std/data/etc.).
-func (tx *Tx) FeesPaid(fees *FeeQuote) (*TxFees, error) {
-	size := tx.SizeWithTypes()
-	return tx.feesPaid(size, fees)
+func (tx *Tx) IsFeePaidEnough(fees *FeeQuote) (bool, error) {
+	expFeesPaid, err := tx.feesPaid(tx.SizeWithTypes(), fees)
+	if err != nil {
+		return false, err
+	}
+	actualFeePaid := tx.TotalInputSatoshis() - tx.TotalOutputSatoshis()
+	return actualFeePaid >= expFeesPaid.TotalFeePaid, nil
 }
 
 // EstimateFeesPaid will estimate how big the tx will be when finalised
@@ -436,8 +440,7 @@ func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 	}
 
 	resp := &TxFees{
-		StdFeePaid: size.TotalStdBytes *
-			uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
+		StdFeePaid:  size.TotalStdBytes * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
 		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
 	}
 	resp.TotalFeePaid = resp.StdFeePaid + resp.DataFeePaid
