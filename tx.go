@@ -424,6 +424,30 @@ func (tx *Tx) IsFeePaidEnough(fees *FeeQuote) (bool, error) {
 	return actualFeePaid >= expFeesPaid.TotalFeePaid, nil
 }
 
+// EstimateIsFeePaidEnough will calculate the fees that this transaction is paying
+// including the individual fee types (std/data/etc.), and will add 107 bytes to the unlocking
+// script of any unsigned inputs (only P2PKH for now) found to give a final size
+// estimate of the tx size for fee calculation.
+func (tx *Tx) EstimateIsFeePaidEnough(fees *FeeQuote) (bool, error) {
+	tempTx, err := tx.estimatedFinalTx()
+	if err != nil {
+		return false, err
+	}
+	expFeesPaid, err := tempTx.feesPaid(tempTx.SizeWithTypes(), fees)
+	if err != nil {
+		return false, err
+	}
+	totalInputSatoshis := tempTx.TotalInputSatoshis()
+	totalOutputSatoshis := tempTx.TotalOutputSatoshis()
+
+	if totalInputSatoshis < totalOutputSatoshis {
+		return false, nil
+	}
+
+	actualFeePaid := totalInputSatoshis - totalOutputSatoshis
+	return actualFeePaid >= expFeesPaid.TotalFeePaid, nil
+}
+
 // EstimateFeesPaid will estimate how big the tx will be when finalised
 // by estimating input unlocking scripts that have not yet been filled
 // including the individual fee types (std/data/etc.).
