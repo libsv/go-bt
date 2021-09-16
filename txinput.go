@@ -126,7 +126,7 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 //                PreviousTxSatoshis: funds[idx].Satoshis,
 //            }, true
 //        }
-//    })
+//    }())
 func (tx *Tx) AutoFund(ctx context.Context, fq *FeeQuote, fn FundIteratorFunc) (err error) {
 	var feesPaid bool
 	for itr, ok := fn(); !feesPaid && ok; itr, ok = fn() {
