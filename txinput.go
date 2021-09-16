@@ -12,23 +12,14 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// ErrNoFund signals the FundGetterFunc has reached the end of its funds.
-var ErrNoFund = errors.New("no remainings funds")
+// ErrNoInput signals the FundGetterFunc has reached the end of its funds.
+var ErrNoInput = errors.New("no remainings inputs")
 
-// FundGetterFunc is used for FromFunds. It expects *bt.Fund to be returned containing
+// InputGetterFunc is used for FromFunds. It expects *bt.Fund to be returned containing
 // relevant input information, and an err informing any retrieval errors.
 //
-// It is expected that bt.ErrNoFund will be returned once the fund source is depleted.
-type FundGetterFunc func(ctx context.Context) (*Fund, error)
-
-// Fund contains information relating to the current fund. Its fields are intended
-// for use with tx.From(...).
-type Fund struct {
-	TxID          string
-	OutIndex      uint32
-	LockingScript string
-	Satoshis      uint64
-}
+// It is expected that bt.ErrNoInput will be returned once the fund source is depleted.
+type InputGetterFunc func(ctx context.Context) (*Input, error)
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
 func NewInputFromBytes(bytes []byte) (*Input, int, error) {
@@ -52,6 +43,28 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
 		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
 	}, totalLength, nil
+}
+
+// NewInputFrom builds and returns a new input from the specified UTXO fields, using the default
+// finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
+// afterwards.
+func NewInputFrom(prevTxID string, vout uint32, prevTxLockingScript string, satoshis uint64) (*Input, error) {
+	pts, err := bscript.NewFromHexString(prevTxLockingScript)
+	if err != nil {
+		return nil, err
+	}
+
+	i := &Input{
+		PreviousTxOutIndex: vout,
+		PreviousTxSatoshis: satoshis,
+		PreviousTxScript:   pts,
+		SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
+	}
+	if err := i.PreviousTxIDAddStr(prevTxID); err != nil {
+		return nil, err
+	}
+
+	return i, nil
 }
 
 // TotalInputSatoshis returns the total Satoshis inputted to the transaction.
@@ -89,26 +102,16 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 // finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
 // afterwards.
 func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
-	pts, err := bscript.NewFromHexString(prevTxLockingScript)
+	i, err := NewInputFrom(prevTxID, vout, prevTxLockingScript, satoshis)
 	if err != nil {
 		return err
 	}
 
-	i := &Input{
-		PreviousTxOutIndex: vout,
-		PreviousTxSatoshis: satoshis,
-		PreviousTxScript:   pts,
-		SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
-	}
-	if err := i.PreviousTxIDAddStr(prevTxID); err != nil {
-		return err
-	}
 	tx.addInput(i)
-
 	return nil
 }
 
-// FromFunds continuously calls the provided bt.FundGetterFunc, adding each returned iteration
+// FromInputs continuously calls the provided bt.FundGetterFunc, adding each returned iteration
 // as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
 //
 // After completion, the receiver is ready for `Change(...)` to be called, and then be signed.
@@ -116,36 +119,28 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 // which need covered.
 //
 // Example usage, for when working with a list:
-//    tx.FromFunds(ctx, bt.NewFeeQuote(), func() bt.FundGetterFunc {
+//    tx.FromInputs(ctx, bt.NewFeeQuote(), func() bt.InputGetterFunc {
 //        idx := 0
-//        return func(ctx context.Context) (*bt.Fund, error) {
-//            if idx >= len(funds) {
-//                return nil, bt.ErrNoFund
+//        return func(ctx context.Context) (*bt.Input, error) {
+//            if idx >= len(inputs) {
+//                return nil, bt.ErrNoInput
 //            }
 //            defer func() { idx++ }()
-//            return &bt.Fund{
-//                TxID: funds[idx].TxID,
-//                LockingScript: funds[idx].Script,
-//                OutIndex: funds[idx].OutIndex,
-//                Satoshis: funds[idx].Satoshis,
-//            }, true
+//            return inputs[idx], true
 //        }
 //    }())
-func (tx *Tx) FromFunds(ctx context.Context, fq *FeeQuote, next FundGetterFunc) (err error) {
+func (tx *Tx) FromInputs(ctx context.Context, fq *FeeQuote, next InputGetterFunc) (err error) {
 	var feesPaid bool
 	for !feesPaid {
-		fund, err := next(ctx)
+		input, err := next(ctx)
 		if err != nil {
-			if errors.Is(err, ErrNoFund) {
+			if errors.Is(err, ErrNoInput) {
 				break
 			}
 
 			return err
 		}
-
-		if err = tx.From(fund.TxID, fund.OutIndex, fund.LockingScript, fund.Satoshis); err != nil {
-			return err
-		}
+		tx.addInput(input)
 
 		feesPaid, err = tx.EstimateIsFeePaidEnough(fq)
 		if err != nil {

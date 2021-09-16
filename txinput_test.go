@@ -85,8 +85,8 @@ func TestTx_From(t *testing.T) {
 func TestTx_AutoFund(t *testing.T) {
 	tests := map[string]struct {
 		tx             *bt.Tx
-		funds          []bt.Fund
-		fundGetterFunc bt.FundGetterFunc
+		inputs         []*bt.Input
+		fundGetterFunc bt.InputGetterFunc
 		expTotalInputs int
 		expErr         error
 	}{
@@ -96,17 +96,13 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds: []bt.Fund{{
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}},
+			inputs: func() []*bt.Input {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+
+				return tx.Inputs
+			}(),
 			expTotalInputs: 2,
 		},
 		"tx with extra inputs and surplus funds is covered with minimum needed inputs": {
@@ -115,22 +111,14 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds: []bt.Fund{{
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}},
+			inputs: func() []*bt.Input {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+
+				return tx.Inputs
+			}(),
 			expTotalInputs: 2,
 		},
 		"tx with exact input satshis is covered": {
@@ -139,17 +127,13 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds: []bt.Fund{{
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      670,
-			}},
+			inputs: func() []*bt.Input {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 670))
+
+				return tx.Inputs
+			}(),
 			expTotalInputs: 2,
 		},
 		"tx with large amount of satoshis is covered": {
@@ -158,47 +142,19 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
 				return tx
 			}(),
-			funds: []bt.Fund{{
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      500,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      1,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      670,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      2,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      700,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      3,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      4,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      5,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      6,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      7,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      650,
-			}},
+			inputs: func() []*bt.Input {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 500))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 670))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 700))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 650))
+
+				return tx.Inputs
+			}(),
 			expTotalInputs: 7,
 		},
 		"iterator with no funds error": {
@@ -207,7 +163,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds:  []bt.Fund{},
+			inputs: []*bt.Input{},
 			expErr: errors.New("insufficient funds from iterator"),
 		},
 		"iterator with insufficient funds errors": {
@@ -216,62 +172,20 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 25400))
 				return tx
 			}(),
-			funds: []bt.Fund{{
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      0,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      500,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      1,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      670,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      2,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      700,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      3,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      4,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      5,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      6,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      1000,
-			}, {
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      7,
-				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      650,
-			}},
-			expErr: errors.New("insufficient funds from iterator"),
-		},
-		"invalid tx script errors": {
-			tx: func() *bt.Tx {
+			inputs: func() []*bt.Input {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
-				return tx
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 500))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 670))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 700))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 1000))
+				assert.NoError(t, tx.From("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", 0, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", 650))
+
+				return tx.Inputs
 			}(),
-			funds: []bt.Fund{{
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      7,
-				LockingScript: "ohhellotherea45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      650,
-			}},
-			expErr: errors.New("encoding/hex: invalid byte: U+006F 'o'"),
+			expErr: errors.New("insufficient funds from iterator"),
 		},
 		"error is returned to the user": {
 			tx: func() *bt.Tx {
@@ -279,36 +193,31 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				return tx
 			}(),
-			fundGetterFunc: func(context.Context) (*bt.Fund, error) {
+			fundGetterFunc: func(context.Context) (*bt.Input, error) {
 				return nil, errors.New("custom error")
 			},
-			funds: []bt.Fund{{
-				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				OutIndex:      7,
-				LockingScript: "ohhellotherea45ae401651fdbdf59a76ad43d1862534088ac",
-				Satoshis:      650,
-			}},
+			inputs: []*bt.Input{},
 			expErr: errors.New("custom error"),
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fgFn := func() bt.FundGetterFunc {
+			fgFn := func() bt.InputGetterFunc {
 				idx := 0
-				return func(ctx context.Context) (*bt.Fund, error) {
-					if idx == len(test.funds) {
-						return nil, bt.ErrNoFund
+				return func(ctx context.Context) (*bt.Input, error) {
+					if idx == len(test.inputs) {
+						return nil, bt.ErrNoInput
 					}
 					defer func() { idx++ }()
-					return &test.funds[idx], nil
+					return test.inputs[idx], nil
 				}
 			}()
 			if test.fundGetterFunc != nil {
 				fgFn = test.fundGetterFunc
 			}
 
-			err := test.tx.FromFunds(context.Background(), bt.NewFeeQuote(), fgFn)
+			err := test.tx.FromInputs(context.Background(), bt.NewFeeQuote(), fgFn)
 			if test.expErr != nil {
 				assert.Error(t, err)
 				assert.EqualError(t, err, test.expErr.Error())
