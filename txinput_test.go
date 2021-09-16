@@ -86,6 +86,7 @@ func TestTx_AutoFund(t *testing.T) {
 	tests := map[string]struct {
 		tx             *bt.Tx
 		funds          []bt.Fund
+		fundGetterFunc bt.FundGetterFunc
 		expTotalInputs int
 		expErr         error
 	}{
@@ -272,11 +273,28 @@ func TestTx_AutoFund(t *testing.T) {
 			}},
 			expErr: errors.New("encoding/hex: invalid byte: U+006F 'o'"),
 		},
+		"error is returned to the user": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
+				return tx
+			}(),
+			fundGetterFunc: func(context.Context) (*bt.Fund, error) {
+				return nil, errors.New("custom error")
+			},
+			funds: []bt.Fund{{
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      7,
+				LockingScript: "ohhellotherea45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      650,
+			}},
+			expErr: errors.New("custom error"),
+		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := test.tx.FromFunds(context.Background(), bt.NewFeeQuote(), func() bt.FundGetterFunc {
+			fgFn := func() bt.FundGetterFunc {
 				idx := 0
 				return func(ctx context.Context) (*bt.Fund, error) {
 					if idx == len(test.funds) {
@@ -285,8 +303,12 @@ func TestTx_AutoFund(t *testing.T) {
 					defer func() { idx++ }()
 					return &test.funds[idx], nil
 				}
-			}())
+			}()
+			if test.fundGetterFunc != nil {
+				fgFn = test.fundGetterFunc
+			}
 
+			err := test.tx.FromFunds(context.Background(), bt.NewFeeQuote(), fgFn)
 			if test.expErr != nil {
 				assert.Error(t, err)
 				assert.EqualError(t, err, test.expErr.Error())

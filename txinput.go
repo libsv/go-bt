@@ -136,15 +136,14 @@ func (tx *Tx) FromFunds(ctx context.Context, fq *FeeQuote, next FundGetterFunc) 
 	for !feesPaid {
 		fund, err := next(ctx)
 		if err != nil {
-			if err == ErrNoFund {
+			if errors.Is(err, ErrNoFund) {
 				break
 			}
 
 			return err
 		}
 
-		if err = tx.From(fund.TxID, fund.OutIndex,
-			fund.LockingScript, fund.Satoshis); err != nil {
+		if err = tx.From(fund.TxID, fund.OutIndex, fund.LockingScript, fund.Satoshis); err != nil {
 			return err
 		}
 
