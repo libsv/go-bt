@@ -2,13 +2,30 @@ package bt
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
 
 	"github.com/libsv/go-bt/v2/bscript"
 )
+
+// FundIteratorFunc is used for AutoFund. It expect bt.FundIteration to be returned
+// containing relevant input information, and a bool informing if the retrieval was successful.
+//
+// It is expected that the boolean return value should return false once funds are depleted.
+type FundIteratorFunc func() (*FundIteration, bool)
+
+// FundIteration contains information relating to the current fund. Its fields are intended
+// for use with tx.From(...).
+type FundIteration struct {
+	PreviousTxID       string
+	PreviousTxOutIndex uint32
+	PreviousTxScript   string
+	PreviousTxSatoshis uint64
+}
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
 func NewInputFromBytes(bytes []byte) (*Input, int, error) {
@@ -84,6 +101,48 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 		return err
 	}
 	tx.addInput(i)
+
+	return nil
+}
+
+// AutoFund continuously calls the provided bt.FundIteratorFunc, adding each returned iteration
+// as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
+//
+// After completion, the receiver is ready for Change to be called, and then signed.
+// Note, this function works under the assumption that receiving *bt.Tx has outputs which need covered.
+//
+// Example usage, for when working with a list:
+//    tx.AutoFund(ctx, bt.NewFeeQuote(), func() bt.FundIteratorFunc {
+//        idx := 0
+//        return func() (*bt.Iteration, bool) {
+//            if idx >= len(test.funds) {
+//                return &bt.FundIteration{}, false
+//            }
+//            defer func() { idx++ }()
+//            return &bt.FundIteration{
+//                PreviousTxID: funds[idx].TxID,
+//                PreviousTxScript: funds[idx].Script,
+//                PreviousTxOutIndex: funds[idx].OutIndex,
+//                PreviousTxSatoshis: funds[idx].Satoshis,
+//            }, true
+//        }
+//    })
+func (tx *Tx) AutoFund(ctx context.Context, fq *FeeQuote, fn FundIteratorFunc) (err error) {
+	var feesPaid bool
+	for itr, ok := fn(); !feesPaid && ok; itr, ok = fn() {
+		if err = tx.From(itr.PreviousTxID, itr.PreviousTxOutIndex,
+			itr.PreviousTxScript, itr.PreviousTxSatoshis); err != nil {
+			return err
+		}
+
+		feesPaid, err = tx.EstimateIsFeePaidEnough(fq)
+		if err != nil {
+			return err
+		}
+	}
+	if !feesPaid {
+		return errors.New("insufficient funds from iterator")
+	}
 
 	return nil
 }
