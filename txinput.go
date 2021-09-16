@@ -108,14 +108,15 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 	return nil
 }
 
-// FromFunds continuously calls the provided bt.FundIteratorFunc, adding each returned iteration
+// FromFunds continuously calls the provided bt.FundGetterFunc, adding each returned iteration
 // as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
 //
 // After completion, the receiver is ready for `Change(...)` to be called, and then be signed.
-// Note, this function works under the assumption that receiving *bt.Tx has outputs which need covered.
+// Note, this function works under the assumption that receiver *bt.Tx alread has all the outputs
+// which need covered.
 //
 // Example usage, for when working with a list:
-//    tx.FromFunds(ctx, bt.NewFeeQuote(), func() bt.FundIteratorFunc {
+//    tx.FromFunds(ctx, bt.NewFeeQuote(), func() bt.FundGetterFunc {
 //        idx := 0
 //        return func(ctx context.Context) (*bt.Fund, error) {
 //            if idx >= len(funds) {
