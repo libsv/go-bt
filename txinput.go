@@ -12,13 +12,13 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// ErrNoInput signals the FundGetterFunc has reached the end of its funds.
+// ErrNoInput signals the InputGetterFunc has reached the end of its input.
 var ErrNoInput = errors.New("no remainings inputs")
 
-// InputGetterFunc is used for FromFunds. It expects *bt.Fund to be returned containing
+// InputGetterFunc is used for FromInputs. It expects *bt.Input to be returned containing
 // relevant input information, and an err informing any retrieval errors.
 //
-// It is expected that bt.ErrNoInput will be returned once the fund source is depleted.
+// It is expected that bt.ErrNoInput will be returned once the input source is depleted.
 type InputGetterFunc func(ctx context.Context) (*Input, error)
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
@@ -111,7 +111,7 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 	return nil
 }
 
-// FromInputs continuously calls the provided bt.FundGetterFunc, adding each returned iteration
+// FromInputs continuously calls the provided bt.InputGetterFunc, adding each returned input
 // as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
 //
 // After completion, the receiver is ready for `Change(...)` to be called, and then be signed.
@@ -148,7 +148,7 @@ func (tx *Tx) FromInputs(ctx context.Context, fq *FeeQuote, next InputGetterFunc
 		}
 	}
 	if !feesPaid {
-		return errors.New("insufficient funds from iterator")
+		return errors.New("insufficient inputs provided")
 	}
 
 	return nil

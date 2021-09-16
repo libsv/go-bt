@@ -82,15 +82,15 @@ func TestTx_From(t *testing.T) {
 	})
 }
 
-func TestTx_AutoFund(t *testing.T) {
+func TestTx_AddInputs(t *testing.T) {
 	tests := map[string]struct {
-		tx             *bt.Tx
-		inputs         []*bt.Input
-		fundGetterFunc bt.InputGetterFunc
-		expTotalInputs int
-		expErr         error
+		tx              *bt.Tx
+		inputs          []*bt.Input
+		inputGetterFunc bt.InputGetterFunc
+		expTotalInputs  int
+		expErr          error
 	}{
-		"tx with exact inputs and surplus funds is covered": {
+		"tx with exact inputs and surplus inputs is covered": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
@@ -105,7 +105,7 @@ func TestTx_AutoFund(t *testing.T) {
 			}(),
 			expTotalInputs: 2,
 		},
-		"tx with extra inputs and surplus funds is covered with minimum needed inputs": {
+		"tx with extra inputs and surplus inputs is covered with minimum needed inputs": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
@@ -157,16 +157,16 @@ func TestTx_AutoFund(t *testing.T) {
 			}(),
 			expTotalInputs: 7,
 		},
-		"iterator with no funds error": {
+		"getter with no inputs error": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
 			inputs: []*bt.Input{},
-			expErr: errors.New("insufficient funds from iterator"),
+			expErr: errors.New("insufficient inputs provided"),
 		},
-		"iterator with insufficient funds errors": {
+		"getter with insufficient inputs errors": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 25400))
@@ -185,7 +185,7 @@ func TestTx_AutoFund(t *testing.T) {
 
 				return tx.Inputs
 			}(),
-			expErr: errors.New("insufficient funds from iterator"),
+			expErr: errors.New("insufficient inputs provided"),
 		},
 		"error is returned to the user": {
 			tx: func() *bt.Tx {
@@ -193,7 +193,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				return tx
 			}(),
-			fundGetterFunc: func(context.Context) (*bt.Input, error) {
+			inputGetterFunc: func(context.Context) (*bt.Input, error) {
 				return nil, errors.New("custom error")
 			},
 			inputs: []*bt.Input{},
@@ -203,7 +203,7 @@ func TestTx_AutoFund(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fgFn := func() bt.InputGetterFunc {
+			iptFn := func() bt.InputGetterFunc {
 				idx := 0
 				return func(ctx context.Context) (*bt.Input, error) {
 					if idx == len(test.inputs) {
@@ -213,11 +213,11 @@ func TestTx_AutoFund(t *testing.T) {
 					return test.inputs[idx], nil
 				}
 			}()
-			if test.fundGetterFunc != nil {
-				fgFn = test.fundGetterFunc
+			if test.inputGetterFunc != nil {
+				iptFn = test.inputGetterFunc
 			}
 
-			err := test.tx.FromInputs(context.Background(), bt.NewFeeQuote(), fgFn)
+			err := test.tx.FromInputs(context.Background(), bt.NewFeeQuote(), iptFn)
 			if test.expErr != nil {
 				assert.Error(t, err)
 				assert.EqualError(t, err, test.expErr.Error())
