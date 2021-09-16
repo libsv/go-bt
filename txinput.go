@@ -16,11 +16,11 @@ import (
 // containing relevant input information, and a bool informing if the retrieval was successful.
 //
 // It is expected that the boolean return value should return false once funds are depleted.
-type FundIteratorFunc func(ctx context.Context) (*FundIteration, bool)
+type FundIteratorFunc func(ctx context.Context) (*Fund, bool)
 
-// FundIteration contains information relating to the current fund. Its fields are intended
+// Fund contains information relating to the current fund. Its fields are intended
 // for use with tx.From(...).
-type FundIteration struct {
+type Fund struct {
 	PreviousTxID       string
 	PreviousTxOutIndex uint32
 	PreviousTxScript   string

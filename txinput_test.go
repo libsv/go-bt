@@ -85,7 +85,7 @@ func TestTx_From(t *testing.T) {
 func TestTx_AutoFund(t *testing.T) {
 	tests := map[string]struct {
 		tx             *bt.Tx
-		funds          []bt.FundIteration
+		funds          []bt.Fund
 		expTotalInputs int
 		expErr         error
 	}{
@@ -95,7 +95,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds: []bt.FundIteration{{
+			funds: []bt.Fund{{
 				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 				PreviousTxOutIndex: 0,
 				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
@@ -114,7 +114,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds: []bt.FundIteration{{
+			funds: []bt.Fund{{
 				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 				PreviousTxOutIndex: 0,
 				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
@@ -138,7 +138,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds: []bt.FundIteration{{
+			funds: []bt.Fund{{
 				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 				PreviousTxOutIndex: 0,
 				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
@@ -157,7 +157,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
 				return tx
 			}(),
-			funds: []bt.FundIteration{{
+			funds: []bt.Fund{{
 				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 				PreviousTxOutIndex: 0,
 				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
@@ -206,7 +206,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds:  []bt.FundIteration{},
+			funds:  []bt.Fund{},
 			expErr: errors.New("insufficient funds from iterator"),
 		},
 		"iterator with insufficient funds errors": {
@@ -215,7 +215,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 25400))
 				return tx
 			}(),
-			funds: []bt.FundIteration{{
+			funds: []bt.Fund{{
 				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 				PreviousTxOutIndex: 0,
 				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
@@ -264,7 +264,7 @@ func TestTx_AutoFund(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			funds: []bt.FundIteration{{
+			funds: []bt.Fund{{
 				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 				PreviousTxOutIndex: 7,
 				PreviousTxScript:   "ohhellotherea45ae401651fdbdf59a76ad43d1862534088ac",
@@ -278,7 +278,7 @@ func TestTx_AutoFund(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := test.tx.AutoFund(context.Background(), bt.NewFeeQuote(), func() bt.FundIteratorFunc {
 				idx := 0
-				return func(ctx context.Context) (*bt.FundIteration, bool) {
+				return func(ctx context.Context) (*bt.Fund, bool) {
 					if idx == len(test.funds) {
 						return nil, false
 					}
