@@ -124,10 +124,10 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 //            }
 //            defer func() { idx++ }()
 //            return &bt.Fund{
-//                PreviousTxID: funds[idx].TxID,
-//                PreviousTxScript: funds[idx].Script,
-//                PreviousTxOutIndex: funds[idx].OutIndex,
-//                PreviousTxSatoshis: funds[idx].Satoshis,
+//                TxID: funds[idx].TxID,
+//                LockingScript: funds[idx].Script,
+//                OutIndex: funds[idx].OutIndex,
+//                Satoshis: funds[idx].Satoshis,
 //            }, true
 //        }
 //    }())
