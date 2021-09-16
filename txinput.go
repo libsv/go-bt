@@ -16,7 +16,7 @@ import (
 // containing relevant input information, and a bool informing if the retrieval was successful.
 //
 // It is expected that the boolean return value should return false once funds are depleted.
-type FundIteratorFunc func() (*FundIteration, bool)
+type FundIteratorFunc func(ctx context.Context) (*FundIteration, bool)
 
 // FundIteration contains information relating to the current fund. Its fields are intended
 // for use with tx.From(...).
@@ -114,7 +114,7 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 // Example usage, for when working with a list:
 //    tx.AutoFund(ctx, bt.NewFeeQuote(), func() bt.FundIteratorFunc {
 //        idx := 0
-//        return func() (*bt.Iteration, bool) {
+//        return func(ctx context.Context) (*bt.Iteration, bool) {
 //            if idx >= len(test.funds) {
 //                return &bt.FundIteration{}, false
 //            }
@@ -129,7 +129,7 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 //    }())
 func (tx *Tx) AutoFund(ctx context.Context, fq *FeeQuote, fn FundIteratorFunc) (err error) {
 	var feesPaid bool
-	for itr, ok := fn(); !feesPaid && ok; itr, ok = fn() {
+	for itr, ok := fn(ctx); !feesPaid && ok; itr, ok = fn(ctx) {
 		if err = tx.From(itr.PreviousTxID, itr.PreviousTxOutIndex,
 			itr.PreviousTxScript, itr.PreviousTxSatoshis); err != nil {
 			return err

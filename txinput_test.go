@@ -278,7 +278,7 @@ func TestTx_AutoFund(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			err := test.tx.AutoFund(context.Background(), bt.NewFeeQuote(), func() bt.FundIteratorFunc {
 				idx := 0
-				return func() (*bt.FundIteration, bool) {
+				return func(ctx context.Context) (*bt.FundIteration, bool) {
 					if idx == len(test.funds) {
 						return nil, false
 					}
