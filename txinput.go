@@ -12,19 +12,22 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// FundGetterFunc is used for AutoFund. It expect bt.FundIteration to be returned
-// containing relevant input information, and a bool informing if the retrieval was successful.
+// ErrNoFund signals the FundGetterFunc has reached the end of its funds.
+var ErrNoFund = errors.New("no remainings funds")
+
+// FundGetterFunc is used for FromFunds. It expects *bt.Fund to be returned containing
+// relevant input information, and an err informing any retrieval errors.
 //
-// It is expected that the boolean return value should return false once funds are depleted.
-type FundGetterFunc func(ctx context.Context) (*Fund, bool)
+// It is expected that bt.ErrNoFund will be returned once the fund source is depleted.
+type FundGetterFunc func(ctx context.Context) (*Fund, error)
 
 // Fund contains information relating to the current fund. Its fields are intended
 // for use with tx.From(...).
 type Fund struct {
-	PreviousTxID       string
-	PreviousTxOutIndex uint32
-	PreviousTxScript   string
-	PreviousTxSatoshis uint64
+	TxID          string
+	OutIndex      uint32
+	LockingScript string
+	Satoshis      uint64
 }
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
@@ -105,21 +108,21 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 	return nil
 }
 
-// AutoFund continuously calls the provided bt.FundIteratorFunc, adding each returned iteration
+// FromFunds continuously calls the provided bt.FundIteratorFunc, adding each returned iteration
 // as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
 //
 // After completion, the receiver is ready for `Change(...)` to be called, and then be signed.
 // Note, this function works under the assumption that receiving *bt.Tx has outputs which need covered.
 //
 // Example usage, for when working with a list:
-//    tx.AutoFund(ctx, bt.NewFeeQuote(), func() bt.FundIteratorFunc {
+//    tx.FromFunds(ctx, bt.NewFeeQuote(), func() bt.FundIteratorFunc {
 //        idx := 0
-//        return func(ctx context.Context) (*bt.Iteration, bool) {
-//            if idx >= len(test.funds) {
-//                return &bt.FundIteration{}, false
+//        return func(ctx context.Context) (*bt.Fund, error) {
+//            if idx >= len(funds) {
+//                return nil, bt.ErrNoFund
 //            }
 //            defer func() { idx++ }()
-//            return &bt.FundIteration{
+//            return &bt.Fund{
 //                PreviousTxID: funds[idx].TxID,
 //                PreviousTxScript: funds[idx].Script,
 //                PreviousTxOutIndex: funds[idx].OutIndex,
@@ -127,11 +130,20 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 //            }, true
 //        }
 //    }())
-func (tx *Tx) AutoFund(ctx context.Context, fq *FeeQuote, fn FundGetterFunc) (err error) {
+func (tx *Tx) FromFunds(ctx context.Context, fq *FeeQuote, next FundGetterFunc) (err error) {
 	var feesPaid bool
-	for itr, ok := fn(ctx); !feesPaid && ok; itr, ok = fn(ctx) {
-		if err = tx.From(itr.PreviousTxID, itr.PreviousTxOutIndex,
-			itr.PreviousTxScript, itr.PreviousTxSatoshis); err != nil {
+	for !feesPaid {
+		fund, err := next(ctx)
+		if err != nil {
+			if err == ErrNoFund {
+				break
+			}
+
+			return err
+		}
+
+		if err = tx.From(fund.TxID, fund.OutIndex,
+			fund.LockingScript, fund.Satoshis); err != nil {
 			return err
 		}
 

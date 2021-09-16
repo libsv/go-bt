@@ -96,15 +96,15 @@ func TestTx_AutoFund(t *testing.T) {
 				return tx
 			}(),
 			funds: []bt.Fund{{
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}},
 			expTotalInputs: 2,
 		},
@@ -115,20 +115,20 @@ func TestTx_AutoFund(t *testing.T) {
 				return tx
 			}(),
 			funds: []bt.Fund{{
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}},
 			expTotalInputs: 2,
 		},
@@ -139,15 +139,15 @@ func TestTx_AutoFund(t *testing.T) {
 				return tx
 			}(),
 			funds: []bt.Fund{{
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 670,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      670,
 			}},
 			expTotalInputs: 2,
 		},
@@ -158,45 +158,45 @@ func TestTx_AutoFund(t *testing.T) {
 				return tx
 			}(),
 			funds: []bt.Fund{{
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 500,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      500,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 1,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 670,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      1,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      670,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 2,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 700,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      2,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      700,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 3,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      3,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 4,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      4,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 5,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      5,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 6,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      6,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 7,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 650,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      7,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      650,
 			}},
 			expTotalInputs: 7,
 		},
@@ -216,45 +216,45 @@ func TestTx_AutoFund(t *testing.T) {
 				return tx
 			}(),
 			funds: []bt.Fund{{
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 0,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 500,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      0,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      500,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 1,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 670,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      1,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      670,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 2,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 700,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      2,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      700,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 3,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      3,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 4,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      4,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 5,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      5,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 6,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 1000,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      6,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      1000,
 			}, {
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 7,
-				PreviousTxScript:   "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 650,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      7,
+				LockingScript: "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      650,
 			}},
 			expErr: errors.New("insufficient funds from iterator"),
 		},
@@ -265,10 +265,10 @@ func TestTx_AutoFund(t *testing.T) {
 				return tx
 			}(),
 			funds: []bt.Fund{{
-				PreviousTxID:       "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				PreviousTxOutIndex: 7,
-				PreviousTxScript:   "ohhellotherea45ae401651fdbdf59a76ad43d1862534088ac",
-				PreviousTxSatoshis: 650,
+				TxID:          "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				OutIndex:      7,
+				LockingScript: "ohhellotherea45ae401651fdbdf59a76ad43d1862534088ac",
+				Satoshis:      650,
 			}},
 			expErr: errors.New("encoding/hex: invalid byte: U+006F 'o'"),
 		},
@@ -276,14 +276,14 @@ func TestTx_AutoFund(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := test.tx.AutoFund(context.Background(), bt.NewFeeQuote(), func() bt.FundGetterFunc {
+			err := test.tx.FromFunds(context.Background(), bt.NewFeeQuote(), func() bt.FundGetterFunc {
 				idx := 0
-				return func(ctx context.Context) (*bt.Fund, bool) {
+				return func(ctx context.Context) (*bt.Fund, error) {
 					if idx == len(test.funds) {
-						return nil, false
+						return nil, bt.ErrNoFund
 					}
 					defer func() { idx++ }()
-					return &test.funds[idx], true
+					return &test.funds[idx], nil
 				}
 			}())
 
