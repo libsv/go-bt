@@ -276,7 +276,7 @@ func TestTx_AutoFund(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := test.tx.AutoFund(context.Background(), bt.NewFeeQuote(), func() bt.FundIteratorFunc {
+			err := test.tx.AutoFund(context.Background(), bt.NewFeeQuote(), func() bt.FundGetterFunc {
 				idx := 0
 				return func(ctx context.Context) (*bt.Fund, bool) {
 					if idx == len(test.funds) {

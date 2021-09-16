@@ -12,11 +12,11 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// FundIteratorFunc is used for AutoFund. It expect bt.FundIteration to be returned
+// FundGetterFunc is used for AutoFund. It expect bt.FundIteration to be returned
 // containing relevant input information, and a bool informing if the retrieval was successful.
 //
 // It is expected that the boolean return value should return false once funds are depleted.
-type FundIteratorFunc func(ctx context.Context) (*Fund, bool)
+type FundGetterFunc func(ctx context.Context) (*Fund, bool)
 
 // Fund contains information relating to the current fund. Its fields are intended
 // for use with tx.From(...).
@@ -127,7 +127,7 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 //            }, true
 //        }
 //    }())
-func (tx *Tx) AutoFund(ctx context.Context, fq *FeeQuote, fn FundIteratorFunc) (err error) {
+func (tx *Tx) AutoFund(ctx context.Context, fq *FeeQuote, fn FundGetterFunc) (err error) {
 	var feesPaid bool
 	for itr, ok := fn(ctx); !feesPaid && ok; itr, ok = fn(ctx) {
 		if err = tx.From(itr.PreviousTxID, itr.PreviousTxOutIndex,
