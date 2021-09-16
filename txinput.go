@@ -120,13 +120,13 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 //
 // Example usage, for when working with a list:
 //    tx.FromInputs(ctx, bt.NewFeeQuote(), func() bt.InputGetterFunc {
-//        idx := 0
+//        i := 0
 //        return func(ctx context.Context) (*bt.Input, error) {
-//            if idx >= len(inputs) {
+//            if i >= len(utxos) {
 //                return nil, bt.ErrNoInput
 //            }
-//            defer func() { idx++ }()
-//            return inputs[idx], true
+//            defer func() { i++ }()
+//            return bt.NewInputFrom(utxos[i].TxID, utxo[i].Vout, utxos[i].Script, utxos[i].Satoshis), true
 //        }
 //    }())
 func (tx *Tx) FromInputs(ctx context.Context, fq *FeeQuote, next InputGetterFunc) (err error) {
