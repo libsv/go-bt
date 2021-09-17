@@ -3,7 +3,6 @@ package bt_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/libsv/go-bk/bip32"
@@ -177,16 +176,14 @@ func TestTx_SignAutoBip32(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			tx := test.tx
-
-			key, err := bip32.NewKeyFromString("tprv8ZgxMBicQKsPfLGWCgh24MgovBADKbvqTmT9BUJ8zyXi2y541oSigK5SmWqq1wTKh4PnGgeEe7boGnocyXWwEjk88hjDdSgy8rvryyPdHzL")
-			assert.NoError(t, err)
-
 			if test.mockDeriver == nil {
+				key, err := bip32.NewKeyFromString("tprv8ZgxMBicQKsPfLGWCgh24MgovBADKbvqTmT9BUJ8zyXi2y541oSigK5SmWqq1wTKh4PnGgeEe7boGnocyXWwEjk88hjDdSgy8rvryyPdHzL")
+				assert.NoError(t, err)
+
 				test.mockDeriver = &bt.LocalBip32SignerDeriver{MasterPrivateKey: key}
 			}
 
-			n, err := tx.SignAutoBip32(context.Background(), test.mockDeriver, test.pathGetterFunc)
+			n, err := test.tx.SignAutoBip32(context.Background(), test.mockDeriver, test.pathGetterFunc)
 
 			if test.expErr != nil {
 				assert.Error(t, err)
@@ -194,10 +191,8 @@ func TestTx_SignAutoBip32(t *testing.T) {
 				return
 			}
 
-			fmt.Println(tx.String())
-
 			assert.Equal(t, test.expSigned, len(n))
-			assert.Equal(t, tx.String(), test.expHex)
+			assert.Equal(t, test.tx.String(), test.expHex)
 		})
 	}
 }
