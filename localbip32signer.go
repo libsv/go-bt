@@ -36,10 +36,15 @@ func (l *LocalBip32Signer) Sign(ctx context.Context, unsignedTx *Tx, index uint3
 }
 
 func (l *LocalBip32Signer) SignHash(ctx context.Context, hash []byte) (publicKey, signature []byte, err error) {
-	privKey, err := l.privKey.ECPrivKey()
+	derivedPrivKey, err := l.privKey.DeriveChildFromPath(l.path)
 	if err != nil {
 		return
 	}
+	privKey, err := derivedPrivKey.ECPrivKey()
+	if err != nil {
+		return
+	}
+
 	sig, err := privKey.Sign(hash)
 	if err != nil {
 		return
