@@ -3,6 +3,7 @@ package bt
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 
 	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2/sighash"
@@ -17,6 +18,10 @@ import (
 // path for a given input, to allow matching and signing.
 func (tx *Tx) SignAutoBip32(ctx context.Context, b Bip32SignerDeriver,
 	fn Bip32PathGetterFunc) (inputsSigned []int, err error) {
+	if fn == nil {
+		return nil, errors.New("Bip32PathGetterFunc not provided")
+	}
+
 	shf := sighash.AllForkID
 
 	for i, in := range tx.Inputs {
