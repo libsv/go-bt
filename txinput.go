@@ -13,7 +13,7 @@ import (
 )
 
 // ErrNoInput signals the InputGetterFunc has reached the end of its input.
-var ErrNoInput = errors.New("no remainings inputs")
+var ErrNoInput = errors.New("no remaining inputs")
 
 // InputGetterFunc is used for FromInputs. It expects *bt.Input to be returned containing
 // relevant input information, and an err informing any retrieval errors.
