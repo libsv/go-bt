@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTx_Bip32SignAuto(t *testing.T) {
+func TestTx_SignAutoBip32(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
@@ -70,6 +70,29 @@ func TestTx_Bip32SignAuto(t *testing.T) {
 			expHex:    "01000000014451cec659e29038c003b90d402ac5e62d377b8f78ac84af381dcd256af7710e0000000000ffffffff01e0410f00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000",
 			expSigned: 0,
 		},
+		"valid tx (empty path)": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NotNil(t, tx)
+
+				err := tx.From(
+					"0e71f76a25cd1d38af84ac788f7b372de6c52a400db903c03890e259c6ce5144",
+					0,
+					"76a91407cfae7ee743646d148c565d951277a1607d6b4688ac",
+					1000000)
+				assert.NoError(t, err)
+
+				err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
+				assert.NoError(t, err)
+
+				return tx
+			}(),
+			pathGetterFunc: func(context.Context, string) (string, error) {
+				return "", nil
+			},
+			expHex:    "01000000014451cec659e29038c003b90d402ac5e62d377b8f78ac84af381dcd256af7710e0000000000ffffffff01e0410f00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000",
+			expSigned: 0,
+		},
 	}
 
 	for name, test := range tests {
@@ -79,7 +102,7 @@ func TestTx_Bip32SignAuto(t *testing.T) {
 			key, err := bip32.NewKeyFromString("tprv8ZgxMBicQKsPfLGWCgh24MgovBADKbvqTmT9BUJ8zyXi2y541oSigK5SmWqq1wTKh4PnGgeEe7boGnocyXWwEjk88hjDdSgy8rvryyPdHzL")
 			assert.NoError(t, err)
 
-			n, err := tx.Bip32SignAuto(context.Background(), &bt.LocalBip32SignerDeriver{MasterPrivateKey: key}, test.pathGetterFunc)
+			n, err := tx.SignAutoBip32(context.Background(), &bt.LocalBip32SignerDeriver{MasterPrivateKey: key}, test.pathGetterFunc)
 
 			if test.expErr != nil {
 				assert.Error(t, err)

@@ -8,14 +8,14 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
-// Bip32SignAuto is used to automatically check which P2PKH Inputs are
+// SignAutoBip32 is used to automatically check which P2PKH Inputs are
 // able to be signed (match a derivated public key) and then sign them.
 // It takes a Bip32SignerDeriver interface as a parameter so that different
 // signing implementations can be used to sign the transaction -
 // for example internal/local or external signing.
 // It also takes Bip32PathGetterFunc with is expected to return a correct derivation,
 // path for a given input, to allow matching and signing.
-func (tx *Tx) Bip32SignAuto(ctx context.Context, b Bip32SignerDeriver,
+func (tx *Tx) SignAutoBip32(ctx context.Context, b Bip32SignerDeriver,
 	fn Bip32PathGetterFunc) (inputsSigned []int, err error) {
 	shf := sighash.AllForkID
 
