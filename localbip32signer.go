@@ -7,17 +7,20 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
-type LocalBip32SignerBuilder struct {
-	PrivateKey *bip32.ExtendedKey
+type LocalBip32SignerDeriver struct {
+	MasterPrivateKey *bip32.ExtendedKey
 }
 
-func (b *LocalBip32SignerBuilder) NewSigner() Bip32Signer {
-	return &LocalBip32Signer{privKey: b.PrivateKey}
+func (b *LocalBip32SignerDeriver) DeriveBip32Signer(derivationPath string) (AutoSigner, error) {
+	derivKey, err := b.MasterPrivateKey.DeriveChildFromPath(derivationPath)
+	if err != nil {
+		return nil, err
+	}
+	return &LocalBip32Signer{derivKey: derivKey}, nil
 }
 
 type LocalBip32Signer struct {
-	privKey *bip32.ExtendedKey
-	path    string
+	derivKey *bip32.ExtendedKey
 }
 
 func (l *LocalBip32Signer) Sign(ctx context.Context, unsignedTx *Tx, index uint32,
@@ -36,11 +39,7 @@ func (l *LocalBip32Signer) Sign(ctx context.Context, unsignedTx *Tx, index uint3
 }
 
 func (l *LocalBip32Signer) SignHash(ctx context.Context, hash []byte) (publicKey, signature []byte, err error) {
-	derivedPrivKey, err := l.privKey.DeriveChildFromPath(l.path)
-	if err != nil {
-		return
-	}
-	privKey, err := derivedPrivKey.ECPrivKey()
+	privKey, err := l.derivKey.ECPrivKey()
 	if err != nil {
 		return
 	}
@@ -49,8 +48,7 @@ func (l *LocalBip32Signer) SignHash(ctx context.Context, hash []byte) (publicKey
 	if err != nil {
 		return
 	}
-
-	publicKey, err = l.privKey.DerivePublicKeyFromPath(l.path)
+	publicKey, err = l.PublicKey(ctx)
 	if err != nil {
 		return
 	}
@@ -58,7 +56,10 @@ func (l *LocalBip32Signer) SignHash(ctx context.Context, hash []byte) (publicKey
 	return
 }
 
-func (l *LocalBip32Signer) PublicKey(ctx context.Context, derivationPath string) (publicKey []byte, err error) {
-	l.path = derivationPath
-	return l.privKey.DerivePublicKeyFromPath(derivationPath)
+func (l *LocalBip32Signer) PublicKey(ctx context.Context) (publicKey []byte, err error) {
+	pubKey, err := l.derivKey.ECPubKey()
+	if err != nil {
+		return nil, err
+	}
+	return pubKey.SerialiseCompressed(), nil
 }

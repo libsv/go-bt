@@ -8,7 +8,7 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
-func (tx *Tx) Bip32SignAuto(ctx context.Context, b Bip32SignerBuilder, fn Bip32PathGetterFunc) (inputsSigned []int, err error) {
+func (tx *Tx) Bip32SignAuto(ctx context.Context, b Bip32SignerDeriver, fn Bip32PathGetterFunc) (inputsSigned []int, err error) {
 	shf := sighash.AllForkID
 
 	for i, in := range tx.Inputs {
@@ -20,9 +20,12 @@ func (tx *Tx) Bip32SignAuto(ctx context.Context, b Bip32SignerBuilder, fn Bip32P
 			return nil, err
 		}
 
-		signer := b.NewSigner()
+		signer, err := b.DeriveBip32Signer(path)
+		if err != nil {
+			return nil, err
+		}
 
-		pubKey, err := signer.PublicKey(ctx, path)
+		pubKey, err := signer.PublicKey(ctx)
 		if err != nil {
 			return nil, err
 		}
