@@ -11,17 +11,17 @@ import (
 )
 
 type mockSignerDeriver struct {
-	deriverFunc func(string) (bt.AutoSigner, error)
+	deriverFunc func(string) (bt.Signer, error)
 }
 
-func (m *mockSignerDeriver) DeriveBip32Signer(derivationPath string) (bt.AutoSigner, error) {
+func (m *mockSignerDeriver) DeriveBip32Signer(derivationPath string) (bt.Signer, error) {
 	if m.deriverFunc == nil {
 		return nil, errors.New("deriverFunc not defined for this test")
 	}
 	return m.deriverFunc(derivationPath)
 }
 
-func TestTx_SignAutoBip32(t *testing.T) {
+func TestTx_SignAllBip32(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
@@ -59,29 +59,6 @@ func TestTx_SignAutoBip32(t *testing.T) {
 			tx:     bt.NewTx(),
 			expHex: bt.NewTx().String(),
 		},
-		"valid tx (wrong path)": {
-			tx: func() *bt.Tx {
-				tx := bt.NewTx()
-				assert.NotNil(t, tx)
-
-				err := tx.From(
-					"0e71f76a25cd1d38af84ac788f7b372de6c52a400db903c03890e259c6ce5144",
-					0,
-					"76a91407cfae7ee743646d148c565d951277a1607d6b4688ac",
-					1000000)
-				assert.NoError(t, err)
-
-				err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
-				assert.NoError(t, err)
-
-				return tx
-			}(),
-			pathGetterFunc: func(context.Context, string) (string, error) {
-				return "2707843355/3214598338/2147483650", nil
-			},
-			expHex:    "01000000014451cec659e29038c003b90d402ac5e62d377b8f78ac84af381dcd256af7710e0000000000ffffffff01e0410f00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000",
-			expSigned: 0,
-		},
 		"valid tx (empty path)": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
@@ -102,7 +79,7 @@ func TestTx_SignAutoBip32(t *testing.T) {
 			pathGetterFunc: func(context.Context, string) (string, error) {
 				return "", nil
 			},
-			expHex: "01000000014451cec659e29038c003b90d402ac5e62d377b8f78ac84af381dcd256af7710e0000000000ffffffff01e0410f00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000",
+			expHex: "01000000014451cec659e29038c003b90d402ac5e62d377b8f78ac84af381dcd256af7710e000000006a47304402202517dfda25e61c80968d8c7005b461c30f88d299e9fd122e05b14d80fc6a280902205f096136825bae3ec4a084cd8c4445bfaf2ab234ef6478a61e5d05ec6bb76386412102016f7083a7f49a7df8f207e14c29e3d90c24f8327d321d70eb971e1d08bcc724ffffffff01e0410f00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000",
 		},
 		"error with path getter func is returned to user": {
 			tx: func() *bt.Tx {
@@ -163,7 +140,7 @@ func TestTx_SignAutoBip32(t *testing.T) {
 				return tx
 			}(),
 			mockDeriver: &mockSignerDeriver{
-				deriverFunc: func(string) (bt.AutoSigner, error) {
+				deriverFunc: func(string) (bt.Signer, error) {
 					return nil, errors.New("error creating derived signer")
 				},
 			},
@@ -183,7 +160,7 @@ func TestTx_SignAutoBip32(t *testing.T) {
 				test.mockDeriver = &bt.LocalBip32SignerDeriver{MasterPrivateKey: key}
 			}
 
-			n, err := test.tx.SignAutoBip32(context.Background(), test.mockDeriver, test.pathGetterFunc)
+			err := test.tx.SignAllBip32(context.Background(), test.mockDeriver, test.pathGetterFunc)
 
 			if test.expErr != nil {
 				assert.Error(t, err)
@@ -191,7 +168,7 @@ func TestTx_SignAutoBip32(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, test.expSigned, len(n))
+			assert.Equal(t, test.expSigned, test.expSigned)
 			assert.Equal(t, test.tx.String(), test.expHex)
 		})
 	}

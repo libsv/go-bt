@@ -10,5 +10,5 @@ type Bip32PathGetterFunc func(ctx context.Context, lockingScript string) (path s
 
 // Bip32SignerDeriver interfaces the building of signers drived from a path.
 type Bip32SignerDeriver interface {
-	DeriveBip32Signer(derivationPath string) (AutoSigner, error)
+	DeriveBip32Signer(derivationPath string) (Signer, error)
 }

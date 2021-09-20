@@ -11,7 +11,7 @@ type LocalBip32SignerDeriver struct {
 }
 
 // DeriveBip32Signer derives a *bt.LocalSigner from the provided derivation path.
-func (b *LocalBip32SignerDeriver) DeriveBip32Signer(derivationPath string) (AutoSigner, error) {
+func (b *LocalBip32SignerDeriver) DeriveBip32Signer(derivationPath string) (Signer, error) {
 	derivKey, err := b.MasterPrivateKey.DeriveChildFromPath(derivationPath)
 	if err != nil {
 		return nil, err

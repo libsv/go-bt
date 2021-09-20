@@ -42,8 +42,3 @@ func (is *LocalSigner) SignHash(ctx context.Context, hash []byte) (publicKey, si
 	signature = sig.Serialise()
 	return
 }
-
-// PublicKey returns the public key which will be used to sign.
-func (is *LocalSigner) PublicKey(ctx context.Context) (publicKey []byte, err error) {
-	return is.PrivateKey.PubKey().SerialiseCompressed(), nil
-}

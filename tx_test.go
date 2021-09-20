@@ -212,7 +212,7 @@ func TestTx_CreateTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, wif)
 
-	_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
+	err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 	assert.NoError(t, err)
 }
 
@@ -245,7 +245,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, true, tx.HasDataOutputs())
@@ -270,7 +270,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, false, tx.HasDataOutputs())
@@ -304,7 +304,7 @@ func TestTx_JSON(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, wif)
 
-				_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
+				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
@@ -326,7 +326,7 @@ func TestTx_JSON(t *testing.T) {
 				tx.AddOutput(&bt.Output{
 					LockingScript: s,
 				})
-				_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
+				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
@@ -422,7 +422,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
 				assert.NotNil(t, w)
-				_, err = tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
@@ -995,7 +995,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
-				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -1014,7 +1014,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -1033,9 +1033,8 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
-				is, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
-				assert.Equal(t, 1, len(is))
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -1055,9 +1054,8 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
-				is, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
-				assert.Equal(t, 1, len(is))
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -1176,7 +1174,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
-				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -1195,7 +1193,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -1214,9 +1212,8 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
-				is, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
-				assert.Equal(t, 1, len(is))
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -1236,9 +1233,8 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
-				is, err := tx.SignAuto(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
+				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
-				assert.Equal(t, 1, len(is))
 				return tx
 			}(),
 			expSize: &bt.TxSize{
