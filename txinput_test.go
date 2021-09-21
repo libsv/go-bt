@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"math"
 	"testing"
 
@@ -89,6 +88,7 @@ func TestTx_From(t *testing.T) {
 }
 
 func TestTx_FromUTXOs(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		tx                      *bt.Tx
 		utxos                   []*bt.UTXO
@@ -452,6 +452,7 @@ func TestTx_FromUTXOs(t *testing.T) {
 }
 
 func TestTx_FromUTXOs_Deficit(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		utxos       []*bt.UTXO
 		expDeficits []uint64
@@ -665,7 +666,6 @@ func TestTx_FromUTXOs_Deficit(t *testing.T) {
 				}()
 
 				deficits = append(deficits, deficit)
-				fmt.Println(test.utxos[:step])
 				return test.utxos[:step], nil
 			})
 
