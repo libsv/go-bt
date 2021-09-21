@@ -15,10 +15,10 @@ func TestTx_ChangeToAddress(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 		err := tx.From(
-			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000})
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("", nil)
@@ -29,10 +29,10 @@ func TestTx_ChangeToAddress(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 		err := tx.From(
-			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000})
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", nil)
@@ -43,10 +43,10 @@ func TestTx_ChangeToAddress(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
 		err := tx.From(
-			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000})
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("1GHMW7ABrFma2NSwiVe9b9bZxkMB7tuPZi", bt.NewFeeQuote())
@@ -69,10 +69,10 @@ func TestTx_Change(t *testing.T) {
 		assert.NotNil(t, tx)
 
 		err = tx.From(
-			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000})
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
@@ -95,10 +95,10 @@ func TestTx_Change(t *testing.T) {
 		assert.NotNil(t, tx)
 
 		err := tx.From(
-			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000})
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
@@ -129,10 +129,10 @@ func TestTx_Change(t *testing.T) {
 
 		// utxo
 		err := tx.From(
-			"b7b0650a7c3a1bd4716369783876348b59f5404784970192cec1996e86950576",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			1000)
+			&bt.UTXO{"b7b0650a7c3a1bd4716369783876348b59f5404784970192cec1996e86950576",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				1000})
 		assert.NoError(t, err)
 
 		// pay to
@@ -177,10 +177,10 @@ func TestTx_Change(t *testing.T) {
 		assert.NotNil(t, tx)
 
 		err := tx.From(
-			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000})
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
@@ -204,10 +204,10 @@ func TestTx_Change(t *testing.T) {
 		assert.NotNil(t, tx)
 
 		err := tx.From(
-			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000})
 		assert.NoError(t, err)
 
 		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 1000000)
@@ -238,10 +238,10 @@ func TestTx_Change(t *testing.T) {
 		assert.NotNil(t, tx)
 
 		err := tx.From(
-			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-			0,
-			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-			4000000)
+			&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000000})
 		assert.NoError(t, err)
 
 		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 999995)
@@ -274,17 +274,17 @@ func TestTx_Change(t *testing.T) {
 		assert.NotNil(t, tx)
 
 		err := tx.From(
-			"9e88ca8eec0845e9e864c024bc5e6711e670932c9c7d929f9fccdb2c440ae28e",
-			0,
-			"76a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac",
-			5689)
+			&bt.UTXO{"9e88ca8eec0845e9e864c024bc5e6711e670932c9c7d929f9fccdb2c440ae28e",
+				0,
+				"76a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac",
+				5689})
 		assert.NoError(t, err)
 
 		err = tx.From(
-			"4e25b077d4cbb955b5a215feb53f963cf04688ff1777b9bea097c7ddbdf7ea42",
-			0,
-			"76a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac",
-			5689)
+			&bt.UTXO{"4e25b077d4cbb955b5a215feb53f963cf04688ff1777b9bea097c7ddbdf7ea42",
+				0,
+				"76a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac",
+				5689})
 		assert.NoError(t, err)
 
 		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.NewFeeQuote())
@@ -318,10 +318,10 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
-					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-					0,
-					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-					1000))
+					&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+						0,
+						"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+						1000}))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 1000))
 				return tx
 			}(),
@@ -334,10 +334,10 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
-					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-					0,
-					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-					1000))
+					&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+						0,
+						"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+						1000}))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
@@ -350,10 +350,10 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
-					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-					0,
-					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-					2500))
+					&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+						0,
+						"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+						2500}))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
@@ -369,10 +369,10 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
-					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-					0,
-					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-					1000))
+					&bt.UTXO{"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+						0,
+						"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+						1000}))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),

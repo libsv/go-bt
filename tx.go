@@ -476,4 +476,21 @@ func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 	}
 	resp.TotalFeePaid = resp.StdFeePaid + resp.DataFeePaid
 	return resp, nil
+
+}
+
+func (tx *Tx) estimateDeficit(fees *FeeQuote) (uint64, error) {
+	totalInputSatoshis := tx.TotalInputSatoshis()
+	totalOutputSatoshis := tx.TotalOutputSatoshis()
+
+	expFeesPaid, err := tx.EstimateFeesPaid(fees)
+	if err != nil {
+		return 0, err
+	}
+
+	if totalInputSatoshis > totalOutputSatoshis+expFeesPaid.TotalFeePaid {
+		return 0, nil
+	}
+
+	return totalOutputSatoshis + expFeesPaid.TotalFeePaid - totalInputSatoshis, nil
 }

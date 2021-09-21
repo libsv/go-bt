@@ -15,11 +15,11 @@ import (
 // ErrNoInput signals the InputGetterFunc has reached the end of its input.
 var ErrNoInput = errors.New("no remaining inputs")
 
-// InputGetterFunc is used for FromInputs. It expects *bt.Input to be returned containing
+// UTXOGetterFunc is used for FromInputs. It expects *bt.UTXO to be returned containing
 // relevant input information, and an err informing any retrieval errors.
 //
 // It is expected that bt.ErrNoInput will be returned once the input source is depleted.
-type InputGetterFunc func(ctx context.Context) (*Input, error)
+type UTXOGetterFunc func(ctx context.Context, deficit uint64) ([]*UTXO, error)
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
 func NewInputFromBytes(bytes []byte) (*Input, int, error) {
@@ -45,28 +45,6 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 	}, totalLength, nil
 }
 
-// NewInputFrom builds and returns a new input from the specified UTXO fields, using the default
-// finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
-// afterwards.
-func NewInputFrom(prevTxID string, vout uint32, prevTxLockingScript string, satoshis uint64) (*Input, error) {
-	pts, err := bscript.NewFromHexString(prevTxLockingScript)
-	if err != nil {
-		return nil, err
-	}
-
-	i := &Input{
-		PreviousTxOutIndex: vout,
-		PreviousTxSatoshis: satoshis,
-		PreviousTxScript:   pts,
-		SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
-	}
-	if err := i.PreviousTxIDAddStr(prevTxID); err != nil {
-		return nil, err
-	}
-
-	return i, nil
-}
-
 // TotalInputSatoshis returns the total Satoshis inputted to the transaction.
 func (tx *Tx) TotalInputSatoshis() (total uint64) {
 	for _, in := range tx.Inputs {
@@ -82,6 +60,7 @@ func (tx *Tx) addInput(input *Input) {
 // AddP2PKHInputsFromTx will add all Outputs of given previous transaction
 // that match a specific public key to your transaction.
 func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
+	txID := pvsTx.TxID()
 	for i, utxo := range pvsTx.Outputs {
 		utxoPkHASH160, err := utxo.LockingScript.PublicKeyHash()
 		if err != nil {
@@ -89,7 +68,12 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 		}
 
 		if bytes.Equal(utxoPkHASH160, crypto.Hash160(matchPK)) {
-			if err := tx.From(pvsTx.TxID(), uint32(i), utxo.LockingScriptHexString(), utxo.Satoshis); err != nil {
+			if err := tx.From(&UTXO{
+				TxID:          txID,
+				Vout:          uint32(i),
+				Satoshis:      utxo.Satoshis,
+				LockingScript: utxo.LockingScriptHexString(),
+			}); err != nil {
 				return err
 			}
 		}
@@ -101,9 +85,19 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 // From adds a new input to the transaction from the specified UTXO fields, using the default
 // finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
 // afterwards.
-func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, satoshis uint64) error {
-	i, err := NewInputFrom(prevTxID, vout, prevTxLockingScript, satoshis)
+func (tx *Tx) From(utxo *UTXO) error {
+	pts, err := bscript.NewFromHexString(utxo.LockingScript)
 	if err != nil {
+		return err
+	}
+
+	i := &Input{
+		PreviousTxOutIndex: utxo.Vout,
+		PreviousTxSatoshis: utxo.Satoshis,
+		PreviousTxScript:   pts,
+		SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
+	}
+	if err := i.PreviousTxIDAddStr(utxo.TxID); err != nil {
 		return err
 	}
 
@@ -129,10 +123,13 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 //            return bt.NewInputFrom(utxos[i].TxID, utxo[i].Vout, utxos[i].Script, utxos[i].Satoshis), true
 //        }
 //    }())
-func (tx *Tx) FromInputs(ctx context.Context, fq *FeeQuote, next InputGetterFunc) (err error) {
-	var feesPaid bool
-	for !feesPaid {
-		input, err := next(ctx)
+func (tx *Tx) FromInputs(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) error {
+	deficit, err := tx.estimateDeficit(fq)
+	if err != nil {
+		return err
+	}
+	for deficit != 0 {
+		utxos, err := next(ctx, 0)
 		if err != nil {
 			if errors.Is(err, ErrNoInput) {
 				break
@@ -140,14 +137,19 @@ func (tx *Tx) FromInputs(ctx context.Context, fq *FeeQuote, next InputGetterFunc
 
 			return err
 		}
-		tx.addInput(input)
 
-		feesPaid, err = tx.EstimateIsFeePaidEnough(fq)
+		for _, utxo := range utxos {
+			if err = tx.From(utxo); err != nil {
+				return err
+			}
+		}
+
+		deficit, err = tx.estimateDeficit(fq)
 		if err != nil {
 			return err
 		}
 	}
-	if !feesPaid {
+	if deficit != 0 {
 		return errors.New("insufficient inputs provided")
 	}
 
