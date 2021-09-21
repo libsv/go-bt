@@ -13,7 +13,7 @@ import (
 )
 
 // ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
-var ErrNoUTXO = errors.New("no remaining inputs")
+var ErrNoUTXO = errors.New("no remaining utxos")
 
 // UTXOGetterFunc is used for tx.FromUTXOs. It expects []*bt.UTXO to be returned containing
 // utxos of which an input can be built.
@@ -114,7 +114,7 @@ func (tx *Tx) From(utxo *UTXO) error {
 //
 // Example usage, for when working with a list:
 //    tx.FromUTXOs(ctx, bt.NewFeeQuote(), func(ctx context.Context, deficit satoshis) ([]*bt.UTXO, error) {
-//        utxos := make([]*bt.Utxo, 0)
+//        utxos := make([]*bt.UTXO, 0)
 //        for _, f := range funds {
 //            deficit -= satoshis
 //            utxos := append(utxos, &bt.UTXO{
@@ -156,7 +156,7 @@ func (tx *Tx) FromUTXOs(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) 
 		}
 	}
 	if deficit != 0 {
-		return errors.New("insufficient inputs provided")
+		return errors.New("insufficient utxos provided")
 	}
 
 	return nil
