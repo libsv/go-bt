@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"math"
 	"testing"
 
 	"github.com/libsv/go-bt/v2"
@@ -86,7 +88,7 @@ func TestTx_From(t *testing.T) {
 	})
 }
 
-func TestTx_FromInputs(t *testing.T) {
+func TestTx_FromUTXOs(t *testing.T) {
 	tests := map[string]struct {
 		tx                      *bt.Tx
 		utxos                   []*bt.UTXO
@@ -426,7 +428,7 @@ func TestTx_FromInputs(t *testing.T) {
 				idx := 0
 				return func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
 					if idx == len(test.utxos) {
-						return nil, bt.ErrNoInput
+						return nil, bt.ErrNoUTXO
 					}
 					defer func() { idx += len(test.utxos) }()
 					return test.utxos, nil
@@ -436,7 +438,7 @@ func TestTx_FromInputs(t *testing.T) {
 				iptFn = test.utxoGetterFuncOverrider(test.utxos)
 			}
 
-			err := test.tx.FromInputs(context.Background(), bt.NewFeeQuote(), iptFn)
+			err := test.tx.FromUTXOs(context.Background(), bt.NewFeeQuote(), iptFn)
 			if test.expErr != nil {
 				assert.Error(t, err)
 				assert.EqualError(t, err, test.expErr.Error())
@@ -445,6 +447,229 @@ func TestTx_FromInputs(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.Equal(t, test.expTotalInputs, test.tx.InputCount())
+		})
+	}
+}
+
+func TestTx_FromUTXOs_Deficit(t *testing.T) {
+	tests := map[string]struct {
+		utxos       []*bt.UTXO
+		expDeficits []uint64
+		iteration   int
+		tx          *bt.Tx
+	}{
+		"1 output worth 5000, 3 utxos worth 6000": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
+
+				return tx
+			}(),
+			utxos: []*bt.UTXO{{
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}},
+			iteration:   1,
+			expDeficits: []uint64{5022, 3096, 1170},
+		},
+		"1 output worth 5000, 3 utxos worth 6000, iterations of 2": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
+
+				return tx
+			}(),
+			utxos: []*bt.UTXO{{
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}},
+			iteration:   2,
+			expDeficits: []uint64{5022, 1170},
+		},
+		"5 outputs worth 35000, 12 utxos worth 37000": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 10000))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 7000))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 3000))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 10000))
+
+				return tx
+			}(),
+			utxos: []*bt.UTXO{{
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				6000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				8000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				3000,
+			}},
+			iteration:   1,
+			expDeficits: []uint64{35090, 33164, 31238, 29312, 27386, 23460, 21534, 15608, 11682, 9756, 1830},
+		},
+		"5 outputs worth 35000, 12 utxos worth 37000, iteration of 3": {
+			tx: func() *bt.Tx {
+				tx := bt.NewTx()
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 10000))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 7000))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 3000))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 10000))
+
+				return tx
+			}(),
+			utxos: []*bt.UTXO{{
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				6000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				4000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				2000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				8000,
+			}, {
+				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
+				0,
+				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
+				3000,
+			}},
+			iteration:   3,
+			expDeficits: []uint64{35090, 29312, 21534, 9756},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			deficits := make([]uint64, 0)
+			test.tx.FromUTXOs(context.Background(), bt.NewFeeQuote(), func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
+				if len(test.utxos) == 0 {
+					return nil, bt.ErrNoUTXO
+				}
+				step := int(math.Min(float64(test.iteration), float64(len(test.utxos))))
+				defer func() {
+					test.utxos = test.utxos[step:]
+				}()
+
+				deficits = append(deficits, deficit)
+				fmt.Println(test.utxos[:step])
+				return test.utxos[:step], nil
+			})
+
+			assert.Equal(t, test.expDeficits, deficits)
 		})
 	}
 }

@@ -12,13 +12,13 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// ErrNoInput signals the InputGetterFunc has reached the end of its input.
-var ErrNoInput = errors.New("no remaining inputs")
+// ErrNoUTXO signals the InputGetterFunc has reached the end of its input.
+var ErrNoUTXO = errors.New("no remaining inputs")
 
-// UTXOGetterFunc is used for FromInputs. It expects *bt.UTXO to be returned containing
-// relevant input information, and an err informing any retrieval errors.
+// UTXOGetterFunc is used for tx.FromInputs. It expects []*bt.UTXO to be returned containing
+// utxos of which an input can be built.
 //
-// It is expected that bt.ErrNoInput will be returned once the input source is depleted.
+// It is expected that bt.ErrNoUTXO will be returned once the utxo source is depleted.
 type UTXOGetterFunc func(ctx context.Context, deficit uint64) ([]*UTXO, error)
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
@@ -105,7 +105,7 @@ func (tx *Tx) From(utxo *UTXO) error {
 	return nil
 }
 
-// FromInputs continuously calls the provided bt.InputGetterFunc, adding each returned input
+// FromUTXOs continuously calls the provided bt.UTXOGetterFunc, adding each returned input
 // as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
 //
 // After completion, the receiver is ready for `Change(...)` to be called, and then be signed.
@@ -113,25 +113,31 @@ func (tx *Tx) From(utxo *UTXO) error {
 // which need covered.
 //
 // Example usage, for when working with a list:
-//    tx.FromInputs(ctx, bt.NewFeeQuote(), func() bt.InputGetterFunc {
-//        i := 0
-//        return func(ctx context.Context) (*bt.Input, error) {
-//            if i >= len(utxos) {
-//                return nil, bt.ErrNoInput
+//    tx.FromUTXOs(ctx, bt.NewFeeQuote(), func(ctx context.Context, deficit satoshis) ([]*bt.UTXO, error) {
+//        utxos := make([]*bt.Utxo, 0)
+//        for _, f := range funds {
+//            deficit -= satoshis
+//            utxos := append(utxos, &bt.UTXO{
+//                TxID: f.TxID,
+//                Vout: f.Vout,
+//                LockingScript: f.Script,
+//                Satoshis: f.Satoshis,
+//            })
+//            if deficit == 0 {
+//                return utxos, nil
 //            }
-//            defer func() { i++ }()
-//            return bt.NewInputFrom(utxos[i].TxID, utxo[i].Vout, utxos[i].Script, utxos[i].Satoshis), true
 //        }
-//    }())
-func (tx *Tx) FromInputs(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) error {
+//        return nil, bt.ErrNoUTXO
+//    })
+func (tx *Tx) FromUTXOs(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) error {
 	deficit, err := tx.estimateDeficit(fq)
 	if err != nil {
 		return err
 	}
 	for deficit != 0 {
-		utxos, err := next(ctx, 0)
+		utxos, err := next(ctx, deficit)
 		if err != nil {
-			if errors.Is(err, ErrNoInput) {
+			if errors.Is(err, ErrNoUTXO) {
 				break
 			}
 
