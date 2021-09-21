@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,12 +35,12 @@ func TestTx_InputCount(t *testing.T) {
 	t.Run("get input count", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
-		err := tx.From(&bt.UTXO{
+		err := tx.From(
 			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 			0,
 			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 			4000000,
-		})
+		)
 		assert.NoError(t, err)
 		assert.Equal(t, 1, tx.InputCount())
 	})
@@ -49,32 +50,32 @@ func TestTx_From(t *testing.T) {
 	t.Run("invalid locking script (hex decode failed)", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
-		err := tx.From(&bt.UTXO{
+		err := tx.From(
 			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 			0,
 			"0",
 			4000000,
-		})
+		)
 		assert.Error(t, err)
 
-		err = tx.From(&bt.UTXO{
+		err = tx.From(
 			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 			0,
 			"76a914af2590a45ae4016",
 			4000000,
-		})
+		)
 		assert.Error(t, err)
 	})
 
 	t.Run("valid script and tx", func(t *testing.T) {
 		tx := bt.NewTx()
 		assert.NotNil(t, tx)
-		err := tx.From(&bt.UTXO{
+		err := tx.From(
 			"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 			0,
 			"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 			4000000,
-		})
+		)
 		assert.NoError(t, err)
 
 		inputs := tx.Inputs
@@ -89,6 +90,72 @@ func TestTx_From(t *testing.T) {
 
 func TestTx_FromUTXOs(t *testing.T) {
 	t.Parallel()
+
+	t.Run("one utxo", func(t *testing.T) {
+		tx := bt.NewTx()
+		script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+		assert.NoError(t, err)
+
+		txID, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+		assert.NoError(t, err)
+
+		assert.NoError(t, tx.FromUTXOs(&bt.UTXO{
+			TxID:          txID,
+			LockingScript: script,
+			Vout:          0,
+			Satoshis:      1000,
+		}))
+
+		input := tx.Inputs[0]
+		assert.Equal(t, len(tx.Inputs), 1)
+		assert.Equal(t, "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", input.PreviousTxIDStr())
+		assert.Equal(t, uint32(0), input.PreviousTxOutIndex)
+		assert.Equal(t, uint64(1000), input.PreviousTxSatoshis)
+		assert.Equal(t, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", input.PreviousTxScript.String())
+	})
+
+	t.Run("multiple utxos", func(t *testing.T) {
+		tx := bt.NewTx()
+		script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+		assert.NoError(t, err)
+		txID, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+		assert.NoError(t, err)
+
+		script2, err := bscript.NewFromHexString("76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac")
+		assert.NoError(t, err)
+		txID2, err := hex.DecodeString("3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5")
+		assert.NoError(t, err)
+
+		assert.NoError(t, tx.FromUTXOs(&bt.UTXO{
+			TxID:          txID,
+			LockingScript: script,
+			Vout:          0,
+			Satoshis:      1000,
+		}, &bt.UTXO{
+			TxID:          txID2,
+			LockingScript: script2,
+			Vout:          1,
+			Satoshis:      2000,
+		}))
+
+		assert.Equal(t, len(tx.Inputs), 2)
+
+		input := tx.Inputs[0]
+		assert.Equal(t, "07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b", input.PreviousTxIDStr())
+		assert.Equal(t, uint32(0), input.PreviousTxOutIndex)
+		assert.Equal(t, uint64(1000), input.PreviousTxSatoshis)
+		assert.Equal(t, "76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac", input.PreviousTxScript.String())
+
+		input = tx.Inputs[1]
+		assert.Equal(t, "3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5", input.PreviousTxIDStr())
+		assert.Equal(t, uint32(1), input.PreviousTxOutIndex)
+		assert.Equal(t, uint64(2000), input.PreviousTxSatoshis)
+		assert.Equal(t, "76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac", input.PreviousTxScript.String())
+	})
+}
+
+func TestTx_Fund(t *testing.T) {
+	t.Parallel()
 	tests := map[string]struct {
 		tx                      *bt.Tx
 		utxos                   []*bt.UTXO
@@ -102,17 +169,17 @@ func TestTx_FromUTXOs(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}}
+			}(),
 			expTotalInputs: 2,
 		},
 		"tx with extra inputs and surplus inputs is covered with all utxos": {
@@ -121,22 +188,19 @@ func TestTx_FromUTXOs(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}}
+			}(),
 			expTotalInputs: 3,
 		},
 		"tx with extra inputs and surplus inputs that returns correct amount is covered with minimum needed utxos": {
@@ -150,22 +214,19 @@ func TestTx_FromUTXOs(t *testing.T) {
 					return utxos[:2], nil
 				}
 			},
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}}
+			}(),
 			expTotalInputs: 2,
 		},
 		"tx with exact input satshis is covered": {
@@ -174,17 +235,17 @@ func TestTx_FromUTXOs(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}}
+			}(),
 			expTotalInputs: 2,
 		},
 		"tx with large amount of satoshis is covered with all utxos": {
@@ -193,47 +254,29 @@ func TestTx_FromUTXOs(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				500,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				670,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				700,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				650,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 500,
+				}, {
+					txid, 0, script, 670,
+				}, {
+					txid, 0, script, 700,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 650,
+				}}
+			}(),
 			expTotalInputs: 8,
 		},
 		"tx with large amount of satoshis is covered with needed utxos": {
@@ -250,47 +293,29 @@ func TestTx_FromUTXOs(t *testing.T) {
 					return utxosCopy[:1], nil
 				}
 			},
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				500,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				670,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				700,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				650,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 500,
+				}, {
+					txid, 0, script, 670,
+				}, {
+					txid, 0, script, 700,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 650,
+				}}
+			}(),
 			expTotalInputs: 7,
 		},
 		"getter with no utxos error": {
@@ -308,47 +333,29 @@ func TestTx_FromUTXOs(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 25400))
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				500,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				670,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				700,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				650,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 500,
+				}, {
+					txid, 0, script, 670,
+				}, {
+					txid, 0, script, 700,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 650,
+				}}
+			}(),
 			expErr: errors.New("insufficient utxos provided"),
 		},
 		"error is returned to the user": {
@@ -370,47 +377,29 @@ func TestTx_FromUTXOs(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				500,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				670,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				700,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				1000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				650,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 500,
+				}, {
+					txid, 0, script, 670,
+				}, {
+					txid, 0, script, 700,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 1000,
+				}, {
+					txid, 0, script, 650,
+				}}
+			}(),
 			utxoGetterFuncOverrider: func(utxos []*bt.UTXO) bt.UTXOGetterFunc {
 				idx := 0
 				return func(context.Context, uint64) ([]*bt.UTXO, error) {
@@ -438,7 +427,7 @@ func TestTx_FromUTXOs(t *testing.T) {
 				iptFn = test.utxoGetterFuncOverrider(test.utxos)
 			}
 
-			err := test.tx.FromUTXOs(context.Background(), bt.NewFeeQuote(), iptFn)
+			err := test.tx.Fund(context.Background(), bt.NewFeeQuote(), iptFn)
 			if test.expErr != nil {
 				assert.Error(t, err)
 				assert.EqualError(t, err, test.expErr.Error())
@@ -451,7 +440,7 @@ func TestTx_FromUTXOs(t *testing.T) {
 	}
 }
 
-func TestTx_FromUTXOs_Deficit(t *testing.T) {
+func TestTx_Fund_Deficit(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		utxos       []*bt.UTXO
@@ -466,22 +455,19 @@ func TestTx_FromUTXOs_Deficit(t *testing.T) {
 
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}}
+			}(),
 			iteration:   1,
 			expDeficits: []uint64{5022, 3096, 1170},
 		},
@@ -492,22 +478,19 @@ func TestTx_FromUTXOs_Deficit(t *testing.T) {
 
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}}
+			}(),
 			iteration:   2,
 			expDeficits: []uint64{5022, 1170},
 		},
@@ -522,62 +505,35 @@ func TestTx_FromUTXOs_Deficit(t *testing.T) {
 
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				4000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				6000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				4000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				8000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				3000,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 4000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 6000,
+				}, {
+					txid, 0, script, 4000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 8000,
+				}, {
+					txid, 0, script, 3000,
+				}}
+			}(),
 			iteration:   1,
 			expDeficits: []uint64{35090, 33164, 31238, 29312, 27386, 23460, 21534, 15608, 11682, 9756, 1830},
 		},
@@ -592,62 +548,35 @@ func TestTx_FromUTXOs_Deficit(t *testing.T) {
 
 				return tx
 			}(),
-			utxos: []*bt.UTXO{{
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				4000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				6000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				4000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				2000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				8000,
-			}, {
-				"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
-				0,
-				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-				3000,
-			}},
+			utxos: func() []*bt.UTXO {
+				txid, err := hex.DecodeString("07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b")
+				assert.NoError(t, err)
+				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
+				assert.NoError(t, err)
+				return []*bt.UTXO{{
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 4000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 6000,
+				}, {
+					txid, 0, script, 4000,
+				}, {
+					txid, 0, script, 2000,
+				}, {
+					txid, 0, script, 8000,
+				}, {
+					txid, 0, script, 3000,
+				}}
+			}(),
 			iteration:   3,
 			expDeficits: []uint64{35090, 29312, 21534, 9756},
 		},
@@ -656,7 +585,7 @@ func TestTx_FromUTXOs_Deficit(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			deficits := make([]uint64, 0)
-			test.tx.FromUTXOs(context.Background(), bt.NewFeeQuote(), func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
+			test.tx.Fund(context.Background(), bt.NewFeeQuote(), func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
 				if len(test.utxos) == 0 {
 					return nil, bt.ErrNoUTXO
 				}
