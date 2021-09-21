@@ -105,7 +105,7 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 	})
 }
 
-// From adds a new input to the transaction from the specified *bt.UTXO fields, using the default
+// FromUTXOs adds a new input to the transaction from the specified *bt.UTXO fields, using the default
 // finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
 // afterwards.
 func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
