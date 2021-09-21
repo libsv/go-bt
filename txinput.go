@@ -12,10 +12,10 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// ErrNoUTXO signals the InputGetterFunc has reached the end of its input.
+// ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
 var ErrNoUTXO = errors.New("no remaining inputs")
 
-// UTXOGetterFunc is used for tx.FromInputs. It expects []*bt.UTXO to be returned containing
+// UTXOGetterFunc is used for tx.FromUTXOs. It expects []*bt.UTXO to be returned containing
 // utxos of which an input can be built.
 //
 // It is expected that bt.ErrNoUTXO will be returned once the utxo source is depleted.
@@ -60,7 +60,7 @@ func (tx *Tx) addInput(input *Input) {
 // AddP2PKHInputsFromTx will add all Outputs of given previous transaction
 // that match a specific public key to your transaction.
 func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
-	txID := pvsTx.TxID()
+	prevTxID := pvsTx.TxID()
 	for i, utxo := range pvsTx.Outputs {
 		utxoPkHASH160, err := utxo.LockingScript.PublicKeyHash()
 		if err != nil {
@@ -69,7 +69,7 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 
 		if bytes.Equal(utxoPkHASH160, crypto.Hash160(matchPK)) {
 			if err := tx.From(&UTXO{
-				TxID:          txID,
+				TxID:          prevTxID,
 				Vout:          uint32(i),
 				Satoshis:      utxo.Satoshis,
 				LockingScript: utxo.LockingScriptHexString(),
