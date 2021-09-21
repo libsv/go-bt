@@ -115,7 +115,7 @@ func TestTx_FromUTXOs(t *testing.T) {
 			}},
 			expTotalInputs: 2,
 		},
-		"tx with extra inputs and surplus inputs is covered with all inputs": {
+		"tx with extra inputs and surplus inputs is covered with all utxos": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
@@ -139,7 +139,7 @@ func TestTx_FromUTXOs(t *testing.T) {
 			}},
 			expTotalInputs: 3,
 		},
-		"tx with extra inputs and surplus inputs that returns correct amount is covered with minimum needed inputs": {
+		"tx with extra inputs and surplus inputs that returns correct amount is covered with minimum needed utxos": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
@@ -187,7 +187,7 @@ func TestTx_FromUTXOs(t *testing.T) {
 			}},
 			expTotalInputs: 2,
 		},
-		"tx with large amount of satoshis is covered with all inputs": {
+		"tx with large amount of satoshis is covered with all utxos": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
@@ -236,7 +236,7 @@ func TestTx_FromUTXOs(t *testing.T) {
 			}},
 			expTotalInputs: 8,
 		},
-		"tx with large amount of satoshis is covered with needed inputs": {
+		"tx with large amount of satoshis is covered with needed utxos": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 5000))
@@ -293,16 +293,16 @@ func TestTx_FromUTXOs(t *testing.T) {
 			}},
 			expTotalInputs: 7,
 		},
-		"getter with no inputs error": {
+		"getter with no utxos error": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 1500))
 				return tx
 			}(),
 			utxos:  []*bt.UTXO{},
-			expErr: errors.New("insufficient inputs provided"),
+			expErr: errors.New("insufficient utxos provided"),
 		},
-		"getter with insufficient inputs errors": {
+		"getter with insufficient utxos errors": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 25400))
@@ -349,7 +349,7 @@ func TestTx_FromUTXOs(t *testing.T) {
 				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 				650,
 			}},
-			expErr: errors.New("insufficient inputs provided"),
+			expErr: errors.New("insufficient utxos provided"),
 		},
 		"error is returned to the user": {
 			tx: func() *bt.Tx {
