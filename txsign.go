@@ -75,8 +75,7 @@ func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
 	return fmt.Errorf("no input at index %d", index)
 }
 
-// SignAll is used to automatically check which P2PKH Inputs are
-// able to be signed (match the public key) and then sign them.
+// SignAll is used to sign all inputs. It currently only supports the signing P2PKH.
 // It takes a Signed interface as a parameter so that different
 // signing implementations can be used to sign the transaction -
 // for example internal/local or external signing.

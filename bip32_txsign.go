@@ -8,8 +8,7 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
-// SignAllBip32 is used to automatically check which P2PKH Inputs are
-// able to be signed (match a derivated public key) and then sign them.
+// SignAllBip32 is used to sign all inputs. It currently only supports the signing P2PKH.
 // It takes a Bip32SignerDeriver interface as a parameter so that different
 // signing implementations can be used to sign the transaction -
 // for example internal/local or external signing.
