@@ -29,7 +29,7 @@ func (tx *Tx) SignAllBip32(ctx context.Context, b Bip32SignerDeriver, get Bip32P
 	for i, in := range tx.Inputs {
 		fn, ok := signerStrats[in.PreviousTxScript.ScriptType()]
 		if !ok {
-			return errors.New("unsupported script type.")
+			return errors.New("unsupported script type")
 		}
 
 		path, err := get(ctx, in.PreviousTxScript.String())
