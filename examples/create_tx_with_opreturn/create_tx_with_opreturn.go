@@ -24,7 +24,7 @@ func main() {
 
 	wif, _ := wif.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
 
-	err := tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
+	err := tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
 	if err != nil {
 		log.Fatal(err.Error())
 	}

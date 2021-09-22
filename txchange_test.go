@@ -83,7 +83,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, expectedTx.String(), tx.String())
@@ -109,7 +109,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		// Correct fee for the tx
@@ -151,7 +151,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t,
@@ -191,7 +191,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a473044022049ee0c0f26c00e6a6b3af5990fc8296c66eab3e3e42ab075069b89b1be6fefec02206079e49dd8c9e1117ef06fbe99714d822620b1f0f5d19f32a1128f5d29b7c3c4412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff01a0083d00000000001976a914af2590a45ae401651fdbdf59a76ad43d1862534088ac00000000", tx.String())
@@ -224,7 +224,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006a47304402206bbb4b23349bdf86e6fbc9067226e9a7b15c977fa530999b39cd0a6d9c83360d02202dd8ffdc610e58b3fc92b44400d99e38c78866765f31acb40d98007a52e7a826412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff0240420f00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88acc0c62d00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac00000000", tx.String())
@@ -258,7 +258,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, "01000000010b94a1ef0fb352aa2adc54207ce47ba55d5a1c1609afda58fe9520e472299107000000006b483045022100fd07316603e9abf393e695192e8ce1e7f808d2735cc57039109a2210ad32d9a7022000e301e2a988b23ab3872b041df8b6eb0315238e0918944cbaf8b6abdde75cac412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff023b420f00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88acc0c62d00000000001976a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac00000000", tx.String())
@@ -295,7 +295,7 @@ func TestTx_Change(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, "01000000028ee20a442cdbcc9f9f927d9c2c9370e611675ebc24c064e8e94508ec8eca889e000000006b483045022100f88298f5a380244dd5b91f70be99394f8e562d2a61976ca8cf2aaeb381ee6e6a0220069243fc951061b624cf96124263b857a65a53400846080b543e4a8c16e097ce4121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff42eaf7bdddc797a0beb97717ff8846f03c963fb5fe15a2b555b9cbd477b0254e000000006b483045022100afa7a986e6e0faf725a9779fe8e61fd19b5973544dc7707fd758cdd45912332a0220760fe07fc8610d867be5281f29778e3cd1a18a6eef74470d0f1a4ede95c848924121034aaeabc056f33fd960d1e43fc8a0672723af02f275e54c31381af66a334634caffffffff01c82b0000000000001976a9147824dec00be2c45dad83c9b5e9f5d7ef05ba3cf988ac00000000", tx.String())
