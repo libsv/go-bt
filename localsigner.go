@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
@@ -11,6 +12,17 @@ import (
 // using a bkec PrivateKey.
 type LocalSigner struct {
 	PrivateKey *bec.PrivateKey
+}
+
+// LocalSignerGetter implements the SignerGetter interface. It is used to sign Tx Inputs locally
+// using a bkec PrivateKey.
+type LocalSignerGetter struct {
+	PrivateKey *bec.PrivateKey
+}
+
+// Signer builds a new *bt.LocalSigner with the same private key as the calling *bt.LocalSignerGetter
+func (lsc *LocalSignerGetter) Signer(ctx context.Context, lockingScript *bscript.Script) (Signer, error) {
+	return &LocalSigner{PrivateKey: lsc.PrivateKey}, nil
 }
 
 // Sign a transaction at a given input index using the PrivateKey passed in through the
@@ -41,9 +53,4 @@ func (is *LocalSigner) SignHash(ctx context.Context, hash []byte) (publicKey, si
 	publicKey = is.PrivateKey.PubKey().SerialiseCompressed()
 	signature = sig.Serialise()
 	return
-}
-
-// PublicKey returns the public key which will be used to sign.
-func (is *LocalSigner) PublicKey(ctx context.Context) (publicKey []byte, err error) {
-	return is.PrivateKey.PubKey().SerialiseCompressed(), nil
 }

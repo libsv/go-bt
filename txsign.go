@@ -2,13 +2,14 @@ package bt
 
 import (
 	"context"
-	"encoding/hex"
+	"errors"
 	"fmt"
 
-	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
 )
+
+type signerFunc func(context.Context, Signer, uint32, sighash.Flag) error
 
 // Sign is used to sign the transaction at a specific input index.
 // It takes a Signed interface as a parameter so that different
@@ -74,32 +75,31 @@ func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
 	return fmt.Errorf("no input at index %d", index)
 }
 
-// SignAuto is used to automatically check which P2PKH Inputs are
-// able to be signed (match the public key) and then sign them.
+// SignAll is used to sign all inputs. It currently only supports the signing P2PKH.
 // It takes a Signed interface as a parameter so that different
 // signing implementations can be used to sign the transaction -
 // for example internal/local or external signing.
-func (tx *Tx) SignAuto(ctx context.Context, s AutoSigner) (inputsSigned []int, err error) {
+func (tx *Tx) SignAll(ctx context.Context, sg SignerGetter) error {
 	shf := sighash.AllForkID // use SIGHASHALLFORFORKID to sign automatically
+	// TODO: add support for other script types
+	signerStrats := map[string]signerFunc{
+		bscript.ScriptTypePubKeyHash: tx.Sign,
+	}
 
 	for i, in := range tx.Inputs {
-		pubKeyHash, _ := in.PreviousTxScript.PublicKeyHash() // doesn't matter if returns error (not p2pkh)
-		pubKeyHashStr := hex.EncodeToString(pubKeyHash)
-
-		pubKey, err := s.PublicKey(ctx)
-		if err != nil {
-			return nil, err
+		// TODO: add support for other script types
+		stratFn, ok := signerStrats[in.PreviousTxScript.ScriptType()]
+		if !ok {
+			return errors.New("unsupported script type")
 		}
-		pubKeyHashStrFromPriv := hex.EncodeToString(crypto.Hash160(pubKey))
-
-		// check if able to sign (public key matches pubKeyHash in script)
-		if pubKeyHashStr == pubKeyHashStrFromPriv {
-			if err := tx.Sign(ctx, s, uint32(i), shf); err != nil {
-				return nil, err
-			}
-			inputsSigned = append(inputsSigned, i)
+		s, err := sg.Signer(ctx, in.PreviousTxScript)
+		if err != nil {
+			return err
+		}
+		if err := stratFn(ctx, s, uint32(i), shf); err != nil {
+			return err
 		}
 	}
 
-	return
+	return nil
 }
