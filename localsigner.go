@@ -14,13 +14,13 @@ type LocalSigner struct {
 	PrivateKey *bec.PrivateKey
 }
 
-// LocalSignerGetter implements the SignerCreator interface. It is used to sign Tx Inputs locally
+// LocalSignerGetter implements the SignerGetter interface. It is used to sign Tx Inputs locally
 // using a bkec PrivateKey.
 type LocalSignerGetter struct {
 	PrivateKey *bec.PrivateKey
 }
 
-// Signer builds a new *bt.LocalSigner with the same private key as the calling *bt.LocalSignerCreator
+// Signer builds a new *bt.LocalSigner with the same private key as the calling *bt.LocalSignerGetter
 func (lsc *LocalSignerGetter) Signer(ctx context.Context, lockingScript *bscript.Script) (Signer, error) {
 	return &LocalSigner{PrivateKey: lsc.PrivateKey}, nil
 }
