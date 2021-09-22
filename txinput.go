@@ -16,8 +16,11 @@ import (
 // ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
 var ErrNoUTXO = errors.New("no remaining utxos")
 
-// UTXOGetterFunc is used for tx.Fund. It expects []*bt.UTXO to be returned containing
-// utxos of which an input can be built.
+// UTXOGetterFunc is used for tx.Fund(...). It provides the amount of satoshis required
+// for funding as `deficit`, and expects []*bt.UTXO to be returned containing
+// utxos of which *bt.Input's can be built.
+// If the returned []*bt.UTXO does not cover the deficit after fee recalculation, then
+// this UTXOGetterFunc is called again, with the newly calculated deficit passed in.
 //
 // It is expected that bt.ErrNoUTXO will be returned once the utxo source is depleted.
 type UTXOGetterFunc func(ctx context.Context, deficit uint64) ([]*UTXO, error)
