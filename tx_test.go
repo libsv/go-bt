@@ -201,7 +201,8 @@ func TestTx_CreateTx(t *testing.T) {
 		"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 		0,
 		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-		2000000)
+		2000000,
+	)
 	assert.NoError(t, err)
 
 	err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
@@ -227,7 +228,8 @@ func TestTx_HasDataOutputs(t *testing.T) {
 			"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 			0,
 			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-			2000000)
+			2000000,
+		)
 		assert.NoError(t, err)
 
 		err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
@@ -259,7 +261,8 @@ func TestTx_HasDataOutputs(t *testing.T) {
 			"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 			0,
 			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-			2000000)
+			2000000,
+		)
 		assert.NoError(t, err)
 
 		err = tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1999942)
@@ -280,9 +283,8 @@ func TestTx_HasDataOutputs(t *testing.T) {
 func TestTx_ToJson(t *testing.T) {
 	tx, _ := bt.NewTxFromString("0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000")
 
-	bb, err := json.MarshalIndent(tx, "", "\t")
+	_, err := json.MarshalIndent(tx, "", "\t")
 	assert.NoError(t, err)
-	fmt.Println(string(bb))
 }
 
 func TestTx_JSON(t *testing.T) {
@@ -297,7 +299,8 @@ func TestTx_JSON(t *testing.T) {
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					2000000))
+					2000000,
+				))
 				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var wif *WIF
 				wif, err := DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
@@ -315,7 +318,8 @@ func TestTx_JSON(t *testing.T) {
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					2000000))
+					2000000,
+				))
 				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var wif *WIF
 				wif, err := DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
@@ -406,17 +410,20 @@ func TestTx_MarshallJSON(t *testing.T) {
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					10000))
+					10000,
+				))
 				assert.NoError(t, tx.From(
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					2,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					10000))
+					10000,
+				))
 				assert.NoError(t, tx.From(
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					114,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					10000))
+					10000,
+				))
 				assert.NoError(t, tx.PayToAddress("n2wmGVP89x3DsLNqk3NvctfQy9m9pvt7mk", 1000))
 				var w *wif.WIF
 				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
@@ -731,17 +738,20 @@ func TestTx_InputIdx(t *testing.T) {
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					1000))
+					1000,
+				))
 				assert.NoError(t, tx.From(
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					2000000))
+					2000000,
+				))
 				assert.NoError(t, tx.From(
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					2000000))
+					2000000,
+				))
 				return tx
 			}(),
 			idx: 0,
@@ -766,17 +776,20 @@ func TestTx_InputIdx(t *testing.T) {
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					1000))
+					1000,
+				))
 				assert.NoError(t, tx.From(
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					2000000))
+					2000000,
+				))
 				assert.NoError(t, tx.From(
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdac4",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					999))
+					999,
+				))
 				return tx
 			}(),
 			idx: 2,
@@ -801,17 +814,20 @@ func TestTx_InputIdx(t *testing.T) {
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					1000))
+					1000,
+				))
 				assert.NoError(t, tx.From(
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					2000000))
+					2000000,
+				))
 				assert.NoError(t, tx.From(
 					"3c8edde27cb9a9132c22038dac4391496be9db16fd21351565cc1006966fdad5",
 					0,
 					"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
-					999))
+					999,
+				))
 				return tx
 			}(),
 			idx:      5,
@@ -911,8 +927,10 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 		"unsigned transaction (1 input 1 P2PKHOutput + no change) paying less by 1 satoshi": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
-					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 1000))
+				assert.NoError(t, tx.From(
+					"a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 1000,
+				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 905))
 				return tx
@@ -925,8 +943,10 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 		}, "unsigned transaction (1 input 1 P2PKHOutput + change) should pay exact amount": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
-					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 834709))
+				assert.NoError(t, tx.From(
+					"a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 834709,
+				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
@@ -954,8 +974,10 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 		}, "unsigned transaction (1 input 2 P2PKHOutputs) should pay exact amount": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
-					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 834763))
+				assert.NoError(t, tx.From(
+					"a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 834763,
+				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 578091))
@@ -970,8 +992,10 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 		}, "unsigned transaction (1 input 2 P2PKHOutputs) should fail paying less by 1 sat": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
-				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
-					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 834763))
+				assert.NoError(t, tx.From(
+					"a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 834763,
+				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256560))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 578091))
@@ -990,8 +1014,10 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				if err != nil {
 					log.Fatal(err)
 				}
-				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
-					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 834709))
+				assert.NoError(t, tx.From(
+					"a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 834709,
+				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
@@ -1010,8 +1036,10 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				if err != nil {
 					log.Fatal(err)
 				}
-				assert.NoError(t, tx.From("a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
-					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
+				assert.NoError(t, tx.From(
+					"a4c76f8a7c05a91dcf5699b95b54e856298e50c1ceca9a8a5569c8532c500c11",
+					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000,
+				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
 				tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
@@ -1029,8 +1057,10 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 					log.Fatal(err)
 				}
 				tx := bt.NewTx()
-				assert.NoError(t, tx.From("160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
-					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
+				assert.NoError(t, tx.From(
+					"160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
+					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000,
+				))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
 				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
@@ -1050,8 +1080,10 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 					log.Fatal(err)
 				}
 				tx := bt.NewTx()
-				assert.NoError(t, tx.From("160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
-					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
+				assert.NoError(t, tx.From(
+					"160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
+					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000,
+				))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
 				err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: w.PrivKey})
@@ -1441,7 +1473,8 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 					"07912972e42095fe58daaf09161c5a5da57be47c2054dc2aaa52b30fefa1940b",
 					0,
 					"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
-					2500))
+					2500,
+				))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
