@@ -37,7 +37,7 @@ func TestTx_SignAll(t *testing.T) {
 
 		rawTxBefore := tx.String()
 
-		err = tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey})
+		err = tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.NotEqual(t, rawTxBefore, tx.String())
@@ -49,7 +49,7 @@ func TestTx_SignAll(t *testing.T) {
 
 		rawTxBefore := tx.String()
 
-		err := tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: nil})
+		err := tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: nil})
 		assert.NoError(t, err)
 
 		assert.Equal(t, rawTxBefore, tx.String())

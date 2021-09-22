@@ -29,7 +29,7 @@ func TestInternalSigner_SignAll(t *testing.T) {
 	wif, err = DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	assert.NoError(t, err)
 
-	signer := bt.LocalSigner{PrivateKey: wif.PrivKey}
+	signer := bt.LocalSignerCreator{PrivateKey: wif.PrivKey}
 	err = tx.SignAll(context.Background(), &signer)
 	assert.NoError(t, err)
 

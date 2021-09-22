@@ -3,6 +3,7 @@ package bt
 import (
 	"context"
 
+	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
@@ -15,4 +16,9 @@ import (
 type Signer interface {
 	Sign(ctx context.Context, unsignedTx *Tx, index uint32, shf sighash.Flag) (publicKey, signature []byte, err error)
 	SignHash(ctx context.Context, hash []byte) (publicKey, signature []byte, err error)
+}
+
+// SignerCreator interface to allow the building of signers.
+type SignerCreator interface {
+	Create(ctx context.Context, lockingScript *bscript.Script) (Signer, error)
 }

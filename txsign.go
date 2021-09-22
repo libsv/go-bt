@@ -79,7 +79,7 @@ func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
 // It takes a Signed interface as a parameter so that different
 // signing implementations can be used to sign the transaction -
 // for example internal/local or external signing.
-func (tx *Tx) SignAll(ctx context.Context, s Signer) error {
+func (tx *Tx) SignAll(ctx context.Context, sc SignerCreator) error {
 	shf := sighash.AllForkID // use SIGHASHALLFORFORKID to sign automatically
 	// TODO: add support for other script types
 	signerStrats := map[string]signerFunc{
@@ -91,6 +91,10 @@ func (tx *Tx) SignAll(ctx context.Context, s Signer) error {
 		fn, ok := signerStrats[in.PreviousTxScript.ScriptType()]
 		if !ok {
 			return errors.New("unsupported script type")
+		}
+		s, err := sc.Create(ctx, in.PreviousTxScript)
+		if err != nil {
+			return err
 		}
 		if err := fn(ctx, s, uint32(i), shf); err != nil {
 			return err
