@@ -20,5 +20,5 @@ type Signer interface {
 
 // SignerGetter interfaces getting a signer for a given output/locking script.
 type SignerGetter interface {
-	Create(ctx context.Context, lockingScript *bscript.Script) (Signer, error)
+	Signer(ctx context.Context, lockingScript *bscript.Script) (Signer, error)
 }

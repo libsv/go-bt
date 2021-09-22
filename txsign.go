@@ -92,7 +92,7 @@ func (tx *Tx) SignAll(ctx context.Context, sg SignerGetter) error {
 		if !ok {
 			return errors.New("unsupported script type")
 		}
-		s, err := sg.Create(ctx, in.PreviousTxScript)
+		s, err := sg.Signer(ctx, in.PreviousTxScript)
 		if err != nil {
 			return err
 		}
