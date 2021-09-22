@@ -88,7 +88,7 @@ func (tx *Tx) SignAll(ctx context.Context, sc SignerCreator) error {
 
 	for i, in := range tx.Inputs {
 		// TODO: add support for other script types
-		fn, ok := signerStrats[in.PreviousTxScript.ScriptType()]
+		strat, ok := signerStrats[in.PreviousTxScript.ScriptType()]
 		if !ok {
 			return errors.New("unsupported script type")
 		}
@@ -96,7 +96,7 @@ func (tx *Tx) SignAll(ctx context.Context, sc SignerCreator) error {
 		if err != nil {
 			return err
 		}
-		if err := fn(ctx, s, uint32(i), shf); err != nil {
+		if err := strat(ctx, s, uint32(i), shf); err != nil {
 			return err
 		}
 	}
