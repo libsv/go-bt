@@ -2,13 +2,28 @@ package bt
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
+	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
 
 	"github.com/libsv/go-bt/v2/bscript"
 )
+
+// ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
+var ErrNoUTXO = errors.New("no remaining utxos")
+
+// UTXOGetterFunc is used for tx.Fund(...). It provides the amount of satoshis required
+// for funding as `deficit`, and expects []*bt.UTXO to be returned containing
+// utxos of which *bt.Input's can be built.
+// If the returned []*bt.UTXO does not cover the deficit after fee recalculation, then
+// this UTXOGetterFunc is called again, with the newly calculated deficit passed in.
+//
+// It is expected that bt.ErrNoUTXO will be returned once the utxo source is depleted.
+type UTXOGetterFunc func(ctx context.Context, deficit uint64) ([]*UTXO, error)
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
 func NewInputFromBytes(bytes []byte) (*Input, int, error) {
@@ -49,6 +64,8 @@ func (tx *Tx) addInput(input *Input) {
 // AddP2PKHInputsFromTx will add all Outputs of given previous transaction
 // that match a specific public key to your transaction.
 func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
+	// Given that the prevTxID never changes, calculate it once up front.
+	prevTxIDBytes := pvsTx.TxIDBytes()
 	for i, utxo := range pvsTx.Outputs {
 		utxoPkHASH160, err := utxo.LockingScript.PublicKeyHash()
 		if err != nil {
@@ -56,7 +73,12 @@ func (tx *Tx) AddP2PKHInputsFromTx(pvsTx *Tx, matchPK []byte) error {
 		}
 
 		if bytes.Equal(utxoPkHASH160, crypto.Hash160(matchPK)) {
-			if err := tx.From(pvsTx.TxID(), uint32(i), utxo.LockingScriptHexString(), utxo.Satoshis); err != nil {
+			if err := tx.FromUTXOs(&UTXO{
+				TxID:          prevTxIDBytes,
+				Vout:          uint32(i),
+				Satoshis:      utxo.Satoshis,
+				LockingScript: utxo.LockingScript,
+			}); err != nil {
 				return err
 			}
 		}
@@ -73,17 +95,93 @@ func (tx *Tx) From(prevTxID string, vout uint32, prevTxLockingScript string, sat
 	if err != nil {
 		return err
 	}
-
-	i := &Input{
-		PreviousTxOutIndex: vout,
-		PreviousTxSatoshis: satoshis,
-		PreviousTxScript:   pts,
-		SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
-	}
-	if err := i.PreviousTxIDAddStr(prevTxID); err != nil {
+	pti, err := hex.DecodeString(prevTxID)
+	if err != nil {
 		return err
 	}
-	tx.addInput(i)
+
+	return tx.FromUTXOs(&UTXO{
+		TxID:          pti,
+		Vout:          vout,
+		LockingScript: pts,
+		Satoshis:      satoshis,
+	})
+}
+
+// FromUTXOs adds a new input to the transaction from the specified *bt.UTXO fields, using the default
+// finalised sequence number (0xFFFFFFFF). If you want a different nSeq, change it manually
+// afterwards.
+func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
+	for _, utxo := range utxos {
+		i := &Input{
+			PreviousTxOutIndex: utxo.Vout,
+			PreviousTxSatoshis: utxo.Satoshis,
+			PreviousTxScript:   utxo.LockingScript,
+			SequenceNumber:     DefaultSequenceNumber, // use default finalised sequence number
+		}
+		if err := i.PreviousTxIDAdd(utxo.TxID); err != nil {
+			return err
+		}
+
+		tx.addInput(i)
+	}
+
+	return nil
+}
+
+// Fund continuously calls the provided bt.UTXOGetterFunc, adding each returned input
+// as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
+//
+// After completion, the receiver is ready for `Change(...)` to be called, and then be signed.
+// Note, this function works under the assumption that receiver *bt.Tx alread has all the outputs
+// which need covered.
+//
+// Example usage, for when working with a list:
+//    tx.Fund(ctx, bt.NewFeeQuote(), func(ctx context.Context, deficit satoshis) ([]*bt.UTXO, error) {
+//        utxos := make([]*bt.UTXO, 0)
+//        for _, f := range funds {
+//            deficit -= satoshis
+//            utxos := append(utxos, &bt.UTXO{
+//                TxID: f.TxID,
+//                Vout: f.Vout,
+//                LockingScript: f.Script,
+//                Satoshis: f.Satoshis,
+//            })
+//            if deficit == 0 {
+//                return utxos, nil
+//            }
+//        }
+//        return nil, bt.ErrNoUTXO
+//    })
+func (tx *Tx) Fund(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) error {
+	deficit, err := tx.estimateDeficit(fq)
+	if err != nil {
+		return err
+	}
+	for deficit != 0 {
+		utxos, err := next(ctx, deficit)
+		if err != nil {
+			if errors.Is(err, ErrNoUTXO) {
+				break
+			}
+
+			return err
+		}
+
+		for _, utxo := range utxos {
+			if err = tx.FromUTXOs(utxo); err != nil {
+				return err
+			}
+		}
+
+		deficit, err = tx.estimateDeficit(fq)
+		if err != nil {
+			return err
+		}
+	}
+	if deficit != 0 {
+		return errors.New("insufficient utxos provided")
+	}
 
 	return nil
 }
