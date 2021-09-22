@@ -18,7 +18,7 @@ type Signer interface {
 	SignHash(ctx context.Context, hash []byte) (publicKey, signature []byte, err error)
 }
 
-// SignerCreator interface to allow the building of signers.
-type SignerCreator interface {
+// SignerGetter interfaces getting a signer for a given output/locking script.
+type SignerGetter interface {
 	Create(ctx context.Context, lockingScript *bscript.Script) (Signer, error)
 }
