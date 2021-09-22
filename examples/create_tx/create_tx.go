@@ -22,7 +22,7 @@ func main() {
 
 	wif, _ := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	if err := tx.SignAll(context.Background(), &bt.LocalSigner{PrivateKey: wif.PrivKey}); err != nil {
+	if err := tx.SignAll(context.Background(), &bt.LocalSignerCreator{PrivateKey: wif.PrivKey}); err != nil {
 		log.Fatal(err.Error())
 	}
 	log.Printf("tx: %s\n", tx)
