@@ -30,7 +30,7 @@ type ParsedOp struct {
 	Data []byte
 }
 
-// Name returns the human readible name for the current opcode
+// Name returns the human readable name for the current opcode
 func (o *ParsedOp) Name() string {
 	return o.Op.name
 }
@@ -151,7 +151,7 @@ func (p *parser) Parse(s *bscript.Script) (ParsedScript, error) {
 	return parsedOps, nil
 }
 
-// unparseScript reversed the action of parseScript and returns the
+// Unparse reversed the action of parseScript and returns the
 // parsedOpcodes as a list of bytes
 func (p *parser) Unparse(pscr ParsedScript) (*bscript.Script, error) {
 	script := make(bscript.Script, 0, len(pscr))

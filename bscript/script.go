@@ -182,9 +182,9 @@ func (s *Script) AppendPushDataArray(d [][]byte) error {
 
 // AppendPushDataStrings takes an array of strings and appends their
 // UTF-8 encoding to the script with proper PUSHDATA prefixes
-func (s *Script) AppendPushDataStrings(strs []string) error {
+func (s *Script) AppendPushDataStrings(pushDataStrings []string) error {
 	dataBytes := make([][]byte, 0)
-	for _, str := range strs {
+	for _, str := range pushDataStrings {
 		strBytes := []byte(str)
 		dataBytes = append(dataBytes, strBytes)
 	}

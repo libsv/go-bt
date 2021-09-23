@@ -49,10 +49,10 @@ const (
 	ScriptVerifyCleanStack
 
 	// ScriptVerifyDERSignatures defines that signatures are required
-	// to compily with the DER format.
+	// to comply with the DER format.
 	ScriptVerifyDERSignatures
 
-	// ScriptVerifyLowS defines that signtures are required to comply with
+	// ScriptVerifyLowS defines that signatures are required to comply with
 	// the DER format and whose S value is <= order / 2.  This is rule 5
 	// of BIP0062.
 	ScriptVerifyLowS
@@ -100,7 +100,7 @@ func (s *ScriptFlags) AddFlag(flag ScriptFlags) {
 	*s |= flag
 }
 
-// halforder is used to tame ECDSA malleability (see BIP0062).
+// halfOrder is used to tame ECDSA malleability (see BIP0062).
 var halfOrder = new(big.Int).Rsh(bec.S256().N, 1)
 
 // Engine is the virtual machine that executes scripts.

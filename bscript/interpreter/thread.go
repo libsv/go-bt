@@ -55,7 +55,7 @@ func (t *thread) addFlag(flag ScriptFlags) {
 	t.flags.AddFlag(flag)
 }
 
-// isBranchExecuting returns whether or not the current conditional branch is
+// isBranchExecuting returns whether the current conditional branch is
 // actively executing. For example, when the data stack has an OP_FALSE on it
 // and an OP_IF is encountered, the branch is inactive until an OP_ELSE or
 // OP_ENDIF is encountered.  It properly handles nested conditionals.
@@ -64,7 +64,7 @@ func (t *thread) isBranchExecuting() bool {
 }
 
 // executeOpcode performs execution on the passed opcode. It takes into account
-// whether or not it is hidden by conditionals, but some rules still must be
+// whether it is hidden by conditionals, but some rules still must be
 // tested in this case.
 func (t *thread) executeOpcode(pop ParsedOp) error {
 	if len(pop.Data) > t.cfg.MaxScriptElementSize() {
@@ -98,7 +98,7 @@ func (t *thread) executeOpcode(pop ParsedOp) error {
 			"element size %d exceeds max allowed size %d", len(pop.Data), t.cfg.MaxScriptElementSize())
 	}
 
-	// Nothing left to do when this is not a conditional opcode and it is
+	// Nothing left to do when this is not a conditional opcode, and it is
 	// not in an executing branch.
 	if !t.isBranchExecuting() && !pop.IsConditional() {
 		return nil
@@ -136,7 +136,7 @@ func (t *thread) validPC() error {
 }
 
 // CheckErrorCondition returns nil if the running script has ended and was
-// successful, leaving a a true boolean on the stack.  An error otherwise,
+// successful, leaving a true boolean on the stack.  An error otherwise,
 // including if the script has not finished.
 func (t *thread) CheckErrorCondition(finalScript bool) error {
 	if t.dstack.Depth() < 1 {
@@ -389,7 +389,7 @@ func (t *thread) subScript() ParsedScript {
 	return t.scripts[t.scriptIdx][t.lastCodeSep:]
 }
 
-// checkHashTypeEncoding returns whether or not the passed hashtype adheres to
+// checkHashTypeEncoding returns whether the passed hashtype adheres to
 // the strict encoding requirements if enabled.
 func (t *thread) checkHashTypeEncoding(shf sighash.Flag) error {
 	if !t.hasFlag(ScriptVerifyStrictEncoding) {
@@ -425,7 +425,7 @@ func (t *thread) checkHashTypeEncoding(shf sighash.Flag) error {
 	return nil
 }
 
-// checkPubKeyEncoding returns whether or not the passed public key adheres to
+// checkPubKeyEncoding returns whether the passed public key adheres to
 // the strict encoding requirements if enabled.
 func (t *thread) checkPubKeyEncoding(pubKey []byte) error {
 	if !t.hasFlag(ScriptVerifyStrictEncoding) {
@@ -444,7 +444,7 @@ func (t *thread) checkPubKeyEncoding(pubKey []byte) error {
 	return scriptError(ErrPubKeyType, "unsupported public key type")
 }
 
-// checkSignatureEncoding returns whether or not the passed signature adheres to
+// checkSignatureEncoding returns whether the passed signature adheres to
 // the strict encoding requirements if enabled.
 func (t *thread) checkSignatureEncoding(sig []byte) error {
 	if !t.hasFlag(ScriptVerifyDERSignatures) && !t.hasFlag(ScriptVerifyLowS) && !t.hasFlag(ScriptVerifyStrictEncoding) {
@@ -482,7 +482,7 @@ func (t *thread) checkSignatureEncoding(sig []byte) error {
 		// maxSigLen is the maximum length of a DER encoded signature and is
 		// when both R and S are 33 bytes each.  It is 33 bytes because a
 		// 256-bit integer requires 32 bytes and an additional leading null byte
-		// might required if the high bit is set in the value.
+		// might be required if the high bit is set in the value.
 		//
 		// 0x30 + <1-byte> + 0x02 + 0x21 + <33 bytes> + 0x2 + 0x21 + <33 bytes>
 		maxSigLen = 72
@@ -622,7 +622,7 @@ func (t *thread) checkSignatureEncoding(sig []byte) error {
 func getStack(stack *stack) [][]byte {
 	array := make([][]byte, stack.Depth())
 	for i := range array {
-		// PeekByteArry can't fail due to overflow, already checked
+		// PeekByteArray can't fail due to overflow, already checked
 		array[len(array)-i-1], _ = stack.PeekByteArray(int32(i))
 	}
 	return array

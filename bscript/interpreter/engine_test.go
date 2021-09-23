@@ -81,7 +81,7 @@ func TestBadPC(t *testing.T) {
 	}
 }
 
-// TestCheckErrorCondition tests the execute early test in CheckErrorCondition()
+// TestCheckErrorCondition tests to execute early test in CheckErrorCondition()
 // since most code paths are tested elsewhere.
 func TestCheckErrorCondition(t *testing.T) {
 	t.Parallel()
