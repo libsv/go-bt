@@ -51,14 +51,15 @@ For more information around the technical aspects of Bitcoin, please see the upd
 
 ### Features
 
-- Full Featured Bitcoin Transactions
-- Auto-Fee Calculations for Change Address
-- Bitcoin Transaction [Script](bscript) Functionality
+- Full featured Bitcoin transactions and transaction manipulation/functionality
+- Auto-fee calculations for change outputs
+- Transaction fee calculation and related checks
+- Interfaced signing/unlocking of transaction inputs for easy adaptation/custimisation and extendability for any use case
+- Bitcoin Transaction [Script](bscript) functionality
+  - Bitcoin script engine ([interpreter](bscript/interpreter))
   - P2PKH (base58 addresses)
   - Data (OP_RETURN)
   - [BIP276](https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki)
-
-- Transaction Signing Extendability
 
 #### Coming Soon! (18 months<sup>TM</sup>)
 
@@ -158,14 +159,6 @@ Read more about this Go project's [code standards](.github/CODE_STANDARDS.md).
 ## Usage
 
 View the [examples](examples)
-
-<br/>
-
-## Maintainers
-
-| [<img src="https://github.com/HaddadJoe.png" height="50" alt="JH" />](https://github.com/HaddadJoe) | [<img src="https://github.com/jadwahab.png" height="50" alt="JW" />](https://github.com/jadwahab) | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
-|:---:|:---:|:---:|
-|  [JH](https://github.com/HaddadJoe)| [JW](https://github.com/jadwahab) | [MrZ](https://github.com/mrz1836) |
 
 <br/>
 
