@@ -4,9 +4,8 @@ import (
 	"encoding/hex"
 	"testing"
 
+	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/libsv/go-bt/bscript"
 )
 
 func TestDecodeParts(t *testing.T) {

@@ -1,11 +1,11 @@
 package bt
 
 import (
-	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 /*
@@ -20,13 +20,15 @@ sequence_no	               normally 0xFFFFFFFF; irrelevant unless transaction's 
                            lock_time is > 0
 */
 
+// DefaultSequenceNumber is the default starting sequence number
+const DefaultSequenceNumber uint32 = 0xFFFFFFFF
+
 // Input is a representation of a transaction input
 //
-// DO NOT CHANGE ORDER - Optimized for memory via maligned
+// DO NOT CHANGE ORDER - Optimised for memory via maligned
 //
 type Input struct {
-	PreviousTxIDBytes  []byte
-	PreviousTxID       string
+	previousTxID       []byte
 	PreviousTxSatoshis uint64
 	PreviousTxScript   *bscript.Script
 	UnlockingScript    *bscript.Script
@@ -34,75 +36,111 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
-// DefaultSequenceNumber is the default starting sequence number
-const DefaultSequenceNumber uint32 = 0xFFFFFFFF
-
-// NewInput creates a new empty Input object with a finalized sequence number.
-func NewInput() *Input {
-	return &Input{
-		UnlockingScript: bscript.NewFromBytes(make([]byte, 0)),
-		SequenceNumber:  DefaultSequenceNumber,
-	}
+// inputJSON is used to covnert an input to and from json.
+// Script is duplicated as we have our own name for unlockingScript
+// but want to be compatible with node json also.
+type inputJSON struct {
+	UnlockingScript *struct {
+		Asm string `json:"asm"`
+		Hex string `json:"hex"`
+	} `json:"unlockingScript,omitempty"`
+	ScriptSig *struct {
+		Asm string `json:"asm"`
+		Hex string `json:"hex"`
+	} `json:"scriptSig,omitempty"`
+	TxID     string `json:"txid"`
+	Vout     uint32 `json:"vout"`
+	Sequence uint32 `json:"sequence"`
 }
 
-// NewInputFromBytes returns a transaction input from the bytes provided.
-func NewInputFromBytes(bytes []byte) (*Input, int, error) {
-	if len(bytes) < 36 {
-		return nil, 0, fmt.Errorf("input length too short < 36")
-	}
-
-	offset := 36
-	l, size := DecodeVarInt(bytes[offset:])
-	offset += size
-
-	totalLength := offset + int(l) + 4 // 4 bytes for nSeq
-
-	if len(bytes) < totalLength {
-		return nil, 0, fmt.Errorf("input length too short < 36 + script + 4")
-	}
-
-	return &Input{
-		PreviousTxIDBytes:  ReverseBytes(bytes[0:32]),
-		PreviousTxID:       hex.EncodeToString(ReverseBytes(bytes[0:32])),
-		PreviousTxOutIndex: binary.LittleEndian.Uint32(bytes[32:36]),
-		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
-		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
-	}, totalLength, nil
-}
-
-// NewInputFromUTXO returns a transaction input from the UTXO fields provided.
-func NewInputFromUTXO(prevTxID string, prevTxIndex uint32, prevTxSats uint64,
-	prevTxScript string, nSeq uint32) (*Input, error) {
-
-	pts, err := bscript.NewFromHexString(prevTxScript)
+// MarshalJSON will convert an input to json, expanding upon the
+// input struct to add additional fields.
+func (i *Input) MarshalJSON() ([]byte, error) {
+	asm, err := i.UnlockingScript.ToASM()
 	if err != nil {
 		return nil, err
 	}
-
-	ptxid, err := hex.DecodeString(prevTxID)
-	if err != nil {
-		return nil, err
+	input := &inputJSON{
+		TxID: hex.EncodeToString(i.previousTxID),
+		Vout: i.PreviousTxOutIndex,
+		UnlockingScript: &struct {
+			Asm string `json:"asm"`
+			Hex string `json:"hex"`
+		}{
+			Asm: asm,
+			Hex: i.UnlockingScript.String(),
+		},
+		Sequence: i.SequenceNumber,
 	}
-
-	return &Input{
-		PreviousTxIDBytes:  ptxid,
-		PreviousTxID:       prevTxID,
-		PreviousTxOutIndex: prevTxIndex,
-		PreviousTxSatoshis: prevTxSats,
-		PreviousTxScript:   pts,
-		SequenceNumber:     nSeq,
-	}, nil
+	return json.Marshal(input)
 }
 
+// UnmarshalJSON will convert a JSON input to an input.
+func (i *Input) UnmarshalJSON(b []byte) error {
+	var ij inputJSON
+	if err := json.Unmarshal(b, &ij); err != nil {
+		return err
+	}
+	ptxID, err := hex.DecodeString(ij.TxID)
+	if err != nil {
+		return err
+	}
+	sig := ij.UnlockingScript
+	if sig == nil {
+		sig = ij.ScriptSig
+	}
+	s, err := bscript.NewFromHexString(sig.Hex)
+	if err != nil {
+		return err
+	}
+	i.UnlockingScript = s
+	i.previousTxID = ptxID
+	i.PreviousTxOutIndex = ij.Vout
+	i.SequenceNumber = ij.Sequence
+	return nil
+}
+
+// PreviousTxIDAdd will add the supplied txID bytes to the Input,
+// if it isn't a valid transaction id an ErrInvalidTxID error will be returned.
+func (i *Input) PreviousTxIDAdd(txID []byte) error {
+	if !IsValidTxID(txID) {
+		return ErrInvalidTxID
+	}
+	i.previousTxID = txID
+	return nil
+}
+
+// PreviousTxIDAddStr will validate and add the supplied txID string to the Input,
+// if it isn't a valid transaction id an ErrInvalidTxID error will be returned.
+func (i *Input) PreviousTxIDAddStr(txID string) error {
+	bb, err := hex.DecodeString(txID)
+	if err != nil {
+		return err
+	}
+	return i.PreviousTxIDAdd(bb)
+}
+
+// PreviousTxID will return the PreviousTxID if set.
+func (i *Input) PreviousTxID() []byte {
+	return i.previousTxID
+}
+
+// PreviousTxIDStr returns the Previous TxID as a hex string.
+func (i *Input) PreviousTxIDStr() string {
+	return hex.EncodeToString(i.previousTxID)
+}
+
+// String implements the Stringer interface and returns a string
+// representation of a transaction input.
 func (i *Input) String() string {
 	return fmt.Sprintf(
-		`prevTxHash:   %x
+		`prevTxHash:   %s
 prevOutIndex: %d
 scriptLen:    %d
-script:       %x
+script:       %s
 sequence:     %x
 `,
-		i.PreviousTxID,
+		hex.EncodeToString(i.previousTxID),
 		i.PreviousTxOutIndex,
 		len(*i.UnlockingScript),
 		i.UnlockingScript,
@@ -110,22 +148,12 @@ sequence:     %x
 	)
 }
 
-// ToBytes encodes the Input into a hex byte array.
-func (i *Input) ToBytes(clear bool) []byte {
+// Bytes encodes the Input into a hex byte array.
+func (i *Input) Bytes(clear bool) []byte {
 	h := make([]byte, 0)
 
-	// TODO: v2 make input (and other internal) elements private and not exposed
-	// so that we only store previoustxid in bytes and then do the conversion
-	// with getters and setters
-	if i.PreviousTxIDBytes == nil {
-		ptidb, err := hex.DecodeString(i.PreviousTxID)
-		if err == nil {
-			i.PreviousTxIDBytes = ptidb
-		}
-	}
-
-	h = append(h, ReverseBytes(i.PreviousTxIDBytes)...)
-	h = append(h, GetLittleEndianBytes(i.PreviousTxOutIndex, 4)...)
+	h = append(h, ReverseBytes(i.previousTxID)...)
+	h = append(h, LittleEndianBytes(i.PreviousTxOutIndex, 4)...)
 	if clear {
 		h = append(h, 0x00)
 	} else {
@@ -137,5 +165,5 @@ func (i *Input) ToBytes(clear bool) []byte {
 		}
 	}
 
-	return append(h, GetLittleEndianBytes(i.SequenceNumber, 4)...)
+	return append(h, LittleEndianBytes(i.SequenceNumber, 4)...)
 }

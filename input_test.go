@@ -1,21 +1,12 @@
 package bt_test
 
 import (
-	"bytes"
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/bscript"
+	"github.com/libsv/go-bt/v2"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestNewInput(t *testing.T) {
-	input := bt.NewInput()
-	assert.NotNil(t, input)
-	assert.Equal(t, "", input.UnlockingScript.ToString())
-	assert.Equal(t, bt.DefaultSequenceNumber, input.SequenceNumber)
-}
 
 func TestNewInputFromBytes(t *testing.T) {
 	t.Parallel()
@@ -72,33 +63,8 @@ func TestInput_String(t *testing.T) {
 		assert.Equal(t, 148, s)
 
 		assert.Equal(t,
-			"prevTxHash:   36666337356633306130383566333331333236356239326338313830383266393736386331336238613161313037623438343032336563663633633836653463\nprevOutIndex: 1\nscriptLen:    107\nscript:       &483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824f\nsequence:     ffffffff\n",
+			"prevTxHash:   6fc75f30a085f3313265b92c818082f9768c13b8a1a107b484023ecf63c86e4c\nprevOutIndex: 1\nscriptLen:    107\nscript:       483045022100f01c1a1679c9437398d691c8497f278fa2d615efc05115688bf2c3335b45c88602201b54437e54fb53bc50545de44ea8c64e9e583952771fcc663c8687dc2638f7854121037e87bbd3b680748a74372640628a8f32d3a841ceeef6f75626ab030c1a04824f\nsequence:     ffffffff\n",
 			i.String(),
 		)
 	})
-}
-
-func TestNewInputFromUTXO(t *testing.T) {
-	t.Parallel()
-
-	i, err := bt.NewInputFromUTXO(
-		"a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5",
-		4,
-		5064,
-		"a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac",
-		bt.DefaultSequenceNumber,
-	)
-	assert.NoError(t, err)
-
-	assert.Equal(t, "a61021694ee0fd7c3d441aab7b387e356f5552957d5a01705a66766fe86ec9e5", i.PreviousTxID)
-	assert.Equal(t, uint32(4), i.PreviousTxOutIndex)
-	assert.Equal(t, uint64(5064), i.PreviousTxSatoshis)
-
-	var es *bscript.Script
-	es, err = bscript.NewFromHexString("a9149cbe9f5e72fa286ac8a38052d1d5337aa363ea7f88ac")
-	assert.NoError(t, err)
-	assert.NotNil(t, es)
-
-	assert.Equal(t, true, bytes.Equal(*i.PreviousTxScript, *es))
-	assert.Equal(t, bt.DefaultSequenceNumber, i.SequenceNumber)
 }

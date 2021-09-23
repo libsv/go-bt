@@ -4,19 +4,19 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/sighash"
+	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/sighash"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTx_GetInputPreimage(t *testing.T) {
+func TestTx_CalcInputPreimage(t *testing.T) {
 	t.Parallel()
 
 	var testVector = []struct {
 		name               string
 		unsignedTx         string
-		index              uint32
+		index              int
 		previousTxSatoshis uint64
 		previousTxScript   string
 		sigHashType        sighash.Flag
@@ -61,19 +61,19 @@ func TestTx_GetInputPreimage(t *testing.T) {
 			assert.NotNil(t, tx)
 
 			// Add the UTXO amount and script (PreviousTxScript already in unsiged tx)
-			tx.Inputs[test.index].PreviousTxSatoshis = test.previousTxSatoshis
-			tx.Inputs[test.index].PreviousTxScript, err = bscript.NewFromHexString(test.previousTxScript)
+			tx.InputIdx(test.index).PreviousTxSatoshis = test.previousTxSatoshis
+			tx.InputIdx(test.index).PreviousTxScript, err = bscript.NewFromHexString(test.previousTxScript)
 			assert.NoError(t, err)
 
 			var actualSigHash []byte
-			actualSigHash, err = tx.GetInputPreimage(test.index, sighash.All|sighash.ForkID)
+			actualSigHash, err = tx.CalcInputPreimage(uint32(test.index), sighash.All|sighash.ForkID)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedPreimage, hex.EncodeToString(actualSigHash))
 		})
 	}
 }
 
-func TestTx_GetInputSignatureHash(t *testing.T) {
+func TestTx_CalcInputSignatureHash(t *testing.T) {
 	t.Parallel()
 
 	var testVector = []struct {
@@ -92,7 +92,7 @@ func TestTx_GetInputSignatureHash(t *testing.T) {
 			100000000,
 			"76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac",
 			sighash.AllForkID,
-			"b111212a304c8f3a84f6e3f41850bccb927266901263cd02efd72d2eef429abe",
+			"be9a42ef2e2dd7ef02cd631290667292cbbc5018f4e3f6843a8f4c302a2111b1",
 		},
 		{
 			"2 Inputs 3 Outputs - SIGHASH_ALL (FORKID) - Index 0",
@@ -101,7 +101,7 @@ func TestTx_GetInputSignatureHash(t *testing.T) {
 			2000000000,
 			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 			sighash.AllForkID,
-			"4c19a3288e2385767006c8438b0e63e029185d7b79195e4827e7d5b6cfee158b",
+			"8b15eecfb6d5e727485e19797b5d1829e0630e8b43c806707685238e28a3194c",
 		},
 		{
 			"2 Inputs 3 Outputs - SIGHASH_ALL (FORKID) - Index 1",
@@ -110,7 +110,34 @@ func TestTx_GetInputSignatureHash(t *testing.T) {
 			2000000000,
 			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 			sighash.AllForkID,
-			"dbba819f30c3cfbfe5d207bfb4eab0992079ee5ebd7fd939504a71a255c3727b",
+			"7b72c355a2714a5039d97fbd5eee792099b0eab4bf07d2e5bfcfc3309f81badb",
+		},
+		{
+			"1 Input 2 Outputs - SIGHASH_ALL",
+			"010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000",
+			0,
+			100000000,
+			"76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac",
+			sighash.All,
+			"7bd029c36f5a950fe21989893bba45b657b217d62df9b1b49933b9cbe4aff389",
+		},
+		{
+			"2 Inputs 3 Outputs - SIGHASH_ALL - Index 0",
+			"01000000027e2705da59f7112c7337d79840b56fff582b8f3a0e9df8eb19e282377bebb1bc0100000000ffffffffdebe6fe5ad8e9220a10fcf6340f7fca660d87aeedf0f74a142fba6de1f68d8490000000000ffffffff0300e1f505000000001976a9142987362cf0d21193ce7e7055824baac1ee245d0d88ac00e1f505000000001976a9143ca26faa390248b7a7ac45be53b0e4004ad7952688ac34657fe2000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788ac00000000",
+			0,
+			2000000000,
+			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+			sighash.All,
+			"66308491ca2e295f816fcc0cc88b4c46ba3fe58a69654f05833a4917d1102770",
+		},
+		{
+			"2 Inputs 3 Outputs - SIGHASH_ALL - Index 1",
+			"01000000027e2705da59f7112c7337d79840b56fff582b8f3a0e9df8eb19e282377bebb1bc0100000000ffffffffdebe6fe5ad8e9220a10fcf6340f7fca660d87aeedf0f74a142fba6de1f68d8490000000000ffffffff0300e1f505000000001976a9142987362cf0d21193ce7e7055824baac1ee245d0d88ac00e1f505000000001976a9143ca26faa390248b7a7ac45be53b0e4004ad7952688ac34657fe2000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788ac00000000",
+			1,
+			2000000000,
+			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+			sighash.All,
+			"4c8ee5be8b0b4a822284248e3854bda603e6eca5e2db73498759cd3f7c25d329",
 		},
 		// TODO: add different SIGHASH flags
 		// note: checking bsv.js - using different sighash flags gives same
@@ -129,9 +156,72 @@ func TestTx_GetInputSignatureHash(t *testing.T) {
 			assert.NoError(t, err)
 
 			var actualSigHash []byte
-			actualSigHash, err = tx.GetInputSignatureHash(test.index, sighash.All|sighash.ForkID)
+			actualSigHash, err = tx.CalcInputSignatureHash(test.index, test.sigHashType)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expectedSigHash, hex.EncodeToString(actualSigHash))
+		})
+	}
+}
+
+func TestTx_CalcInputPreimageLegacy(t *testing.T) {
+	t.Parallel()
+
+	var testVector = []struct {
+		name               string
+		unsignedTx         string
+		index              int
+		previousTxSatoshis uint64
+		previousTxScript   string
+		sigHashType        sighash.Flag
+		expectedPreimage   string
+	}{
+		{
+			"1 Input 2 Outputs - SIGHASH_ALL",
+			"010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000",
+			0,
+			100000000,
+			"76a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88ac",
+			sighash.All,
+			"010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000001976a914c0a3c167a28cabb9fbb495affa0761e6e74ac60d88acffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac0000000001000000",
+		},
+		{
+			"2 Inputs 3 Outputs - SIGHASH_ALL - Index 0",
+			"01000000027e2705da59f7112c7337d79840b56fff582b8f3a0e9df8eb19e282377bebb1bc0100000000ffffffffdebe6fe5ad8e9220a10fcf6340f7fca660d87aeedf0f74a142fba6de1f68d8490000000000ffffffff0300e1f505000000001976a9142987362cf0d21193ce7e7055824baac1ee245d0d88ac00e1f505000000001976a9143ca26faa390248b7a7ac45be53b0e4004ad7952688ac34657fe2000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788ac00000000",
+			0,
+			2000000000,
+			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+			sighash.All,
+			"01000000027e2705da59f7112c7337d79840b56fff582b8f3a0e9df8eb19e282377bebb1bc010000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788acffffffffdebe6fe5ad8e9220a10fcf6340f7fca660d87aeedf0f74a142fba6de1f68d8490000000000ffffffff0300e1f505000000001976a9142987362cf0d21193ce7e7055824baac1ee245d0d88ac00e1f505000000001976a9143ca26faa390248b7a7ac45be53b0e4004ad7952688ac34657fe2000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788ac0000000001000000",
+		},
+		{
+			"2 Inputs 3 Outputs - SIGHASH_ALL - Index 1",
+			"01000000027e2705da59f7112c7337d79840b56fff582b8f3a0e9df8eb19e282377bebb1bc0100000000ffffffffdebe6fe5ad8e9220a10fcf6340f7fca660d87aeedf0f74a142fba6de1f68d8490000000000ffffffff0300e1f505000000001976a9142987362cf0d21193ce7e7055824baac1ee245d0d88ac00e1f505000000001976a9143ca26faa390248b7a7ac45be53b0e4004ad7952688ac34657fe2000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788ac00000000",
+			1,
+			2000000000,
+			"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
+			sighash.All,
+			"01000000027e2705da59f7112c7337d79840b56fff582b8f3a0e9df8eb19e282377bebb1bc0100000000ffffffffdebe6fe5ad8e9220a10fcf6340f7fca660d87aeedf0f74a142fba6de1f68d849000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788acffffffff0300e1f505000000001976a9142987362cf0d21193ce7e7055824baac1ee245d0d88ac00e1f505000000001976a9143ca26faa390248b7a7ac45be53b0e4004ad7952688ac34657fe2000000001976a914eb0bd5edba389198e73f8efabddfc61666969ff788ac0000000001000000",
+		},
+		// TODO: add different SIGHASH flags
+		// note: checking bsv.js - using different sighash flags gives same
+		// sighash for some reason.. check later..
+	}
+
+	for _, test := range testVector {
+		t.Run(test.name, func(t *testing.T) {
+			tx, err := bt.NewTxFromString(test.unsignedTx)
+			assert.NoError(t, err)
+			assert.NotNil(t, tx)
+
+			// Add the UTXO amount and script (PreviousTxScript already in unsiged tx)
+			tx.InputIdx(test.index).PreviousTxSatoshis = test.previousTxSatoshis
+			tx.InputIdx(test.index).PreviousTxScript, err = bscript.NewFromHexString(test.previousTxScript)
+			assert.NoError(t, err)
+
+			var actualSigHash []byte
+			actualSigHash, err = tx.CalcInputPreimageLegacy(uint32(test.index), test.sigHashType)
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedPreimage, hex.EncodeToString(actualSigHash))
 		})
 	}
 }

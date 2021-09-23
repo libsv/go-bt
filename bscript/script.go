@@ -1,13 +1,30 @@
 package bscript
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"strings"
 
-	"github.com/bitcoinsv/bsvd/bsvec"
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/crypto"
+)
+
+// Sentinel errors raised by the package.
+var (
+	ErrInvalidPKLen  = errors.New("invalid public key length")
+	ErrInvalidOpCode = errors.New("invalid opcode data")
+	ErrEmptyScript   = errors.New("script is empty")
+	ErrNotP2PKH      = errors.New("not a P2PKH")
+)
+
+// ScriptKey types.
+const (
+	ScriptTypePubKey      = "pubkey"
+	ScriptTypePubKeyHash  = "pubkeyhash"
+	ScriptTypeNonStandard = "nonstandard"
+	ScriptTypeMultiSig    = "multisig"
+	ScriptTypeNullData    = "nulldata"
 )
 
 // Script type
@@ -30,30 +47,25 @@ func NewFromBytes(b []byte) *Script {
 
 // NewFromASM creates a new script from a BitCoin ASM formatted string.
 func NewFromASM(str string) (*Script, error) {
-	sections := strings.Split(str, " ")
+	s := Script{}
 
-	s := &Script{}
-
-	for _, section := range sections {
+	for _, section := range strings.Split(str, " ") {
 		if val, ok := opCodeStrings[section]; ok {
 			s.AppendOpCode(val)
 		} else {
 			if err := s.AppendPushDataHexString(section); err != nil {
-				return nil, errors.New("invalid opcode data")
+				return nil, ErrInvalidOpCode
 			}
 		}
 	}
 
-	return s, nil
+	return &s, nil
 }
 
 // NewP2PKHFromPubKeyEC takes a public key hex string (in
 // compressed format) and creates a P2PKH script from it.
-func NewP2PKHFromPubKeyEC(pubKey *bsvec.PublicKey) (*Script, error) {
-
-	pubKeyBytes := pubKey.SerializeCompressed()
-
-	return NewP2PKHFromPubKeyBytes(pubKeyBytes)
+func NewP2PKHFromPubKeyEC(pubKey *bec.PublicKey) (*Script, error) {
+	return NewP2PKHFromPubKeyBytes(pubKey.SerialiseCompressed())
 }
 
 // NewP2PKHFromPubKeyStr takes a public key hex string (in
@@ -63,21 +75,27 @@ func NewP2PKHFromPubKeyStr(pubKey string) (*Script, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return NewP2PKHFromPubKeyBytes(pubKeyBytes)
 }
 
 // NewP2PKHFromPubKeyBytes takes public key bytes (in
 // compressed format) and creates a P2PKH script from it.
 func NewP2PKHFromPubKeyBytes(pubKeyBytes []byte) (*Script, error) {
-	hash := crypto.Hash160(pubKeyBytes)
+	if len(pubKeyBytes) != 33 {
+		return nil, ErrInvalidPKLen
+	}
+	return NewP2PKHFromPubKeyHash(crypto.Hash160(pubKeyBytes))
+}
 
+// NewP2PKHFromPubKeyHash takes a public key hex string (in
+// compressed format) and creates a P2PKH script from it.
+func NewP2PKHFromPubKeyHash(pubKeyHash []byte) (*Script, error) {
 	b := []byte{
 		OpDUP,
 		OpHASH160,
-		0x14,
+		OpDATA20,
 	}
-	b = append(b, hash...)
+	b = append(b, pubKeyHash...)
 	b = append(b, OpEQUALVERIFY)
 	b = append(b, OpCHECKSIG)
 
@@ -93,23 +111,12 @@ func NewP2PKHFromPubKeyHashStr(pubKeyHash string) (*Script, error) {
 		return nil, err
 	}
 
-	b := []byte{
-		OpDUP,
-		OpHASH160,
-		0x14,
-	}
-	b = append(b, hash...)
-	b = append(b, OpEQUALVERIFY)
-	b = append(b, OpCHECKSIG)
-
-	s := Script(b)
-	return &s, nil
+	return NewP2PKHFromPubKeyHash(hash)
 }
 
 // NewP2PKHFromAddress takes an address
 // and creates a P2PKH script from it.
 func NewP2PKHFromAddress(addr string) (*Script, error) {
-
 	a, err := NewAddressFromString(addr)
 	if err != nil {
 		return nil, err
@@ -120,14 +127,14 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 		return nil, err
 	}
 
-	s := &Script{}
-	s.AppendOpCode(OpDUP)
-	s.AppendOpCode(OpHASH160)
+	s := new(Script).
+		AppendOpCode(OpDUP).
+		AppendOpCode(OpHASH160)
 	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
 		return nil, err
 	}
-	s.AppendOpCode(OpEQUALVERIFY)
-	s.AppendOpCode(OpCHECKSIG)
+	s.AppendOpCode(OpEQUALVERIFY).
+		AppendOpCode(OpCHECKSIG)
 
 	return s, nil
 }
@@ -181,17 +188,17 @@ func (s *Script) AppendPushDataStrings(strs []string) error {
 		strBytes := []byte(str)
 		dataBytes = append(dataBytes, strBytes)
 	}
-
 	return s.AppendPushDataArray(dataBytes)
 }
 
 // AppendOpCode appends an opcode type to the script
-func (s *Script) AppendOpCode(o uint8) {
+func (s *Script) AppendOpCode(o uint8) *Script {
 	*s = append(*s, o)
+	return s
 }
 
-// ToString returns hex string of script.
-func (s *Script) ToString() string { // TODO: change to HexString?
+// String implements the stringer interface and returns the hex string of script.
+func (s *Script) String() string {
 	return hex.EncodeToString(*s)
 }
 
@@ -222,7 +229,7 @@ func (s *Script) IsP2PKH() bool {
 	return len(b) == 25 &&
 		b[0] == OpDUP &&
 		b[1] == OpHASH160 &&
-		b[2] == 0x14 &&
+		b[2] == OpDATA20 &&
 		b[23] == OpEQUALVERIFY &&
 		b[24] == OpCHECKSIG
 }
@@ -234,10 +241,7 @@ func (s *Script) IsP2PK() bool {
 		return false
 	}
 
-	if len(parts) == 2 &&
-		len(parts[0]) > 0 &&
-		parts[1][0] == OpCHECKSIG {
-
+	if len(parts) == 2 && len(parts[0]) > 0 && parts[1][0] == OpCHECKSIG {
 		pubkey := parts[0]
 		version := pubkey[0]
 
@@ -257,7 +261,7 @@ func (s *Script) IsP2SH() bool {
 
 	return len(b) == 23 &&
 		b[0] == OpHASH160 &&
-		b[1] == 0x14 &&
+		b[1] == OpDATA20 &&
 		b[22] == OpEQUAL
 }
 
@@ -266,12 +270,12 @@ func (s *Script) IsP2SH() bool {
 func (s *Script) IsData() bool {
 	b := []byte(*s)
 
-	return b[0] == 0x6a ||
-		b[0] == 0x00 && b[1] == 0x6a
+	return b[0] == OpRETURN ||
+		b[0] == OpFALSE && b[1] == OpRETURN
 }
 
-// IsMultisigOut returns true if this is a multisig output script.
-func (s *Script) IsMultisigOut() bool {
+// IsMultiSigOut returns true if this is a multisig output script.
+func (s *Script) IsMultiSigOut() bool {
 	parts, err := DecodeParts(*s)
 	if err != nil {
 		return false
@@ -299,14 +303,14 @@ func isSmallIntOp(opcode byte) bool {
 	return opcode == OpZERO || (opcode >= OpONE && opcode <= Op16)
 }
 
-// GetPublicKeyHash returns a public key hash byte array if the script is a P2PKH script
-func (s *Script) GetPublicKeyHash() ([]byte, error) {
+// PublicKeyHash returns a public key hash byte array if the script is a P2PKH script.
+func (s *Script) PublicKeyHash() ([]byte, error) {
 	if s == nil || len(*s) == 0 {
-		return nil, fmt.Errorf("script is empty")
+		return nil, ErrEmptyScript
 	}
 
-	if (*s)[0] != 0x76 || (*s)[1] != 0xa9 {
-		return nil, fmt.Errorf("not a P2PKH")
+	if (*s)[0] != OpDUP || (*s)[1] != OpHASH160 {
+		return nil, ErrNotP2PKH
 	}
 
 	parts, err := DecodeParts((*s)[2:])
@@ -315,4 +319,57 @@ func (s *Script) GetPublicKeyHash() ([]byte, error) {
 	}
 
 	return parts[0], nil
+}
+
+// ScriptType returns the type of script this is as a string.
+func (s *Script) ScriptType() string {
+	if s.IsP2PKH() {
+		return ScriptTypePubKeyHash
+	}
+	if s.IsP2PK() {
+		return ScriptTypePubKey
+	}
+	if s.IsMultiSigOut() {
+		return ScriptTypeMultiSig
+	}
+	if s.IsData() {
+		return ScriptTypeNullData
+	}
+	return ScriptTypeNonStandard
+}
+
+// Addresses will return all addresses found in the script, if any.
+func (s *Script) Addresses() ([]string, error) {
+	addresses := make([]string, 0)
+	if s.IsP2PKH() {
+		pkh, err := s.PublicKeyHash()
+		if err != nil {
+			return nil, err
+		}
+		a, err := NewAddressFromPublicKeyHash(pkh, true)
+		if err != nil {
+			return nil, err
+		}
+		addresses = []string{a.AddressString}
+	}
+	// TODO: handle multisig, and other outputs
+	// https://github.com/libsv/go-bt/issues/6
+	return addresses, nil
+}
+
+// Equals will compare the script to b and return true if they match.
+func (s *Script) Equals(b *Script) bool {
+	return bytes.Equal(*s, *b)
+}
+
+// EqualsBytes will compare the script to a byte representation of a
+// script, b, and return true if they match.
+func (s *Script) EqualsBytes(b []byte) bool {
+	return bytes.Equal(*s, b)
+}
+
+// EqualsHex will compare the script to a hex string h,
+// if they match then true is returned otherwise false.
+func (s *Script) EqualsHex(h string) bool {
+	return s.String() == h
 }

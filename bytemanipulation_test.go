@@ -4,12 +4,12 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/go-bt"
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bk/crypto"
+	"github.com/libsv/go-bt/v2"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetLittleEndianBytes(t *testing.T) {
+func TestLittleEndianBytes(t *testing.T) {
 	// todo: add test coverage
 }
 

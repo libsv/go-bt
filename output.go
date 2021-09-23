@@ -3,10 +3,10 @@ package bt
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
-	"github.com/libsv/go-bt/bscript"
-	"github.com/libsv/go-bt/crypto"
+	"github.com/libsv/go-bt/v2/bscript"
 )
 
 /*
@@ -25,156 +25,96 @@ Txout-script / scriptPubKey   Script                                      <out-s
 type Output struct {
 	Satoshis      uint64
 	LockingScript *bscript.Script
+	index         int
 }
 
-// NewOutputFromBytes returns a transaction Output from the bytes provided
-func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
-	if len(bytes) < 8 {
-		return nil, 0, fmt.Errorf("output length too short < 8")
-	}
-
-	offset := 8
-	l, size := DecodeVarInt(bytes[offset:])
-	offset += size
-
-	totalLength := offset + int(l)
-
-	if len(bytes) < totalLength {
-		return nil, 0, fmt.Errorf("output length too short < 8 + script")
-	}
-
-	s := bscript.Script(bytes[offset:totalLength])
-
-	return &Output{
-		Satoshis:      binary.LittleEndian.Uint64(bytes[0:8]),
-		LockingScript: &s,
-	}, totalLength, nil
+type outputJSON struct {
+	Value        float64 `json:"value"`
+	Satoshis     uint64  `json:"satoshis"`
+	Index        int     `json:"n"`
+	ScriptPubKey *struct {
+		Asm     string `json:"asm"`
+		Hex     string `json:"hex"`
+		ReqSigs int    `json:"reqSigs,omitempty"`
+		Type    string `json:"type"`
+	} `json:"scriptPubKey,omitempty"`
+	LockingScript *struct {
+		Asm     string `json:"asm"`
+		Hex     string `json:"hex"`
+		ReqSigs int    `json:"reqSigs,omitempty"`
+		Type    string `json:"type"`
+	} `json:"lockingScript,omitempty"`
 }
 
-// NewP2PKHOutputFromPubKeyHashStr makes an output to a PKH with a value.
-func NewP2PKHOutputFromPubKeyHashStr(publicKeyHash string, satoshis uint64) (*Output, error) {
-	s, err := bscript.NewP2PKHFromPubKeyHashStr(publicKeyHash)
+// MarshalJSON will serialise an output to json.
+func (o *Output) MarshalJSON() ([]byte, error) {
+	asm, err := o.LockingScript.ToASM()
+	if err != nil {
+		return nil, err
+	}
+	addresses, err := o.LockingScript.Addresses()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Output{
-		Satoshis:      satoshis,
-		LockingScript: s,
-	}, nil
+	output := &outputJSON{
+		Value:    float64(o.Satoshis) / 100000000,
+		Satoshis: o.Satoshis,
+		Index:    o.index,
+		LockingScript: &struct {
+			Asm     string `json:"asm"`
+			Hex     string `json:"hex"`
+			ReqSigs int    `json:"reqSigs,omitempty"`
+			Type    string `json:"type"`
+		}{
+			Asm:     asm,
+			Hex:     o.LockingScriptHexString(),
+			ReqSigs: len(addresses),
+			Type:    o.LockingScript.ScriptType(),
+		},
+	}
+	return json.Marshal(output)
 }
 
-// NewP2PKHOutputFromPubKeyBytes makes an output to a PKH with a value.
-func NewP2PKHOutputFromPubKeyBytes(publicKeyBytes []byte, satoshis uint64) (*Output, error) {
-	s, err := bscript.NewP2PKHFromPubKeyBytes(publicKeyBytes)
+// UnmarshalJSON will convert a json serialised output to a bt Output.
+func (o *Output) UnmarshalJSON(b []byte) error {
+	var oj outputJSON
+	if err := json.Unmarshal(b, &oj); err != nil {
+		return err
+	}
+	script := oj.LockingScript
+	if script == nil {
+		script = oj.ScriptPubKey
+	}
+	s, err := bscript.NewFromHexString(script.Hex)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return &Output{
-		Satoshis:      satoshis,
-		LockingScript: s,
-	}, nil
+	if oj.Satoshis > 0 {
+		o.Satoshis = oj.Satoshis
+	} else {
+		o.Satoshis = uint64(oj.Value * 100000000)
+	}
+	o.index = oj.Index
+	o.LockingScript = s
+	return nil
 }
 
-// NewP2PKHOutputFromPubKeyStr makes an output to a PKH with a value.
-func NewP2PKHOutputFromPubKeyStr(publicKey string, satoshis uint64) (*Output, error) {
-	s, err := bscript.NewP2PKHFromPubKeyStr(publicKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Output{
-		Satoshis:      satoshis,
-		LockingScript: s,
-	}, nil
-}
-
-// NewP2PKHOutputFromAddress makes an output to a PKH with a value.
-func NewP2PKHOutputFromAddress(addr string, satoshis uint64) (*Output, error) {
-	s, err := bscript.NewP2PKHFromAddress(addr)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Output{
-		Satoshis:      satoshis,
-		LockingScript: s,
-	}, nil
-}
-
-// NewHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
-func NewHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64) (*Output, error) {
-
-	publicKeyHashBytes, err := hex.DecodeString(publicKeyHash)
-	if err != nil {
-		return nil, err
-	}
-
-	s := &bscript.Script{}
-
-	s.AppendOpCode(bscript.OpHASH160)
-	secretBytesHash := crypto.Hash160([]byte(secret))
-
-	if err = s.AppendPushData(secretBytesHash); err != nil {
-		return nil, err
-	}
-	s.AppendOpCode(bscript.OpEQUALVERIFY)
-	s.AppendOpCode(bscript.OpDUP)
-	s.AppendOpCode(bscript.OpHASH160)
-
-	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
-		return nil, err
-	}
-	s.AppendOpCode(bscript.OpEQUALVERIFY)
-	s.AppendOpCode(bscript.OpCHECKSIG)
-
-	return &Output{
-		Satoshis:      satoshis,
-		LockingScript: s,
-	}, nil
-}
-
-// NewOpReturnOutput creates a new Output with OP_FALSE OP_RETURN and then the data
-// passed in encoded as hex.
-func NewOpReturnOutput(data []byte) (*Output, error) {
-	return createOpReturnOutput([][]byte{data})
-}
-
-// NewOpReturnPartsOutput creates a new Output with OP_FALSE OP_RETURN and then
-// uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
-func NewOpReturnPartsOutput(data [][]byte) (*Output, error) {
-	return createOpReturnOutput(data)
-}
-
-func createOpReturnOutput(data [][]byte) (*Output, error) {
-	s := &bscript.Script{}
-
-	s.AppendOpCode(bscript.OpFALSE)
-	s.AppendOpCode(bscript.OpRETURN)
-	err := s.AppendPushDataArray(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Output{LockingScript: s}, nil
-}
-
-// GetLockingScriptHexString returns the locking script
+// LockingScriptHexString returns the locking script
 // of an output encoded as a hex string.
-func (o *Output) GetLockingScriptHexString() string {
+func (o *Output) LockingScriptHexString() string {
 	return hex.EncodeToString(*o.LockingScript)
 }
 
 func (o *Output) String() string {
 	return fmt.Sprintf(`value:     %d
 scriptLen: %d
-script:    %x
+script:    %s
 `, o.Satoshis, len(*o.LockingScript), o.LockingScript)
 }
 
-// ToBytes encodes the Output into a byte array.
-func (o *Output) ToBytes() []byte {
+// Bytes encodes the Output into a byte array.
+func (o *Output) Bytes() []byte {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, o.Satoshis)
 
@@ -186,9 +126,9 @@ func (o *Output) ToBytes() []byte {
 	return h
 }
 
-// GetBytesForSigHash returns the proper serialization
+// BytesForSigHash returns the proper serialisation
 // of an output to be hashed and signed (sighash).
-func (o *Output) GetBytesForSigHash() []byte {
+func (o *Output) BytesForSigHash() []byte {
 	buf := make([]byte, 0)
 
 	satoshis := make([]byte, 8)

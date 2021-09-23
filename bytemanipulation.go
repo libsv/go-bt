@@ -14,8 +14,8 @@ func ReverseBytes(a []byte) []byte {
 	return tmp
 }
 
-// GetLittleEndianBytes returns a byte array in little endian from an unsigned integer of 32 bytes.
-func GetLittleEndianBytes(v uint32, l uint32) []byte {
+// LittleEndianBytes returns a byte array in little endian from an unsigned integer of 32 bytes.
+func LittleEndianBytes(v uint32, l uint32) []byte {
 	buf := make([]byte, l)
 
 	binary.LittleEndian.PutUint32(buf, v)

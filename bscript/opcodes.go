@@ -186,7 +186,9 @@ const (
 	OpCHECKMULTISIGVERIFY byte = 0xaf // 175
 	OpNOP1                byte = 0xb0 // 176
 	OpNOP2                byte = 0xb1 // 177
+	OpCHECKLOCKTIMEVERIFY byte = 0xb1 // 177
 	OpNOP3                byte = 0xb2 // 178
+	OpCHECKSEQUENCEVERIFY byte = 0xb2 // 178
 	OpNOP4                byte = 0xb3 // 179
 	OpNOP5                byte = 0xb4 // 180
 	OpNOP6                byte = 0xb5 // 181
