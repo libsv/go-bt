@@ -186,7 +186,7 @@ func TestFeeQuotes_AddMinerWithDefault(t *testing.T) {
 func TestFeeQuotes_AddMiner(t *testing.T) {
 	tests := map[string]struct {
 		fee       *FeeQuote
-		minername string
+		minerName string
 	}{
 		"adding a miner with custom fee should return custom fee": {
 			fee: &FeeQuote{
@@ -203,7 +203,7 @@ func TestFeeQuotes_AddMiner(t *testing.T) {
 				},
 				},
 			},
-			minername: "test",
+			minerName: "test",
 		}, "adding miners with custom fees should return correct fee": {
 			fee: &FeeQuote{
 				mu: sync.RWMutex{},
@@ -230,14 +230,14 @@ func TestFeeQuotes_AddMiner(t *testing.T) {
 					},
 				},
 			},
-			minername: "test",
+			minerName: "test",
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fq := NewFeeQuotes(test.minername)
-			fq.AddMiner(test.minername, test.fee)
-			q, err := fq.Quote(test.minername)
+			fq := NewFeeQuotes(test.minerName)
+			fq.AddMiner(test.minerName, test.fee)
+			q, err := fq.Quote(test.minerName)
 			assert.NoError(t, err)
 			assert.Equal(t, test.fee, q)
 		})
@@ -522,7 +522,7 @@ func TestFeeQuotes_Fee(t *testing.T) {
 		}, "feeType not found should return error": {
 			fq:        NewFeeQuotes("test"),
 			minerName: "test",
-			feeType:   "dontexist",
+			feeType:   "does_not_exist",
 			err:       ErrFeeTypeNotFound,
 		},
 	}
@@ -593,7 +593,7 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 		}, "random key should error": {
 			quote: &FeeQuote{
 				fees: map[FeeType]*Fee{
-					"idunno": {
+					"randomKey": {
 						FeeType: FeeTypeStandard,
 						MiningFee: FeeUnit{
 							Satoshis: 100,
@@ -605,7 +605,7 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("unknown feetype supplied 'idunno'"),
+			err: errors.New("unknown feetype supplied 'randomKey'"),
 		},
 	}
 	for name, test := range tests {

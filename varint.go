@@ -28,7 +28,7 @@ func VarInt(i uint64) []byte {
 }
 
 // DecodeVarInt takes a byte array in VarInt format and returns the
-// decoded unsigned integer value of the length and it's size in bytes.
+// decoded unsigned integer value of the length, and it's size in bytes.
 // See http://learnmeabitcoin.com/glossary/varint
 func DecodeVarInt(b []byte) (result uint64, size int) {
 	switch b[0] {

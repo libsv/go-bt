@@ -51,14 +51,15 @@ For more information around the technical aspects of Bitcoin, please see the upd
 
 ### Features
 
-- Full Featured Bitcoin Transactions
-- Auto-Fee Calculations for Change Address
-- Bitcoin Transaction [Script](bscript/) Functionality
+- Full featured Bitcoin transactions and transaction manipulation/functionality
+- Auto-fee calculations for change outputs
+- Transaction fee calculation and related checks
+- Interfaced signing/unlocking of transaction inputs for easy adaptation/custimisation and extendability for any use case
+- Bitcoin Transaction [Script](bscript) functionality
+  - Bitcoin script engine ([interpreter](bscript/interpreter))
   - P2PKH (base58 addresses)
   - Data (OP_RETURN)
   - [BIP276](https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki)
-
-- Transaction Signing Extendability
 
 #### Coming Soon! (18 months<sup>TM</sup>)
 
@@ -123,7 +124,7 @@ vet                  Run the Go vet application
 ## Examples & Tests
 
 All unit tests and [examples](examples) run via [Github Actions](https://github.com/libsv/go-bt/actions) and
-uses [Go version 1.15.x](https://golang.org/doc/go1.15). View the [configuration file](.github/workflows/run-tests.yml).
+uses [Go version 1.16.x](https://golang.org/doc/go1.16). View the [configuration file](.github/workflows/run-tests.yml).
 
 Run all tests (including integration tests)
 
@@ -151,7 +152,7 @@ make bench
 
 ## Code Standards
 
-Read more about this Go project's [code standards](CODE_STANDARDS.md).
+Read more about this Go project's [code standards](.github/CODE_STANDARDS.md).
 
 <br/>
 
@@ -161,17 +162,9 @@ View the [examples](examples)
 
 <br/>
 
-## Maintainers
-
-| [<img src="https://github.com/HaddadJoe.png" height="50" alt="JH" />](https://github.com/HaddadJoe) | [<img src="https://github.com/jadwahab.png" height="50" alt="JW" />](https://github.com/jadwahab) | [<img src="https://github.com/mrz1836.png" height="50" alt="MrZ" />](https://github.com/mrz1836) |
-|:---:|:---:|:---:|
-|  [JH](https://github.com/HaddadJoe)| [JW](https://github.com/jadwahab) | [MrZ](https://github.com/mrz1836) |
-
-<br/>
-
 ## Contributing
 
-View the [contributing guidelines](CONTRIBUTING.md) and please follow the [code of conduct](CODE_OF_CONDUCT.md).
+View the [contributing guidelines](.github/CONTRIBUTING.md) and please follow the [code of conduct](.github/CODE_OF_CONDUCT.md).
 
 ### How can I help?
 
@@ -180,8 +173,10 @@ The most basic way to show your support is to star :star2: the project, or to ra
 You can also support this project by [becoming a sponsor on GitHub](https://github.com/sponsors/libsv) :clap:
 or by making a [**bitcoin donation**](https://gobitcoinsv.com/#sponsor) to ensure this journey continues indefinitely! :rocket:
 
+[![Stars](https://img.shields.io/github/stars/libsv/go-bt?label=Please%20like%20us&style=social)](https://github.com/libsv/go-bt/stargazers)
+
 <br/>
 
 ## License
 
-![License](https://img.shields.io/github/license/libsv/go-bt.svg?style=flat&v=1)
+[![License](https://img.shields.io/github/license/libsv/go-bt.svg?style=flat&v=1)](LICENSE)
