@@ -53,7 +53,7 @@ For more information around the technical aspects of Bitcoin, please see the upd
 
 - Full Featured Bitcoin Transactions
 - Auto-Fee Calculations for Change Address
-- Bitcoin Transaction [Script](bscript/) Functionality
+- Bitcoin Transaction [Script](bscript) Functionality
   - P2PKH (base58 addresses)
   - Data (OP_RETURN)
   - [BIP276](https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki)
@@ -123,7 +123,7 @@ vet                  Run the Go vet application
 ## Examples & Tests
 
 All unit tests and [examples](examples) run via [Github Actions](https://github.com/libsv/go-bt/actions) and
-uses [Go version 1.15.x](https://golang.org/doc/go1.15). View the [configuration file](.github/workflows/run-tests.yml).
+uses [Go version 1.16.x](https://golang.org/doc/go1.16). View the [configuration file](.github/workflows/run-tests.yml).
 
 Run all tests (including integration tests)
 
@@ -151,7 +151,7 @@ make bench
 
 ## Code Standards
 
-Read more about this Go project's [code standards](CODE_STANDARDS.md).
+Read more about this Go project's [code standards](.github/CODE_STANDARDS.md).
 
 <br/>
 
@@ -171,7 +171,7 @@ View the [examples](examples)
 
 ## Contributing
 
-View the [contributing guidelines](CONTRIBUTING.md) and please follow the [code of conduct](CODE_OF_CONDUCT.md).
+View the [contributing guidelines](.github/CONTRIBUTING.md) and please follow the [code of conduct](.github/CODE_OF_CONDUCT.md).
 
 ### How can I help?
 
@@ -180,8 +180,10 @@ The most basic way to show your support is to star :star2: the project, or to ra
 You can also support this project by [becoming a sponsor on GitHub](https://github.com/sponsors/libsv) :clap:
 or by making a [**bitcoin donation**](https://gobitcoinsv.com/#sponsor) to ensure this journey continues indefinitely! :rocket:
 
+[![Stars](https://img.shields.io/github/stars/libsv/go-bt?label=Please%20like%20us&style=social)](https://github.com/libsv/go-bt/stargazers)
+
 <br/>
 
 ## License
 
-![License](https://img.shields.io/github/license/libsv/go-bt.svg?style=flat&v=1)
+[![License](https://img.shields.io/github/license/libsv/go-bt.svg?style=flat&v=1)](LICENSE)
