@@ -71,7 +71,7 @@ const (
 	// a script that has not finished executing.
 	ErrScriptUnfinished
 
-	// ErrScriptDone is returned when an attempt to execute an opcode is
+	// ErrInvalidProgramCounter is returned when an attempt to execute an opcode is
 	// made once all of them have already been executed.  This can happen
 	// due to things such as a second call to Execute or calling Step after
 	// all opcodes have already been executed.
@@ -97,7 +97,7 @@ const (
 	ErrStackOverflow
 
 	// ErrInvalidPubKeyCount is returned when the number of public keys
-	// specified for a multsig is either negative or greater than
+	// specified for a multisig is either negative or greater than
 	// MaxPubKeysPerMultiSig.
 	ErrInvalidPubKeyCount
 
@@ -148,7 +148,7 @@ const (
 	// true.
 	ErrCheckSigVerify
 
-	// ErrCheckSigVerify is returned when OP_CHECKMULTISIGVERIFY is
+	// ErrCheckMultiSigVerify is returned when OP_CHECKMULTISIGVERIFY is
 	// encountered in a script and the top item on the data stack does not
 	// evaluate to true.
 	ErrCheckMultiSigVerify
@@ -288,7 +288,7 @@ const (
 	ErrPubKeyType
 
 	// ErrCleanStack is returned when the ScriptVerifyCleanStack flag
-	// is set, and after evalution, the stack does not contain only a
+	// is set, and after evaluation, the stack does not contain only a
 	// single element.
 	ErrCleanStack
 
@@ -424,7 +424,7 @@ func NewError(c ErrorCode, desc string, fmtArgs ...interface{}) Error {
 	return Error{ErrorCode: c, Description: fmt.Sprintf(desc, fmtArgs...)}
 }
 
-// IsErrorCode returns whether or not the provided error is a script error with
+// IsErrorCode returns whether the provided error is a script error with
 // the provided error code.
 func IsErrorCode(err error, c ErrorCode) bool {
 	e := &Error{}

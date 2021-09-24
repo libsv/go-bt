@@ -38,10 +38,10 @@ const (
 	VerifyCleanStack
 
 	// VerifyDERSignatures defines that signatures are required
-	// to compily with the DER format.
+	// to comply with the DER format.
 	VerifyDERSignatures
 
-	// VerifyLowS defines that signtures are required to comply with
+	// VerifyLowS defines that signatures are required to comply with
 	// the DER format and whose S value is <= order / 2.  This is rule 5
 	// of BIP0062.
 	VerifyLowS

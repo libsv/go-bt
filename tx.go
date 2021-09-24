@@ -36,6 +36,8 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 
 // Sentinel errors for transactions.
 var (
+
+	// ErrInvalidTxID is used for an invalid txID
 	ErrInvalidTxID = errors.New("invalid TxID")
 )
 

@@ -26,7 +26,7 @@ type ParsedOp struct {
 	Data []byte
 }
 
-// Name returns the human readible name for the current opcode
+// Name returns the human readable name for the current opcode
 func (o *ParsedOp) Name() string {
 	return o.Op.name
 }

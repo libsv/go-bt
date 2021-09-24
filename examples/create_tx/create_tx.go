@@ -20,9 +20,9 @@ func main() {
 
 	_ = tx.PayToAddress("1NRoySJ9Lvby6DuE2UQYnyT67AASwNZxGb", 1000)
 
-	wif, _ := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
+	decodedWif, _ := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	if err := tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey}); err != nil {
+	if err := tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: decodedWif.PrivKey}); err != nil {
 		log.Fatal(err.Error())
 	}
 	log.Printf("tx: %s\n", tx)

@@ -133,7 +133,7 @@ func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
 // as an input via tx.From(...), until it is estimated that inputs cover the outputs + fees.
 //
 // After completion, the receiver is ready for `Change(...)` to be called, and then be signed.
-// Note, this function works under the assumption that receiver *bt.Tx alread has all the outputs
+// Note, this function works under the assumption that receiver *bt.Tx already has all the outputs
 // which need covered.
 //
 // Example usage, for when working with a list:

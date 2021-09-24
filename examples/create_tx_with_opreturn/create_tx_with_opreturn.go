@@ -22,9 +22,9 @@ func main() {
 
 	_ = tx.AddOpReturnOutput([]byte("You are using go-bt!"))
 
-	wif, _ := wif.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
+	decodedWif, _ := wif.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
 
-	err := tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: wif.PrivKey})
+	err := tx.SignAll(context.Background(), &bt.LocalSignerGetter{PrivateKey: decodedWif.PrivKey})
 	if err != nil {
 		log.Fatal(err.Error())
 	}
