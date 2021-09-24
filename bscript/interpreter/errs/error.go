@@ -2,13 +2,11 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package interpreter
+package errs
 
 import (
 	"errors"
 	"fmt"
-
-	"github.com/libsv/go-bt/v2/bscript"
 )
 
 // ErrorCode identifies a kind of script error.
@@ -421,8 +419,8 @@ func (e Error) Error() string {
 	return e.Description
 }
 
-// scriptError creates an Error given a set of arguments.
-func scriptError(c ErrorCode, desc string, fmtArgs ...interface{}) Error {
+// NewError creates an Error given a set of arguments.
+func NewError(c ErrorCode, desc string, fmtArgs ...interface{}) Error {
 	return Error{ErrorCode: c, Description: fmt.Sprintf(desc, fmtArgs...)}
 }
 
@@ -432,13 +430,4 @@ func IsErrorCode(err error, c ErrorCode) bool {
 	e := &Error{}
 	ok := errors.As(err, e)
 	return ok && e.ErrorCode == c
-}
-
-// NewErrMinimalDataPush returns an Error with code ErrMinimalData
-func NewErrMinimalDataPush(op, expected opcode, length int) Error {
-	fmtStr := "data push of %d bytes encoded with opcode %s, use %s instead"
-	if (bscript.Op1 <= op.val && op.val <= bscript.Op16) || op.val == bscript.Op1NEGATE {
-		fmtStr = "data push of value %d encoded with opcode %s, use %s instead"
-	}
-	return scriptError(ErrMinimalData, fmt.Sprintf(fmtStr, length, op.Name(), expected.Name()))
 }

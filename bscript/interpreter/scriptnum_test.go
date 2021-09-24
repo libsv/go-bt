@@ -11,6 +11,8 @@ import (
 
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/scriptflag"
 )
 
 // hexToBytes converts the passed hex string into bytes and will panic if there
@@ -96,8 +98,8 @@ func TestMakeScriptNum(t *testing.T) {
 
 	// Errors used in the tests below defined here for convenience and to
 	// keep the horizontal test size shorter.
-	errNumTooBig := scriptError(ErrNumberTooBig, "")
-	errMinimalData := scriptError(ErrMinimalData, "")
+	errNumTooBig := errs.NewError(errs.ErrNumberTooBig, "")
+	errMinimalData := errs.NewError(errs.ErrMinimalData, "")
 
 	tests := []struct {
 		serialised      []byte
@@ -287,7 +289,7 @@ func TestDisasmString(t *testing.T) {
 		PreviousTxOut: &bt.Output{LockingScript: prev},
 		Tx:            tx,
 		InputIdx:      0,
-		Flags:         ScriptBip16 | ScriptVerifyCleanStack,
+		Flags:         scriptflag.Bip16 | scriptflag.VerifyCleanStack,
 	})
 	if err != nil {
 		t.Error(err)

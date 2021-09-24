@@ -3,9 +3,9 @@ package interpreter
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
 )
 
 // OpcodeParser parses *bscript.Script into a ParsedScript, and unparsing back
@@ -17,12 +17,8 @@ type OpcodeParser interface {
 // ParsedScript is a slice of ParsedOp
 type ParsedScript []ParsedOp
 
-type parser struct{}
-
-// NewOpcodeParser returns an OpcodeParser
-func NewOpcodeParser() OpcodeParser {
-	return &parser{}
-}
+// DefaultOpcodeParser is a standard parser which can be used from zero value.
+type DefaultOpcodeParser struct{}
 
 // ParsedOp is a parsed opcode
 type ParsedOp struct {
@@ -70,31 +66,51 @@ func (o *ParsedOp) IsConditional() bool {
 func (o *ParsedOp) EnforceMinimumDataPush() error {
 	dataLen := len(o.Data)
 	if dataLen == 0 && o.Op.val != bscript.Op0 {
-		return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.Op0], 0)
+		return errs.NewError(
+			errs.ErrMinimalData,
+			"zero length data push is encoded with opcode %s instead of OP_0",
+			o.Op.name,
+		)
 	}
 	if dataLen == 1 && (1 <= o.Data[0] && o.Data[0] <= 16) && o.Op.val != bscript.Op1+o.Data[0]-1 {
-		return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.Op1+o.Data[0]-1], int(o.Data[0]))
+		return errs.NewError(
+			errs.ErrMinimalData,
+			"data push of the value %d encoded with opcode %s instead of OP_%d", o.Data[0], o.Op.name, o.Data[0],
+		)
 	}
 	if dataLen == 1 && o.Data[0] == 0x81 && o.Op.val != bscript.Op1NEGATE {
-		return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.Op1NEGATE], -1)
+		return errs.NewError(
+			errs.ErrMinimalData,
+			"data push of the value -1 encoded with opcode %s instead of OP_1NEGATE", o.Op.name,
+		)
 	}
 	if dataLen <= 75 {
 		if int(o.Op.val) != dataLen {
-			return NewErrMinimalDataPush(o.Op, opcodeArray[byte(dataLen)], dataLen)
+			return errs.NewError(
+				errs.ErrMinimalData,
+				"data push of %d bytes encoded with opcode %s instead of OP_DATA_%d", dataLen, o.Op.name, dataLen,
+			)
 		}
 	} else if dataLen <= 255 {
 		if o.Op.val != bscript.OpPUSHDATA1 {
-			return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.OpPUSHDATA1], dataLen)
+			return errs.NewError(
+				errs.ErrMinimalData,
+				"data push of %d bytes encoded with opcode %s instead of OP_PUSHDATA1", dataLen, o.Op.name,
+			)
 		}
 	} else if dataLen <= 65535 {
 		if o.Op.val != bscript.OpPUSHDATA2 {
-			return NewErrMinimalDataPush(o.Op, opcodeArray[bscript.OpPUSHDATA2], dataLen)
+			return errs.NewError(
+				errs.ErrMinimalData,
+				"data push of %d bytes encoded with opcode %s instead of OP_PUSHDATA2", dataLen, o.Op.name,
+			)
 		}
 	}
 	return nil
 }
 
-func (p *parser) Parse(s *bscript.Script) (ParsedScript, error) {
+// Parse takes a *bscript.Script and returns a []interpreter.ParsedOp
+func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 	script := *s
 	parsedOps := make([]ParsedOp, 0, len(script))
 
@@ -108,8 +124,8 @@ func (p *parser) Parse(s *bscript.Script) (ParsedScript, error) {
 			i++
 		case parsedOp.Op.length > 1:
 			if len(script[i:]) < parsedOp.Op.length {
-				return nil, scriptError(ErrMalformedPush, fmt.Sprintf("opcode %s required %d bytes, script has %d remaining",
-					parsedOp.Name(), parsedOp.Op.length, len(script[i:])))
+				return nil, errs.NewError(errs.ErrMalformedPush, "opcode %s required %d bytes, script has %d remaining",
+					parsedOp.Name(), parsedOp.Op.length, len(script[i:]))
 			}
 			parsedOp.Data = script[i+1 : i+parsedOp.Op.length]
 			i += parsedOp.Op.length
@@ -117,8 +133,8 @@ func (p *parser) Parse(s *bscript.Script) (ParsedScript, error) {
 			var l uint
 			offset := i + 1
 			if len(script[offset:]) < -parsedOp.Op.length {
-				return nil, scriptError(ErrMalformedPush, fmt.Sprintf("opcode %s required %d bytes, script has %d remaining",
-					parsedOp.Name(), parsedOp.Op.length, len(script[offset:])))
+				return nil, errs.NewError(errs.ErrMalformedPush, "opcode %s required %d bytes, script has %d remaining",
+					parsedOp.Name(), parsedOp.Op.length, len(script[offset:]))
 			}
 			// Next -length bytes are little endian length of data.
 			switch parsedOp.Op.length {
@@ -133,13 +149,13 @@ func (p *parser) Parse(s *bscript.Script) (ParsedScript, error) {
 					(uint(script[offset+1]) << 8) |
 					uint(script[offset]))
 			default:
-				return nil, scriptError(ErrMalformedPush, fmt.Sprintf("invalid opcode length %d", parsedOp.Op.length))
+				return nil, errs.NewError(errs.ErrMalformedPush, "invalid opcode length %d", parsedOp.Op.length)
 			}
 
 			offset += -parsedOp.Op.length
 			if int(l) > len(script[offset:]) || int(l) < 0 {
-				return nil, scriptError(ErrMalformedPush, fmt.Sprintf("opcode %s pushes %d bytes, script has %d remaining",
-					parsedOp.Name(), l, len(script[offset:])))
+				return nil, errs.NewError(errs.ErrMalformedPush, "opcode %s pushes %d bytes, script has %d remaining",
+					parsedOp.Name(), l, len(script[offset:]))
 			}
 
 			parsedOp.Data = script[offset : offset+int(l)]
@@ -151,9 +167,9 @@ func (p *parser) Parse(s *bscript.Script) (ParsedScript, error) {
 	return parsedOps, nil
 }
 
-// unparseScript reversed the action of parseScript and returns the
-// parsedOpcodes as a list of bytes
-func (p *parser) Unparse(pscr ParsedScript) (*bscript.Script, error) {
+// Unparse reverses the action of Parse and returns the
+// ParsedScript as a *bscript.Script
+func (p *DefaultOpcodeParser) Unparse(pscr ParsedScript) (*bscript.Script, error) {
 	script := make(bscript.Script, 0, len(pscr))
 	for _, pop := range pscr {
 		b, err := pop.bytes()
@@ -240,11 +256,11 @@ func (o *ParsedOp) bytes() ([]byte, error) {
 	retbytes[0] = o.Op.val
 	if o.Op.length == 1 {
 		if len(o.Data) != 0 {
-			str := fmt.Sprintf("internal consistency error - "+
-				"parsed opcode %s has data length %d when %d "+
-				"was expected", o.Name(), len(o.Data),
-				0)
-			return nil, scriptError(ErrInternal, str)
+			return nil, errs.NewError(
+				errs.ErrInternal,
+				"internal consistency error - parsed opcode %s has data length %d when %d was expected",
+				o.Name(), len(o.Data), 0,
+			)
 		}
 		return retbytes, nil
 	}
@@ -273,10 +289,10 @@ func (o *ParsedOp) bytes() ([]byte, error) {
 	retbytes = append(retbytes, o.Data...)
 
 	if len(retbytes) != nbytes {
-		str := fmt.Sprintf("internal consistency error - "+
-			"parsed opcode %s has data length %d when %d was "+
-			"expected", o.Name(), len(retbytes), nbytes)
-		return nil, scriptError(ErrInternal, str)
+		return nil, errs.NewError(errs.ErrInternal,
+			"internal consistency error - parsed opcode %s has data length %d when %d was expected",
+			o.Name(), len(retbytes), nbytes,
+		)
 	}
 
 	return retbytes, nil
