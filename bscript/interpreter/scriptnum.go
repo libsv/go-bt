@@ -5,7 +5,7 @@
 package interpreter
 
 import (
-	"fmt"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
 )
 
 const (
@@ -65,9 +65,7 @@ func checkMinimalDataEncoding(v []byte) error {
 		// is +-255, which encode to 0xff00 and 0xff80 respectively.
 		// (big-endian).
 		if len(v) == 1 || v[len(v)-2]&0x80 == 0 {
-			str := fmt.Sprintf("numeric value encoded as %x is "+
-				"not minimally encoded", v)
-			return scriptError(ErrMinimalData, str)
+			return errs.NewError(errs.ErrMinimalData, "numeric value encoded as %x is not minimally encoded", v)
 		}
 	}
 
@@ -179,7 +177,7 @@ func (n scriptNum) Int64() int64 {
 // requireMinimal enabled.
 //
 // The scriptNumLen is the maximum number of bytes the encoded value can be
-// before an ErrStackNumberTooBig is returned.  This effectively limits the
+// before an errs.ErrStackNumberTooBig is returned.  This effectively limits the
 // range of allowed values.
 // WARNING:  Great care should be taken if passing a value larger than
 // defaultScriptNumLen, which could lead to addition and multiplication
@@ -190,10 +188,11 @@ func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int) (scriptNum, 
 	// Interpreting data requires that it is not larger than
 	// the passed scriptNumLen value.
 	if len(v) > scriptNumLen {
-		str := fmt.Sprintf("numeric value encoded as %x is %d bytes "+
-			"which exceeds the max allowed of %d", v, len(v),
-			scriptNumLen)
-		return 0, scriptError(ErrNumberTooBig, str)
+		return 0, errs.NewError(
+			errs.ErrNumberTooBig,
+			"numeric value encoded as %x is %d bytes which exceeds the max allowed of %d",
+			v, len(v), scriptNumLen,
+		)
 	}
 
 	// Enforce minimal encoded if requested.
