@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2/bscript"
@@ -185,6 +186,62 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	offset += 4
 
 	return &t, offset, nil
+}
+
+// NewTxFromReader creates a transaction from an io.Reader
+func NewTxFromReader(r io.Reader) (*Tx, error) {
+	t := Tx{}
+
+	version := make([]byte, 4)
+	if n, err := io.ReadFull(r, version); n != 4 || err != nil {
+		return nil, err
+	}
+	t.Version = binary.LittleEndian.Uint32(version)
+
+	var err error
+
+	inputCount, err := DecodeVarIntFromReader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	// create Inputs
+	var i uint64
+	var input *Input
+
+	for ; i < inputCount; i++ {
+		input, err = NewInputFromReader(r)
+		if err != nil {
+			return nil, err
+		}
+		t.addInput(input)
+	}
+
+	outputCount, err := DecodeVarIntFromReader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	// create Outputs
+	var output *Output
+
+	for i = 0; i < outputCount; i++ {
+		output, err = NewOutputFromReader(r)
+		if err != nil {
+			return nil, err
+		}
+
+		output.index = int(i)
+		t.AddOutput(output)
+	}
+
+	locktime := make([]byte, 4)
+	if n, err := io.ReadFull(r, version); n != 4 || err != nil {
+		return nil, err
+	}
+	t.LockTime = binary.LittleEndian.Uint32(locktime)
+
+	return &t, nil
 }
 
 // HasDataOutputs returns true if the transaction has

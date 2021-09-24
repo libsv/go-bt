@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/libsv/go-bk/crypto"
 
@@ -47,6 +48,41 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
 		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
 	}, totalLength, nil
+}
+
+// NewInputFromReader returns a transaction input from the io.Reader provided.
+func NewInputFromReader(r io.Reader) (*Input, error) {
+	previousTxID := make([]byte, 32)
+	if n, err := io.ReadFull(r, previousTxID); n != 32 || err != nil {
+		return nil, fmt.Errorf("Could not read previousTxID(32), got %d bytes and err: %w", n, err)
+	}
+
+	prevIndex := make([]byte, 4)
+	if n, err := io.ReadFull(r, prevIndex); n != 4 || err != nil {
+		return nil, fmt.Errorf("Could not read prevIndex(4), got %d bytes and err: %w", n, err)
+	}
+
+	l, err := DecodeVarIntFromReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read varint: %w", err)
+	}
+
+	script := make([]byte, l)
+	if n, err := io.ReadFull(r, script); uint64(n) != l || err != nil {
+		return nil, fmt.Errorf("Could not read script(%d), got %d bytes and err: %w", l, n, err)
+	}
+
+	sequence := make([]byte, 4)
+	if n, err := io.ReadFull(r, sequence); n != 4 || err != nil {
+		return nil, fmt.Errorf("Could not read sequence(4), got %d bytes and err: %w", n, err)
+	}
+
+	return &Input{
+		previousTxID:       ReverseBytes(previousTxID),
+		PreviousTxOutIndex: binary.LittleEndian.Uint32(prevIndex),
+		UnlockingScript:    bscript.NewFromBytes(script),
+		SequenceNumber:     binary.LittleEndian.Uint32(sequence),
+	}, nil
 }
 
 // TotalInputSatoshis returns the total Satoshis inputted to the transaction.

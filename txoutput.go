@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2/bscript"
@@ -32,6 +33,30 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 		Satoshis:      binary.LittleEndian.Uint64(bytes[0:8]),
 		LockingScript: &s,
 	}, totalLength, nil
+}
+
+// NewOutputFromReader returns a transaction Output from the io.Reader provided
+func NewOutputFromReader(r io.Reader) (*Output, error) {
+	satoshis := make([]byte, 8)
+	if n, err := io.ReadFull(r, satoshis); n != 8 || err != nil {
+		return nil, fmt.Errorf("Could not read satoshis(8), got %d bytes and err: %w", n, err)
+	}
+
+	l, err := DecodeVarIntFromReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read varint: %w", err)
+	}
+
+	script := make([]byte, l)
+	if n, err := io.ReadFull(r, script); uint64(n) != l || err != nil {
+		return nil, fmt.Errorf("Could not read LockingScript(%d), got %d bytes and err: %w", l, n, err)
+	}
+	s := bscript.Script(script)
+
+	return &Output{
+		Satoshis:      binary.LittleEndian.Uint64(satoshis),
+		LockingScript: &s,
+	}, nil
 }
 
 // TotalOutputSatoshis returns the total Satoshis outputted from the transaction.
