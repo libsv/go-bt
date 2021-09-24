@@ -4,22 +4,23 @@ import (
 	"bytes"
 	"crypto/sha1" //nolint:gosec // OP_SHA1 support requires this
 	"crypto/sha256"
-	"fmt"
 	"hash"
 
 	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/scriptflag"
 	"github.com/libsv/go-bt/v2/sighash"
 	"golang.org/x/crypto/ripemd160"
 )
 
 // Conditional execution constants.
 const (
-	OpCondFalse = 0
-	OpCondTrue  = 1
-	OpCondSkip  = 2
+	opCondFalse = 0
+	opCondTrue  = 1
+	opCondSkip  = 2
 )
 
 type opcode struct {
@@ -325,7 +326,7 @@ var opcodeArray = [256]opcode{
 // dictate the script doesn't fail until the program counter passes over a
 // disabled opcode (even when they appear in a branch that is not executed).
 func opcodeDisabled(op *ParsedOp, t *thread) error {
-	return scriptError(ErrDisabledOpcode, "attempt to execute disabled opcode %s", op.Name())
+	return errs.NewError(errs.ErrDisabledOpcode, "attempt to execute disabled opcode %s", op.Name())
 }
 
 func opcodeVerConditional(op *ParsedOp, t *thread) error {
@@ -338,13 +339,13 @@ func opcodeVerConditional(op *ParsedOp, t *thread) error {
 // opcodeReserved is a common handler for all reserved opcodes.  It returns an
 // appropriate error indicating the opcode is reserved.
 func opcodeReserved(op *ParsedOp, t *thread) error {
-	return scriptError(ErrReservedOpcode, "attempt to execute reserved opcode %s", op.Name())
+	return errs.NewError(errs.ErrReservedOpcode, "attempt to execute reserved opcode %s", op.Name())
 }
 
 // opcodeInvalid is a common handler for all invalid opcodes.  It returns an
 // appropriate error indicating the opcode is invalid.
 func opcodeInvalid(op *ParsedOp, t *thread) error {
-	return scriptError(ErrReservedOpcode, "attempt to execute invalid opcode %s", op.Name())
+	return errs.NewError(errs.ErrReservedOpcode, "attempt to execute invalid opcode %s", op.Name())
 }
 
 // opcodeFalse pushes an empty array to the data stack to represent false.  Note
@@ -385,9 +386,9 @@ func opcodeNop(op *ParsedOp, t *thread) error {
 	switch op.Op.val {
 	case bscript.OpNOP1, bscript.OpNOP4, bscript.OpNOP5,
 		bscript.OpNOP6, bscript.OpNOP7, bscript.OpNOP8, bscript.OpNOP9, bscript.OpNOP10:
-		if t.hasFlag(ScriptDiscourageUpgradableNops) {
-			return scriptError(
-				ErrDiscourageUpgradableNOPs,
+		if t.hasFlag(scriptflag.DiscourageUpgradableNops) {
+			return errs.NewError(
+				errs.ErrDiscourageUpgradableNOPs,
 				"bscript.OpNOP%d reserved for soft-fork upgrades",
 				op.Op.val-(bscript.OpNOP1-1),
 			)
@@ -399,17 +400,17 @@ func opcodeNop(op *ParsedOp, t *thread) error {
 
 // popIfBool pops the top item off the stack and returns a bool
 func popIfBool(t *thread) (bool, error) {
-	if t.hasFlag(ScriptVerifyMinimalIf) {
+	if t.hasFlag(scriptflag.VerifyMinimalIf) {
 		b, err := t.dstack.PopByteArray()
 		if err != nil {
 			return false, err
 		}
 
 		if len(b) > 1 {
-			return false, scriptError(ErrMinimalIf, "conditionl has data of length %d", len(b))
+			return false, errs.NewError(errs.ErrMinimalIf, "conditionl has data of length %d", len(b))
 		}
 		if len(b) == 1 && b[0] != 1 {
-			return false, scriptError(ErrMinimalIf, "conditional failed")
+			return false, errs.NewError(errs.ErrMinimalIf, "conditional failed")
 		}
 
 		return asBool(b), nil
@@ -434,7 +435,7 @@ func popIfBool(t *thread) (bool, error) {
 // Data stack transformation: [... bool] -> [...]
 // Conditional stack transformation: [...] -> [... OpCondValue]
 func opcodeIf(op *ParsedOp, t *thread) error {
-	condVal := OpCondFalse
+	condVal := opCondFalse
 	if t.shouldExec(*op) {
 		if t.isBranchExecuting() {
 			ok, err := popIfBool(t)
@@ -443,10 +444,10 @@ func opcodeIf(op *ParsedOp, t *thread) error {
 			}
 
 			if ok {
-				condVal = OpCondTrue
+				condVal = opCondTrue
 			}
 		} else {
-			condVal = OpCondSkip
+			condVal = opCondSkip
 		}
 	}
 
@@ -472,7 +473,7 @@ func opcodeIf(op *ParsedOp, t *thread) error {
 // Data stack transformation: [... bool] -> [...]
 // Conditional stack transformation: [...] -> [... OpCondValue]
 func opcodeNotIf(op *ParsedOp, t *thread) error {
-	condVal := OpCondFalse
+	condVal := opCondFalse
 	if t.shouldExec(*op) {
 		if t.isBranchExecuting() {
 			ok, err := popIfBool(t)
@@ -481,10 +482,10 @@ func opcodeNotIf(op *ParsedOp, t *thread) error {
 			}
 
 			if !ok {
-				condVal = OpCondTrue
+				condVal = opCondTrue
 			}
 		} else {
-			condVal = OpCondSkip
+			condVal = opCondSkip
 		}
 	}
 
@@ -500,7 +501,7 @@ func opcodeNotIf(op *ParsedOp, t *thread) error {
 // Conditional stack transformation: [... OpCondValue] -> [... !OpCondValue]
 func opcodeElse(op *ParsedOp, t *thread) error {
 	if len(t.condStack) == 0 {
-		return scriptError(ErrUnbalancedConditional,
+		return errs.NewError(errs.ErrUnbalancedConditional,
 			"encountered opcode %s with no matching opcode to begin conditional execution", op.Name())
 	}
 
@@ -510,17 +511,17 @@ func opcodeElse(op *ParsedOp, t *thread) error {
 		return err
 	}
 	if ok {
-		return scriptError(ErrUnbalancedConditional,
+		return errs.NewError(errs.ErrUnbalancedConditional,
 			"encountered opcode %s with no matching opcode to begin conditional execution", op.Name())
 	}
 
 	conditionalIdx := len(t.condStack) - 1
 	switch t.condStack[conditionalIdx] {
-	case OpCondTrue:
-		t.condStack[conditionalIdx] = OpCondFalse
-	case OpCondFalse:
-		t.condStack[conditionalIdx] = OpCondTrue
-	case OpCondSkip:
+	case opCondTrue:
+		t.condStack[conditionalIdx] = opCondFalse
+	case opCondFalse:
+		t.condStack[conditionalIdx] = opCondTrue
+	case opCondSkip:
 		// Value doesn't change in skip since it indicates this opcode
 		// is nested in a non-executed branch.
 	}
@@ -537,7 +538,7 @@ func opcodeElse(op *ParsedOp, t *thread) error {
 // Conditional stack transformation: [... OpCondValue] -> [...]
 func opcodeEndif(op *ParsedOp, t *thread) error {
 	if len(t.condStack) == 0 {
-		return scriptError(ErrUnbalancedConditional,
+		return errs.NewError(errs.ErrUnbalancedConditional,
 			"encountered opcode %s with no matching opcode to begin conditional execution", op.Name())
 	}
 
@@ -554,13 +555,13 @@ func opcodeEndif(op *ParsedOp, t *thread) error {
 // item on the stack or when that item evaluates to false.  In the latter case
 // where the verification fails specifically due to the top item evaluating
 // to false, the returned error will use the passed error code.
-func abstractVerify(op *ParsedOp, t *thread, c ErrorCode) error {
+func abstractVerify(op *ParsedOp, t *thread, c errs.ErrorCode) error {
 	verified, err := t.dstack.PopBool()
 	if err != nil {
 		return err
 	}
 	if !verified {
-		return scriptError(c, "%s failed", op.Name())
+		return errs.NewError(c, "%s failed", op.Name())
 	}
 
 	return nil
@@ -569,14 +570,14 @@ func abstractVerify(op *ParsedOp, t *thread, c ErrorCode) error {
 // opcodeVerify examines the top item on the data stack as a boolean value and
 // verifies it evaluates to true.  An error is returned if it does not.
 func opcodeVerify(op *ParsedOp, t *thread) error {
-	return abstractVerify(op, t, ErrVerify)
+	return abstractVerify(op, t, errs.ErrVerify)
 }
 
 // opcodeReturn returns an appropriate error since it is always an error to
 // return early from a script.
 func opcodeReturn(op *ParsedOp, t *thread) error {
 	if !t.afterGenesis {
-		return scriptError(ErrEarlyReturn, "script returned early")
+		return errs.NewError(errs.ErrEarlyReturn, "script returned early")
 	}
 
 	t.earlyReturnAfterGenesis = true
@@ -595,12 +596,12 @@ func verifyLockTime(txLockTime, threshold, lockTime int64) error {
 	// type.
 	if !((txLockTime < threshold && lockTime < threshold) ||
 		(txLockTime >= threshold && lockTime >= threshold)) {
-		return scriptError(ErrUnsatisfiedLockTime,
+		return errs.NewError(errs.ErrUnsatisfiedLockTime,
 			"mismatched locktime types -- tx locktime %d, stack locktime %d", txLockTime, lockTime)
 	}
 
 	if lockTime > txLockTime {
-		return scriptError(ErrUnsatisfiedLockTime,
+		return errs.NewError(errs.ErrUnsatisfiedLockTime,
 			"locktime requirement not satisfied -- locktime is greater than the transaction locktime: %d > %d",
 			lockTime, txLockTime)
 	}
@@ -616,9 +617,9 @@ func verifyLockTime(txLockTime, threshold, lockTime int64) error {
 func opcodeCheckLockTimeVerify(op *ParsedOp, t *thread) error {
 	// If the ScriptVerifyCheckLockTimeVerify script flag is not set, treat
 	// opcode as bscript.OpNOP2 instead.
-	if !t.hasFlag(ScriptVerifyCheckLockTimeVerify) || t.afterGenesis {
-		if t.hasFlag(ScriptDiscourageUpgradableNops) {
-			return scriptError(ErrDiscourageUpgradableNOPs, "bscript.OpNOP2 reserved for soft-fork upgrades")
+	if !t.hasFlag(scriptflag.VerifyCheckLockTimeVerify) || t.afterGenesis {
+		if t.hasFlag(scriptflag.DiscourageUpgradableNops) {
+			return errs.NewError(errs.ErrDiscourageUpgradableNOPs, "bscript.OpNOP2 reserved for soft-fork upgrades")
 		}
 
 		return nil
@@ -646,7 +647,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, t *thread) error {
 	// arithmetic being done first, you can always use
 	// 0 bscript.OpMAX bscript.OpCHECKLOCKTIMEVERIFY.
 	if lockTime < 0 {
-		return scriptError(ErrNegativeLockTime, "negative lock time: %d", lockTime)
+		return errs.NewError(errs.ErrNegativeLockTime, "negative lock time: %d", lockTime)
 	}
 
 	// The lock time field of a transaction is either a block height at
@@ -672,7 +673,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, t *thread) error {
 	// another input being unlocked, the opcode execution will still fail when the
 	// input being used by the opcode is locked.
 	if t.tx.Inputs[t.inputIdx].SequenceNumber == bt.MaxTxInSequenceNum {
-		return scriptError(ErrUnsatisfiedLockTime, "transaction input is finalised")
+		return errs.NewError(errs.ErrUnsatisfiedLockTime, "transaction input is finalised")
 	}
 
 	return nil
@@ -686,9 +687,9 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, t *thread) error {
 func opcodeCheckSequenceVerify(op *ParsedOp, t *thread) error {
 	// If the ScriptVerifyCheckSequenceVerify script flag is not set, treat
 	// opcode as bscript.OpNOP3 instead.
-	if !t.hasFlag(ScriptVerifyCheckSequenceVerify) || t.afterGenesis {
-		if t.hasFlag(ScriptDiscourageUpgradableNops) {
-			return scriptError(ErrDiscourageUpgradableNOPs, "bscript.OpNOP3 reserved for soft-fork upgrades")
+	if !t.hasFlag(scriptflag.VerifyCheckSequenceVerify) || t.afterGenesis {
+		if t.hasFlag(scriptflag.DiscourageUpgradableNops) {
+			return errs.NewError(errs.ErrDiscourageUpgradableNOPs, "bscript.OpNOP3 reserved for soft-fork upgrades")
 		}
 
 		return nil
@@ -716,7 +717,7 @@ func opcodeCheckSequenceVerify(op *ParsedOp, t *thread) error {
 	// arithmetic being done first, you can always use
 	// 0 bscript.OpMAX bscript.OpCHECKSEQUENCEVERIFY.
 	if stackSequence < 0 {
-		return scriptError(ErrNegativeLockTime, "negative sequence: %d", stackSequence)
+		return errs.NewError(errs.ErrNegativeLockTime, "negative sequence: %d", stackSequence)
 	}
 
 	sequence := int64(stackSequence)
@@ -731,7 +732,7 @@ func opcodeCheckSequenceVerify(op *ParsedOp, t *thread) error {
 	// Transaction version numbers not high enough to trigger CSV rules must
 	// fail.
 	if t.tx.Version < 2 {
-		return scriptError(ErrUnsatisfiedLockTime, "invalid transaction version: %d", t.tx.Version)
+		return errs.NewError(errs.ErrUnsatisfiedLockTime, "invalid transaction version: %d", t.tx.Version)
 	}
 
 	// Sequence numbers with their most significant bit set are not
@@ -740,7 +741,7 @@ func opcodeCheckSequenceVerify(op *ParsedOp, t *thread) error {
 	// to get around a CHECKSEQUENCEVERIFY check.
 	txSequence := int64(t.tx.Inputs[t.inputIdx].SequenceNumber)
 	if txSequence&int64(bt.SequenceLockTimeDisabled) != 0 {
-		return scriptError(ErrUnsatisfiedLockTime,
+		return errs.NewError(errs.ErrUnsatisfiedLockTime,
 			"transaction sequence has sequence locktime disabled bit set: 0x%x", txSequence)
 	}
 
@@ -951,7 +952,7 @@ func opcodeCat(op *ParsedOp, t *thread) error {
 
 	c := append(a, b...)
 	if len(c) > t.cfg.MaxScriptElementSize() {
-		return scriptError(ErrElementTooBig,
+		return errs.NewError(errs.ErrElementTooBig,
 			"concatenated size %d exceeds max allowed size %d", len(c), t.cfg.MaxScriptElementSize())
 	}
 
@@ -975,10 +976,10 @@ func opcodeSplit(op *ParsedOp, t *thread) error {
 	}
 
 	if n.Int32() > int32(len(c)) {
-		return scriptError(ErrNumberTooBig, "n is larger than length of array")
+		return errs.NewError(errs.ErrNumberTooBig, "n is larger than length of array")
 	}
 	if n < 0 {
-		return scriptError(ErrNumberTooSmall, "n is negative")
+		return errs.NewError(errs.ErrNumberTooSmall, "n is negative")
 	}
 
 	a := c[:n]
@@ -1007,7 +1008,7 @@ func opcodeNum2bin(op *ParsedOp, t *thread) error {
 
 	size := int(n.Int32())
 	if size > t.cfg.MaxScriptElementSize() {
-		return scriptError(ErrNumberTooBig, "n is larger than the max of %d", defaultScriptNumLen)
+		return errs.NewError(errs.ErrNumberTooBig, "n is larger than the max of %d", defaultScriptNumLen)
 	}
 
 	// encode a as a script num so that we we take the bytes it
@@ -1019,7 +1020,7 @@ func opcodeNum2bin(op *ParsedOp, t *thread) error {
 
 	b := sn.Bytes()
 	if len(b) > size {
-		return scriptError(ErrNumberTooSmall, "cannot fit it into n sized array")
+		return errs.NewError(errs.ErrNumberTooSmall, "cannot fit it into n sized array")
 	}
 	if len(b) == size {
 		t.dstack.PushByteArray(b)
@@ -1058,8 +1059,7 @@ func opcodeBin2num(op *ParsedOp, t *thread) error {
 		return err
 	}
 	if len(n.Bytes()) > defaultScriptNumLen {
-		return scriptError(ErrNumberTooBig,
-			fmt.Sprintf("script numbers are limited to %d bytes", defaultScriptNumLen))
+		return errs.NewError(errs.ErrNumberTooBig, "script numbers are limited to %d bytes", defaultScriptNumLen)
 	}
 
 	t.dstack.PushInt(n)
@@ -1099,7 +1099,7 @@ func opcodeInvert(op *ParsedOp, t *thread) error {
 // opcodeAnd executes a boolean and between each bit in the operands
 //
 // Stack transformation: x1 x2 bscript.OpAND -> out
-func opcodeAnd(op *ParsedOp, t *thread) error {
+func opcodeAnd(op *ParsedOp, t *thread) error { //nolint:dupl // to keep functionality with function signature
 	a, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1111,7 +1111,7 @@ func opcodeAnd(op *ParsedOp, t *thread) error {
 	}
 
 	if len(a) != len(b) {
-		return scriptError(ErrInvalidInputLength, "byte arrays are not the same length")
+		return errs.NewError(errs.ErrInvalidInputLength, "byte arrays are not the same length")
 	}
 
 	c := make([]byte, len(a))
@@ -1126,7 +1126,7 @@ func opcodeAnd(op *ParsedOp, t *thread) error {
 // opcodeOr executes a boolean or between each bit in the operands
 //
 // Stack transformation: x1 x2 bscript.OpOR -> out
-func opcodeOr(op *ParsedOp, t *thread) error {
+func opcodeOr(op *ParsedOp, t *thread) error { //nolint:dupl // to keep functionality with function signature
 	a, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1138,7 +1138,7 @@ func opcodeOr(op *ParsedOp, t *thread) error {
 	}
 
 	if len(a) != len(b) {
-		return scriptError(ErrInvalidInputLength, "byte arrays are not the same length")
+		return errs.NewError(errs.ErrInvalidInputLength, "byte arrays are not the same length")
 	}
 
 	c := make([]byte, len(a))
@@ -1153,7 +1153,7 @@ func opcodeOr(op *ParsedOp, t *thread) error {
 // opcodeXor executes a boolean xor between each bit in the operands
 //
 // Stack transformation: x1 x2 bscript.OpXOR -> out
-func opcodeXor(op *ParsedOp, t *thread) error {
+func opcodeXor(op *ParsedOp, t *thread) error { //nolint:dupl // to keep functionality with function signature
 	a, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
@@ -1165,7 +1165,7 @@ func opcodeXor(op *ParsedOp, t *thread) error {
 	}
 
 	if len(a) != len(b) {
-		return scriptError(ErrInvalidInputLength, "byte arrays are not the same length")
+		return errs.NewError(errs.ErrInvalidInputLength, "byte arrays are not the same length")
 	}
 
 	c := make([]byte, len(a))
@@ -1208,7 +1208,7 @@ func opcodeEqualVerify(op *ParsedOp, t *thread) error {
 		return err
 	}
 
-	return abstractVerify(op, t, ErrEqualVerify)
+	return abstractVerify(op, t, errs.ErrEqualVerify)
 }
 
 // opcode1Add treats the top item on the data stack as an integer and replaces
@@ -1393,7 +1393,7 @@ func opcodeDiv(op *ParsedOp, t *thread) error {
 	}
 
 	if b == 0 {
-		return scriptError(ErrDivideByZero, "divide by zero")
+		return errs.NewError(errs.ErrDivideByZero, "divide by zero")
 	}
 
 	t.dstack.PushInt(a / b)
@@ -1416,7 +1416,7 @@ func opcodeMod(op *ParsedOp, t *thread) error {
 	}
 
 	if b == 0 {
-		return scriptError(ErrDivideByZero, "mod by zero")
+		return errs.NewError(errs.ErrDivideByZero, "mod by zero")
 	}
 
 	t.dstack.PushInt(a % b)
@@ -1430,7 +1430,7 @@ func opcodeLShift(op *ParsedOp, t *thread) error {
 	}
 
 	if n.Int32() < 0 {
-		return scriptError(ErrNumberTooSmall, "n less than 0")
+		return errs.NewError(errs.ErrNumberTooSmall, "n less than 0")
 	}
 
 	x, err := t.dstack.PopByteArray()
@@ -1455,7 +1455,7 @@ func opcodeRShift(op *ParsedOp, t *thread) error {
 	}
 
 	if n.Int32() < 0 {
-		return scriptError(ErrNumberTooSmall, "n less than 0")
+		return errs.NewError(errs.ErrNumberTooSmall, "n less than 0")
 	}
 
 	x, err := t.dstack.PopByteArray()
@@ -1565,7 +1565,7 @@ func opcodeNumEqualVerify(op *ParsedOp, t *thread) error {
 		return err
 	}
 
-	return abstractVerify(op, t, ErrNumEqualVerify)
+	return abstractVerify(op, t, errs.ErrNumEqualVerify)
 }
 
 // opcodeNumNotEqual treats the top two items on the data stack as integers.
@@ -1927,7 +1927,7 @@ func opcodeCheckSig(op *ParsedOp, t *thread) error {
 
 	// Remove the signature since there is no way for a signature
 	// to sign itself.
-	if !t.hasFlag(ScriptEnableSighashForkID) || !shf.Has(sighash.ForkID) {
+	if !t.hasFlag(scriptflag.EnableSighashForkID) || !shf.Has(sighash.ForkID) {
 		subScript = subScript.removeOpcodeByData(fullSigBytes)
 		subScript = subScript.removeOpcode(bscript.OpCODESEPARATOR)
 	}
@@ -1953,7 +1953,7 @@ func opcodeCheckSig(op *ParsedOp, t *thread) error {
 	}
 
 	var signature *bec.Signature
-	if t.hasFlag(ScriptVerifyStrictEncoding) || t.hasFlag(ScriptVerifyDERSignatures) {
+	if t.hasFlag(scriptflag.VerifyStrictEncoding) || t.hasFlag(scriptflag.VerifyDERSignatures) {
 		signature, err = bec.ParseDERSignature(sigBytes, bec.S256())
 	} else {
 		signature, err = bec.ParseSignature(sigBytes, bec.S256())
@@ -1964,8 +1964,8 @@ func opcodeCheckSig(op *ParsedOp, t *thread) error {
 	}
 
 	ok := signature.Verify(hash, pubKey)
-	if !ok && t.hasFlag(ScriptVerifyNullFail) && len(sigBytes) > 0 {
-		return scriptError(ErrNullFail, "signature not empty on failed checksig")
+	if !ok && t.hasFlag(scriptflag.VerifyNullFail) && len(sigBytes) > 0 {
+		return errs.NewError(errs.ErrNullFail, "signature not empty on failed checksig")
 	}
 
 	t.dstack.PushBool(ok)
@@ -1982,7 +1982,7 @@ func opcodeCheckSigVerify(op *ParsedOp, t *thread) error {
 		return err
 	}
 
-	return abstractVerify(op, t, ErrCheckSigVerify)
+	return abstractVerify(op, t, errs.ErrCheckSigVerify)
 }
 
 // parsedSigInfo houses a raw signature along with its parsed form and a flag
@@ -2021,14 +2021,18 @@ func opcodeCheckMultiSig(op *ParsedOp, t *thread) error {
 
 	numPubKeys := int(numKeys.Int32())
 	if numPubKeys < 0 {
-		return scriptError(ErrInvalidPubKeyCount, "number of pubkeys %d is negative", numPubKeys)
+		return errs.NewError(errs.ErrInvalidPubKeyCount, "number of pubkeys %d is negative", numPubKeys)
 	}
 	if numPubKeys > t.cfg.MaxPubKeysPerMultiSig() {
-		return scriptError(ErrInvalidPubKeyCount, "too many pubkeys: %d > %d", numPubKeys, t.cfg.MaxPubKeysPerMultiSig())
+		return errs.NewError(
+			errs.ErrInvalidPubKeyCount,
+			"too many pubkeys: %d > %d",
+			numPubKeys, t.cfg.MaxPubKeysPerMultiSig(),
+		)
 	}
 	t.numOps += numPubKeys
 	if t.numOps > t.cfg.MaxOps() {
-		return scriptError(ErrTooManyOperations, "exceeded max operation limit of %d", t.cfg.MaxOps())
+		return errs.NewError(errs.ErrTooManyOperations, "exceeded max operation limit of %d", t.cfg.MaxOps())
 	}
 
 	pubKeys := make([][]byte, 0, numPubKeys)
@@ -2047,10 +2051,14 @@ func opcodeCheckMultiSig(op *ParsedOp, t *thread) error {
 
 	numSignatures := int(numSigs.Int32())
 	if numSignatures < 0 {
-		return scriptError(ErrInvalidSignatureCount, "number of signatures %d is negative", numSignatures)
+		return errs.NewError(errs.ErrInvalidSignatureCount, "number of signatures %d is negative", numSignatures)
 	}
 	if numSignatures > numPubKeys {
-		return scriptError(ErrInvalidSignatureCount, "more signatures than pubkeys: %d > %d", numSignatures, numPubKeys)
+		return errs.NewError(
+			errs.ErrInvalidSignatureCount,
+			"more signatures than pubkeys: %d > %d",
+			numSignatures, numPubKeys,
+		)
 	}
 
 	signatures := make([]*parsedSigInfo, 0, numSignatures)
@@ -2075,8 +2083,8 @@ func opcodeCheckMultiSig(op *ParsedOp, t *thread) error {
 	// Since the dummy argument is otherwise not checked, it could be any
 	// value which unfortunately provides a source of malleability.  Thus,
 	// there is a script flag to force an error when the value is NOT 0.
-	if t.hasFlag(ScriptStrictMultiSig) && len(dummy) != 0 {
-		return scriptError(ErrSigNullDummy, "multisig dummy argument has length %d instead of 0", len(dummy))
+	if t.hasFlag(scriptflag.StrictMultiSig) && len(dummy) != 0 {
+		return errs.NewError(errs.ErrSigNullDummy, "multisig dummy argument has length %d instead of 0", len(dummy))
 	}
 
 	// Get script starting from the most recent bscript.OpCODESEPARATOR.
@@ -2131,8 +2139,8 @@ func opcodeCheckMultiSig(op *ParsedOp, t *thread) error {
 
 			// Parse the signature.
 			var err error
-			if t.hasFlag(ScriptVerifyStrictEncoding) ||
-				t.hasFlag(ScriptVerifyDERSignatures) {
+			if t.hasFlag(scriptflag.VerifyStrictEncoding) ||
+				t.hasFlag(scriptflag.VerifyDERSignatures) {
 
 				parsedSig, err = bec.ParseDERSignature(signature,
 					bec.S256())
@@ -2188,10 +2196,10 @@ func opcodeCheckMultiSig(op *ParsedOp, t *thread) error {
 		}
 	}
 
-	if !success && t.hasFlag(ScriptVerifyNullFail) {
+	if !success && t.hasFlag(scriptflag.VerifyNullFail) {
 		for _, sig := range signatures {
 			if len(sig.signature) > 0 {
-				return scriptError(ErrNullFail, "not all signatures empty on failed checkmultisig")
+				return errs.NewError(errs.ErrNullFail, "not all signatures empty on failed checkmultisig")
 			}
 		}
 	}
@@ -2211,9 +2219,9 @@ func opcodeCheckMultiSigVerify(op *ParsedOp, t *thread) error {
 		return err
 	}
 
-	return abstractVerify(op, t, ErrCheckMultiSigVerify)
+	return abstractVerify(op, t, errs.ErrCheckMultiSigVerify)
 }
 
-func success() Error {
-	return scriptError(ErrOK, "success")
+func success() errs.Error {
+	return errs.NewError(errs.ErrOK, "success")
 }

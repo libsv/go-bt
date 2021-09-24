@@ -5,7 +5,7 @@
 package interpreter
 
 import (
-	"fmt"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
 )
 
 const (
@@ -45,7 +45,7 @@ const (
 // interpreting it as an integer, it provides the required behaviour.
 type scriptNum int64
 
-// checkMinimalDataEncoding returns whether or not the passed byte array adheres
+// checkMinimalDataEncoding returns whether the passed byte array adheres
 // to the minimal encoding requirements.
 func checkMinimalDataEncoding(v []byte) error {
 	if len(v) == 0 {
@@ -65,9 +65,7 @@ func checkMinimalDataEncoding(v []byte) error {
 		// is +-255, which encode to 0xff00 and 0xff80 respectively.
 		// (big-endian).
 		if len(v) == 1 || v[len(v)-2]&0x80 == 0 {
-			str := fmt.Sprintf("numeric value encoded as %x is "+
-				"not minimally encoded", v)
-			return scriptError(ErrMinimalData, str)
+			return errs.NewError(errs.ErrMinimalData, "numeric value encoded as %x is not minimally encoded", v)
 		}
 	}
 
@@ -135,7 +133,7 @@ func (n scriptNum) Bytes() []byte {
 // when the script number is higher than the max allowed int32, the max int32
 // value is returned and vice versa for the minimum value.  Note that this
 // behaviour is different from a simple int32 cast because that truncates
-// and the consensus rules dictate numbers which are directly cast to ints
+// and the consensus rules dictate numbers which are directly cast to integers
 // provide this behaviour.
 //
 // In practice, for most opcodes, the number should never be out of range since
@@ -163,10 +161,10 @@ func (n scriptNum) Int64() int64 {
 // makeScriptNum interprets the passed serialised bytes as an encoded integer
 // and returns the result as a script number.
 //
-// Since the consensus rules dictate that serialised bytes interpreted as ints
+// Since the consensus rules dictate that serialised bytes interpreted as integers
 // are only allowed to be in the range determined by a maximum number of bytes,
 // on a per opcode basis, an error will be returned when the provided bytes
-// would result in a number outside of that range.  In particular, the range for
+// would result in a number outside that range.  In particular, the range for
 // the vast majority of opcodes dealing with numeric values are limited to 4
 // bytes and therefore will pass that value to this function resulting in an
 // allowed range of [-2^31 + 1, 2^31 - 1].
@@ -179,7 +177,7 @@ func (n scriptNum) Int64() int64 {
 // requireMinimal enabled.
 //
 // The scriptNumLen is the maximum number of bytes the encoded value can be
-// before an ErrStackNumberTooBig is returned.  This effectively limits the
+// before an errs.ErrStackNumberTooBig is returned.  This effectively limits the
 // range of allowed values.
 // WARNING:  Great care should be taken if passing a value larger than
 // defaultScriptNumLen, which could lead to addition and multiplication
@@ -188,12 +186,13 @@ func (n scriptNum) Int64() int64 {
 // See the Bytes function documentation for example encodings.
 func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int) (scriptNum, error) {
 	// Interpreting data requires that it is not larger than
-	// the the passed scriptNumLen value.
+	// the passed scriptNumLen value.
 	if len(v) > scriptNumLen {
-		str := fmt.Sprintf("numeric value encoded as %x is %d bytes "+
-			"which exceeds the max allowed of %d", v, len(v),
-			scriptNumLen)
-		return 0, scriptError(ErrNumberTooBig, str)
+		return 0, errs.NewError(
+			errs.ErrNumberTooBig,
+			"numeric value encoded as %x is %d bytes which exceeds the max allowed of %d",
+			v, len(v), scriptNumLen,
+		)
 	}
 
 	// Enforce minimal encoded if requested.

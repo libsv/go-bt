@@ -9,6 +9,8 @@ import (
 
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/scriptflag"
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
@@ -52,7 +54,7 @@ func TestBadPC(t *testing.T) {
 
 	for _, test := range tests {
 		vm := &thread{
-			scriptParser: &parser{},
+			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
 		}
 		err := vm.apply(ExecutionParams{
@@ -81,7 +83,7 @@ func TestBadPC(t *testing.T) {
 	}
 }
 
-// TestCheckErrorCondition tests the execute early test in CheckErrorCondition()
+// TestCheckErrorCondition tests to execute early test in CheckErrorCondition()
 // since most code paths are tested elsewhere.
 func TestCheckErrorCondition(t *testing.T) {
 	t.Parallel()
@@ -108,7 +110,7 @@ func TestCheckErrorCondition(t *testing.T) {
 	}
 
 	vm := &thread{
-		scriptParser: &parser{},
+		scriptParser: &DefaultOpcodeParser{},
 		cfg:          &beforeGenesisConfig{},
 	}
 
@@ -142,8 +144,8 @@ func TestCheckErrorCondition(t *testing.T) {
 func TestInvalidFlagCombinations(t *testing.T) {
 	t.Parallel()
 
-	tests := []ScriptFlags{
-		ScriptVerifyCleanStack,
+	tests := []scriptflag.Flag{
+		scriptflag.VerifyCleanStack,
 	}
 
 	uls, err := bscript.NewFromASM("OP_NOP")
@@ -174,7 +176,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 
 	for i, test := range tests {
 		vm := &thread{
-			scriptParser: &parser{},
+			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
 		}
 		err := vm.apply(ExecutionParams{
@@ -183,7 +185,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 			PreviousTxOut: txOut,
 			Flags:         test,
 		})
-		if !IsErrorCode(err, ErrInvalidFlags) {
+		if !errs.IsErrorCode(err, errs.ErrInvalidFlags) {
 			t.Fatalf("TestInvalidFlagCombinations #%d unexpected "+
 				"error: %v", i, err)
 		}
@@ -235,7 +237,7 @@ func TestCheckPubKeyEncoding(t *testing.T) {
 		},
 	}
 
-	vm := thread{flags: ScriptVerifyStrictEncoding}
+	vm := thread{scriptflag: scriptflag.VerifyStrictEncoding}
 	for _, test := range tests {
 		err := vm.checkPubKeyEncoding(test.key)
 		if err != nil && test.isValid {
@@ -407,7 +409,7 @@ func TestCheckSignatureEncoding(t *testing.T) {
 		},
 	}
 
-	vm := thread{flags: ScriptVerifyStrictEncoding}
+	vm := thread{scriptflag: scriptflag.VerifyStrictEncoding}
 	for _, test := range tests {
 		err := vm.checkSignatureEncoding(test.sig)
 		if err != nil && test.isValid {
@@ -425,140 +427,140 @@ func TestCheckHashTypeEncoding(t *testing.T) {
 	var SigHashBug sighash.Flag = 0x20
 	encodingTests := []struct {
 		SigHash     sighash.Flag
-		EngineFlags ScriptFlags
+		EngineFlags scriptflag.Flag
 		ShouldFail  bool
 	}{
 		{
 			sighash.All,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			false,
 		},
 		{
 			sighash.None,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			false,
 		},
 		{
 			sighash.Single,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			false,
 		},
 		{
 			sighash.All | sighash.AnyOneCanPay,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			false,
 		},
 		{
 			sighash.None | sighash.AnyOneCanPay,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			false,
 		},
 		{
 			sighash.Single | sighash.AnyOneCanPay,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			false,
 		},
 		{
 			sighash.All | sighash.ForkID,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			true,
 		},
 		{
 			sighash.None | sighash.ForkID,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			true,
 		},
 		{
 			sighash.Single | sighash.ForkID,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			true,
 		},
 		{
 			sighash.All | sighash.AnyOneCanPay | sighash.ForkID,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			true,
 		},
 		{
 			sighash.None | sighash.AnyOneCanPay | sighash.ForkID,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			true,
 		},
 		{
 			sighash.Single | sighash.AnyOneCanPay | sighash.ForkID,
-			ScriptVerifyStrictEncoding,
+			scriptflag.VerifyStrictEncoding,
 			true,
 		},
 
 		{
 			sighash.All | sighash.ForkID,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			false,
 		},
 		{
 			sighash.None | sighash.ForkID,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			false,
 		},
 		{
 			sighash.Single | sighash.ForkID,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			false,
 		},
 		{
 			sighash.All | sighash.AnyOneCanPay | sighash.ForkID,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			false,
 		},
 		{
 			sighash.None | sighash.AnyOneCanPay | sighash.ForkID,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			false,
 		},
 		{
 			sighash.Single | sighash.AnyOneCanPay | sighash.ForkID,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			false,
 		},
 
 		{
 			sighash.All,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			true,
 		},
 		{
 			sighash.None,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			true,
 		},
 		{
 			sighash.Single,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			true,
 		},
 		{
 			sighash.All | sighash.AnyOneCanPay,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			true,
 		},
 		{
 			sighash.None | sighash.AnyOneCanPay,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			true,
 		},
 		{
 			sighash.Single | sighash.AnyOneCanPay,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			true,
 		},
 		{
 			sighash.Single | sighash.AnyOneCanPay | sighash.ForkID | SigHashBug,
-			ScriptVerifyStrictEncoding | ScriptVerifyBip143SigHash,
+			scriptflag.VerifyStrictEncoding | scriptflag.VerifyBip143SigHash,
 			true,
 		},
 	}
 
 	for i, test := range encodingTests {
-		e := thread{flags: test.EngineFlags}
+		e := thread{scriptflag: test.EngineFlags}
 		err := e.checkHashTypeEncoding(test.SigHash)
 		if test.ShouldFail && err == nil {
 			t.Errorf("Expected test %d to fail", i)

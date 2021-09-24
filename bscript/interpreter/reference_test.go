@@ -16,6 +16,8 @@ import (
 
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/scriptflag"
 )
 
 var opcodeByName = make(map[string]byte)
@@ -150,8 +152,8 @@ var shortFormOps map[string]byte
 
 // parseScriptFlags parses the provided flags string from the format used in the
 // reference tests into ScriptFlags suitable for use in the script engine.
-func parseScriptFlags(flagStr string) (ScriptFlags, error) {
-	var flags ScriptFlags
+func parseScriptFlags(flagStr string) (scriptflag.Flag, error) {
+	var flags scriptflag.Flag
 
 	sFlags := strings.Split(flagStr, ",")
 	for _, flag := range sFlags {
@@ -159,37 +161,37 @@ func parseScriptFlags(flagStr string) (ScriptFlags, error) {
 		case "":
 			// Nothing.
 		case "CHECKLOCKTIMEVERIFY":
-			flags |= ScriptVerifyCheckLockTimeVerify
+			flags |= scriptflag.VerifyCheckLockTimeVerify
 		case "CHECKSEQUENCEVERIFY":
-			flags |= ScriptVerifyCheckSequenceVerify
+			flags |= scriptflag.VerifyCheckSequenceVerify
 		case "CLEANSTACK":
-			flags |= ScriptVerifyCleanStack
+			flags |= scriptflag.VerifyCleanStack
 		case "DERSIG":
-			flags |= ScriptVerifyDERSignatures
+			flags |= scriptflag.VerifyDERSignatures
 		case "DISCOURAGE_UPGRADABLE_NOPS":
-			flags |= ScriptDiscourageUpgradableNops
+			flags |= scriptflag.DiscourageUpgradableNops
 		case "LOW_S":
-			flags |= ScriptVerifyLowS
+			flags |= scriptflag.VerifyLowS
 		case "MINIMALDATA":
-			flags |= ScriptVerifyMinimalData
+			flags |= scriptflag.VerifyMinimalData
 		case "NONE":
 			// Nothing.
 		case "NULLDUMMY":
-			flags |= ScriptStrictMultiSig
+			flags |= scriptflag.StrictMultiSig
 		case "NULLFAIL":
-			flags |= ScriptVerifyNullFail
+			flags |= scriptflag.VerifyNullFail
 		case "P2SH":
-			flags |= ScriptBip16
+			flags |= scriptflag.Bip16
 		case "SIGPUSHONLY":
-			flags |= ScriptVerifySigPushOnly
+			flags |= scriptflag.VerifySigPushOnly
 		case "STRICTENC":
-			flags |= ScriptVerifyStrictEncoding
+			flags |= scriptflag.VerifyStrictEncoding
 		case "UTXO_AFTER_GENESIS":
-			flags |= ScriptUTXOAfterGenesis
+			flags |= scriptflag.UTXOAfterGenesis
 		case "MINIMALIF":
-			flags |= ScriptVerifyMinimalIf
+			flags |= scriptflag.VerifyMinimalIf
 		case "SIGHASH_FORKID":
-			flags |= ScriptEnableSighashForkID
+			flags |= scriptflag.EnableSighashForkID
 		default:
 			return flags, fmt.Errorf("invalid flag: %s", flag)
 		}
@@ -200,89 +202,89 @@ func parseScriptFlags(flagStr string) (ScriptFlags, error) {
 // parseExpectedResult parses the provided expected result string into allowed
 // script error codes.  An error is returned if the expected result string is
 // not supported.
-func parseExpectedResult(expected string) ([]ErrorCode, error) {
+func parseExpectedResult(expected string) ([]errs.ErrorCode, error) {
 	switch expected {
 	case "OK":
 		return nil, nil
 	case "INVALID_NUMBER_RANGE", "SPLIT_RANGE":
-		return []ErrorCode{ErrNumberTooBig, ErrNumberTooSmall}, nil
+		return []errs.ErrorCode{errs.ErrNumberTooBig, errs.ErrNumberTooSmall}, nil
 	case "OPERAND_SIZE":
-		return []ErrorCode{ErrInvalidInputLength}, nil
+		return []errs.ErrorCode{errs.ErrInvalidInputLength}, nil
 	case "PUBKEYTYPE":
-		return []ErrorCode{ErrPubKeyType}, nil
+		return []errs.ErrorCode{errs.ErrPubKeyType}, nil
 	case "SIG_DER":
-		return []ErrorCode{ErrSigTooShort, ErrSigTooLong,
-			ErrSigInvalidSeqID, ErrSigInvalidDataLen, ErrSigMissingSTypeID,
-			ErrSigMissingSLen, ErrSigInvalidSLen,
-			ErrSigInvalidRIntID, ErrSigZeroRLen, ErrSigNegativeR,
-			ErrSigTooMuchRPadding, ErrSigInvalidSIntID,
-			ErrSigZeroSLen, ErrSigNegativeS, ErrSigTooMuchSPadding,
-			ErrInvalidSigHashType}, nil
+		return []errs.ErrorCode{errs.ErrSigTooShort, errs.ErrSigTooLong,
+			errs.ErrSigInvalidSeqID, errs.ErrSigInvalidDataLen, errs.ErrSigMissingSTypeID,
+			errs.ErrSigMissingSLen, errs.ErrSigInvalidSLen,
+			errs.ErrSigInvalidRIntID, errs.ErrSigZeroRLen, errs.ErrSigNegativeR,
+			errs.ErrSigTooMuchRPadding, errs.ErrSigInvalidSIntID,
+			errs.ErrSigZeroSLen, errs.ErrSigNegativeS, errs.ErrSigTooMuchSPadding,
+			errs.ErrInvalidSigHashType}, nil
 	case "EVAL_FALSE":
-		return []ErrorCode{ErrEvalFalse, ErrEmptyStack}, nil
+		return []errs.ErrorCode{errs.ErrEvalFalse, errs.ErrEmptyStack}, nil
 	case "EQUALVERIFY":
-		return []ErrorCode{ErrEqualVerify}, nil
+		return []errs.ErrorCode{errs.ErrEqualVerify}, nil
 	case "NULLFAIL":
-		return []ErrorCode{ErrNullFail}, nil
+		return []errs.ErrorCode{errs.ErrNullFail}, nil
 	case "SIG_HIGH_S":
-		return []ErrorCode{ErrSigHighS}, nil
+		return []errs.ErrorCode{errs.ErrSigHighS}, nil
 	case "SIG_HASHTYPE":
-		return []ErrorCode{ErrInvalidSigHashType}, nil
+		return []errs.ErrorCode{errs.ErrInvalidSigHashType}, nil
 	case "SIG_NULLDUMMY":
-		return []ErrorCode{ErrSigNullDummy}, nil
+		return []errs.ErrorCode{errs.ErrSigNullDummy}, nil
 	case "SIG_PUSHONLY":
-		return []ErrorCode{ErrNotPushOnly}, nil
+		return []errs.ErrorCode{errs.ErrNotPushOnly}, nil
 	case "CLEANSTACK":
-		return []ErrorCode{ErrCleanStack}, nil
+		return []errs.ErrorCode{errs.ErrCleanStack}, nil
 	case "BAD_OPCODE":
-		return []ErrorCode{ErrReservedOpcode, ErrMalformedPush}, nil
+		return []errs.ErrorCode{errs.ErrReservedOpcode, errs.ErrMalformedPush}, nil
 	case "UNBALANCED_CONDITIONAL":
-		return []ErrorCode{ErrUnbalancedConditional,
-			ErrInvalidStackOperation}, nil
+		return []errs.ErrorCode{errs.ErrUnbalancedConditional,
+			errs.ErrInvalidStackOperation}, nil
 	case "OP_RETURN":
-		return []ErrorCode{ErrEarlyReturn}, nil
+		return []errs.ErrorCode{errs.ErrEarlyReturn}, nil
 	case "VERIFY":
-		return []ErrorCode{ErrVerify}, nil
+		return []errs.ErrorCode{errs.ErrVerify}, nil
 	case "INVALID_STACK_OPERATION", "INVALID_ALTSTACK_OPERATION":
-		return []ErrorCode{ErrInvalidStackOperation}, nil
+		return []errs.ErrorCode{errs.ErrInvalidStackOperation}, nil
 	case "DISABLED_OPCODE":
-		return []ErrorCode{ErrDisabledOpcode}, nil
+		return []errs.ErrorCode{errs.ErrDisabledOpcode}, nil
 	case "DISCOURAGE_UPGRADABLE_NOPS":
-		return []ErrorCode{ErrDiscourageUpgradableNOPs}, nil
+		return []errs.ErrorCode{errs.ErrDiscourageUpgradableNOPs}, nil
 	case "SCRIPTNUM_OVERFLOW":
-		return []ErrorCode{ErrNumberTooBig}, nil
+		return []errs.ErrorCode{errs.ErrNumberTooBig}, nil
 	case "NUMBER_SIZE":
-		return []ErrorCode{ErrNumberTooBig, ErrNumberTooSmall}, nil
+		return []errs.ErrorCode{errs.ErrNumberTooBig, errs.ErrNumberTooSmall}, nil
 	case "PUSH_SIZE":
-		return []ErrorCode{ErrElementTooBig}, nil
+		return []errs.ErrorCode{errs.ErrElementTooBig}, nil
 	case "OP_COUNT":
-		return []ErrorCode{ErrTooManyOperations}, nil
+		return []errs.ErrorCode{errs.ErrTooManyOperations}, nil
 	case "STACK_SIZE":
-		return []ErrorCode{ErrStackOverflow}, nil
+		return []errs.ErrorCode{errs.ErrStackOverflow}, nil
 	case "SCRIPT_SIZE":
-		return []ErrorCode{ErrScriptTooBig}, nil
+		return []errs.ErrorCode{errs.ErrScriptTooBig}, nil
 	case "ELEMENT_SIZE":
-		return []ErrorCode{ErrElementTooBig}, nil
+		return []errs.ErrorCode{errs.ErrElementTooBig}, nil
 	case "PUBKEY_COUNT":
-		return []ErrorCode{ErrInvalidPubKeyCount}, nil
+		return []errs.ErrorCode{errs.ErrInvalidPubKeyCount}, nil
 	case "SIG_COUNT":
-		return []ErrorCode{ErrInvalidSignatureCount}, nil
+		return []errs.ErrorCode{errs.ErrInvalidSignatureCount}, nil
 	case "MINIMALDATA":
-		return []ErrorCode{ErrMinimalData}, nil
+		return []errs.ErrorCode{errs.ErrMinimalData}, nil
 	case "MINIMALIF":
-		return []ErrorCode{ErrMinimalIf}, nil
+		return []errs.ErrorCode{errs.ErrMinimalIf}, nil
 	case "NEGATIVE_LOCKTIME":
-		return []ErrorCode{ErrNegativeLockTime}, nil
+		return []errs.ErrorCode{errs.ErrNegativeLockTime}, nil
 	case "UNSATISFIED_LOCKTIME":
-		return []ErrorCode{ErrUnsatisfiedLockTime}, nil
+		return []errs.ErrorCode{errs.ErrUnsatisfiedLockTime}, nil
 	case "SCRIPTNUM_MINENCODE":
-		return []ErrorCode{ErrMinimalData}, nil
+		return []errs.ErrorCode{errs.ErrMinimalData}, nil
 	case "DIV_BY_ZERO", "MOD_BY_ZERO":
-		return []ErrorCode{ErrDivideByZero}, nil
+		return []errs.ErrorCode{errs.ErrDivideByZero}, nil
 	case "CHECKSIGVERIFY":
-		return []ErrorCode{ErrCheckSigVerify}, nil
+		return []errs.ErrorCode{errs.ErrCheckSigVerify}, nil
 	case "ILLEGAL_FORKID":
-		return []ErrorCode{ErrIllegalForkID}, nil
+		return []errs.ErrorCode{errs.ErrIllegalForkID}, nil
 	}
 
 	return nil, fmt.Errorf("unrecognised expected result in test data: %v",
@@ -449,13 +451,13 @@ func TestScripts(t *testing.T) {
 		// the execution matches it.
 		success := false
 		for _, code := range allowedErrorCodes {
-			if IsErrorCode(err, code) {
+			if errs.IsErrorCode(err, code) {
 				success = true
 				break
 			}
 		}
 		if !success {
-			serr := &Error{}
+			serr := &errs.Error{}
 			if ok := errors.As(err, serr); ok {
 				t.Errorf("%s: want error codes %v, got %v", name, allowedErrorCodes, serr.ErrorCode)
 				continue

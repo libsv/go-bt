@@ -13,9 +13,9 @@ import (
 General format (inside a block) of each output of a transaction - Txout
 Field	                        Description	                                Size
 -----------------------------------------------------------------------------------------------------
-value                         non negative integer giving the number of   8 bytes
+value                         non-negative integer giving the number of   8 bytes
                               Satoshis(BTC/10^8) to be transferred
-Txout-script length           non negative integer                        1 - 9 bytes VI = VarInt
+Txout-script length           non-negative integer                        1 - 9 bytes VI = VarInt
 Txout-script / scriptPubKey   Script                                      <out-script length>-many bytes
 (lockingScript)
 

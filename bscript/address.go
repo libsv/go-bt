@@ -16,8 +16,8 @@ const (
 	hashTestNetP2SH  = 0xc4
 )
 
-// An Address struct contains the address string as well as the hash160 hexstring of the public key.
-// The address string will be human readable and specific to the network type, but the public key hash
+// An Address struct contains the address string as well as the hash160 hex string of the public key.
+// The address string will be human-readable and specific to the network type, but the public key hash
 // is useful because it stays the same regardless of the network type (mainnet, testnet).
 type Address struct {
 	AddressString string
@@ -62,7 +62,7 @@ func addressToPubKeyHashStr(address string) (string, error) {
 
 // NewAddressFromPublicKeyString takes a public key string and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
-// Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
+// Otherwise, (mainnet is false) it will return a testnet address (starting with an m or n).
 func NewAddressFromPublicKeyString(pubKey string, mainnet bool) (*Address, error) {
 	pubKeyBytes, err := hex.DecodeString(pubKey)
 	if err != nil {
@@ -73,7 +73,7 @@ func NewAddressFromPublicKeyString(pubKey string, mainnet bool) (*Address, error
 
 // NewAddressFromPublicKeyHash takes a public key hash in bytes and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
-// Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
+// Otherwise, (mainnet is false) it will return a testnet address (starting with an m or n).
 func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 
 	// regtest := 111
@@ -83,7 +83,7 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	if !mainnet {
 		bb[0] = 111
 	}
-	// nolint: makezero // we need to setup the array with 1
+	// nolint: makezero // we need to set up the array with 1
 	bb = append(bb, hash...)
 
 	return &Address{
@@ -94,7 +94,7 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 
 // NewAddressFromPublicKey takes a bec public key and returns an Address struct pointer.
 // If mainnet parameter is true it will return a mainnet address (starting with a 1).
-// Otherwise (mainnet is false) it will return a testnet address (starting with an m or n).
+// Otherwise, (mainnet is false) it will return a testnet address (starting with an m or n).
 func NewAddressFromPublicKey(pubKey *bec.PublicKey, mainnet bool) (*Address, error) {
 	hash := crypto.Hash160(pubKey.SerialiseCompressed())
 
@@ -105,7 +105,7 @@ func NewAddressFromPublicKey(pubKey *bec.PublicKey, mainnet bool) (*Address, err
 	if !mainnet {
 		bb[0] = 111
 	}
-	// nolint: makezero // we need to setup the array with 1
+	// nolint: makezero // we need to set up the array with 1
 	bb = append(bb, hash...)
 
 	return &Address{
