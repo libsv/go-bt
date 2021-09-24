@@ -19,7 +19,7 @@ type utxoJSON struct {
 	TxID         string  `json:"txid"`
 	Vout         uint32  `json:"vout"`
 	ScriptPubKey string  `json:"scriptPubKey"`
-	Amount       float64 `json:"amount"`
+	Value        float64 `json:"value"`
 	Satoshis     uint64  `json:"satoshis"`
 }
 
@@ -46,7 +46,7 @@ func (u *UTXO) UnmarshalJSON(body []byte) error {
 	if j.Satoshis > 0 {
 		u.Satoshis = j.Satoshis
 	} else {
-		u.Satoshis = uint64(j.Amount * 100000000)
+		u.Satoshis = uint64(j.Value * 100000000)
 	}
 
 	return nil
@@ -56,7 +56,7 @@ func (u *UTXO) UnmarshalJSON(body []byte) error {
 func (u *UTXO) MarshalJSON() ([]byte, error) {
 	return json.Marshal(utxoJSON{
 		TxID:         hex.EncodeToString(u.TxID),
-		Amount:       float64(u.Satoshis) / 100000000,
+		Value:        float64(u.Satoshis) / 100000000,
 		Satoshis:     u.Satoshis,
 		Vout:         u.Vout,
 		ScriptPubKey: u.LockingScript.String(),

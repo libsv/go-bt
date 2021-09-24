@@ -67,7 +67,7 @@ func TestUTXO_MarshalJSON(t *testing.T) {
     "txid": "31ad4b5ef1d0d48340e063087cbfa6a3f3dea3cd5d34c983e0028c18daf3d2a7",
     "vout": 0,
     "scriptPubKey": "2102076ad7c107f82ae973fbdaa1d84532c8d69e3838bcbee1570efe0fa30b3cb25bac",
-    "amount": 12.5,
+    "value": 12.5,
     "satoshis": 1250000000
 }`,
 		},
