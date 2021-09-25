@@ -34,7 +34,7 @@ const (
 
 // FeeQuotes contains a list of miners and the current fees for each miner as well as their expiry.
 //
-// This can be used when getting fees from multiple miners and you want to use the cheapest for example.
+// This can be used when getting fees from multiple miners, and you want to use the cheapest for example.
 //
 // Usage setup should be calling NewFeeQuotes(minerName).
 type FeeQuotes struct {
@@ -42,7 +42,7 @@ type FeeQuotes struct {
 	quotes map[string]*FeeQuote
 }
 
-// NewFeeQuotes will setup default feeQuotes for the minerName supplied, ie TAAL etc.
+// NewFeeQuotes will set up default feeQuotes for the minerName supplied, ie TAAL etc.
 func NewFeeQuotes(minerName string) *FeeQuotes {
 	return &FeeQuotes{
 		mu:     sync.RWMutex{},
@@ -133,7 +133,7 @@ type FeeQuote struct {
 	expiryTime time.Time
 }
 
-// NewFeeQuote will setup and return a new FeeQuotes struct which
+// NewFeeQuote will set up and return a new FeeQuotes struct which
 // contains default fees when initially setup. You would then pass this
 // data structure to a singleton struct via injection for reading.
 // If you are only getting quotes from one miner you can use this directly

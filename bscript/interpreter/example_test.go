@@ -7,6 +7,7 @@ import (
 
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript/interpreter"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/scriptflag"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -46,7 +47,7 @@ func ExampleEngine_Execute() {
 		Tx:            tx,
 		InputIdx:      inputIdx,
 		PreviousTxOut: prevOutput,
-		Flags:         interpreter.ScriptEnableSighashForkID | interpreter.ScriptUTXOAfterGenesis,
+		Flags:         scriptflag.EnableSighashForkID | scriptflag.UTXOAfterGenesis,
 	}); err != nil {
 		fmt.Println(err)
 		return
@@ -77,7 +78,7 @@ func ExampleEngine_Execute_error() {
 		Tx:            tx,
 		InputIdx:      inputIdx,
 		PreviousTxOut: prevOutput,
-		Flags:         interpreter.ScriptEnableSighashForkID | interpreter.ScriptUTXOAfterGenesis,
+		Flags:         scriptflag.EnableSighashForkID | scriptflag.UTXOAfterGenesis,
 	}); err != nil {
 		fmt.Println(err)
 		return

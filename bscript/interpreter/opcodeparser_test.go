@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
 )
 
 // TestOpcodeDisabled tests the opcodeDisabled function manually because all
@@ -20,9 +21,9 @@ func TestOpcodeDisabled(t *testing.T) {
 	for _, opcodeVal := range tests {
 		pop := ParsedOp{Op: opcodeArray[opcodeVal], Data: nil}
 		err := opcodeDisabled(&pop, nil)
-		if !IsErrorCode(err, ErrDisabledOpcode) {
+		if !errs.IsErrorCode(err, errs.ErrDisabledOpcode) {
 			t.Errorf("opcodeDisabled: unexpected error - got %v, "+
-				"want %v", err, ErrDisabledOpcode)
+				"want %v", err, errs.ErrDisabledOpcode)
 			continue
 		}
 	}

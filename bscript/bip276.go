@@ -10,7 +10,7 @@ import (
 	"github.com/libsv/go-bk/crypto"
 )
 
-// BIP276 proposes a scheme for encoding typed bitcoin related data in a user friendly way
+// BIP276 proposes a scheme for encoding typed bitcoin related data in a user-friendly way
 // see https://github.com/moneybutton/bips/blob/master/bip-0276.mediawiki
 type BIP276 struct {
 	Prefix  string
