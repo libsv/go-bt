@@ -154,3 +154,27 @@ func TestDecodeParts(t *testing.T) {
 		assert.NoError(t, err)
 	})
 }
+
+func TestNoOverflow(t *testing.T) {
+	b := make([]byte, 0)
+	b = append(b, bscript.OpPUSHDATA2)
+	b = append(b, 0xff)
+	b = append(b, 0xff)
+
+	bigScript := make([]byte, 0xffff)
+
+	b = append(b, bigScript...)
+
+	t.Logf("Script len is %d", len(b))
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Panic detected: %v", r)
+		}
+	}()
+
+	_, err := bscript.DecodeParts(b)
+	if err != nil {
+		t.Error(err)
+	}
+}

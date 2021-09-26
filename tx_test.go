@@ -1,8 +1,11 @@
 package bt_test
 
 import (
+	"bufio"
 	"encoding/hex"
 	"errors"
+	"io"
+	"os"
 	"reflect"
 	"testing"
 
@@ -1056,5 +1059,69 @@ func TestTx_HasOutputsWithAddress(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, test.expIdxs, ii)
 		})
+	}
+}
+
+// This test reads a sample block from a file, but normally
+// we would get the block directly from the node via a REST GET...
+/*
+	resp, err := http.Get(fmt.Sprintf("%s/rest/block/%s.bin", b.client.serverAddr, blockHash))
+	if err != nil {
+		return nil, fmt.Errorf("Could not GET block: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+		return nil, fmt.Errorf("ERROR: code %d: %s", resp.StatusCode, data)
+	}
+	Then use resp.Body as in the test below
+*/
+func TestNewTxFromReader(t *testing.T) {
+	var err error
+
+	var f *os.File
+	f, err = os.Open("./block.bin")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	defer f.Close()
+
+	r := bufio.NewReader(f)
+
+	header := make([]byte, 80)
+	var n int
+	if n, err = io.ReadFull(f, header); n != 80 || err != nil {
+		t.Errorf("Read %d bytes, err: %v", n, err)
+	}
+
+	txCount, err := bt.DecodeVarIntFromReader(r)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	if txCount != 648 {
+		t.Errorf("Expected %d transactions, got %d", 648, txCount)
+		t.FailNow()
+	}
+
+	var tx *bt.Tx
+
+	for i := uint64(0); i < txCount; i++ {
+		tx, err = bt.NewTxFromReader(r)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
+		// t.Log(tx.TxID())
+		// t.Logf("%x", tx.Bytes())
+	}
+	if tx.GetTxID() != "b7c59d7fa17a74bbe0a05e5381f42b9ac7fe23b8a1ca40005a74802fe5b8bb5a" {
+		t.Errorf("Expected %q, got %q", "b7c59d7fa17a74bbe0a05e5381f42b9ac7fe23b8a1ca40005a74802fe5b8bb5a", tx.GetTxID())
+		t.FailNow()
 	}
 }

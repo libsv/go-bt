@@ -1,6 +1,10 @@
 package bt
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+	"io"
+)
 
 // VarInt takes an unsigned integer and  returns a byte array in VarInt format.
 // See http://learnmeabitcoin.com/glossary/varint
@@ -66,4 +70,40 @@ func VarIntUpperLimitInc(length uint64) int {
 		return -1
 	}
 	return 0
+}
+
+// DecodeVarIntFromReader takes an io.Reader and returns the
+// decoded unsigned integer value of the length.
+// See http://learnmeabitcoin.com/glossary/varint
+func DecodeVarIntFromReader(r io.Reader) (uint64, error) {
+	b := make([]byte, 1)
+	if n, err := io.ReadFull(r, b); n != 1 || err != nil {
+		return 0, fmt.Errorf("Could not read varint type, got %d bytes and err: %w", n, err)
+	}
+
+	switch b[0] {
+	case 0xff:
+		bb := make([]byte, 8)
+		if n, err := io.ReadFull(r, bb); n != 8 || err != nil {
+			return 0, fmt.Errorf("Could not read varint(8), got %d bytes and err: %w", n, err)
+		}
+		return binary.LittleEndian.Uint64(bb), nil
+
+	case 0xfe:
+		bb := make([]byte, 4)
+		if n, err := io.ReadFull(r, bb); n != 4 || err != nil {
+			return 0, fmt.Errorf("Could not read varint(4), got %d bytes and err: %w", n, err)
+		}
+		return uint64(binary.LittleEndian.Uint32(bb)), nil
+
+	case 0xfd:
+		bb := make([]byte, 2)
+		if n, err := io.ReadFull(r, bb); n != 2 || err != nil {
+			return 0, fmt.Errorf("Could not read varint(2), got %d bytes and err: %w", n, err)
+		}
+		return uint64(binary.LittleEndian.Uint16(bb)), nil
+
+	default:
+		return uint64(binary.LittleEndian.Uint16([]byte{b[0], 0x00})), nil
+	}
 }
