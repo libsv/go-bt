@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 
 	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
@@ -90,47 +91,69 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 		return nil, 0, fmt.Errorf("too short to be a tx - even an empty tx has 10 bytes")
 	}
 
-	var offset int
-	t := Tx{
-		Version: binary.LittleEndian.Uint32(b[offset:4]),
+	r := bytes.NewReader(b)
+
+	tx, err := NewTxFromReader(r)
+	if err != nil {
+		return nil, 0, err
 	}
-	offset += 4
 
-	inputCount, size := DecodeVarInt(b[offset:])
-	offset += size
+	return tx, len(tx.ToBytes()), nil
+}
 
-	// create inputs
-	var i uint64
+// NewTxFromReader creates a transaction from an io.Reader
+func NewTxFromReader(r io.Reader) (*Tx, error) {
+	t := Tx{}
+
+	version := make([]byte, 4)
+	if n, err := io.ReadFull(r, version); n != 4 || err != nil {
+		return nil, err
+	}
+	t.Version = binary.LittleEndian.Uint32(version)
+
 	var err error
-	var input *Input
-	for ; i < inputCount; i++ {
-		input, size, err = NewInputFromBytes(b[offset:])
-		if err != nil {
-			return nil, 0, err
-		}
-		offset += size
 
+	inputCount, _, err := DecodeVarIntFromReader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	// create Inputs
+	var i uint64
+	var input *Input
+
+	for ; i < inputCount; i++ {
+		input, err = NewInputFromReader(r)
+		if err != nil {
+			return nil, err
+		}
 		t.Inputs = append(t.Inputs, input)
 	}
 
-	// create outputs
-	var outputCount uint64
+	outputCount, _, err := DecodeVarIntFromReader(r)
+	if err != nil {
+		return nil, err
+	}
+
+	// create Outputs
 	var output *Output
-	outputCount, size = DecodeVarInt(b[offset:])
-	offset += size
+
 	for i = 0; i < outputCount; i++ {
-		output, size, err = NewOutputFromBytes(b[offset:])
+		output, err = NewOutputFromReader(r)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
-		offset += size
+
 		t.Outputs = append(t.Outputs, output)
 	}
 
-	t.LockTime = binary.LittleEndian.Uint32(b[offset:])
-	offset += 4
+	locktime := make([]byte, 4)
+	if n, err := io.ReadFull(r, version); n != 4 || err != nil {
+		return nil, err
+	}
+	t.LockTime = binary.LittleEndian.Uint32(locktime)
 
-	return &t, offset, nil
+	return &t, nil
 }
 
 // AddInput adds a new input to the transaction.

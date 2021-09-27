@@ -1,9 +1,11 @@
 package bt
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
 
 	"github.com/libsv/go-bt/bscript"
 )
@@ -46,28 +48,55 @@ func NewInput() *Input {
 }
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
-func NewInputFromBytes(bytes []byte) (*Input, int, error) {
-	if len(bytes) < 36 {
+func NewInputFromBytes(b []byte) (*Input, int, error) {
+	if len(b) < 36 {
 		return nil, 0, fmt.Errorf("input length too short < 36")
 	}
 
-	offset := 36
-	l, size := DecodeVarInt(bytes[offset:])
-	offset += size
+	r := bytes.NewReader(b)
 
-	totalLength := offset + int(l) + 4 // 4 bytes for nSeq
+	i, err := NewInputFromReader(r)
+	if err != nil {
+		return nil, 0, err
+	}
 
-	if len(bytes) < totalLength {
-		return nil, 0, fmt.Errorf("input length too short < 36 + script + 4")
+	return i, len(i.ToBytes(false)), nil
+}
+
+// NewInputFromReader returns a transaction input from the io.Reader provided.
+func NewInputFromReader(r io.Reader) (*Input, error) {
+	previousTxID := make([]byte, 32)
+	if n, err := io.ReadFull(r, previousTxID); n != 32 || err != nil {
+		return nil, fmt.Errorf("Could not read previousTxID(32), got %d bytes and err: %w", n, err)
+	}
+
+	prevIndex := make([]byte, 4)
+	if n, err := io.ReadFull(r, prevIndex); n != 4 || err != nil {
+		return nil, fmt.Errorf("Could not read prevIndex(4), got %d bytes and err: %w", n, err)
+	}
+
+	l, _, err := DecodeVarIntFromReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read varint: %w", err)
+	}
+
+	script := make([]byte, l)
+	if n, err := io.ReadFull(r, script); uint64(n) != l || err != nil {
+		return nil, fmt.Errorf("Could not read script(%d), got %d bytes and err: %w", l, n, err)
+	}
+
+	sequence := make([]byte, 4)
+	if n, err := io.ReadFull(r, sequence); n != 4 || err != nil {
+		return nil, fmt.Errorf("Could not read sequence(4), got %d bytes and err: %w", n, err)
 	}
 
 	return &Input{
-		PreviousTxIDBytes:  ReverseBytes(bytes[0:32]),
-		PreviousTxID:       hex.EncodeToString(ReverseBytes(bytes[0:32])),
-		PreviousTxOutIndex: binary.LittleEndian.Uint32(bytes[32:36]),
-		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
-		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
-	}, totalLength, nil
+		PreviousTxIDBytes:  ReverseBytes(previousTxID),
+		PreviousTxID:       hex.EncodeToString(ReverseBytes(previousTxID)),
+		PreviousTxOutIndex: binary.LittleEndian.Uint32(prevIndex),
+		UnlockingScript:    bscript.NewFromBytes(script),
+		SequenceNumber:     binary.LittleEndian.Uint32(sequence),
+	}, nil
 }
 
 // NewInputFromUTXO returns a transaction input from the UTXO fields provided.
