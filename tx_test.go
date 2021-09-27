@@ -161,6 +161,7 @@ func TestAddInputFromTx(t *testing.T) {
 */
 func TestNewTxFromReader(t *testing.T) {
 	var err error
+	var n int
 
 	f, err := os.Open("./block.bin")
 	if err != nil {
@@ -172,7 +173,7 @@ func TestNewTxFromReader(t *testing.T) {
 	r := bufio.NewReader(f)
 
 	header := make([]byte, 80)
-	if n, err := io.ReadFull(f, header); n != 80 || err != nil {
+	if n, err = io.ReadFull(f, header); n != 80 || err != nil {
 		t.Errorf("Read %d bytes, err: %v", n, err)
 	}
 
