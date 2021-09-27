@@ -25,7 +25,6 @@ Txout-script / scriptPubKey   Script                                      <out-s
 type Output struct {
 	Satoshis      uint64
 	LockingScript *bscript.Script
-	index         int
 }
 
 type outputJSON struct {
@@ -46,6 +45,25 @@ type outputJSON struct {
 	} `json:"lockingScript,omitempty"`
 }
 
+func (o *outputJSON) toOutput() (*Output, error) {
+	out := &Output{}
+	script := o.LockingScript
+	if script == nil {
+		script = o.ScriptPubKey
+	}
+	s, err := bscript.NewFromHexString(script.Hex)
+	if err != nil {
+		return nil, err
+	}
+	if o.Satoshis > 0 {
+		out.Satoshis = o.Satoshis
+	} else {
+		out.Satoshis = uint64(o.Value * 100000000)
+	}
+	out.LockingScript = s
+	return out, nil
+}
+
 // MarshalJSON will serialise an output to json.
 func (o *Output) MarshalJSON() ([]byte, error) {
 	asm, err := o.LockingScript.ToASM()
@@ -60,7 +78,7 @@ func (o *Output) MarshalJSON() ([]byte, error) {
 	output := &outputJSON{
 		Value:    float64(o.Satoshis) / 100000000,
 		Satoshis: o.Satoshis,
-		Index:    o.index,
+		Index:    0,
 		LockingScript: &struct {
 			Asm     string `json:"asm"`
 			Hex     string `json:"hex"`
@@ -74,6 +92,34 @@ func (o *Output) MarshalJSON() ([]byte, error) {
 		},
 	}
 	return json.Marshal(output)
+}
+
+func (o *Output) toJSON() (*outputJSON, error) {
+	asm, err := o.LockingScript.ToASM()
+	if err != nil {
+		return nil, err
+	}
+	addresses, err := o.LockingScript.Addresses()
+	if err != nil {
+		return nil, err
+	}
+
+	return &outputJSON{
+		Value:    float64(o.Satoshis) / 100000000,
+		Satoshis: o.Satoshis,
+		Index:    0,
+		LockingScript: &struct {
+			Asm     string `json:"asm"`
+			Hex     string `json:"hex"`
+			ReqSigs int    `json:"reqSigs,omitempty"`
+			Type    string `json:"type"`
+		}{
+			Asm:     asm,
+			Hex:     o.LockingScriptHexString(),
+			ReqSigs: len(addresses),
+			Type:    o.LockingScript.ScriptType(),
+		},
+	}, nil
 }
 
 // UnmarshalJSON will convert a json serialised output to a bt Output.
@@ -95,7 +141,6 @@ func (o *Output) UnmarshalJSON(b []byte) error {
 	} else {
 		o.Satoshis = uint64(oj.Value * 100000000)
 	}
-	o.index = oj.Index
 	o.LockingScript = s
 	return nil
 }
