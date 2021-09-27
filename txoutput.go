@@ -111,7 +111,7 @@ func (tx *Tx) AddP2PKHOutputFromScript(script *bscript.Script, satoshis uint64) 
 	return nil
 }
 
-// AddP2PKHOutputFromScript generated a random P2PKH output script from a provided *bip32.ExtendedKey,
+// AddP2PKHOutputFromBip32ExtKey generated a random P2PKH output script from a provided *bip32.ExtendedKey,
 // and add it to the receiving tx. The derviation path used is returned.
 func (tx *Tx) AddP2PKHOutputFromBip32ExtKey(privKey *bip32.ExtendedKey, satoshis uint64) (string, error) {
 	script, derivationPath, err := bscript.NewP2PKHFromBip32ExtKey(privKey)
