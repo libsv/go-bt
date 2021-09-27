@@ -1,9 +1,11 @@
 package bt
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
 
 	"github.com/libsv/go-bt/bscript"
 	"github.com/libsv/go-bt/crypto"
@@ -28,27 +30,53 @@ type Output struct {
 }
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
-func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
-	if len(bytes) < 8 {
+func NewOutputFromBytes(b []byte) (*Output, int, error) {
+	if len(b) < 8 {
 		return nil, 0, fmt.Errorf("output length too short < 8")
 	}
 
 	offset := 8
-	l, size := DecodeVarInt(bytes[offset:])
+	l, size := DecodeVarInt(b[offset:])
 	offset += size
 
 	totalLength := offset + int(l)
 
-	if len(bytes) < totalLength {
+	if len(b) < totalLength {
 		return nil, 0, fmt.Errorf("output length too short < 8 + script")
 	}
 
-	s := bscript.Script(bytes[offset:totalLength])
+	r := bytes.NewReader(b)
+
+	o, err := NewOutputFromReader(r)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return o, len(o.ToBytes()), nil
+}
+
+// NewOutputFromReader returns a transaction Output from the io.Reader provided
+func NewOutputFromReader(r io.Reader) (*Output, error) {
+	satoshis := make([]byte, 8)
+	if n, err := io.ReadFull(r, satoshis); n != 8 || err != nil {
+		return nil, fmt.Errorf("Could not read satoshis(8), got %d bytes and err: %w", n, err)
+	}
+
+	l, _, err := DecodeVarIntFromReader(r)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read varint: %w", err)
+	}
+
+	script := make([]byte, l)
+	if n, err := io.ReadFull(r, script); uint64(n) != l || err != nil {
+		return nil, fmt.Errorf("Could not read LockingScript(%d), got %d bytes and err: %w", l, n, err)
+	}
+	s := bscript.Script(script)
 
 	return &Output{
-		Satoshis:      binary.LittleEndian.Uint64(bytes[0:8]),
+		Satoshis:      binary.LittleEndian.Uint64(satoshis),
 		LockingScript: &s,
-	}, totalLength, nil
+	}, nil
 }
 
 // NewP2PKHOutputFromPubKeyHashStr makes an output to a PKH with a value.
