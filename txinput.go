@@ -27,27 +27,29 @@ var ErrNoUTXO = errors.New("no remaining utxos")
 type UTXOGetterFunc func(ctx context.Context, deficit uint64) ([]*UTXO, error)
 
 // NewInputFromBytes returns a transaction input from the bytes provided.
-func NewInputFromBytes(bytes []byte) (*Input, int, error) {
-	if len(bytes) < 36 {
+func NewInputFromBytes(b []byte) (*Input, int, error) {
+	if len(b) < 36 {
 		return nil, 0, fmt.Errorf("input length too short < 36")
 	}
 
 	offset := 36
-	l, size := DecodeVarInt(bytes[offset:])
+	l, size := DecodeVarInt(b[offset:])
 	offset += size
 
 	totalLength := offset + int(l) + 4 // 4 bytes for nSeq
 
-	if len(bytes) < totalLength {
+	if len(b) < totalLength {
 		return nil, 0, fmt.Errorf("input length too short < 36 + script + 4")
 	}
 
-	return &Input{
-		previousTxID:       ReverseBytes(bytes[0:32]),
-		PreviousTxOutIndex: binary.LittleEndian.Uint32(bytes[32:36]),
-		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
-		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
-	}, totalLength, nil
+	r := bytes.NewReader(b)
+
+	i, err := NewInputFromReader(r)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return i, len(i.Bytes(false)), nil
 }
 
 // NewInputFromReader returns a transaction input from the io.Reader provided.
@@ -62,7 +64,7 @@ func NewInputFromReader(r io.Reader) (*Input, error) {
 		return nil, fmt.Errorf("Could not read prevIndex(4), got %d bytes and err: %w", n, err)
 	}
 
-	l, err := DecodeVarIntFromReader(r)
+	l, _, err := DecodeVarIntFromReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("Could not read varint: %w", err)
 	}

@@ -1,6 +1,7 @@
 package bt
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -12,27 +13,29 @@ import (
 )
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
-func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
-	if len(bytes) < 8 {
+func NewOutputFromBytes(b []byte) (*Output, int, error) {
+	if len(b) < 8 {
 		return nil, 0, fmt.Errorf("output length too short < 8")
 	}
 
 	offset := 8
-	l, size := DecodeVarInt(bytes[offset:])
+	l, size := DecodeVarInt(b[offset:])
 	offset += size
 
 	totalLength := offset + int(l)
 
-	if len(bytes) < totalLength {
+	if len(b) < totalLength {
 		return nil, 0, fmt.Errorf("output length too short < 8 + script")
 	}
 
-	s := bscript.Script(bytes[offset:totalLength])
+	r := bytes.NewReader(b)
 
-	return &Output{
-		Satoshis:      binary.LittleEndian.Uint64(bytes[0:8]),
-		LockingScript: &s,
-	}, totalLength, nil
+	o, err := NewOutputFromReader(r)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return o, len(o.Bytes()), nil
 }
 
 // NewOutputFromReader returns a transaction Output from the io.Reader provided
@@ -42,7 +45,7 @@ func NewOutputFromReader(r io.Reader) (*Output, error) {
 		return nil, fmt.Errorf("Could not read satoshis(8), got %d bytes and err: %w", n, err)
 	}
 
-	l, err := DecodeVarIntFromReader(r)
+	l, _, err := DecodeVarIntFromReader(r)
 	if err != nil {
 		return nil, fmt.Errorf("Could not read varint: %w", err)
 	}

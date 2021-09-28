@@ -161,46 +161,14 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 		return nil, 0, fmt.Errorf("too short to be a tx - even an empty tx has 10 bytes")
 	}
 
-	var offset int
-	t := Tx{
-		Version: binary.LittleEndian.Uint32(b[offset:4]),
-	}
-	offset += 4
+	r := bytes.NewReader(b)
 
-	inputCount, size := DecodeVarInt(b[offset:])
-	offset += size
-
-	// create Inputs
-	var i uint64
-	var err error
-	var input *Input
-	for ; i < inputCount; i++ {
-		input, size, err = NewInputFromBytes(b[offset:])
-		if err != nil {
-			return nil, 0, err
-		}
-		offset += size
-		t.addInput(input)
+	tx, err := NewTxFromReader(r)
+	if err != nil {
+		return nil, 0, err
 	}
 
-	// create Outputs
-	var outputCount uint64
-	var output *Output
-	outputCount, size = DecodeVarInt(b[offset:])
-	offset += size
-	for i = 0; i < outputCount; i++ {
-		output, size, err = NewOutputFromBytes(b[offset:])
-		if err != nil {
-			return nil, 0, err
-		}
-		offset += size
-		t.AddOutput(output)
-	}
-
-	t.LockTime = binary.LittleEndian.Uint32(b[offset:])
-	offset += 4
-
-	return &t, offset, nil
+	return tx, len(tx.Bytes()), nil
 }
 
 // NewTxFromReader creates a transaction from an io.Reader
@@ -215,7 +183,7 @@ func NewTxFromReader(r io.Reader) (*Tx, error) {
 
 	var err error
 
-	inputCount, err := DecodeVarIntFromReader(r)
+	inputCount, _, err := DecodeVarIntFromReader(r)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +200,7 @@ func NewTxFromReader(r io.Reader) (*Tx, error) {
 		t.addInput(input)
 	}
 
-	outputCount, err := DecodeVarIntFromReader(r)
+	outputCount, _, err := DecodeVarIntFromReader(r)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +214,6 @@ func NewTxFromReader(r io.Reader) (*Tx, error) {
 			return nil, err
 		}
 
-		output.index = int(i)
 		t.AddOutput(output)
 	}
 
