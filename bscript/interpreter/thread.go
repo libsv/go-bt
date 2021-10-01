@@ -110,6 +110,10 @@ func (t *thread) hasFlag(flag scriptflag.Flag) bool {
 	return t.flags.HasFlag(flag)
 }
 
+func (t *thread) hasAny(ff ...scriptflag.Flag) bool {
+	return t.flags.HasAny(ff...)
+}
+
 func (t *thread) addFlag(flag scriptflag.Flag) {
 	t.flags.AddFlag(flag)
 }
@@ -354,7 +358,7 @@ func (t *thread) apply(params ExecutionParams) error {
 		return errs.NewError(errs.ErrEvalFalse, "false stack entry at end of script execution")
 	}
 
-	if t.hasFlag(scriptflag.VerifyCleanStack) && (!t.hasFlag(scriptflag.Bip16)) {
+	if t.hasFlag(scriptflag.VerifyCleanStack) && !t.hasFlag(scriptflag.Bip16) {
 		return errs.NewError(errs.ErrInvalidFlags, "invalid scriptflag combination")
 	}
 
@@ -512,9 +516,7 @@ func (t *thread) checkPubKeyEncoding(pubKey []byte) error {
 // checkSignatureEncoding returns whether the passed signature adheres to
 // the strict encoding requirements if enabled.
 func (t *thread) checkSignatureEncoding(sig []byte) error {
-	if !t.hasFlag(scriptflag.VerifyDERSignatures) &&
-		!t.hasFlag(scriptflag.VerifyLowS) &&
-		!t.hasFlag(scriptflag.VerifyStrictEncoding) {
+	if !t.hasAny(scriptflag.VerifyDERSignatures, scriptflag.VerifyLowS, scriptflag.VerifyStrictEncoding) {
 		return nil
 	}
 
