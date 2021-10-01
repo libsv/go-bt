@@ -16,3 +16,17 @@ updates:
     # Labels must be created first
     labels:
       - "update"
+  - package-ecosystem: "gomod"
+    target-branch: "v1"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      # Check for npm updates at 9am UTC (5am EST)
+      time: "10:00"
+    reviewers:
+      - "jadwahab"
+    assignees:
+      - "jadwahab"
+    # Labels must be created first
+    labels:
+      - "update"
