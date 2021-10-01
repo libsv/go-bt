@@ -148,7 +148,7 @@ func NewTxFromReader(r io.Reader) (*Tx, error) {
 	}
 
 	locktime := make([]byte, 4)
-	if n, err := io.ReadFull(r, version); n != 4 || err != nil {
+	if n, err := io.ReadFull(r, locktime); n != 4 || err != nil {
 		return nil, err
 	}
 	t.LockTime = binary.LittleEndian.Uint32(locktime)
