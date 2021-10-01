@@ -429,8 +429,7 @@ func TestScripts(t *testing.T) {
 		// Generate a transaction pair such that one spends from the
 		// other and the provided signature and public key scripts are
 		// used, then create a new engine to execute the scripts.
-		tx := createSpendingTx(scriptSig, scriptPubKey,
-			inputAmt)
+		tx := createSpendingTx(scriptSig, scriptPubKey, inputAmt)
 
 		err = NewEngine().Execute(ExecutionParams{
 			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)},
@@ -438,6 +437,137 @@ func TestScripts(t *testing.T) {
 			InputIdx:      0,
 			Flags:         flags,
 		})
+
+		// Ensure there were no errors when the expected result is OK.
+		if resultStr == "OK" {
+			if err != nil {
+				t.Errorf("%s failed to execute: %v", name, err)
+			}
+			continue
+		}
+
+		// At this point an error was expected so ensure the result of
+		// the execution matches it.
+		success := false
+		for _, code := range allowedErrorCodes {
+			if errs.IsErrorCode(err, code) {
+				success = true
+				break
+			}
+		}
+		if !success {
+			serr := &errs.Error{}
+			if ok := errors.As(err, serr); ok {
+				t.Errorf("%s: want error codes %v, got %v", name, allowedErrorCodes, serr.ErrorCode)
+				continue
+			}
+			t.Errorf("%s: want error codes %v, got err: %v (%T)", name, allowedErrorCodes, err, err)
+			continue
+		}
+	}
+}
+
+// TestScriptOnly ensures all of the tests in script_tests.json execute with the
+// expected results as defined in the test data.
+func TestScriptOnly(t *testing.T) {
+	file, err := ioutil.ReadFile("data/script_tests.json")
+	if err != nil {
+		t.Fatalf("TestScripts: %v\n", err)
+	}
+
+	var tests [][]interface{}
+	err = json.Unmarshal(file, &tests)
+	if err != nil {
+		t.Fatalf("TestScripts couldn't Unmarshal: %v", err)
+	}
+
+	// Create a signature cache to use only if requested.
+	for i, test := range tests {
+		// "Format is: [[wit..., amount]?, scriptSig, scriptPubKey,
+		//    flags, expected_scripterror, ... comments]"
+
+		// Skip single line comments.
+		if len(test) == 1 {
+			continue
+		}
+
+		// Construct a name for the test based on the comment and test
+		// data.
+		name, err := scriptTestName(test)
+		if err != nil {
+			t.Errorf("TestScripts: invalid test #%d: %v", i, err)
+			continue
+		}
+
+		if _, ok := test[0].([]interface{}); ok {
+			test = test[1:]
+		}
+
+		// Extract and parse the signature script from the test fields.
+		scriptSigStr, ok := test[0].(string)
+		if !ok {
+			t.Errorf("%s: signature script is not a string", name)
+			continue
+		}
+		scriptSig, err := parseShortForm(scriptSigStr)
+		if err != nil {
+			t.Errorf("%s: can't parse signature script: %v", name,
+				err)
+			continue
+		}
+
+		// Extract and parse the public key script from the test fields.
+		scriptPubKeyStr, ok := test[1].(string)
+		if !ok {
+			t.Errorf("%s: public key script is not a string", name)
+			continue
+		}
+		scriptPubKey, err := parseShortForm(scriptPubKeyStr)
+		if err != nil {
+			t.Errorf("%s: can't parse public key script: %v", name,
+				err)
+			continue
+		}
+
+		// Extract and parse the script flags from the test fields.
+		flagsStr, ok := test[2].(string)
+		if !ok {
+			t.Errorf("%s: flags field is not a string", name)
+			continue
+		}
+		flags, err := parseScriptFlags(flagsStr)
+		if err != nil {
+			t.Errorf("%s: %v", name, err)
+			continue
+		}
+
+		// Extract and parse the expected result from the test fields.
+		//
+		// Convert the expected result string into the allowed script
+		// error codes.  This is necessary because interpreter is more
+		// fine grained with its errors than the reference test data, so
+		// some of the reference test data errors map to more than one
+		// possibility.
+		resultStr, ok := test[3].(string)
+		if !ok {
+			t.Errorf("%s: result field is not a string", name)
+			continue
+		}
+		allowedErrorCodes, err := parseExpectedResult(resultStr)
+		if err != nil {
+			t.Errorf("%s: %v", name, err)
+			continue
+		}
+
+		err = NewEngine().Execute(ExecutionParams{
+			LockingScript:   scriptPubKey,
+			UnlockingScript: scriptSig,
+			Flags:           flags,
+		})
+
+		if err != nil && errs.IsErrorCode(err, errs.ErrInvalidParams) {
+			continue
+		}
 
 		// Ensure there were no errors when the expected result is OK.
 		if resultStr == "OK" {

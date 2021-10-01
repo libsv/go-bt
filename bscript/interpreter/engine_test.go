@@ -237,7 +237,7 @@ func TestCheckPubKeyEncoding(t *testing.T) {
 		},
 	}
 
-	vm := thread{scriptflag: scriptflag.VerifyStrictEncoding}
+	vm := thread{flags: scriptflag.VerifyStrictEncoding}
 	for _, test := range tests {
 		err := vm.checkPubKeyEncoding(test.key)
 		if err != nil && test.isValid {
@@ -409,7 +409,7 @@ func TestCheckSignatureEncoding(t *testing.T) {
 		},
 	}
 
-	vm := thread{scriptflag: scriptflag.VerifyStrictEncoding}
+	vm := thread{flags: scriptflag.VerifyStrictEncoding}
 	for _, test := range tests {
 		err := vm.checkSignatureEncoding(test.sig)
 		if err != nil && test.isValid {
@@ -560,7 +560,7 @@ func TestCheckHashTypeEncoding(t *testing.T) {
 	}
 
 	for i, test := range encodingTests {
-		e := thread{scriptflag: test.EngineFlags}
+		e := thread{flags: test.EngineFlags}
 		err := e.checkHashTypeEncoding(test.SigHash)
 		if test.ShouldFail && err == nil {
 			t.Errorf("Expected test %d to fail", i)

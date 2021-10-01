@@ -84,6 +84,28 @@ func (s Flag) HasFlag(flag Flag) bool {
 	return s&flag == flag
 }
 
+// HasAll returns true if all passed in flags are present.
+func (s Flag) HasAll(flags ...Flag) bool {
+	for _, f := range flags {
+		if s&f != f {
+			return false
+		}
+	}
+
+	return true
+}
+
+// HasAny returns true if any of the passed in flags are present.
+func (s Flag) HasAny(flags ...Flag) bool {
+	for _, f := range flags {
+		if s&f == f {
+			return true
+		}
+	}
+
+	return false
+}
+
 // AddFlag adds the passed flag to Flags
 func (s *Flag) AddFlag(flag Flag) {
 	*s |= flag

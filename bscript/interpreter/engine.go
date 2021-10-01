@@ -22,10 +22,32 @@ func NewEngine() Engine {
 
 // Execute will execute all scripts in the script engine and return either nil
 // for successful validation or an error if one occurred.
+//
+// Execute with tx example:
+//  if err := engine.Execute(interpreter.ExecutionParams{
+//      Tx:            tx,
+//      PreviousTxOut: previousOutput,
+//      InputIdx:      previousOutput,
+//      Flags:         interpreter.ScriptEnableSighashForkID | interpreter.ScriptUTXOAfterGenesis,
+//  }); err != nil {
+//      // handle err
+//  }
+//
+// Execute with scripts example:
+//  if err := engine.Execute(interpreter.ExecutionParams{
+//      LockingScript:   lockingScript,
+//      UnlockingScript: unlockingScript,
+//      Flags:         interpreter.ScriptEnableSighashForkID | interpreter.ScriptUTXOAfterGenesis,
+//  }); err != nil {
+//      // handle err
+//  }
+//
 func (e *engine) Execute(params ExecutionParams) error {
 	th := &thread{
-		scriptParser: &DefaultOpcodeParser{},
-		cfg:          &beforeGenesisConfig{},
+		scriptParser: &DefaultOpcodeParser{
+			ErrorOnCheckSig: params.Tx == nil || params.PreviousTxOut == nil,
+		},
+		cfg: &beforeGenesisConfig{},
 	}
 
 	if err := th.apply(params); err != nil {

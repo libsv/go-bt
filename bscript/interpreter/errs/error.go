@@ -52,6 +52,10 @@ const (
 	// the provided data exceeds MaxDataCarrierSize.
 	ErrTooMuchNullData
 
+	// ErrInvalidParams is returned when the ExectionParams passed to the Execute
+	// func have errors.
+	ErrInvalidParams
+
 	// ------------------------------------------
 	// Failures related to final execution state.
 	// ------------------------------------------
@@ -335,6 +339,7 @@ var errorCodeStrings = map[ErrorCode]string{
 	ErrNotMultisigScript:        "ErrNotMultisigScript",
 	ErrTooManyRequiredSigs:      "ErrTooManyRequiredSigs",
 	ErrTooMuchNullData:          "ErrTooMuchNullData",
+	ErrInvalidParams:            "ErrInvalidParams",
 	ErrEarlyReturn:              "ErrEarlyReturn",
 	ErrEmptyStack:               "ErrEmptyStack",
 	ErrEvalFalse:                "ErrEvalFalse",
