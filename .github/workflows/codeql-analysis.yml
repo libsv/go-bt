@@ -10,7 +10,7 @@ on:
     branches: [master,v1]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [masterv1]
+    branches: [master,v1]
   schedule:
     - cron: '0 23 * * 0'
 
