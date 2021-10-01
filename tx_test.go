@@ -163,7 +163,7 @@ func TestNewTxFromReader(t *testing.T) {
 		t.Errorf("Read %d bytes, err: %v", n, err)
 	}
 
-	txCount, err := bt.DecodeVarIntFromReader(r)
+	txCount, _, err := bt.DecodeVarIntFromReader(r)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -1563,4 +1563,21 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 			assert.Equal(t, test.expFees, fee.TotalFeePaid)
 		})
 	}
+}
+
+func TestTXLocktime(t *testing.T) {
+	txHex := "0200000001c62f5df294ab2d22184668b5589cbd4fd3f0882e547cd6affa449fdec385e85a010000006b483045022100bdd0d0843d04a0e2ffcca13d7ba2e283b93455bdf1f62a953943882a1844384902206e1c9050695d728eedec83289bafbd4f3a82603e1e5acfd589b6bcaca6777b1941210377a1922cf0d29ed2a26d4e8dc94486c2e1071f5c0f3efa44f05292be15165fbbfeffffff027039333c000000001976a91496f0222a34f8e7c0f909ac54493d724aabc0c70b88ace11d7218000000001976a914f65696c35c694cede991cf04781940dd27aff75088acfdc80a00"
+
+	tx, err := bt.NewTxFromString(txHex)
+	if err != nil {
+		t.Error(err)
+	}
+
+	expected := "e14192d41196f4f374ec03259700f82c266cd316fe5da998de541903bffc40b4"
+	txid := tx.TxID()
+
+	if txid != expected {
+		t.Errorf("Expected %q, got %q", expected, txid)
+	}
+
 }
