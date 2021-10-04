@@ -7,7 +7,7 @@ package interpreter
 
 // Engine is the virtual machine that executes scripts.
 type Engine interface {
-	Execute(ExecutionParams) error
+	Execute(opts ...ExecutionOptionFunc) error
 }
 
 type engine struct{}
@@ -22,13 +22,33 @@ func NewEngine() Engine {
 
 // Execute will execute all scripts in the script engine and return either nil
 // for successful validation or an error if one occurred.
-func (e *engine) Execute(params ExecutionParams) error {
-	th := &thread{
-		scriptParser: &DefaultOpcodeParser{},
-		cfg:          &beforeGenesisConfig{},
+//
+// Execute with tx example:
+//  if err := engine.Execute(
+//      interpreter.WithTx(tx, inputIdx previousOutput),
+//      interpreter.WithAfterGenesis(),
+//      interpreter.WithForkID(),
+//  ); err != nil {
+//      // handle err
+//  }
+//
+// Execute with scripts example:
+//  if err := engine.Execute(
+//      interpreter.WithScripts(lockingScript, unlockingScript),
+//      interpreter.WithAfterGenesis(),
+//      interpreter.WithForkID(),
+//  }); err != nil {
+//      // handle err
+//  }
+//
+func (e *engine) Execute(oo ...ExecutionOptionFunc) error {
+	opts := &execOpts{}
+	for _, o := range oo {
+		o(opts)
 	}
 
-	if err := th.apply(params); err != nil {
+	th, err := createThread(opts)
+	if err != nil {
 		return err
 	}
 

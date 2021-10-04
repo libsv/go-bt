@@ -18,7 +18,9 @@ type OpcodeParser interface {
 type ParsedScript []ParsedOp
 
 // DefaultOpcodeParser is a standard parser which can be used from zero value.
-type DefaultOpcodeParser struct{}
+type DefaultOpcodeParser struct {
+	ErrorOnCheckSig bool
+}
 
 // ParsedOp is a parsed opcode
 type ParsedOp struct {
@@ -35,6 +37,17 @@ func (o *ParsedOp) Name() string {
 func (o *ParsedOp) IsDisabled() bool {
 	switch o.Op.val {
 	case bscript.Op2MUL, bscript.Op2DIV:
+		return true
+	default:
+		return false
+	}
+}
+
+// RequiresTx returns true if the op is checksig
+func (o *ParsedOp) RequiresTx() bool {
+	switch o.Op.val {
+	case bscript.OpCHECKSIG, bscript.OpCHECKSIGVERIFY,
+		bscript.OpCHECKMULTISIG, bscript.OpCHECKMULTISIGVERIFY, bscript.OpCHECKSEQUENCEVERIFY:
 		return true
 	default:
 		return false
@@ -118,6 +131,9 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 		instruction := script[i]
 
 		parsedOp := ParsedOp{Op: opcodeArray[instruction]}
+		if p.ErrorOnCheckSig && parsedOp.RequiresTx() {
+			return nil, errs.NewError(errs.ErrInvalidParams, "tx and previous output must be supplied for checksig")
+		}
 
 		switch {
 		case parsedOp.Op.length == 1:

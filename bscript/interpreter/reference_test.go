@@ -429,15 +429,12 @@ func TestScripts(t *testing.T) {
 		// Generate a transaction pair such that one spends from the
 		// other and the provided signature and public key scripts are
 		// used, then create a new engine to execute the scripts.
-		tx := createSpendingTx(scriptSig, scriptPubKey,
-			inputAmt)
+		tx := createSpendingTx(scriptSig, scriptPubKey, inputAmt)
 
-		err = NewEngine().Execute(ExecutionParams{
-			PreviousTxOut: &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)},
-			Tx:            tx,
-			InputIdx:      0,
-			Flags:         flags,
-		})
+		err = NewEngine().Execute(
+			WithTx(tx, 0, &bt.Output{LockingScript: scriptPubKey, Satoshis: uint64(inputAmt)}),
+			WithFlags(flags),
+		)
 
 		// Ensure there were no errors when the expected result is OK.
 		if resultStr == "OK" {
@@ -618,12 +615,10 @@ testloop:
 			// These are meant to fail, so as soon as the first
 			// input fails the transaction has failed. (some of the
 			// test txns have good inputs, too..
-			err := NewEngine().Execute(ExecutionParams{
-				PreviousTxOut: prevOut,
-				Tx:            tx,
-				InputIdx:      k,
-				Flags:         flags,
-			})
+			err = NewEngine().Execute(
+				WithTx(tx, k, prevOut),
+				WithFlags(flags),
+			)
 			if err != nil {
 				continue testloop
 			}
@@ -762,12 +757,10 @@ testloop:
 				continue testloop
 			}
 
-			if err = NewEngine().Execute(ExecutionParams{
-				PreviousTxOut: prevOut,
-				Tx:            tx,
-				InputIdx:      k,
-				Flags:         flags,
-			}); err != nil {
+			if err = NewEngine().Execute(
+				WithTx(tx, k, prevOut),
+				WithFlags(flags),
+			); err != nil {
 				t.Errorf("test (%d:%v:%d) failed to execute: "+
 					"%v", i, test, k, err)
 				continue

@@ -29,7 +29,7 @@ const (
 	Mask = 0x1f
 )
 
-// Has returns true if contains the provided flag
+// Has returns true if contains the provided flag.
 func (f Flag) Has(shf Flag) bool {
 	return f&shf == shf
 }

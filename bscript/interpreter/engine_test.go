@@ -5,6 +5,7 @@
 package interpreter
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/libsv/go-bt/v2"
@@ -12,6 +13,7 @@ import (
 	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
 	"github.com/libsv/go-bt/v2/bscript/interpreter/scriptflag"
 	"github.com/libsv/go-bt/v2/sighash"
+	"github.com/stretchr/testify/assert"
 )
 
 // TestBadPC sets the pc to a deliberately bad result then confirms that Step()
@@ -57,7 +59,7 @@ func TestBadPC(t *testing.T) {
 			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
 		}
-		err := vm.apply(ExecutionParams{
+		err := vm.apply(&execOpts{
 			PreviousTxOut: txOut,
 			Tx:            tx,
 			InputIdx:      0,
@@ -114,7 +116,7 @@ func TestCheckErrorCondition(t *testing.T) {
 		cfg:          &beforeGenesisConfig{},
 	}
 
-	err = vm.apply(ExecutionParams{
+	err = vm.apply(&execOpts{
 		PreviousTxOut: txOut,
 		InputIdx:      0,
 		Tx:            tx,
@@ -136,6 +138,260 @@ func TestCheckErrorCondition(t *testing.T) {
 	err = vm.CheckErrorCondition(false)
 	if err != nil {
 		t.Errorf("unexpected error %v on final check", err)
+	}
+}
+
+func TestValidateParams(t *testing.T) {
+	tests := map[string]struct {
+		params execOpts
+		expErr error
+	}{
+		"valid tx/previous out checksig script": {
+			params: execOpts{
+				Tx: func() *bt.Tx {
+					tx := bt.NewTx()
+					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
+					assert.NoError(t, err)
+
+					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+
+					tx.Inputs[0].UnlockingScript = uls
+
+					return tx
+				}(),
+				PreviousTxOut: func() *bt.Output {
+					cbLockingScript, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+
+					return &bt.Output{LockingScript: cbLockingScript, Satoshis: 0}
+				}(),
+			},
+		},
+		"valid tx/previous out non-checksig script": {
+			params: execOpts{
+				Tx: func() *bt.Tx {
+					tx := bt.NewTx()
+					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "52529387", 0)
+					assert.NoError(t, err)
+
+					txUnlockingScript, err := bscript.NewFromASM("OP_4")
+					assert.NoError(t, err)
+
+					tx.Inputs[0].UnlockingScript = txUnlockingScript
+
+					return tx
+				}(),
+				PreviousTxOut: func() *bt.Output {
+					cbLockingScript, err := bscript.NewFromASM("OP_2 OP_2 OP_ADD OP_EQUAL")
+					assert.NoError(t, err)
+
+					return &bt.Output{LockingScript: cbLockingScript, Satoshis: 0}
+				}(),
+			},
+		},
+		"valid locking/unlocking script non-checksig": {
+			params: execOpts{
+				LockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("52529387")
+					assert.NoError(t, err)
+					return script
+				}(),
+				UnlockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("54")
+					assert.NoError(t, err)
+					return script
+				}(),
+			},
+		},
+		"valid locking/unlocking script with check-sig": {
+			params: execOpts{
+				LockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+					return script
+				}(),
+				UnlockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+					return script
+				}(),
+				Tx: func() *bt.Tx {
+					tx := bt.NewTx()
+					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
+					assert.NoError(t, err)
+
+					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+
+					tx.Inputs[0].UnlockingScript = uls
+
+					return tx
+				}(),
+				PreviousTxOut: func() *bt.Output {
+					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+
+					return &bt.Output{LockingScript: script, Satoshis: 0}
+				}(),
+			},
+		},
+		"no locking script provided errors": {
+			params: execOpts{
+				UnlockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+					return script
+				}(),
+				Tx: func() *bt.Tx {
+					tx := bt.NewTx()
+					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
+					assert.NoError(t, err)
+
+					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+
+					tx.Inputs[0].UnlockingScript = uls
+
+					return tx
+				}(),
+			},
+			expErr: errors.New("no locking script provided"),
+		},
+		"no unlocking script provided errors": {
+			params: execOpts{
+				LockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+					return script
+				}(),
+				PreviousTxOut: func() *bt.Output {
+					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+
+					return &bt.Output{LockingScript: script, Satoshis: 0}
+				}(),
+			},
+			expErr: errors.New("no unlocking script provided"),
+		},
+		"invalid locking/unlocking script with checksig": {
+			params: execOpts{
+				LockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+					return script
+				}(),
+				UnlockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+					return script
+				}(),
+			},
+			expErr: errors.New("tx and previous output must be supplied for checksig"),
+		},
+		"provided locking script that differs from previoustxout's errors": {
+			params: execOpts{
+				LockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("52529387")
+					assert.NoError(t, err)
+					return script
+				}(),
+				UnlockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+					return script
+				}(),
+				Tx: func() *bt.Tx {
+					tx := bt.NewTx()
+					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
+					assert.NoError(t, err)
+
+					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+
+					tx.Inputs[0].UnlockingScript = uls
+
+					return tx
+				}(),
+				PreviousTxOut: func() *bt.Output {
+					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+
+					return &bt.Output{LockingScript: script, Satoshis: 0}
+				}(),
+			},
+			expErr: errors.New("locking script does not match the previous outputs locking script"),
+		},
+		"provided unlocking scropt that differs from tx input's errors": {
+			params: execOpts{
+				LockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+					return script
+				}(),
+				UnlockingScript: func() *bscript.Script {
+					script, err := bscript.NewFromHexString("84")
+					assert.NoError(t, err)
+					return script
+				}(),
+				Tx: func() *bt.Tx {
+					tx := bt.NewTx()
+					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
+					assert.NoError(t, err)
+
+					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+
+					tx.Inputs[0].UnlockingScript = uls
+
+					return tx
+				}(),
+				PreviousTxOut: func() *bt.Output {
+					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+
+					return &bt.Output{LockingScript: script, Satoshis: 0}
+				}(),
+			},
+			expErr: errors.New("unlocking script does not match the unlocking script of the requested input"),
+		},
+		"invalid input index errors": {
+			params: execOpts{
+				Tx: func() *bt.Tx {
+					tx := bt.NewTx()
+					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
+					assert.NoError(t, err)
+
+					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					assert.NoError(t, err)
+
+					tx.Inputs[0].UnlockingScript = uls
+
+					return tx
+				}(),
+				PreviousTxOut: func() *bt.Output {
+					cbLockingScript, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
+					assert.NoError(t, err)
+
+					return &bt.Output{LockingScript: cbLockingScript, Satoshis: 0}
+				}(),
+				InputIdx: 5,
+			},
+			expErr: errors.New("transaction input index 5 is negative or >= 1"),
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, err := createThread(&test.params)
+
+			if test.expErr != nil {
+				assert.Error(t, err)
+				assert.EqualError(t, err, test.expErr.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }
 
@@ -179,7 +435,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
 		}
-		err := vm.apply(ExecutionParams{
+		err := vm.apply(&execOpts{
 			Tx:            tx,
 			InputIdx:      0,
 			PreviousTxOut: txOut,
@@ -237,7 +493,7 @@ func TestCheckPubKeyEncoding(t *testing.T) {
 		},
 	}
 
-	vm := thread{scriptflag: scriptflag.VerifyStrictEncoding}
+	vm := thread{flags: scriptflag.VerifyStrictEncoding}
 	for _, test := range tests {
 		err := vm.checkPubKeyEncoding(test.key)
 		if err != nil && test.isValid {
@@ -409,7 +665,7 @@ func TestCheckSignatureEncoding(t *testing.T) {
 		},
 	}
 
-	vm := thread{scriptflag: scriptflag.VerifyStrictEncoding}
+	vm := thread{flags: scriptflag.VerifyStrictEncoding}
 	for _, test := range tests {
 		err := vm.checkSignatureEncoding(test.sig)
 		if err != nil && test.isValid {
@@ -560,7 +816,7 @@ func TestCheckHashTypeEncoding(t *testing.T) {
 	}
 
 	for i, test := range encodingTests {
-		e := thread{scriptflag: test.EngineFlags}
+		e := thread{flags: test.EngineFlags}
 		err := e.checkHashTypeEncoding(test.SigHash)
 		if test.ShouldFail && err == nil {
 			t.Errorf("Expected test %d to fail", i)

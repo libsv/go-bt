@@ -1953,7 +1953,7 @@ func opcodeCheckSig(op *ParsedOp, t *thread) error {
 	}
 
 	var signature *bec.Signature
-	if t.hasFlag(scriptflag.VerifyStrictEncoding) || t.hasFlag(scriptflag.VerifyDERSignatures) {
+	if t.hasAny(scriptflag.VerifyStrictEncoding, scriptflag.VerifyDERSignatures) {
 		signature, err = bec.ParseDERSignature(sigBytes, bec.S256())
 	} else {
 		signature, err = bec.ParseSignature(sigBytes, bec.S256())
@@ -2139,9 +2139,7 @@ func opcodeCheckMultiSig(op *ParsedOp, t *thread) error {
 
 			// Parse the signature.
 			var err error
-			if t.hasFlag(scriptflag.VerifyStrictEncoding) ||
-				t.hasFlag(scriptflag.VerifyDERSignatures) {
-
+			if t.hasAny(scriptflag.VerifyStrictEncoding, scriptflag.VerifyDERSignatures) {
 				parsedSig, err = bec.ParseDERSignature(signature,
 					bec.S256())
 			} else {

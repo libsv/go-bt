@@ -37,28 +37,100 @@ type thread struct {
 
 	numOps int
 
-	scriptflag scriptflag.Flag
-	bip16      bool // treat execution as pay-to-script-hash
+	flags scriptflag.Flag
+	bip16 bool // treat execution as pay-to-script-hash
 
 	afterGenesis            bool
 	earlyReturnAfterGenesis bool
 }
 
-// ExecutionParams are the params required for building an Engine
-type ExecutionParams struct {
-	PreviousTxOut *bt.Output
-	Tx            *bt.Tx
-	InputIdx      int
-	Flags         scriptflag.Flag
+func createThread(opts *execOpts) (*thread, error) {
+	th := &thread{
+		scriptParser: &DefaultOpcodeParser{
+			ErrorOnCheckSig: opts.Tx == nil || opts.PreviousTxOut == nil,
+		},
+		cfg: &beforeGenesisConfig{},
+	}
+
+	if err := th.apply(opts); err != nil {
+		return nil, err
+	}
+
+	return th, nil
+}
+
+// execOpts are the params required for building an Engine
+//
+// Raw *bscript.Scripts can be supplied as LockingScript and UnlockingScript, or
+// a Tx, an input index, and a previous output.
+//
+// If checksig operaitons are to be executed without a Tx or a PreviousTxOut supplied,
+// the engine will return an ErrInvalidParams on execute.
+type execOpts struct {
+	LockingScript   *bscript.Script
+	UnlockingScript *bscript.Script
+	PreviousTxOut   *bt.Output
+	Tx              *bt.Tx
+	InputIdx        int
+	Flags           scriptflag.Flag
+}
+
+func (o execOpts) validate() error {
+	// The provided transaction input index must refer to a valid input.
+	if o.InputIdx < 0 || (o.Tx != nil && o.InputIdx > o.Tx.InputCount()-1) {
+		return errs.NewError(
+			errs.ErrInvalidIndex,
+			"transaction input index %d is negative or >= %d", o.InputIdx, len(o.Tx.Inputs),
+		)
+	}
+
+	outputHasLockingScript := o.PreviousTxOut != nil && o.PreviousTxOut.LockingScript != nil
+	txHasUnlockingScript := o.Tx != nil && o.Tx.Inputs != nil && len(o.Tx.Inputs) > 0 &&
+		o.Tx.Inputs[o.InputIdx] != nil && o.Tx.Inputs[o.InputIdx].UnlockingScript != nil
+	// If no locking script was provided
+	if o.LockingScript == nil && !outputHasLockingScript {
+		return errs.NewError(errs.ErrInvalidParams, "no locking script provided")
+	}
+
+	// If no unlocking script was provided
+	if o.UnlockingScript == nil && !txHasUnlockingScript {
+		return errs.NewError(errs.ErrInvalidParams, "no unlocking script provided")
+	}
+
+	// If both a locking script and previous output were provided, make sure the scripts match
+	if o.LockingScript != nil && outputHasLockingScript {
+		if !o.LockingScript.Equals(o.PreviousTxOut.LockingScript) {
+			return errs.NewError(
+				errs.ErrInvalidParams,
+				"locking script does not match the previous outputs locking script",
+			)
+		}
+	}
+
+	// If both a unlocking script and an input were provided, make sure the scripts match
+	if o.UnlockingScript != nil && txHasUnlockingScript {
+		if !o.UnlockingScript.Equals(o.Tx.Inputs[o.InputIdx].UnlockingScript) {
+			return errs.NewError(
+				errs.ErrInvalidParams,
+				"unlocking script does not match the unlocking script of the requested input",
+			)
+		}
+	}
+
+	return nil
 }
 
 // hasFlag returns whether the script engine instance has the passed flag set.
 func (t *thread) hasFlag(flag scriptflag.Flag) bool {
-	return t.scriptflag.HasFlag(flag)
+	return t.flags.HasFlag(flag)
+}
+
+func (t *thread) hasAny(ff ...scriptflag.Flag) bool {
+	return t.flags.HasAny(ff...)
 }
 
 func (t *thread) addFlag(flag scriptflag.Flag) {
-	t.scriptflag.AddFlag(flag)
+	t.flags.AddFlag(flag)
 }
 
 // isBranchExecuting returns whether the current conditional branch is
@@ -232,6 +304,7 @@ func (t *thread) Step() (bool, error) {
 			if err != nil {
 				return false, err
 			}
+
 			t.scripts = append(t.scripts, pops)
 
 			// Set stack to be the stack from first script minus the
@@ -253,11 +326,22 @@ func (t *thread) Step() (bool, error) {
 	return false, nil
 }
 
-func (t *thread) apply(params ExecutionParams) error {
-	t.tx = params.Tx
-	t.scriptflag = params.Flags
-	t.inputIdx = params.InputIdx
-	t.prevOutput = params.PreviousTxOut
+func (t *thread) apply(opts *execOpts) error {
+	if err := opts.validate(); err != nil {
+		return err
+	}
+
+	if opts.UnlockingScript == nil {
+		opts.UnlockingScript = opts.Tx.Inputs[opts.InputIdx].UnlockingScript
+	}
+	if opts.LockingScript == nil {
+		opts.LockingScript = opts.PreviousTxOut.LockingScript
+	}
+
+	t.tx = opts.Tx
+	t.flags = opts.Flags
+	t.inputIdx = opts.InputIdx
+	t.prevOutput = opts.PreviousTxOut
 
 	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
 	// the pay-to-script-hash (P2SH) evaluation (ScriptBip16).
@@ -278,16 +362,8 @@ func (t *thread) apply(params ExecutionParams) error {
 		t.cfg = &afterGenesisConfig{}
 	}
 
-	// The provided transaction input index must refer to a valid input.
-	if t.inputIdx < 0 || t.inputIdx > t.tx.InputCount()-1 {
-		return errs.NewError(
-			errs.ErrInvalidIndex,
-			"transaction input index %d is negative or >= %d", params.InputIdx, len(params.Tx.Inputs),
-		)
-	}
-
-	uls := t.tx.Inputs[params.InputIdx].UnlockingScript
-	ls := t.prevOutput.LockingScript
+	uls := opts.UnlockingScript
+	ls := opts.LockingScript
 
 	// When both the signature script and public key script are empty the
 	// result is necessarily an error since the stack would end up being
@@ -297,7 +373,7 @@ func (t *thread) apply(params ExecutionParams) error {
 		return errs.NewError(errs.ErrEvalFalse, "false stack entry at end of script execution")
 	}
 
-	if t.hasFlag(scriptflag.VerifyCleanStack) && (!t.hasFlag(scriptflag.Bip16)) {
+	if t.hasFlag(scriptflag.VerifyCleanStack) && !t.hasFlag(scriptflag.Bip16) {
 		return errs.NewError(errs.ErrInvalidFlags, "invalid scriptflag combination")
 	}
 
@@ -358,8 +434,10 @@ func (t *thread) apply(params ExecutionParams) error {
 		t.astack.verifyMinimalData = true
 	}
 
-	t.tx.InputIdx(t.inputIdx).PreviousTxScript = t.prevOutput.LockingScript
-	t.tx.InputIdx(t.inputIdx).PreviousTxSatoshis = t.prevOutput.Satoshis
+	if t.tx != nil {
+		t.tx.InputIdx(t.inputIdx).PreviousTxScript = t.prevOutput.LockingScript
+		t.tx.InputIdx(t.inputIdx).PreviousTxSatoshis = t.prevOutput.Satoshis
+	}
 
 	return nil
 }
@@ -453,9 +531,7 @@ func (t *thread) checkPubKeyEncoding(pubKey []byte) error {
 // checkSignatureEncoding returns whether the passed signature adheres to
 // the strict encoding requirements if enabled.
 func (t *thread) checkSignatureEncoding(sig []byte) error {
-	if !t.hasFlag(scriptflag.VerifyDERSignatures) &&
-		!t.hasFlag(scriptflag.VerifyLowS) &&
-		!t.hasFlag(scriptflag.VerifyStrictEncoding) {
+	if !t.hasAny(scriptflag.VerifyDERSignatures, scriptflag.VerifyLowS, scriptflag.VerifyStrictEncoding) {
 		return nil
 	}
 
@@ -656,14 +732,15 @@ func (t *thread) shouldExec(pop ParsedOp) bool {
 	if !t.afterGenesis {
 		return true
 	}
-	var count int
+	cf := true
 	for _, v := range t.condStack {
 		if v == opCondFalse {
-			count++
+			cf = false
+			break
 		}
 	}
 
-	return count == 0 && (!t.earlyReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
+	return cf && (!t.earlyReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
 }
 
 func (t *thread) shiftScript() {
