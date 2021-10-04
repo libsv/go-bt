@@ -123,7 +123,7 @@ func (tx *Tx) UnmarshalJSON(b []byte) error {
 
 // NewTx creates a new transaction object with default values.
 func NewTx() *Tx {
-	return &Tx{Version: 1, LockTime: 0}
+	return &Tx{Version: 1, LockTime: 0, Inputs: make([]*Input, 0)}
 }
 
 // NewTxFromString takes a toBytesHelper string representation of a bitcoin transaction

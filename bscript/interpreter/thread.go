@@ -44,6 +44,21 @@ type thread struct {
 	earlyReturnAfterGenesis bool
 }
 
+func createThread(params ExecutionParams) (*thread, error) {
+	th := &thread{
+		scriptParser: &DefaultOpcodeParser{
+			ErrorOnCheckSig: params.Tx == nil || params.PreviousTxOut == nil,
+		},
+		cfg: &beforeGenesisConfig{},
+	}
+
+	if err := th.apply(params); err != nil {
+		return nil, err
+	}
+
+	return th, nil
+}
+
 // ExecutionParams are the params required for building an Engine
 //
 // Raw *bscript.Scripts can be supplied as LockingScript and UnlockingScript, or
@@ -61,8 +76,16 @@ type ExecutionParams struct {
 }
 
 func (e ExecutionParams) validate() error {
+	// The provided transaction input index must refer to a valid input.
+	if e.InputIdx < 0 || (e.Tx != nil && e.InputIdx > e.Tx.InputCount()-1) {
+		return errs.NewError(
+			errs.ErrInvalidIndex,
+			"transaction input index %d is negative or >= %d", e.InputIdx, len(e.Tx.Inputs),
+		)
+	}
+
 	outputHasLockingScript := e.PreviousTxOut != nil && e.PreviousTxOut.LockingScript != nil
-	txHasUnlockingScript := e.Tx != nil && e.Tx.Inputs != nil &&
+	txHasUnlockingScript := e.Tx != nil && e.Tx.Inputs != nil && len(e.Tx.Inputs) > 0 &&
 		e.Tx.Inputs[e.InputIdx] != nil && e.Tx.Inputs[e.InputIdx].UnlockingScript != nil
 	// If no locking script was provided
 	if e.LockingScript == nil && !outputHasLockingScript {
@@ -86,20 +109,12 @@ func (e ExecutionParams) validate() error {
 
 	// If both a unlocking script and an input were provided, make sure the scripts match
 	if e.UnlockingScript != nil && txHasUnlockingScript {
-		if !e.LockingScript.Equals(e.Tx.Inputs[e.InputIdx].UnlockingScript) {
+		if !e.UnlockingScript.Equals(e.Tx.Inputs[e.InputIdx].UnlockingScript) {
 			return errs.NewError(
 				errs.ErrInvalidParams,
 				"unlocking script does not match the unlocking script of the requested input",
 			)
 		}
-	}
-
-	// The provided transaction input index must refer to a valid input.
-	if e.InputIdx < 0 || (e.Tx != nil && e.InputIdx > e.Tx.InputCount()-1) {
-		return errs.NewError(
-			errs.ErrInvalidIndex,
-			"transaction input index %d is negative or >= %d", e.InputIdx, len(e.Tx.Inputs),
-		)
 	}
 
 	return nil

@@ -43,14 +43,8 @@ func NewEngine() Engine {
 //  }
 //
 func (e *engine) Execute(params ExecutionParams) error {
-	th := &thread{
-		scriptParser: &DefaultOpcodeParser{
-			ErrorOnCheckSig: params.Tx == nil || params.PreviousTxOut == nil,
-		},
-		cfg: &beforeGenesisConfig{},
-	}
-
-	if err := th.apply(params); err != nil {
+	th, err := createThread(params)
+	if err != nil {
 		return err
 	}
 
