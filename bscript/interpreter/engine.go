@@ -42,12 +42,12 @@ func NewEngine() Engine {
 //  }
 //
 func (e *engine) Execute(oo ...ExecutionOptionFunc) error {
-	params := &ExecutionParams{}
+	opts := &execOpts{}
 	for _, o := range oo {
-		o(params)
+		o(opts)
 	}
 
-	th, err := createThread(params)
+	th, err := createThread(opts)
 	if err != nil {
 		return err
 	}

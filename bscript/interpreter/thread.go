@@ -44,29 +44,29 @@ type thread struct {
 	earlyReturnAfterGenesis bool
 }
 
-func createThread(params *ExecutionParams) (*thread, error) {
+func createThread(opts *execOpts) (*thread, error) {
 	th := &thread{
 		scriptParser: &DefaultOpcodeParser{
-			ErrorOnCheckSig: params.Tx == nil || params.PreviousTxOut == nil,
+			ErrorOnCheckSig: opts.Tx == nil || opts.PreviousTxOut == nil,
 		},
 		cfg: &beforeGenesisConfig{},
 	}
 
-	if err := th.apply(params); err != nil {
+	if err := th.apply(opts); err != nil {
 		return nil, err
 	}
 
 	return th, nil
 }
 
-// ExecutionParams are the params required for building an Engine
+// execOpts are the params required for building an Engine
 //
 // Raw *bscript.Scripts can be supplied as LockingScript and UnlockingScript, or
 // a Tx, an input index, and a previous output.
 //
 // If checksig operaitons are to be executed without a Tx or a PreviousTxOut supplied,
 // the engine will return an ErrInvalidParams on execute.
-type ExecutionParams struct {
+type execOpts struct {
 	LockingScript   *bscript.Script
 	UnlockingScript *bscript.Script
 	PreviousTxOut   *bt.Output
@@ -75,31 +75,31 @@ type ExecutionParams struct {
 	Flags           scriptflag.Flag
 }
 
-func (e ExecutionParams) validate() error {
+func (o execOpts) validate() error {
 	// The provided transaction input index must refer to a valid input.
-	if e.InputIdx < 0 || (e.Tx != nil && e.InputIdx > e.Tx.InputCount()-1) {
+	if o.InputIdx < 0 || (o.Tx != nil && o.InputIdx > o.Tx.InputCount()-1) {
 		return errs.NewError(
 			errs.ErrInvalidIndex,
-			"transaction input index %d is negative or >= %d", e.InputIdx, len(e.Tx.Inputs),
+			"transaction input index %d is negative or >= %d", o.InputIdx, len(o.Tx.Inputs),
 		)
 	}
 
-	outputHasLockingScript := e.PreviousTxOut != nil && e.PreviousTxOut.LockingScript != nil
-	txHasUnlockingScript := e.Tx != nil && e.Tx.Inputs != nil && len(e.Tx.Inputs) > 0 &&
-		e.Tx.Inputs[e.InputIdx] != nil && e.Tx.Inputs[e.InputIdx].UnlockingScript != nil
+	outputHasLockingScript := o.PreviousTxOut != nil && o.PreviousTxOut.LockingScript != nil
+	txHasUnlockingScript := o.Tx != nil && o.Tx.Inputs != nil && len(o.Tx.Inputs) > 0 &&
+		o.Tx.Inputs[o.InputIdx] != nil && o.Tx.Inputs[o.InputIdx].UnlockingScript != nil
 	// If no locking script was provided
-	if e.LockingScript == nil && !outputHasLockingScript {
+	if o.LockingScript == nil && !outputHasLockingScript {
 		return errs.NewError(errs.ErrInvalidParams, "no locking script provided")
 	}
 
 	// If no unlocking script was provided
-	if e.UnlockingScript == nil && !txHasUnlockingScript {
+	if o.UnlockingScript == nil && !txHasUnlockingScript {
 		return errs.NewError(errs.ErrInvalidParams, "no unlocking script provided")
 	}
 
 	// If both a locking script and previous output were provided, make sure the scripts match
-	if e.LockingScript != nil && outputHasLockingScript {
-		if !e.LockingScript.Equals(e.PreviousTxOut.LockingScript) {
+	if o.LockingScript != nil && outputHasLockingScript {
+		if !o.LockingScript.Equals(o.PreviousTxOut.LockingScript) {
 			return errs.NewError(
 				errs.ErrInvalidParams,
 				"locking script does not match the previous outputs locking script",
@@ -108,8 +108,8 @@ func (e ExecutionParams) validate() error {
 	}
 
 	// If both a unlocking script and an input were provided, make sure the scripts match
-	if e.UnlockingScript != nil && txHasUnlockingScript {
-		if !e.UnlockingScript.Equals(e.Tx.Inputs[e.InputIdx].UnlockingScript) {
+	if o.UnlockingScript != nil && txHasUnlockingScript {
+		if !o.UnlockingScript.Equals(o.Tx.Inputs[o.InputIdx].UnlockingScript) {
 			return errs.NewError(
 				errs.ErrInvalidParams,
 				"unlocking script does not match the unlocking script of the requested input",
@@ -326,22 +326,22 @@ func (t *thread) Step() (bool, error) {
 	return false, nil
 }
 
-func (t *thread) apply(params *ExecutionParams) error {
-	if err := params.validate(); err != nil {
+func (t *thread) apply(opts *execOpts) error {
+	if err := opts.validate(); err != nil {
 		return err
 	}
 
-	if params.UnlockingScript == nil {
-		params.UnlockingScript = params.Tx.Inputs[params.InputIdx].UnlockingScript
+	if opts.UnlockingScript == nil {
+		opts.UnlockingScript = opts.Tx.Inputs[opts.InputIdx].UnlockingScript
 	}
-	if params.LockingScript == nil {
-		params.LockingScript = params.PreviousTxOut.LockingScript
+	if opts.LockingScript == nil {
+		opts.LockingScript = opts.PreviousTxOut.LockingScript
 	}
 
-	t.tx = params.Tx
-	t.flags = params.Flags
-	t.inputIdx = params.InputIdx
-	t.prevOutput = params.PreviousTxOut
+	t.tx = opts.Tx
+	t.flags = opts.Flags
+	t.inputIdx = opts.InputIdx
+	t.prevOutput = opts.PreviousTxOut
 
 	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
 	// the pay-to-script-hash (P2SH) evaluation (ScriptBip16).
@@ -362,8 +362,8 @@ func (t *thread) apply(params *ExecutionParams) error {
 		t.cfg = &afterGenesisConfig{}
 	}
 
-	uls := params.UnlockingScript
-	ls := params.LockingScript
+	uls := opts.UnlockingScript
+	ls := opts.LockingScript
 
 	// When both the signature script and public key script are empty the
 	// result is necessarily an error since the stack would end up being

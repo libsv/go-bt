@@ -59,7 +59,7 @@ func TestBadPC(t *testing.T) {
 			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
 		}
-		err := vm.apply(&ExecutionParams{
+		err := vm.apply(&execOpts{
 			PreviousTxOut: txOut,
 			Tx:            tx,
 			InputIdx:      0,
@@ -116,7 +116,7 @@ func TestCheckErrorCondition(t *testing.T) {
 		cfg:          &beforeGenesisConfig{},
 	}
 
-	err = vm.apply(&ExecutionParams{
+	err = vm.apply(&execOpts{
 		PreviousTxOut: txOut,
 		InputIdx:      0,
 		Tx:            tx,
@@ -143,11 +143,11 @@ func TestCheckErrorCondition(t *testing.T) {
 
 func TestValidateParams(t *testing.T) {
 	tests := map[string]struct {
-		params ExecutionParams
+		params execOpts
 		expErr error
 	}{
 		"valid tx/previous out checksig script": {
-			params: ExecutionParams{
+			params: execOpts{
 				Tx: func() *bt.Tx {
 					tx := bt.NewTx()
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
@@ -169,7 +169,7 @@ func TestValidateParams(t *testing.T) {
 			},
 		},
 		"valid tx/previous out non-checksig script": {
-			params: ExecutionParams{
+			params: execOpts{
 				Tx: func() *bt.Tx {
 					tx := bt.NewTx()
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "52529387", 0)
@@ -191,7 +191,7 @@ func TestValidateParams(t *testing.T) {
 			},
 		},
 		"valid locking/unlocking script non-checksig": {
-			params: ExecutionParams{
+			params: execOpts{
 				LockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("52529387")
 					assert.NoError(t, err)
@@ -205,7 +205,7 @@ func TestValidateParams(t *testing.T) {
 			},
 		},
 		"valid locking/unlocking script with check-sig": {
-			params: ExecutionParams{
+			params: execOpts{
 				LockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
 					assert.NoError(t, err)
@@ -237,7 +237,7 @@ func TestValidateParams(t *testing.T) {
 			},
 		},
 		"no locking script provided errors": {
-			params: ExecutionParams{
+			params: execOpts{
 				UnlockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
 					assert.NoError(t, err)
@@ -259,7 +259,7 @@ func TestValidateParams(t *testing.T) {
 			expErr: errors.New("no locking script provided"),
 		},
 		"no unlocking script provided errors": {
-			params: ExecutionParams{
+			params: execOpts{
 				LockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
 					assert.NoError(t, err)
@@ -275,7 +275,7 @@ func TestValidateParams(t *testing.T) {
 			expErr: errors.New("no unlocking script provided"),
 		},
 		"invalid locking/unlocking script with checksig": {
-			params: ExecutionParams{
+			params: execOpts{
 				LockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
 					assert.NoError(t, err)
@@ -290,7 +290,7 @@ func TestValidateParams(t *testing.T) {
 			expErr: errors.New("tx and previous output must be supplied for checksig"),
 		},
 		"provided locking script that differs from previoustxout's errors": {
-			params: ExecutionParams{
+			params: execOpts{
 				LockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("52529387")
 					assert.NoError(t, err)
@@ -323,7 +323,7 @@ func TestValidateParams(t *testing.T) {
 			expErr: errors.New("locking script does not match the previous outputs locking script"),
 		},
 		"provided unlocking scropt that differs from tx input's errors": {
-			params: ExecutionParams{
+			params: execOpts{
 				LockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
 					assert.NoError(t, err)
@@ -356,7 +356,7 @@ func TestValidateParams(t *testing.T) {
 			expErr: errors.New("unlocking script does not match the unlocking script of the requested input"),
 		},
 		"invalid input index errors": {
-			params: ExecutionParams{
+			params: execOpts{
 				Tx: func() *bt.Tx {
 					tx := bt.NewTx()
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
@@ -435,7 +435,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
 		}
-		err := vm.apply(&ExecutionParams{
+		err := vm.apply(&execOpts{
 			Tx:            tx,
 			InputIdx:      0,
 			PreviousTxOut: txOut,
