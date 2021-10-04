@@ -59,7 +59,7 @@ func TestBadPC(t *testing.T) {
 			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
 		}
-		err := vm.apply(ExecutionParams{
+		err := vm.apply(&ExecutionParams{
 			PreviousTxOut: txOut,
 			Tx:            tx,
 			InputIdx:      0,
@@ -116,7 +116,7 @@ func TestCheckErrorCondition(t *testing.T) {
 		cfg:          &beforeGenesisConfig{},
 	}
 
-	err = vm.apply(ExecutionParams{
+	err = vm.apply(&ExecutionParams{
 		PreviousTxOut: txOut,
 		InputIdx:      0,
 		Tx:            tx,
@@ -383,7 +383,7 @@ func TestValidateParams(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err := createThread(test.params)
+			_, err := createThread(&test.params)
 
 			if test.expErr != nil {
 				assert.Error(t, err)
@@ -435,7 +435,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
 		}
-		err := vm.apply(ExecutionParams{
+		err := vm.apply(&ExecutionParams{
 			Tx:            tx,
 			InputIdx:      0,
 			PreviousTxOut: txOut,

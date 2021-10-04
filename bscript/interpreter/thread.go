@@ -44,7 +44,7 @@ type thread struct {
 	earlyReturnAfterGenesis bool
 }
 
-func createThread(params ExecutionParams) (*thread, error) {
+func createThread(params *ExecutionParams) (*thread, error) {
 	th := &thread{
 		scriptParser: &DefaultOpcodeParser{
 			ErrorOnCheckSig: params.Tx == nil || params.PreviousTxOut == nil,
@@ -326,7 +326,7 @@ func (t *thread) Step() (bool, error) {
 	return false, nil
 }
 
-func (t *thread) apply(params ExecutionParams) error {
+func (t *thread) apply(params *ExecutionParams) error {
 	if err := params.validate(); err != nil {
 		return err
 	}

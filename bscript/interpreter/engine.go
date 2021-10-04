@@ -7,7 +7,7 @@ package interpreter
 
 // Engine is the virtual machine that executes scripts.
 type Engine interface {
-	Execute(ExecutionParams) error
+	Execute(opts ...ExecutionOptionFunc) error
 }
 
 type engine struct{}
@@ -24,25 +24,29 @@ func NewEngine() Engine {
 // for successful validation or an error if one occurred.
 //
 // Execute with tx example:
-//  if err := engine.Execute(interpreter.ExecutionParams{
-//      Tx:            tx,
-//      PreviousTxOut: previousOutput,
-//      InputIdx:      previousOutput,
-//      Flags:         interpreter.ScriptEnableSighashForkID | interpreter.ScriptUTXOAfterGenesis,
-//  }); err != nil {
+//  if err := engine.Execute(
+//      interpreter.WithTx(tx, inputIdx previousOutput),
+//      interpreter.WithAfterGenesis(),
+//      interpreter.WithForkID(),
+//  ); err != nil {
 //      // handle err
 //  }
 //
 // Execute with scripts example:
-//  if err := engine.Execute(interpreter.ExecutionParams{
-//      LockingScript:   lockingScript,
-//      UnlockingScript: unlockingScript,
-//      Flags:         interpreter.ScriptEnableSighashForkID | interpreter.ScriptUTXOAfterGenesis,
+//  if err := engine.Execute(
+//      interpreter.WithScripts(lockingScript, unlockingScript),
+//      interpreter.WithAfterGenesis(),
+//      interpreter.WithForkID(),
 //  }); err != nil {
 //      // handle err
 //  }
 //
-func (e *engine) Execute(params ExecutionParams) error {
+func (e *engine) Execute(oo ...ExecutionOptionFunc) error {
+	params := &ExecutionParams{}
+	for _, o := range oo {
+		o(params)
+	}
+
 	th, err := createThread(params)
 	if err != nil {
 		return err
