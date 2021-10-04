@@ -168,10 +168,8 @@ func (tx *Tx) Fund(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) error
 			return err
 		}
 
-		for _, utxo := range utxos {
-			if err = tx.FromUTXOs(utxo); err != nil {
-				return err
-			}
+		if err = tx.FromUTXOs(utxos...); err != nil {
+			return err
 		}
 
 		deficit, err = tx.estimateDeficit(fq)
