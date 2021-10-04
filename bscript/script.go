@@ -143,7 +143,7 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 }
 
 // NewP2PKHFromBip32ExtKey takes a *bip32.ExtendedKey and creates a P2PKH script from it,
-// using a randomly generating a seed. The script and the derivation path are returning.
+// using an internally random generated seed, returning the script and derivation path used.
 func NewP2PKHFromBip32ExtKey(privKey *bip32.ExtendedKey) (*Script, string, error) {
 	var b [8]byte
 	if _, err := rand.Read(b[:]); err != nil {
