@@ -325,7 +325,7 @@ func TestTx_Fund(t *testing.T) {
 				return tx
 			}(),
 			utxos:  []*bt.UTXO{},
-			expErr: errors.New("insufficient utxos provided"),
+			expErr: bt.ErrInsufficientFunds,
 		},
 		"getter with insufficient utxos errors": {
 			tx: func() *bt.Tx {
@@ -356,7 +356,7 @@ func TestTx_Fund(t *testing.T) {
 					txid, 0, script, 650,
 				}}
 			}(),
-			expErr: errors.New("insufficient utxos provided"),
+			expErr: bt.ErrInsufficientFunds,
 		},
 		"error is returned to the user": {
 			tx: func() *bt.Tx {

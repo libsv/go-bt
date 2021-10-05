@@ -13,8 +13,13 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
-var ErrNoUTXO = errors.New("no remaining utxos")
+var (
+	// ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
+	ErrNoUTXO = errors.New("no remaining utxos")
+
+	// ErrInsufficientFunds insufficient funds provided for funding
+	ErrInsufficientFunds = errors.New("insufficient funds provided")
+)
 
 // UTXOGetterFunc is used for tx.Fund(...). It provides the amount of satoshis required
 // for funding as `deficit`, and expects []*bt.UTXO to be returned containing
@@ -136,8 +141,10 @@ func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
 // Note, this function works under the assumption that receiver *bt.Tx already has all the outputs
 // which need covered.
 //
-// Example usage, for when working with a list:
-//    tx.Fund(ctx, bt.NewFeeQuote(), func(ctx context.Context, deficit satoshis) ([]*bt.UTXO, error) {
+// If insufficient utxos are provided from the UTXOGetterFunc, a bt.ErrInsufficientFunds is returned.
+//
+// Example usage:
+//    if err := tx.Fund(ctx, bt.NewFeeQuote(), func(ctx context.Context, deficit satoshis) ([]*bt.UTXO, error) {
 //        utxos := make([]*bt.UTXO, 0)
 //        for _, f := range funds {
 //            deficit -= satoshis
@@ -152,7 +159,10 @@ func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
 //            }
 //        }
 //        return nil, bt.ErrNoUTXO
-//    })
+//    }); err != nil {
+//        if errors.Is(err, bt.ErrInsufficientFunds) { /* handle */ }
+//        return err
+//    }
 func (tx *Tx) Fund(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) error {
 	deficit, err := tx.estimateDeficit(fq)
 	if err != nil {
@@ -178,7 +188,7 @@ func (tx *Tx) Fund(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) error
 		}
 	}
 	if deficit != 0 {
-		return errors.New("insufficient utxos provided")
+		return ErrInsufficientFunds
 	}
 
 	return nil
