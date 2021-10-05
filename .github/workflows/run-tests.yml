@@ -4,9 +4,13 @@ on:
   push:
     tags:
       - '*'
-    branches: [ master, v1 ]
+    branches:
+      - master
+      - v1
   pull_request:
-    branches: [ master, v1 ]
+    branches:
+      - master
+      - v1
 
 jobs:
   golangci:
