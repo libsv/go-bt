@@ -15,7 +15,8 @@ type LocalSignatureUnlockerGetter struct {
 	PrivateKey *bec.PrivateKey
 }
 
-// Unlocker builds a new *bt.LocalSignatureUnlocker with the same private key as the calling *bt.LocalSignatureUnlockerGetter.
+// Unlocker builds a new *bt.LocalSignatureUnlocker with the same private key
+// as the calling *bt.LocalSignatureUnlockerGetter.
 func (lg *LocalSignatureUnlockerGetter) Unlocker(ctx context.Context, lockingScript *bscript.Script) (Unlocker, error) {
 	return &LocalSignatureUnlocker{PrivateKey: lg.PrivateKey}, nil
 }
