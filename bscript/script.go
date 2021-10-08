@@ -24,6 +24,7 @@ const (
 	ScriptTypePubKeyHash  = "pubkeyhash"
 	ScriptTypeNonStandard = "nonstandard"
 	ScriptTypeEmpty       = "empty"
+	ScriptTypeSecureHash  = "securehash"
 	ScriptTypeMultiSig    = "multisig"
 	ScriptTypeNullData    = "nulldata"
 )

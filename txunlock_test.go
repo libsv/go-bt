@@ -37,7 +37,7 @@ func TestTx_UnlockAll(t *testing.T) {
 
 		rawTxBefore := tx.String()
 
-		err = tx.UnlockAll(context.Background(), &bt.LocalP2PKHUnlockerGetter{PrivateKey: wif.PrivKey})
+		err = tx.UnlockAll(context.Background(), &bt.LocalSignatureUnlockerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.NotEqual(t, rawTxBefore, tx.String())
@@ -49,7 +49,7 @@ func TestTx_UnlockAll(t *testing.T) {
 
 		rawTxBefore := tx.String()
 
-		err := tx.UnlockAll(context.Background(), &bt.LocalP2PKHUnlockerGetter{PrivateKey: nil})
+		err := tx.UnlockAll(context.Background(), &bt.LocalSignatureUnlockerGetter{PrivateKey: nil})
 		assert.NoError(t, err)
 
 		assert.Equal(t, rawTxBefore, tx.String())

@@ -15,8 +15,8 @@ import (
 func TestLocalSignatureUnlocker_UnlockAll(t *testing.T) {
 	t.Parallel()
 
-	lockedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
-	tx, err := bt.NewTxFromString(lockedTx)
+	incompleteTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
+	tx, err := bt.NewTxFromString(incompleteTx)
 	assert.NoError(t, err)
 	assert.NotNil(t, tx)
 
@@ -30,13 +30,13 @@ func TestLocalSignatureUnlocker_UnlockAll(t *testing.T) {
 	w, err = wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	assert.NoError(t, err)
 
-	unlocker := bt.LocalP2PKHUnlockerGetter{PrivateKey: w.PrivKey}
+	unlocker := bt.LocalSignatureUnlockerGetter{PrivateKey: w.PrivKey}
 	err = tx.UnlockAll(context.Background(), &unlocker)
 	assert.NoError(t, err)
 
 	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 	assert.Equal(t, expectedSignedTx, tx.String())
-	assert.NotEqual(t, lockedTx, tx.String())
+	assert.NotEqual(t, incompleteTx, tx.String())
 }
 
 func TestLocalSignatureUnlocker_ValidSignature(t *testing.T) {
@@ -67,7 +67,7 @@ func TestLocalSignatureUnlocker_ValidSignature(t *testing.T) {
 
 				assert.NoError(
 					t,
-					tx.From("64faeaa2e3cbadaf82d8fa8c7ded508cb043c5d101671f43c084be2ac6163148", 1, "4730440220665740bdf8cf402f0a3cfeb9a7b82645132190e3c3bd605e0811b79c9dd675e002207929a958673cebe60a6af9fa1fa89e7f3fc397727df5798500d58906c3886a44412103401136395f6c679c6176cdf499ff54720acfb56c07028feaafdce68d79463a45", 5000000000),
+					tx.From("64faeaa2e3cbadaf82d8fa8c7ded508cb043c5d101671f43c084be2ac6163148", 1, "76a914343cadc47d08a14ef773d70b3b2a90870b67b3ad88ac", 5000000000),
 				)
 				tx.Inputs[0].SequenceNumber = 0xfffffffe
 
@@ -93,7 +93,7 @@ func TestLocalSignatureUnlocker_ValidSignature(t *testing.T) {
 			w, err := wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 			assert.NoError(t, err)
 
-			unlocker := &bt.LocalP2PKHUnlocker{PrivateKey: w.PrivKey}
+			unlocker := &bt.LocalSignatureUnlocker{PrivateKey: w.PrivKey}
 			assert.NoError(t, unlocker.Unlock(context.Background(), tx, 0, sighash.AllForkID))
 
 			unlockingScript := []byte(*tx.Inputs[0].UnlockingScript)
