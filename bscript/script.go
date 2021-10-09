@@ -192,8 +192,8 @@ func (s *Script) AppendPushDataStrings(pushDataStrings []string) error {
 }
 
 // AppendOpCode appends an opcode type to the script
-func (s *Script) AppendOpCode(o uint8) *Script {
-	*s = append(*s, o)
+func (s *Script) AppendOpCode(o ...uint8) *Script {
+	*s = append(*s, o...)
 	return s
 }
 
