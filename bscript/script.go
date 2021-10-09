@@ -376,3 +376,38 @@ func (s *Script) EqualsBytes(b []byte) bool {
 func (s *Script) EqualsHex(h string) bool {
 	return s.String() == h
 }
+
+// MinPushSize returns the minimum size of a push operation of the given data.
+func MinPushSize(b []byte) int {
+	l := len(b)
+
+	if l > 0xffffffff {
+		return 0
+	}
+
+	if l == 0 {
+		return 1
+	}
+
+	if l == 1 {
+		if b[0] <= 16 || b[0] == 0x81 {
+			return 1
+		} else {
+			return 2
+		}
+	}
+
+	if l <= 75 {
+		return l + 1
+	}
+
+	if l <= 0xff {
+		return l + 2
+	}
+
+	if l <= 0xffff {
+		return l + 3
+	}
+
+	return l + 5
+}
