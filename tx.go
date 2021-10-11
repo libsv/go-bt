@@ -236,6 +236,13 @@ func (tx *Tx) Clone() *Tx {
 }
 
 // NodeJSON returns a wrapped *bt.Tx for marshalling/unmarshalling into a node tx format.
+//
+// Marshalling usage example:
+//  bb, err := json.Marshal(tx.NodeJSON())
+//
+// Unmarshalling usage example:
+//  tx := bt.NewTx()
+//  if err := json.Unmarshal(bb, tx.NodeJSON()); err != nil {}
 func (tx *Tx) NodeJSON() *nodeWrapper {
 	return &nodeWrapper{Tx: tx}
 }
