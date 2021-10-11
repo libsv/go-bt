@@ -12,7 +12,16 @@ type nodeWrapper struct {
 	*bt.Tx
 }
 
-func Node(tx *bt.Tx) *nodeWrapper {
+// Node a json wrapper for *bt.Tx, used for marshalling and unmarshalling json
+// to/from node format.
+//
+// Marshal example:
+//  bb, err := json.Marshal(txjson.Node(tx))
+//
+// Unmarshal example:
+//  tx := bt.NewTx()
+//  if err := json.Unmarshal(bb, txjson.Node(tx)); err != nil {}
+func Node(tx *bt.Tx) *nodeWrapper { // nolint:revive // We don't want this type to be used outside of json formatting.
 	return &nodeWrapper{tx}
 }
 
@@ -49,10 +58,10 @@ type nodeOutputJSON struct {
 }
 
 func (n *nodeWrapper) MarshalJSON() ([]byte, error) {
-	tx := n.Tx
-	if n == nil {
+	if n == nil || n.Tx == nil {
 		return nil, errors.New("tx is nil so cannot be marshalled")
 	}
+	tx := n.Tx
 	oo := make([]*nodeOutputJSON, 0, len(tx.Outputs))
 	for i, o := range tx.Outputs {
 		out := &nodeOutputJSON{}
@@ -173,7 +182,9 @@ func (i *nodeInputJSON) toInput() (*bt.Input, error) {
 	input.UnlockingScript = s
 	input.PreviousTxOutIndex = i.Vout
 	input.SequenceNumber = i.Sequence
-	input.PreviousTxIDAddStr(i.TxID)
+	if err = input.PreviousTxIDAddStr(i.TxID); err != nil {
+		return nil, err
+	}
 
 	return input, nil
 }
