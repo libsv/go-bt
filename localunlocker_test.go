@@ -94,15 +94,13 @@ func TestLocalSignatureUnlocker_ValidSignature(t *testing.T) {
 			assert.NoError(t, err)
 
 			unlocker := &bt.LocalSignatureUnlocker{PrivateKey: w.PrivKey}
-			parts, err := unlocker.Unlock(context.Background(), tx, 0, sighash.AllForkID)
+			assert.NoError(t, unlocker.Unlock(context.Background(), tx, 0, sighash.AllForkID))
+
+			parts, err := bscript.DecodeParts(*tx.Inputs[0].UnlockingScript)
 			assert.NoError(t, err)
 
-			//unlockingScript := []byte(*tx.Inputs[0].UnlockingScript)
-
-			publicKeyBytes := parts[0]
-			sigBytes := parts[1]
-			//publicKeyBytes := unlockingScript[len(unlockingScript)-33:]
-			//sigBytes := unlockingScript[1 : len(unlockingScript)-35]
+			sigBytes := parts[0]
+			publicKeyBytes := parts[1]
 
 			publicKey, err := bec.ParsePubKey(publicKeyBytes, bec.S256())
 			assert.NoError(t, err)
@@ -133,11 +131,11 @@ type mockUnlocker struct {
 	script string
 }
 
-func (m *mockUnlocker) Unlock(ctx context.Context, tx *bt.Tx, idx uint32, shf sighash.Flag) ([][]byte, error) {
+func (m *mockUnlocker) Unlock(ctx context.Context, tx *bt.Tx, idx uint32, shf sighash.Flag) error {
 	script, err := bscript.NewFromASM(m.script)
 	assert.NoError(m.t, err)
 
-	return [][]byte{*script}, tx.ApplyUnlockingScript(idx, script)
+	return tx.ApplyUnlockingScript(idx, script)
 }
 
 func TestLocalSignatureUnlocker_NonSignature(t *testing.T) {

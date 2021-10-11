@@ -33,19 +33,19 @@ type LocalSignatureUnlocker struct {
 // as well as the public key corresponding to the private key used. The produced
 // signature is deterministic (same message and same key yield the same signature) and
 // canonical in accordance with RFC6979 and BIP0062.
-func (lu *LocalSignatureUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32, shf sighash.Flag) ([][]byte, error) {
+func (lu *LocalSignatureUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32, shf sighash.Flag) error {
 	if shf == 0 {
 		shf = sighash.AllForkID
 	}
 
 	sh, err := tx.CalcInputSignatureHash(idx, shf)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	sig, err := lu.PrivateKey.Sign(sh)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	pubKey := lu.PrivateKey.PubKey().SerialiseCompressed()
@@ -53,8 +53,8 @@ func (lu *LocalSignatureUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32
 
 	switch tx.Inputs[idx].PreviousTxScript.ScriptType() {
 	case bscript.ScriptTypePubKeyHash:
-		return [][]byte{pubKey, signature}, tx.ApplyP2PKHUnlockingScript(idx, pubKey, signature, shf)
+		return tx.ApplyP2PKHUnlockingScript(idx, pubKey, signature, shf)
 	}
 
-	return nil, errors.New("currently only p2pkh supported")
+	return errors.New("currently only p2pkh supported")
 }
