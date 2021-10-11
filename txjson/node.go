@@ -12,7 +12,7 @@ type nodeWrapper struct {
 	*bt.Tx
 }
 
-func NodeWrapper(tx *bt.Tx) *nodeWrapper {
+func Node(tx *bt.Tx) *nodeWrapper {
 	return &nodeWrapper{tx}
 }
 
@@ -23,13 +23,22 @@ type nodeTxJSON struct {
 	Hash     string            `json:"hash"`
 	Size     int               `json:"size"`
 	Hex      string            `json:"hex"`
-	Inputs   []*bt.Input       `json:"vin"`
+	Inputs   []*nodeInputJSON  `json:"vin"`
 	Outputs  []*nodeOutputJSON `json:"vout"`
+}
+
+type nodeInputJSON struct {
+	ScriptSig *struct {
+		Asm string `json:"asm"`
+		Hex string `json:"hex"`
+	} `json:"scriptSig,omitempty"`
+	TxID     string `json:"txid"`
+	Vout     uint32 `json:"vout"`
+	Sequence uint32 `json:"sequence"`
 }
 
 type nodeOutputJSON struct {
 	Value        float64 `json:"value"`
-	Satoshis     uint64  `json:"satoshis"`
 	Index        int     `json:"n"`
 	ScriptPubKey *struct {
 		Asm     string `json:"asm"`
@@ -37,12 +46,6 @@ type nodeOutputJSON struct {
 		ReqSigs int    `json:"reqSigs,omitempty"`
 		Type    string `json:"type"`
 	} `json:"scriptPubKey,omitempty"`
-	LockingScript *struct {
-		Asm     string `json:"asm"`
-		Hex     string `json:"hex"`
-		ReqSigs int    `json:"reqSigs,omitempty"`
-		Type    string `json:"type"`
-	} `json:"lockingScript,omitempty"`
 }
 
 func (n *nodeWrapper) MarshalJSON() ([]byte, error) {
@@ -52,17 +55,25 @@ func (n *nodeWrapper) MarshalJSON() ([]byte, error) {
 	}
 	oo := make([]*nodeOutputJSON, 0, len(tx.Outputs))
 	for i, o := range tx.Outputs {
-		out, err := outputToNodeJSON(o)
-		if err != nil {
+		out := &nodeOutputJSON{}
+		if err := out.fromOutput(o); err != nil {
 			return nil, err
 		}
 		out.Index = i
 		oo = append(oo, out)
 	}
+	ii := make([]*nodeInputJSON, 0, len(tx.Inputs))
+	for _, i := range tx.Inputs {
+		in := &nodeInputJSON{}
+		if err := in.fromInput(i); err != nil {
+			return nil, err
+		}
+		ii = append(ii, in)
+	}
 	txj := nodeTxJSON{
 		Version:  tx.Version,
 		LockTime: tx.LockTime,
-		Inputs:   tx.Inputs,
+		Inputs:   ii,
 		Outputs:  oo,
 		TxID:     tx.TxID(),
 		Hash:     tx.TxID(),
@@ -97,39 +108,19 @@ func (n *nodeWrapper) UnmarshalJSON(b []byte) error {
 		}
 		oo = append(oo, out)
 	}
-	tx.Inputs = txj.Inputs
+	ii := make([]*bt.Input, 0, len(txj.Inputs))
+	for _, i := range txj.Inputs {
+		in, err := i.toInput()
+		if err != nil {
+			return err
+		}
+		ii = append(ii, in)
+	}
+	tx.Inputs = ii
 	tx.Outputs = oo
 	tx.LockTime = txj.LockTime
 	tx.Version = txj.Version
 	return nil
-}
-
-func outputToNodeJSON(o *bt.Output) (*nodeOutputJSON, error) {
-	asm, err := o.LockingScript.ToASM()
-	if err != nil {
-		return nil, err
-	}
-	addresses, err := o.LockingScript.Addresses()
-	if err != nil {
-		return nil, err
-	}
-
-	return &nodeOutputJSON{
-		Value:    float64(o.Satoshis) / 100000000,
-		Satoshis: o.Satoshis,
-		Index:    0,
-		LockingScript: &struct {
-			Asm     string `json:"asm"`
-			Hex     string `json:"hex"`
-			ReqSigs int    `json:"reqSigs,omitempty"`
-			Type    string `json:"type"`
-		}{
-			Asm:     asm,
-			Hex:     o.LockingScriptHexString(),
-			ReqSigs: len(addresses),
-			Type:    o.LockingScript.ScriptType(),
-		},
-	}, nil
 }
 
 func (o *nodeOutputJSON) fromOutput(out *bt.Output) error {
@@ -143,10 +134,9 @@ func (o *nodeOutputJSON) fromOutput(out *bt.Output) error {
 	}
 
 	*o = nodeOutputJSON{
-		Value:    float64(o.Satoshis) / 100000000,
-		Satoshis: o.Satoshis,
-		Index:    0,
-		LockingScript: &struct {
+		Value: float64(out.Satoshis) / 100000000,
+		Index: 0,
+		ScriptPubKey: &struct {
 			Asm     string `json:"asm"`
 			Hex     string `json:"hex"`
 			ReqSigs int    `json:"reqSigs,omitempty"`
@@ -164,19 +154,47 @@ func (o *nodeOutputJSON) fromOutput(out *bt.Output) error {
 
 func (o *nodeOutputJSON) toOutput() (*bt.Output, error) {
 	out := &bt.Output{}
-	script := o.LockingScript
-	if script == nil {
-		script = o.ScriptPubKey
-	}
-	s, err := bscript.NewFromHexString(script.Hex)
+	s, err := bscript.NewFromHexString(o.ScriptPubKey.Hex)
 	if err != nil {
 		return nil, err
 	}
-	if o.Satoshis > 0 {
-		out.Satoshis = o.Satoshis
-	} else {
-		out.Satoshis = uint64(o.Value * 100000000)
-	}
+	out.Satoshis = uint64(o.Value * 100000000)
 	out.LockingScript = s
 	return out, nil
+}
+
+func (i *nodeInputJSON) toInput() (*bt.Input, error) {
+	input := &bt.Input{}
+	s, err := bscript.NewFromHexString(i.ScriptSig.Hex)
+	if err != nil {
+		return nil, err
+	}
+
+	input.UnlockingScript = s
+	input.PreviousTxOutIndex = i.Vout
+	input.SequenceNumber = i.Sequence
+	input.PreviousTxIDAddStr(i.TxID)
+
+	return input, nil
+}
+
+func (i *nodeInputJSON) fromInput(input *bt.Input) error {
+	asm, err := input.UnlockingScript.ToASM()
+	if err != nil {
+		return err
+	}
+
+	i.ScriptSig = &struct {
+		Asm string `json:"asm"`
+		Hex string `json:"hex"`
+	}{
+		Asm: asm,
+		Hex: input.UnlockingScript.String(),
+	}
+
+	i.Vout = input.PreviousTxOutIndex
+	i.Sequence = input.SequenceNumber
+	i.TxID = input.PreviousTxIDStr()
+
+	return nil
 }

@@ -54,14 +54,12 @@ type Tx struct {
 }
 
 type txJSON struct {
-	Version  uint32        `json:"version"`
-	LockTime uint32        `json:"locktime"`
-	TxID     string        `json:"txid"`
-	Hash     string        `json:"hash"`
-	Size     int           `json:"size"`
-	Hex      string        `json:"hex"`
-	Inputs   []*Input      `json:"vin"`
-	Outputs  []*outputJSON `json:"vout"`
+	TxID     string    `json:"txid"`
+	Hex      string    `json:"hex"`
+	Inputs   []*Input  `json:"inputs"`
+	Outputs  []*Output `json:"outputs"`
+	Version  uint32    `json:"version"`
+	LockTime uint32    `json:"lockTime"`
 }
 
 // MarshalJSON will serialise a transaction to json.
@@ -69,26 +67,14 @@ func (tx *Tx) MarshalJSON() ([]byte, error) {
 	if tx == nil {
 		return nil, errors.New("tx is nil so cannot be marshalled")
 	}
-	oo := make([]*outputJSON, 0, len(tx.Outputs))
-	for i, o := range tx.Outputs {
-		out, err := o.toJSON()
-		if err != nil {
-			return nil, err
-		}
-		out.Index = i
-		oo = append(oo, out)
-	}
-	txj := txJSON{
-		Version:  tx.Version,
-		LockTime: tx.LockTime,
-		Inputs:   tx.Inputs,
-		Outputs:  oo,
+	return json.Marshal(txJSON{
 		TxID:     tx.TxID(),
-		Hash:     tx.TxID(),
-		Size:     len(tx.Bytes()),
 		Hex:      tx.String(),
-	}
-	return json.Marshal(txj)
+		Inputs:   tx.Inputs,
+		Outputs:  tx.Outputs,
+		LockTime: tx.LockTime,
+		Version:  tx.Version,
+	})
 }
 
 // UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
@@ -106,16 +92,8 @@ func (tx *Tx) UnmarshalJSON(b []byte) error {
 		*tx = *t
 		return nil
 	}
-	oo := make([]*Output, 0, len(txj.Outputs))
-	for _, o := range txj.Outputs {
-		out, err := o.toOutput()
-		if err != nil {
-			return err
-		}
-		oo = append(oo, out)
-	}
-	tx.Inputs = txj.Inputs
-	tx.Outputs = oo
+	//tx.Inputs = txj.Inputs
+	//tx.Outputs = oo
 	tx.LockTime = txj.LockTime
 	tx.Version = txj.Version
 	return nil

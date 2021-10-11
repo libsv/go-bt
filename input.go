@@ -40,39 +40,21 @@ type Input struct {
 // Script is duplicated as we have our own name for unlockingScript
 // but want to be compatible with node json also.
 type inputJSON struct {
-	UnlockingScript *struct {
-		Asm string `json:"asm"`
-		Hex string `json:"hex"`
-	} `json:"unlockingScript,omitempty"`
-	ScriptSig *struct {
-		Asm string `json:"asm"`
-		Hex string `json:"hex"`
-	} `json:"scriptSig,omitempty"`
-	TxID     string `json:"txid"`
-	Vout     uint32 `json:"vout"`
-	Sequence uint32 `json:"sequence"`
+	UnlockingScript string `json:"unlockingScript"`
+	TxID            string `json:"txid"`
+	Vout            uint32 `json:"vout"`
+	Sequence        uint32 `json:"sequence"`
 }
 
 // MarshalJSON will convert an input to json, expanding upon the
 // input struct to add additional fields.
 func (i *Input) MarshalJSON() ([]byte, error) {
-	asm, err := i.UnlockingScript.ToASM()
-	if err != nil {
-		return nil, err
-	}
-	input := &inputJSON{
-		TxID: hex.EncodeToString(i.previousTxID),
-		Vout: i.PreviousTxOutIndex,
-		UnlockingScript: &struct {
-			Asm string `json:"asm"`
-			Hex string `json:"hex"`
-		}{
-			Asm: asm,
-			Hex: i.UnlockingScript.String(),
-		},
-		Sequence: i.SequenceNumber,
-	}
-	return json.Marshal(input)
+	return json.Marshal(&inputJSON{
+		TxID:            hex.EncodeToString(i.previousTxID),
+		Vout:            i.PreviousTxOutIndex,
+		UnlockingScript: i.UnlockingScript.String(),
+		Sequence:        i.SequenceNumber,
+	})
 }
 
 // UnmarshalJSON will convert a JSON input to an input.
@@ -85,11 +67,7 @@ func (i *Input) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
-	sig := ij.UnlockingScript
-	if sig == nil {
-		sig = ij.ScriptSig
-	}
-	s, err := bscript.NewFromHexString(sig.Hex)
+	s, err := bscript.NewFromHexString(ij.UnlockingScript)
 	if err != nil {
 		return err
 	}
