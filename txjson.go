@@ -59,8 +59,6 @@ func (tx *Tx) UnmarshalJSON(b []byte) error {
 		*tx = *t
 		return nil
 	}
-	//tx.Inputs = txj.Inputs
-	//tx.Outputs = oo
 	tx.LockTime = txj.LockTime
 	tx.Version = txj.Version
 	return nil
