@@ -47,10 +47,10 @@ var (
 // DO NOT CHANGE ORDER - Optimised memory via malign
 //
 type Tx struct {
-	Inputs   []*Input
-	Outputs  []*Output
-	Version  uint32
-	LockTime uint32
+	Inputs   []*Input  `json:"inputs"`
+	Outputs  []*Output `json:"outputs"`
+	Version  uint32    `json:"version"`
+	LockTime uint32    `json:"lockTime"`
 }
 
 type txJSON struct {
