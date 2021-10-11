@@ -29,33 +29,32 @@ type LocalSignatureUnlocker struct {
 
 // Unlock a transaction at a given input using the PrivateKey passed in through the LocalSignatureUnlocker
 // struct.
-// Unlock generates and applies an ECDSA signature for the provided hash digest using the private key
+// Unlock generates, applies, and returns an ECDSA signature for the provided hash digest using the private key
 // as well as the public key corresponding to the private key used. The produced
 // signature is deterministic (same message and same key yield the same signature) and
 // canonical in accordance with RFC6979 and BIP0062.
-func (lu *LocalSignatureUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32, shf sighash.Flag) error {
+func (lu *LocalSignatureUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32, shf sighash.Flag) ([][]byte, error) {
 	if shf == 0 {
 		shf = sighash.AllForkID
 	}
 
 	sh, err := tx.CalcInputSignatureHash(idx, shf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sig, err := lu.PrivateKey.Sign(sh)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	pubKey := lu.PrivateKey.PubKey().SerialiseCompressed()
 	signature := sig.Serialise()
 
-	// TODO: support more script types
 	switch tx.Inputs[idx].PreviousTxScript.ScriptType() {
 	case bscript.ScriptTypePubKeyHash:
-		return tx.ApplyP2PKHUnlockingScript(idx, pubKey, signature, shf)
+		return [][]byte{pubKey, signature}, tx.ApplyP2PKHUnlockingScript(idx, pubKey, signature, shf)
 	}
 
-	return errors.New("currently only p2pkh supported")
+	return nil, errors.New("currently only p2pkh supported")
 }

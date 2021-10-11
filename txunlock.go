@@ -18,7 +18,8 @@ func (tx *Tx) Unlock(ctx context.Context, u Unlocker, idx uint32, shf sighash.Fl
 		shf = sighash.AllForkID
 	}
 
-	return u.Unlock(ctx, tx, idx, shf)
+	_, err := u.Unlock(ctx, tx, idx, shf)
+	return err
 }
 
 // UnlockAll is used to sign all inputs. It takes an UnlockerGetter interface
