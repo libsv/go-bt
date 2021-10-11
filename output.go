@@ -3,7 +3,6 @@ package bt
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/libsv/go-bt/v2/bscript"
@@ -25,34 +24,6 @@ Txout-script / scriptPubKey   Script                                      <out-s
 type Output struct {
 	Satoshis      uint64
 	LockingScript *bscript.Script
-}
-
-type outputJSON struct {
-	Satoshis      uint64 `json:"satoshis"`
-	LockingScript string `json:"lockingScript"`
-}
-
-// MarshalJSON will serialise an output to json.
-func (o *Output) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&outputJSON{
-		Satoshis:      o.Satoshis,
-		LockingScript: o.LockingScriptHexString(),
-	})
-}
-
-// UnmarshalJSON will convert a json serialised output to a bt Output.
-func (o *Output) UnmarshalJSON(b []byte) error {
-	var oj outputJSON
-	if err := json.Unmarshal(b, &oj); err != nil {
-		return err
-	}
-	s, err := bscript.NewFromHexString(oj.LockingScript)
-	if err != nil {
-		return err
-	}
-	o.Satoshis = oj.Satoshis
-	o.LockingScript = s
-	return nil
 }
 
 // LockingScriptHexString returns the locking script

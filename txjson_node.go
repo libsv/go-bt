@@ -1,29 +1,25 @@
-package txjson
+package bt
 
 import (
 	"encoding/json"
 	"errors"
 
-	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
 type nodeWrapper struct {
-	*bt.Tx
+	*Tx
 }
 
-// Node a json wrapper for *bt.Tx, used for marshalling and unmarshalling json
+// Node a json wrapper for *Tx, used for marshalling and unmarshalling json
 // to/from node format.
 //
 // Marshal example:
 //  bb, err := json.Marshal(txjson.Node(tx))
 //
 // Unmarshal example:
-//  tx := bt.NewTx()
+//  tx := NewTx()
 //  if err := json.Unmarshal(bb, txjson.Node(tx)); err != nil {}
-func Node(tx *bt.Tx) *nodeWrapper { // nolint:revive // We don't want this type to be used outside of json formatting.
-	return &nodeWrapper{tx}
-}
 
 type nodeTxJSON struct {
 	Version  uint32            `json:"version"`
@@ -102,14 +98,14 @@ func (n *nodeWrapper) UnmarshalJSON(b []byte) error {
 	}
 	// quick convert
 	if txj.Hex != "" {
-		t, err := bt.NewTxFromString(txj.Hex)
+		t, err := NewTxFromString(txj.Hex)
 		if err != nil {
 			return err
 		}
 		*tx = *t
 		return nil
 	}
-	oo := make([]*bt.Output, 0, len(txj.Outputs))
+	oo := make([]*Output, 0, len(txj.Outputs))
 	for _, o := range txj.Outputs {
 		out, err := o.toOutput()
 		if err != nil {
@@ -117,7 +113,7 @@ func (n *nodeWrapper) UnmarshalJSON(b []byte) error {
 		}
 		oo = append(oo, out)
 	}
-	ii := make([]*bt.Input, 0, len(txj.Inputs))
+	ii := make([]*Input, 0, len(txj.Inputs))
 	for _, i := range txj.Inputs {
 		in, err := i.toInput()
 		if err != nil {
@@ -132,7 +128,7 @@ func (n *nodeWrapper) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (o *nodeOutputJSON) fromOutput(out *bt.Output) error {
+func (o *nodeOutputJSON) fromOutput(out *Output) error {
 	asm, err := out.LockingScript.ToASM()
 	if err != nil {
 		return err
@@ -161,8 +157,8 @@ func (o *nodeOutputJSON) fromOutput(out *bt.Output) error {
 	return nil
 }
 
-func (o *nodeOutputJSON) toOutput() (*bt.Output, error) {
-	out := &bt.Output{}
+func (o *nodeOutputJSON) toOutput() (*Output, error) {
+	out := &Output{}
 	s, err := bscript.NewFromHexString(o.ScriptPubKey.Hex)
 	if err != nil {
 		return nil, err
@@ -172,8 +168,8 @@ func (o *nodeOutputJSON) toOutput() (*bt.Output, error) {
 	return out, nil
 }
 
-func (i *nodeInputJSON) toInput() (*bt.Input, error) {
-	input := &bt.Input{}
+func (i *nodeInputJSON) toInput() (*Input, error) {
+	input := &Input{}
 	s, err := bscript.NewFromHexString(i.ScriptSig.Hex)
 	if err != nil {
 		return nil, err
@@ -189,7 +185,7 @@ func (i *nodeInputJSON) toInput() (*bt.Input, error) {
 	return input, nil
 }
 
-func (i *nodeInputJSON) fromInput(input *bt.Input) error {
+func (i *nodeInputJSON) fromInput(input *Input) error {
 	asm, err := input.UnlockingScript.ToASM()
 	if err != nil {
 		return err

@@ -2,7 +2,6 @@ package bt
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/libsv/go-bt/v2/bscript"
@@ -34,48 +33,6 @@ type Input struct {
 	UnlockingScript    *bscript.Script
 	PreviousTxOutIndex uint32
 	SequenceNumber     uint32
-}
-
-// inputJSON is used to convert an input to and from json.
-// Script is duplicated as we have our own name for unlockingScript
-// but want to be compatible with node json also.
-type inputJSON struct {
-	UnlockingScript string `json:"unlockingScript"`
-	TxID            string `json:"txid"`
-	Vout            uint32 `json:"vout"`
-	Sequence        uint32 `json:"sequence"`
-}
-
-// MarshalJSON will convert an input to json, expanding upon the
-// input struct to add additional fields.
-func (i *Input) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&inputJSON{
-		TxID:            hex.EncodeToString(i.previousTxID),
-		Vout:            i.PreviousTxOutIndex,
-		UnlockingScript: i.UnlockingScript.String(),
-		Sequence:        i.SequenceNumber,
-	})
-}
-
-// UnmarshalJSON will convert a JSON input to an input.
-func (i *Input) UnmarshalJSON(b []byte) error {
-	var ij inputJSON
-	if err := json.Unmarshal(b, &ij); err != nil {
-		return err
-	}
-	ptxID, err := hex.DecodeString(ij.TxID)
-	if err != nil {
-		return err
-	}
-	s, err := bscript.NewFromHexString(ij.UnlockingScript)
-	if err != nil {
-		return err
-	}
-	i.UnlockingScript = s
-	i.previousTxID = ptxID
-	i.PreviousTxOutIndex = ij.Vout
-	i.SequenceNumber = ij.Sequence
-	return nil
 }
 
 // PreviousTxIDAdd will add the supplied txID bytes to the Input,

@@ -1,4 +1,4 @@
-package txjson_test
+package bt_test
 
 import (
 	"context"
@@ -8,11 +8,10 @@ import (
 	"github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
-	"github.com/libsv/go-bt/v2/txjson"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNode_JSON(t *testing.T) {
+func TestTxJSON_Node_JSON(t *testing.T) {
 	tests := map[string]struct {
 		tx  *bt.Tx
 		err error
@@ -63,19 +62,19 @@ func TestNode_JSON(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			bb, err := json.Marshal(txjson.Node(test.tx))
+			bb, err := json.Marshal(test.tx.NodeJSON())
 			assert.NoError(t, err)
 			if err != nil {
 				return
 			}
 			tx := &bt.Tx{}
-			assert.NoError(t, json.Unmarshal(bb, txjson.Node(tx)))
+			assert.NoError(t, json.Unmarshal(bb, tx.NodeJSON()))
 			assert.Equal(t, test.tx.String(), tx.String())
 		})
 	}
 }
 
-func TestNode_MarshallJSON(t *testing.T) {
+func TestTxJSON_Node_MarshallJSON(t *testing.T) {
 	tests := map[string]struct {
 		tx      *bt.Tx
 		expJSON string
@@ -209,14 +208,14 @@ func TestNode_MarshallJSON(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			bb, err := json.MarshalIndent(txjson.Node(test.tx), "", "\t")
+			bb, err := json.MarshalIndent(test.tx.NodeJSON(), "", "\t")
 			assert.NoError(t, err)
 			assert.Equal(t, test.expJSON, string(bb))
 		})
 	}
 }
 
-func TestNode_UnmarshalJSON(t *testing.T) {
+func TestTxJSON_Node_UnmarshalJSON(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		json  string
@@ -370,9 +369,16 @@ func TestNode_UnmarshalJSON(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			tx := bt.NewTx()
-			err := json.Unmarshal([]byte(test.json), txjson.Node(tx))
+			err := json.Unmarshal([]byte(test.json), tx.NodeJSON())
 			assert.NoError(t, err)
 			assert.Equal(t, test.expTx, tx)
 		})
 	}
+}
+
+func TestTxJSON_Node_ToJson(t *testing.T) {
+	tx, _ := bt.NewTxFromString("0100000001abad53d72f342dd3f338e5e3346b492440f8ea821f8b8800e318f461cc5ea5a2010000006a4730440220042edc1302c5463e8397120a56b28ea381c8f7f6d9bdc1fee5ebca00c84a76e2022077069bbdb7ed701c4977b7db0aba80d41d4e693112256660bb5d674599e390cf41210294639d6e4249ea381c2e077e95c78fc97afe47a52eb24e1b1595cd3fdd0afdf8ffffffff02000000000000000008006a0548656c6c6f7f030000000000001976a914b85524abf8202a961b847a3bd0bc89d3d4d41cc588ac00000000")
+
+	_, err := json.MarshalIndent(tx.NodeJSON(), "", "\t")
+	assert.NoError(t, err)
 }

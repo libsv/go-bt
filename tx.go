@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -51,52 +50,6 @@ type Tx struct {
 	Outputs  []*Output `json:"outputs"`
 	Version  uint32    `json:"version"`
 	LockTime uint32    `json:"lockTime"`
-}
-
-type txJSON struct {
-	TxID     string    `json:"txid"`
-	Hex      string    `json:"hex"`
-	Inputs   []*Input  `json:"inputs"`
-	Outputs  []*Output `json:"outputs"`
-	Version  uint32    `json:"version"`
-	LockTime uint32    `json:"lockTime"`
-}
-
-// MarshalJSON will serialise a transaction to json.
-func (tx *Tx) MarshalJSON() ([]byte, error) {
-	if tx == nil {
-		return nil, errors.New("tx is nil so cannot be marshalled")
-	}
-	return json.Marshal(txJSON{
-		TxID:     tx.TxID(),
-		Hex:      tx.String(),
-		Inputs:   tx.Inputs,
-		Outputs:  tx.Outputs,
-		LockTime: tx.LockTime,
-		Version:  tx.Version,
-	})
-}
-
-// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
-func (tx *Tx) UnmarshalJSON(b []byte) error {
-	var txj txJSON
-	if err := json.Unmarshal(b, &txj); err != nil {
-		return err
-	}
-	// quick convert
-	if txj.Hex != "" {
-		t, err := NewTxFromString(txj.Hex)
-		if err != nil {
-			return err
-		}
-		*tx = *t
-		return nil
-	}
-	//tx.Inputs = txj.Inputs
-	//tx.Outputs = oo
-	tx.LockTime = txj.LockTime
-	tx.Version = txj.Version
-	return nil
 }
 
 // NewTx creates a new transaction object with default values.
@@ -280,6 +233,11 @@ func (tx *Tx) Clone() *Tx {
 	}
 
 	return clone
+}
+
+// NodeJSON returns a wrapped *bt.Tx for marshalling/unmarshalling into a node tx format.
+func (tx *Tx) NodeJSON() *nodeWrapper {
+	return &nodeWrapper{Tx: tx}
 }
 
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
