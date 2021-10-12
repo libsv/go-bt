@@ -41,7 +41,7 @@ func addressToPubKeyHashStr(address string) (string, error) {
 	decoded := base58.Decode(address)
 
 	if len(decoded) != 25 {
-		return "", fmt.Errorf("invalid address length for '%s'", address)
+		return "", fmt.Errorf("%w for '%s'", ErrInvalidAddressLength, address)
 	}
 
 	switch decoded[0] {
@@ -56,7 +56,7 @@ func addressToPubKeyHashStr(address string) (string, error) {
 	case hashTestNetP2SH: // Testnet script hash (P2SH address)
 		fallthrough
 	default:
-		return "", fmt.Errorf("address %s is not supported", address)
+		return "", fmt.Errorf("%w %s", ErrUnsupportedAddress, address)
 	}
 }
 

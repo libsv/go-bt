@@ -2,7 +2,6 @@ package bt_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	. "github.com/libsv/go-bk/wif"
@@ -375,7 +374,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			}(),
 			index: 1,
 			fees:  bt.NewFeeQuote(),
-			err:   errors.New("index is greater than number of Inputs in transaction"),
+			err:   bt.ErrOutputNoExist,
 		},
 	}
 	for name, test := range tests {
@@ -383,7 +382,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 			err := test.tx.ChangeToExistingOutput(test.index, test.fees)
 			if test.err != nil {
 				assert.Error(t, err)
-				assert.Equal(t, test.err, err)
+				assert.EqualError(t, test.err, err.Error())
 				return
 			}
 			assert.Equal(t, test.expOutputTotal, test.tx.TotalOutputSatoshis())

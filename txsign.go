@@ -2,8 +2,6 @@ package bt
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
@@ -72,7 +70,7 @@ func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
 		return nil
 	}
 
-	return fmt.Errorf("no input at index %d", index)
+	return ErrInputNoExist
 }
 
 // SignAll is used to sign all inputs. It currently only supports the signing P2PKH.
@@ -90,7 +88,7 @@ func (tx *Tx) SignAll(ctx context.Context, sg SignerGetter) error {
 		// TODO: add support for other script types
 		stratFn, ok := signerStrats[in.PreviousTxScript.ScriptType()]
 		if !ok {
-			return errors.New("unsupported script type")
+			return ErrUnsupportedScript
 		}
 		s, err := sg.Signer(ctx, in.PreviousTxScript)
 		if err != nil {

@@ -3,17 +3,16 @@ package bt
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
-	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/pkg/errors"
 )
 
 // NewOutputFromBytes returns a transaction Output from the bytes provided
 func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	if len(bytes) < 8 {
-		return nil, 0, fmt.Errorf("output length too short < 8")
+		return nil, 0, errors.Wrapf(ErrOutputTooShort, "%d < 8", len(bytes))
 	}
 
 	offset := 8
@@ -23,7 +22,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	totalLength := offset + int(l)
 
 	if len(bytes) < totalLength {
-		return nil, 0, fmt.Errorf("output length too short < 8 + script")
+		return nil, 0, errors.Wrapf(ErrOutputTooShort, "%d < 8 + script", len(bytes))
 	}
 
 	s := bscript.Script(bytes[offset:totalLength])
@@ -101,7 +100,7 @@ func (tx *Tx) AddP2PKHOutputFromAddress(addr string, satoshis uint64) error {
 // AddP2PKHOutputFromScript makes an output to a P2PKH script paid to the provided locking script with a value.
 func (tx *Tx) AddP2PKHOutputFromScript(script *bscript.Script, satoshis uint64) error {
 	if !script.IsP2PKH() {
-		return errors.New("script is not a valid P2PKH script")
+		return errors.Wrapf(ErrInvalidScriptType, "'%s' is not a valid P2PKH script", script.ScriptType())
 	}
 	tx.AddOutput(&Output{
 		Satoshis:      satoshis,
