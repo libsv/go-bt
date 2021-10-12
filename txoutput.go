@@ -11,8 +11,8 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// NewOutputFromBytes returns a transaction Output from the bytes provided
-func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
+// newOutputFromBytes returns a transaction Output from the bytes provided
+func newOutputFromBytes(bytes []byte) (*Output, int, error) {
 	if len(bytes) < 8 {
 		return nil, 0, fmt.Errorf("output length too short < 8")
 	}

@@ -174,7 +174,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	var err error
 	var input *Input
 	for ; i < inputCount; i++ {
-		input, size, err = NewInputFromBytes(b[offset:])
+		input, size, err = newInputFromBytes(b[offset:])
 		if err != nil {
 			return nil, 0, err
 		}
@@ -188,7 +188,7 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	outputCount, size = DecodeVarInt(b[offset:])
 	offset += size
 	for i = 0; i < outputCount; i++ {
-		output, size, err = NewOutputFromBytes(b[offset:])
+		output, size, err = newOutputFromBytes(b[offset:])
 		if err != nil {
 			return nil, 0, err
 		}

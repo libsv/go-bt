@@ -30,8 +30,8 @@ var (
 // It is expected that bt.ErrNoUTXO will be returned once the utxo source is depleted.
 type UTXOGetterFunc func(ctx context.Context, deficit uint64) ([]*UTXO, error)
 
-// NewInputFromBytes returns a transaction input from the bytes provided.
-func NewInputFromBytes(bytes []byte) (*Input, int, error) {
+// newInputFromBytes returns a transaction input from the bytes provided.
+func newInputFromBytes(bytes []byte) (*Input, int, error) {
 	if len(bytes) < 36 {
 		return nil, 0, fmt.Errorf("input length too short < 36")
 	}
