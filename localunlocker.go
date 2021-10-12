@@ -10,7 +10,7 @@ import (
 )
 
 // LocalSignatureUnlockerGetter implements the UnlockerGetter interface. It unlocks a Tx locally,
-// using a bkec PrivateKey.
+// using a bec PrivateKey.
 type LocalSignatureUnlockerGetter struct {
 	PrivateKey *bec.PrivateKey
 }
@@ -22,7 +22,7 @@ func (lg *LocalSignatureUnlockerGetter) Unlocker(ctx context.Context, lockingScr
 }
 
 // LocalSignatureUnlocker implements the unlocker interface. It is used to unlock a tx locally using a
-// bkec Private Key.
+// bec Private Key.
 type LocalSignatureUnlocker struct {
 	PrivateKey *bec.PrivateKey
 }
