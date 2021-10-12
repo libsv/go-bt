@@ -59,7 +59,7 @@ type txJSON struct {
 // MarshalJSON will serialise a transaction to json.
 func (tx *Tx) MarshalJSON() ([]byte, error) {
 	if tx == nil {
-		return nil, errors.Wrap(ErrTxNil, "cannot marshal")
+		return nil, errors.Wrap(ErrTxNil, "cannot marshal tx")
 	}
 	oo := make([]*outputJSON, 0, len(tx.Outputs))
 	for i, o := range tx.Outputs {

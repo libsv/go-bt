@@ -589,7 +589,7 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("'': unknown fee type"),
+			err: errors.New("unknown fee type ''"),
 		}, "random key should error": {
 			quote: &FeeQuote{
 				fees: map[FeeType]*Fee{
@@ -605,7 +605,7 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 					},
 				},
 			},
-			err: errors.New("'randomKey': unknown fee type"),
+			err: errors.New("unknown fee type 'randomKey'"),
 		},
 	}
 	for name, test := range tests {

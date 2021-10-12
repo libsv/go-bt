@@ -3,8 +3,7 @@ package bscript
 import (
 	"encoding/binary"
 	"encoding/hex"
-
-	"github.com/pkg/errors"
+	"fmt"
 )
 
 // EncodeParts takes an array of byte slices and returns a single byte
@@ -20,7 +19,7 @@ func EncodeParts(parts [][]byte) ([]byte, error) {
 	for i, part := range parts {
 		pd, err := PushDataPrefix(part)
 		if err != nil {
-			return nil, errors.Wrapf(ErrPartTooBig, "part %d", i)
+			return nil, fmt.Errorf("%w '%d'", ErrPartTooBig, i)
 		}
 
 		b = append(b, pd...)

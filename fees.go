@@ -2,10 +2,9 @@ package bt
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // FeeType is used to specify which
@@ -256,7 +255,7 @@ func (f *FeeQuote) UnmarshalJSON(body []byte) error {
 	}
 	for k, v := range fees {
 		if k != FeeTypeData && k != FeeTypeStandard {
-			return errors.Wrapf(ErrUnknownFeeType, "'%s'", k)
+			return fmt.Errorf("%w '%s'", ErrUnknownFeeType, k)
 		}
 		v.FeeType = k
 	}

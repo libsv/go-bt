@@ -6,7 +6,7 @@ import "github.com/pkg/errors"
 var (
 	ErrDataTooBig   = errors.New("data too big")
 	ErrDataTooSmall = errors.New("not enough data")
-	ErrPartTooBig   = errors.New("part is too big")
+	ErrPartTooBig   = errors.New("part too big")
 )
 
 // Sentinel errors raised by addresses.

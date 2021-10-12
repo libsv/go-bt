@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
 	"github.com/pkg/errors"
@@ -24,7 +25,7 @@ type UTXOGetterFunc func(ctx context.Context, deficit uint64) ([]*UTXO, error)
 // NewInputFromBytes returns a transaction input from the bytes provided.
 func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 	if len(bytes) < 36 {
-		return nil, 0, errors.Wrapf(ErrInputTooShort, "%d < 36", len(bytes))
+		return nil, 0, fmt.Errorf("%w < 36", ErrInputTooShort)
 	}
 
 	offset := 36
@@ -34,7 +35,7 @@ func NewInputFromBytes(bytes []byte) (*Input, int, error) {
 	totalLength := offset + int(l) + 4 // 4 bytes for nSeq
 
 	if len(bytes) < totalLength {
-		return nil, 0, errors.Wrapf(ErrInputTooShort, "%d < 36 + script + 4", len(bytes))
+		return nil, 0, fmt.Errorf("%w < 36 + script + 4", ErrInputTooShort)
 	}
 
 	return &Input{

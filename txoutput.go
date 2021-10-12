@@ -3,6 +3,7 @@ package bt
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2/bscript"
@@ -12,7 +13,7 @@ import (
 // NewOutputFromBytes returns a transaction Output from the bytes provided
 func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	if len(bytes) < 8 {
-		return nil, 0, errors.Wrapf(ErrOutputTooShort, "%d < 8", len(bytes))
+		return nil, 0, fmt.Errorf("%w < 8", ErrOutputTooShort)
 	}
 
 	offset := 8
@@ -22,7 +23,7 @@ func NewOutputFromBytes(bytes []byte) (*Output, int, error) {
 	totalLength := offset + int(l)
 
 	if len(bytes) < totalLength {
-		return nil, 0, errors.Wrapf(ErrOutputTooShort, "%d < 8 + script", len(bytes))
+		return nil, 0, fmt.Errorf("%w < 8 + script", ErrInputTooShort)
 	}
 
 	s := bscript.Script(bytes[offset:totalLength])
