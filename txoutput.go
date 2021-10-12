@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/libsv/go-bk/bip32"
 	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2/bscript"
 )
@@ -108,6 +109,21 @@ func (tx *Tx) AddP2PKHOutputFromScript(script *bscript.Script, satoshis uint64) 
 		LockingScript: script,
 	})
 	return nil
+}
+
+// AddP2PKHOutputFromBip32ExtKey generated a random P2PKH output script from a provided *bip32.ExtendedKey,
+// and add it to the receiving tx. The derviation path used is returned.
+func (tx *Tx) AddP2PKHOutputFromBip32ExtKey(privKey *bip32.ExtendedKey, satoshis uint64) (string, error) {
+	script, derivationPath, err := bscript.NewP2PKHFromBip32ExtKey(privKey)
+	if err != nil {
+		return "", err
+	}
+
+	tx.AddOutput(&Output{
+		LockingScript: script,
+		Satoshis:      satoshis,
+	})
+	return derivationPath, nil
 }
 
 // AddHashPuzzleOutput makes an output to a hash puzzle + PKH with a value.
