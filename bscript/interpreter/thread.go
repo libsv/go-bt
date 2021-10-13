@@ -22,6 +22,8 @@ type thread struct {
 
 	cfg config
 
+	debug *Debugger
+
 	scripts         []ParsedScript
 	condStack       []int
 	savedFirstStack [][]byte // stack from first script for bip16 scripts
@@ -49,7 +51,8 @@ func createThread(opts *execOpts) (*thread, error) {
 		scriptParser: &DefaultOpcodeParser{
 			ErrorOnCheckSig: opts.Tx == nil || opts.PreviousTxOut == nil,
 		},
-		cfg: &beforeGenesisConfig{},
+		debug: NewDebugger(),
+		cfg:   &beforeGenesisConfig{},
 	}
 
 	if err := th.apply(opts); err != nil {
@@ -73,6 +76,7 @@ type execOpts struct {
 	Tx              *bt.Tx
 	InputIdx        int
 	Flags           scriptflag.Flag
+	Debugger        *Debugger
 }
 
 func (o execOpts) validate() error {
@@ -233,6 +237,9 @@ func (t *thread) CheckErrorCondition(finalScript bool) error {
 		return errs.NewError(errs.ErrEvalFalse, "false stack entry at end of script execution")
 	}
 
+	if finalScript {
+		t.debug.afterSuccess()
+	}
 	return nil
 }
 
@@ -249,8 +256,8 @@ func (t *thread) Step() (bool, error) {
 	}
 
 	opcode := t.scripts[t.scriptIdx][t.scriptOff]
-	t.scriptOff++
 
+	t.debug.beforeStep()
 	// Execute the opcode while taking into account several things such as
 	// disabled opcodes, illegal opcodes, maximum allowed operations per
 	// script, maximum script element sizes, and conditionals.
@@ -262,6 +269,9 @@ func (t *thread) Step() (bool, error) {
 		}
 		return true, err
 	}
+	t.debug.afterStep()
+
+	t.scriptOff++
 
 	// The number of elements in the combination of the data and alt stacks
 	// must not exceed the maximum number of stack elements allowed.
@@ -331,6 +341,13 @@ func (t *thread) apply(opts *execOpts) error {
 		return err
 	}
 
+	if opts.Debugger != nil {
+		t.debug = opts.Debugger
+		t.debug.attach(t)
+	}
+	t.dstack.debug = t.debug
+	t.astack.debug = t.debug
+
 	if opts.UnlockingScript == nil {
 		opts.UnlockingScript = opts.Tx.Inputs[opts.InputIdx].UnlockingScript
 	}
@@ -357,7 +374,7 @@ func (t *thread) apply(opts *execOpts) error {
 
 	t.elseStack = &nopBoolStack{}
 	if t.hasFlag(scriptflag.UTXOAfterGenesis) {
-		t.elseStack = &stack{}
+		t.elseStack = &stack{debug: NewDebugger()}
 		t.afterGenesis = true
 		t.cfg = &afterGenesisConfig{}
 	}
@@ -443,14 +460,20 @@ func (t *thread) apply(opts *execOpts) error {
 }
 
 func (t *thread) execute() error {
-	for {
-		done, err := t.Step()
-		if err != nil {
-			return err
+	if err := func() error {
+		defer t.debug.afterExecution()
+		for {
+			done, err := t.Step()
+			if err != nil {
+				return err
+			}
+
+			if done {
+				return nil
+			}
 		}
-		if done {
-			break
-		}
+	}(); err != nil {
+		return err
 	}
 
 	return t.CheckErrorCondition(true)
@@ -748,4 +771,39 @@ func (t *thread) shiftScript() {
 	t.scriptOff = 0
 	t.scriptIdx++
 	t.earlyReturnAfterGenesis = false
+}
+
+func (t *thread) state() *ThreadState {
+	scriptIdx := t.scriptIdx
+	offsetIdx := t.scriptOff
+	if scriptIdx >= len(t.scripts) {
+		scriptIdx = len(t.scripts) - 1
+		offsetIdx = len(t.scripts[scriptIdx]) - 1
+	}
+
+	if offsetIdx >= len(t.scripts[scriptIdx]) {
+		offsetIdx = len(t.scripts[scriptIdx]) - 1
+	}
+	ts := ThreadState{
+		DStack:        make([][]byte, int(t.dstack.Depth())),
+		AStack:        make([][]byte, int(t.astack.Depth())),
+		CurrentOpcode: t.scripts[scriptIdx][offsetIdx],
+		Scripts:       make([]ParsedScript, len(t.scripts)),
+	}
+	for i, dd := range t.dstack.stk {
+		ts.DStack[i] = make([]byte, len(dd))
+		copy(ts.DStack[i], dd)
+	}
+
+	for i, aa := range t.astack.stk {
+		ts.AStack[i] = make([]byte, len(aa))
+		copy(ts.AStack[i], aa)
+	}
+
+	for i, script := range t.scripts {
+		ts.Scripts[i] = make(ParsedScript, len(script))
+		copy(ts.Scripts[i], script)
+	}
+
+	return &ts
 }

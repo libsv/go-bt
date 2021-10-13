@@ -53,3 +53,11 @@ func WithFlags(flags scriptflag.Flag) ExecutionOptionFunc {
 		p.Flags.AddFlag(flags)
 	}
 }
+
+// WithDebugger enable debuggin on the current execution with the provided
+// configured debugger.
+func WithDebugger(debugger *Debugger) ExecutionOptionFunc {
+	return func(p *execOpts) {
+		p.Debugger = debugger
+	}
+}

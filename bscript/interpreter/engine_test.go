@@ -58,6 +58,7 @@ func TestBadPC(t *testing.T) {
 		vm := &thread{
 			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
+			debug:        NewDebugger(),
 		}
 		err := vm.apply(&execOpts{
 			PreviousTxOut: txOut,
@@ -114,6 +115,7 @@ func TestCheckErrorCondition(t *testing.T) {
 	vm := &thread{
 		scriptParser: &DefaultOpcodeParser{},
 		cfg:          &beforeGenesisConfig{},
+		debug:        NewDebugger(),
 	}
 
 	err = vm.apply(&execOpts{
@@ -434,6 +436,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 		vm := &thread{
 			scriptParser: &DefaultOpcodeParser{},
 			cfg:          &beforeGenesisConfig{},
+			debug:        NewDebugger(),
 		}
 		err := vm.apply(&execOpts{
 			Tx:            tx,

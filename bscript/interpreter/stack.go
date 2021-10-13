@@ -39,6 +39,7 @@ func fromBool(v bool) []byte {
 type stack struct {
 	stk               [][]byte
 	verifyMinimalData bool
+	debug             *Debugger
 }
 
 // Depth returns the number of items on the stack.
@@ -50,6 +51,8 @@ func (s *stack) Depth() int32 {
 //
 // Stack transformation: [... x1 x2] -> [... x1 x2 data]
 func (s *stack) PushByteArray(so []byte) {
+	defer s.debug.afterStackPush(so)
+	s.debug.beforeStackPush(so)
 	s.stk = append(s.stk, so)
 }
 
@@ -73,7 +76,13 @@ func (s *stack) PushBool(val bool) {
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x2]
 func (s *stack) PopByteArray() ([]byte, error) {
-	return s.nipN(0)
+	s.debug.beforeStackPop()
+	data, err := s.nipN(0)
+	if err != nil {
+		return nil, err
+	}
+	s.debug.afterStackPop(data)
+	return data, nil
 }
 
 // PopInt pops the value off the top of the stack, converts it into a script

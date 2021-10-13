@@ -52,5 +52,10 @@ func (e *engine) Execute(oo ...ExecutionOptionFunc) error {
 		return err
 	}
 
-	return th.execute()
+	if err := th.execute(); err != nil {
+		th.debug.afterError(err)
+		return err
+	}
+
+	return nil
 }
