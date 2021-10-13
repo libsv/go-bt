@@ -29,7 +29,7 @@ func (n *noopThreadState) state() *ThreadState {
 
 // Debugger for debugging execution.
 type Debugger struct {
-	tsg threadState
+	ts threadState
 
 	beforeExecuteOpcodeFns []DebugThreadStateFunc
 	afterExecuteOpcodefns  []DebugThreadStateFunc
@@ -58,7 +58,7 @@ type Debugger struct {
 //  engine.Execute(interpreter.WithDebugger(debugger))
 func NewDebugger() *Debugger {
 	return &Debugger{
-		tsg:                    &noopThreadState{},
+		ts:                     &noopThreadState{},
 		beforeExecuteOpcodeFns: make([]DebugThreadStateFunc, 0),
 		afterExecuteOpcodefns:  make([]DebugThreadStateFunc, 0),
 		afterExecutionFns:      make([]DebugThreadStateFunc, 0),
@@ -71,8 +71,8 @@ func NewDebugger() *Debugger {
 	}
 }
 
-func (d *Debugger) attach(t *thread) {
-	d.tsg = t
+func (d *Debugger) attach(t threadState) {
+	d.ts = t
 }
 
 // AttachBeforeExecuteOpcode attach the provided function to be executed before
@@ -149,63 +149,63 @@ func (d *Debugger) AttachAfterStackPop(fn DebugStackFunc) {
 }
 
 func (d *Debugger) beforeExecuteOpcode() {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.beforeExecuteOpcodeFns {
 		fn(state)
 	}
 }
 
 func (d *Debugger) afterExecuteOpcode() {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.afterExecuteOpcodefns {
 		fn(state)
 	}
 }
 
 func (d *Debugger) afterExecution() {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.afterExecutionFns {
 		fn(state)
 	}
 }
 
 func (d *Debugger) afterSuccess() {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.afterSuccessFns {
 		fn(state)
 	}
 }
 
 func (d *Debugger) afterError(err error) {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.afterErrorFns {
 		fn(state, err)
 	}
 }
 
 func (d *Debugger) beforeStackPush(data []byte) {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.beforeStackPushFns {
 		fn(state, data)
 	}
 }
 
 func (d *Debugger) afterStackPush(data []byte) {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.afterStackPushFns {
 		fn(state, data)
 	}
 }
 
 func (d *Debugger) beforeStackPop() {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.beforeStackPopFns {
 		fn(state)
 	}
 }
 
 func (d *Debugger) afterStackPop(data []byte) {
-	state := d.tsg.state()
+	state := d.ts.state()
 	for _, fn := range d.afterStackPopFns {
 		fn(state, data)
 	}
