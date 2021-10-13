@@ -257,7 +257,7 @@ func (t *thread) Step() (bool, error) {
 
 	opcode := t.scripts[t.scriptIdx][t.scriptOff]
 
-	t.debug.beforeStep()
+	t.debug.beforeExecuteOpcode()
 	// Execute the opcode while taking into account several things such as
 	// disabled opcodes, illegal opcodes, maximum allowed operations per
 	// script, maximum script element sizes, and conditionals.
@@ -269,7 +269,7 @@ func (t *thread) Step() (bool, error) {
 		}
 		return true, err
 	}
-	t.debug.afterStep()
+	t.debug.afterExecuteOpcode()
 
 	t.scriptOff++
 

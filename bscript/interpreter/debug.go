@@ -31,8 +31,8 @@ func (n *noopThreadState) state() *ThreadState {
 type Debugger struct {
 	tsg threadState
 
-	beforeStepFns []DebugThreadStateFunc
-	afterStepFns  []DebugThreadStateFunc
+	beforeExecuteOpcodeFns []DebugThreadStateFunc
+	afterExecuteOpcodefns  []DebugThreadStateFunc
 
 	afterExecutionFns []DebugThreadStateFunc
 	afterSuccessFns   []DebugThreadStateFunc
@@ -49,7 +49,7 @@ type Debugger struct {
 // functions.
 // Example usage:
 //  debugger := interpreter.NewDebugger()
-//  debugger.AttachBeforeStep(func (state *interpreter.ThreadState) {
+//  debugger.AttachBeforeExecuteOpcode(func (state *interpreter.ThreadState) {
 //      fmt.Println(state.DStack)
 //  })
 //  debugger.AttachAfterStackPush(func (state *interpreter.ThreadState, data []byte) {
@@ -58,16 +58,16 @@ type Debugger struct {
 //  engine.Execute(interpreter.WithDebugger(debugger))
 func NewDebugger() *Debugger {
 	return &Debugger{
-		tsg:                &noopThreadState{},
-		beforeStepFns:      make([]DebugThreadStateFunc, 0),
-		afterStepFns:       make([]DebugThreadStateFunc, 0),
-		afterExecutionFns:  make([]DebugThreadStateFunc, 0),
-		afterSuccessFns:    make([]DebugThreadStateFunc, 0),
-		afterErrorFns:      make([]DebugExecutionErrorFunc, 0),
-		beforeStackPushFns: make([]DebugStackFunc, 0),
-		afterStackPushFns:  make([]DebugStackFunc, 0),
-		beforeStackPopFns:  make([]DebugThreadStateFunc, 0),
-		afterStackPopFns:   make([]DebugStackFunc, 0),
+		tsg:                    &noopThreadState{},
+		beforeExecuteOpcodeFns: make([]DebugThreadStateFunc, 0),
+		afterExecuteOpcodefns:  make([]DebugThreadStateFunc, 0),
+		afterExecutionFns:      make([]DebugThreadStateFunc, 0),
+		afterSuccessFns:        make([]DebugThreadStateFunc, 0),
+		afterErrorFns:          make([]DebugExecutionErrorFunc, 0),
+		beforeStackPushFns:     make([]DebugStackFunc, 0),
+		afterStackPushFns:      make([]DebugStackFunc, 0),
+		beforeStackPopFns:      make([]DebugThreadStateFunc, 0),
+		afterStackPopFns:       make([]DebugStackFunc, 0),
 	}
 }
 
@@ -75,20 +75,20 @@ func (d *Debugger) attach(t *thread) {
 	d.tsg = t
 }
 
-// AttachBeforeStep attach the provided function to be executed before
+// AttachBeforeExecuteOpcode attach the provided function to be executed before
 // an opcodes execution.
 // If this is called multiple times, provided funcs are executed on a
 // FIFO basis.
-func (d *Debugger) AttachBeforeStep(fn DebugThreadStateFunc) {
-	d.beforeStepFns = append(d.beforeStepFns, fn)
+func (d *Debugger) AttachBeforeExecuteOpcode(fn DebugThreadStateFunc) {
+	d.beforeExecuteOpcodeFns = append(d.beforeExecuteOpcodeFns, fn)
 }
 
-// AttachAfterStep attach the provided function to be executed after
+// AttachAfterExecuteOpcode attach the provided function to be executed after
 // an opcodes execution.
 // If this is called multiple times, provided funcs are executed on a
 // FIFO basis.
-func (d *Debugger) AttachAfterStep(fn DebugThreadStateFunc) {
-	d.afterStepFns = append(d.afterStepFns, fn)
+func (d *Debugger) AttachAfterExecuteOpcode(fn DebugThreadStateFunc) {
+	d.afterExecuteOpcodefns = append(d.afterExecuteOpcodefns, fn)
 }
 
 // AttachAfterExecution attach the provided function to be executed after
@@ -148,16 +148,16 @@ func (d *Debugger) AttachAfterStackPop(fn DebugStackFunc) {
 	d.afterStackPopFns = append(d.afterStackPopFns, fn)
 }
 
-func (d *Debugger) beforeStep() {
+func (d *Debugger) beforeExecuteOpcode() {
 	state := d.tsg.state()
-	for _, fn := range d.beforeStepFns {
+	for _, fn := range d.beforeExecuteOpcodeFns {
 		fn(state)
 	}
 }
 
-func (d *Debugger) afterStep() {
+func (d *Debugger) afterExecuteOpcode() {
 	state := d.tsg.state()
-	for _, fn := range d.afterStepFns {
+	for _, fn := range d.afterExecuteOpcodefns {
 		fn(state)
 	}
 }

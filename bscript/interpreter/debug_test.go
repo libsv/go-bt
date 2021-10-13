@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDebugger_BeforeStep(t *testing.T) {
+func TestDebugger_BeforeExecuteOpcode(t *testing.T) {
 	t.Parallel()
 
 	type stateHistory struct {
@@ -89,7 +89,7 @@ func TestDebugger_BeforeStep(t *testing.T) {
 			}
 
 			debugger := interpreter.NewDebugger()
-			debugger.AttachBeforeStep(func(state *interpreter.ThreadState) {
+			debugger.AttachBeforeExecuteOpcode(func(state *interpreter.ThreadState) {
 				stack := make([]string, len(state.DStack))
 				for i, d := range state.DStack {
 					stack[i] = hex.EncodeToString(d)
@@ -110,7 +110,7 @@ func TestDebugger_BeforeStep(t *testing.T) {
 	}
 }
 
-func TestDebugger_AfterStep(t *testing.T) {
+func TestDebugger_AfterExecuteOpcode(t *testing.T) {
 	t.Parallel()
 
 	type stateHistory struct {
@@ -189,7 +189,7 @@ func TestDebugger_AfterStep(t *testing.T) {
 			}
 
 			debugger := interpreter.NewDebugger()
-			debugger.AttachAfterStep(func(state *interpreter.ThreadState) {
+			debugger.AttachAfterExecuteOpcode(func(state *interpreter.ThreadState) {
 				stack := make([]string, len(state.DStack))
 				for i, d := range state.DStack {
 					stack[i] = hex.EncodeToString(d)
