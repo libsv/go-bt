@@ -54,11 +54,9 @@ func WithFlags(flags scriptflag.Flag) ExecutionOptionFunc {
 	}
 }
 
-// WithDebugger enable debuggin on the current execution with the provided
-// configured debugger.
+// WithDebugger enable execution debugging with the provided configured debugger.
 // It is important to note that when this setting is applied, it enables thread
-// state cloning, at every debuggable step. Therefore, it is recommended to not
-// use the debugging feature in production/performance oriented code.
+// state cloning, at every configured debug step.
 func WithDebugger(debugger *Debugger) ExecutionOptionFunc {
 	return func(p *execOpts) {
 		p.Debugger = debugger
