@@ -751,7 +751,7 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 				"OP_MUL", "OP_MUL", "OP_EQUALVERIFY", "OP_EQUALVERIFY", "OP_EQUALVERIFY",
 				"OP_ADD", "OP_ADD", "OP_EQUAL", "OP_EQUAL", "OP_EQUAL",
 			},
-			expPopData: []string{"03", "02", "06", "06", "02", "02", "04", "04", "01"},
+			expPopData: []string{"03", "02", "06", "06", "01", "02", "02", "04", "04", "01"},
 		},
 		"complex script": {
 			lockingScriptHex:   "76a97ca8a687",
@@ -765,6 +765,7 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 				{},
 			},
 			expOpcodes: []string{"OP_HASH160", "OP_SHA256", "OP_RIPEMD160", "OP_EQUAL", "OP_EQUAL", "OP_EQUAL"},
+			expPopData: []string{"", "", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "b472a266d0bd89c13706a4132ccfb16f7c3b9fcb", "01"},
 		},
 		"error script": {
 			lockingScriptHex:   "5253958852529387",
@@ -777,6 +778,7 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 				{"04"},
 			},
 			expOpcodes: []string{"OP_MUL", "OP_MUL", "OP_EQUALVERIFY", "OP_EQUALVERIFY", "OP_EQUALVERIFY"},
+			expPopData: []string{"03", "02", "06", "07", ""},
 		},
 	}
 
@@ -814,6 +816,7 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 
 			assert.Equal(t, test.expStackHistory, history.dstack)
 			assert.Equal(t, test.expOpcodes, history.opcodes)
+			assert.Equal(t, test.expPopData, history.entries)
 		})
 	}
 }

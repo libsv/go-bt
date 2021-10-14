@@ -8,14 +8,16 @@ type ThreadState struct {
 	Scripts       []ParsedScript
 }
 
-// DebugThreadStateFunc debug handler for a threads state.
-type DebugThreadStateFunc func(state *ThreadState)
+type (
+	// DebugThreadStateFunc debug handler for a threads state.
+	DebugThreadStateFunc func(state *ThreadState)
 
-// DebugStackFunc debug handler for stack operations.
-type DebugStackFunc func(state *ThreadState, data []byte)
+	// DebugStackFunc debug handler for stack operations.
+	DebugStackFunc func(state *ThreadState, data []byte)
 
-// DebugExecutionErrorFunc debug handler for execution failure.
-type DebugExecutionErrorFunc func(state *ThreadState, err error)
+	// DebugExecutionErrorFunc debug handler for execution failure.
+	DebugExecutionErrorFunc func(state *ThreadState, err error)
+)
 
 type threadState interface {
 	state() *ThreadState
@@ -45,8 +47,9 @@ type Debugger struct {
 	afterStackPopFns  []DebugStackFunc
 }
 
-// NewDebugger returns an empty debugger, to be configured with `Attach`
+// NewDebugger returns an empty debugger which is to be configured with the `Attach`
 // functions.
+//
 // Example usage:
 //  debugger := interpreter.NewDebugger()
 //  debugger.AttachBeforeExecuteOpcode(func (state *interpreter.ThreadState) {
