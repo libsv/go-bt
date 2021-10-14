@@ -793,6 +793,11 @@ func (t *thread) state() *ThreadState {
 		OpcodeIdx: offsetIdx,
 	}
 
+	for i, dd := range t.dstack.stk {
+		ts.DStack[i] = make([]byte, len(dd))
+		copy(ts.DStack[i], dd)
+	}
+
 	for i, aa := range t.astack.stk {
 		ts.AStack[i] = make([]byte, len(aa))
 		copy(ts.AStack[i], aa)
