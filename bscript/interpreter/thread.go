@@ -148,7 +148,7 @@ func (t *thread) isBranchExecuting() bool {
 // executeOpcode performs execution on the passed opcode. It takes into account
 // whether it is hidden by conditionals, but some rules still must be
 // tested in this case.
-func (t *thread) executeOpcode(pop ParsedOp) error {
+func (t *thread) executeOpcode(pop ParsedOpcode) error {
 	if len(pop.Data) > t.cfg.MaxScriptElementSize() {
 		return errs.NewError(errs.ErrElementTooBig,
 			"element size %d exceeds max allowed size %d", len(pop.Data), t.cfg.MaxScriptElementSize())
@@ -167,7 +167,7 @@ func (t *thread) executeOpcode(pop ParsedOp) error {
 	}
 
 	// Note that this includes OP_RESERVED which counts as a push operation.
-	if pop.Op.val > bscript.Op16 {
+	if pop.op.val > bscript.Op16 {
 		t.numOps++
 		if t.numOps > t.cfg.MaxOps() {
 			return errs.NewError(errs.ErrTooManyOperations, "exceeded max operation limit of %d", t.cfg.MaxOps())
@@ -188,8 +188,8 @@ func (t *thread) executeOpcode(pop ParsedOp) error {
 
 	// Ensure all executed data push opcodes use the minimal encoding when
 	// the minimal data verification flag is set.
-	if t.dstack.verifyMinimalData && t.isBranchExecuting() && pop.Op.val <= bscript.OpPUSHDATA4 && exec {
-		if err := pop.EnforceMinimumDataPush(); err != nil {
+	if t.dstack.verifyMinimalData && t.isBranchExecuting() && pop.op.val <= bscript.OpPUSHDATA4 && exec {
+		if err := pop.enforceMinimumDataPush(); err != nil {
 			return err
 		}
 	}
@@ -200,7 +200,7 @@ func (t *thread) executeOpcode(pop ParsedOp) error {
 		return nil
 	}
 
-	return pop.Op.exec(&pop, t)
+	return pop.op.exec(&pop, t)
 }
 
 // validPC returns an error if the current script position is valid for
@@ -751,7 +751,7 @@ func setStack(stack *stack, data [][]byte) {
 
 // shouldExec returns true if the engine should execute the passed in operation,
 // based on its own internal state.
-func (t *thread) shouldExec(pop ParsedOp) bool {
+func (t *thread) shouldExec(pop ParsedOpcode) bool {
 	if !t.afterGenesis {
 		return true
 	}
@@ -763,7 +763,7 @@ func (t *thread) shouldExec(pop ParsedOp) bool {
 		}
 	}
 
-	return cf && (!t.earlyReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
+	return cf && (!t.earlyReturnAfterGenesis || pop.op.val == bscript.OpRETURN)
 }
 
 func (t *thread) shiftScript() {
@@ -785,14 +785,12 @@ func (t *thread) state() *ThreadState {
 		offsetIdx = len(t.scripts[scriptIdx]) - 1
 	}
 	ts := ThreadState{
-		DStack:        make([][]byte, int(t.dstack.Depth())),
-		AStack:        make([][]byte, int(t.astack.Depth())),
-		CurrentOpcode: t.scripts[scriptIdx][offsetIdx],
-		Scripts:       make([]ParsedScript, len(t.scripts)),
-	}
-	for i, dd := range t.dstack.stk {
-		ts.DStack[i] = make([]byte, len(dd))
-		copy(ts.DStack[i], dd)
+		DStack:    make([][]byte, int(t.dstack.Depth())),
+		AStack:    make([][]byte, int(t.astack.Depth())),
+		Opcode:    t.scripts[scriptIdx][offsetIdx],
+		Scripts:   make([]ParsedScript, len(t.scripts)),
+		ScriptIdx: scriptIdx,
+		OpcodeIdx: offsetIdx,
 	}
 
 	for i, aa := range t.astack.stk {

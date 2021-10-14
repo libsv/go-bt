@@ -95,7 +95,7 @@ func TestDebugger_BeforeExecuteOpcode(t *testing.T) {
 					stack[i] = hex.EncodeToString(d)
 				}
 				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.CurrentOpcode.Name())
+				history.opcodes = append(history.opcodes, state.Opcode.Name())
 			})
 
 			interpreter.NewEngine().Execute(
@@ -195,7 +195,7 @@ func TestDebugger_AfterExecuteOpcode(t *testing.T) {
 					stack[i] = hex.EncodeToString(d)
 				}
 				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.CurrentOpcode.Name())
+				history.opcodes = append(history.opcodes, state.Opcode.Name())
 			})
 
 			interpreter.NewEngine().Execute(
@@ -255,7 +255,7 @@ func TestDebugger_AfterExecution(t *testing.T) {
 				for _, d := range state.DStack {
 					stack = append(stack, hex.EncodeToString(d))
 				}
-				opcode = state.CurrentOpcode.Name()
+				opcode = state.Opcode.Name()
 			})
 
 			interpreter.NewEngine().Execute(
@@ -315,7 +315,7 @@ func TestDebugger_AfterError(t *testing.T) {
 				for _, d := range state.DStack {
 					stack = append(stack, hex.EncodeToString(d))
 				}
-				opcode = state.CurrentOpcode.Name()
+				opcode = state.Opcode.Name()
 			})
 
 			interpreter.NewEngine().Execute(
@@ -381,7 +381,7 @@ func TestDebugger_AfterSuccess(t *testing.T) {
 				for _, d := range state.DStack {
 					stack = append(stack, hex.EncodeToString(d))
 				}
-				opcode = state.CurrentOpcode.Name()
+				opcode = state.Opcode.Name()
 			})
 
 			interpreter.NewEngine().Execute(
@@ -491,7 +491,7 @@ func TestDebugger_BeforeStackPush(t *testing.T) {
 					stack[i] = hex.EncodeToString(d)
 				}
 				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.CurrentOpcode.Name())
+				history.opcodes = append(history.opcodes, state.Opcode.Name())
 				history.entries = append(history.entries, hex.EncodeToString(data))
 			})
 
@@ -600,7 +600,7 @@ func TestDebugger_AfterStackPush(t *testing.T) {
 					stack[i] = hex.EncodeToString(d)
 				}
 				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.CurrentOpcode.Name())
+				history.opcodes = append(history.opcodes, state.Opcode.Name())
 				history.entries = append(history.entries, hex.EncodeToString(data))
 			})
 
@@ -700,7 +700,7 @@ func TestDebugger_BeforeStackPop(t *testing.T) {
 					stack[i] = hex.EncodeToString(d)
 				}
 				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.CurrentOpcode.Name())
+				history.opcodes = append(history.opcodes, state.Opcode.Name())
 			})
 
 			interpreter.NewEngine().Execute(
@@ -804,7 +804,7 @@ func TestDebugger_AfterStackPop(t *testing.T) {
 					stack[i] = hex.EncodeToString(d)
 				}
 				history.dstack = append(history.dstack, stack)
-				history.opcodes = append(history.opcodes, state.CurrentOpcode.Name())
+				history.opcodes = append(history.opcodes, state.Opcode.Name())
 				history.entries = append(history.entries, hex.EncodeToString(data))
 			})
 

@@ -2,10 +2,12 @@ package interpreter
 
 // ThreadState a snapshot of a threads state during execution.
 type ThreadState struct {
-	DStack        [][]byte
-	AStack        [][]byte
-	CurrentOpcode ParsedOp
-	Scripts       []ParsedScript
+	DStack    [][]byte
+	AStack    [][]byte
+	Opcode    ParsedOpcode
+	Scripts   []ParsedScript
+	ScriptIdx int
+	OpcodeIdx int
 }
 
 type (
@@ -23,9 +25,9 @@ type threadState interface {
 	state() *ThreadState
 }
 
-type noopThreadState struct{}
+type nopThreadState struct{}
 
-func (n *noopThreadState) state() *ThreadState {
+func (n *nopThreadState) state() *ThreadState {
 	return &ThreadState{}
 }
 
@@ -34,7 +36,7 @@ type Debugger struct {
 	ts threadState
 
 	beforeExecuteOpcodeFns []DebugThreadStateFunc
-	afterExecuteOpcodefns  []DebugThreadStateFunc
+	afterExecuteOpcodeFns  []DebugThreadStateFunc
 
 	afterExecutionFns []DebugThreadStateFunc
 	afterSuccessFns   []DebugThreadStateFunc
@@ -61,9 +63,9 @@ type Debugger struct {
 //  engine.Execute(interpreter.WithDebugger(debugger))
 func NewDebugger() *Debugger {
 	return &Debugger{
-		ts:                     &noopThreadState{},
+		ts:                     &nopThreadState{},
 		beforeExecuteOpcodeFns: make([]DebugThreadStateFunc, 0),
-		afterExecuteOpcodefns:  make([]DebugThreadStateFunc, 0),
+		afterExecuteOpcodeFns:  make([]DebugThreadStateFunc, 0),
 		afterExecutionFns:      make([]DebugThreadStateFunc, 0),
 		afterSuccessFns:        make([]DebugThreadStateFunc, 0),
 		afterErrorFns:          make([]DebugExecutionErrorFunc, 0),
@@ -91,7 +93,7 @@ func (d *Debugger) AttachBeforeExecuteOpcode(fn DebugThreadStateFunc) {
 // If this is called multiple times, provided funcs are executed on a
 // FIFO basis.
 func (d *Debugger) AttachAfterExecuteOpcode(fn DebugThreadStateFunc) {
-	d.afterExecuteOpcodefns = append(d.afterExecuteOpcodefns, fn)
+	d.afterExecuteOpcodeFns = append(d.afterExecuteOpcodeFns, fn)
 }
 
 // AttachAfterExecution attach the provided function to be executed after
@@ -152,6 +154,10 @@ func (d *Debugger) AttachAfterStackPop(fn DebugStackFunc) {
 }
 
 func (d *Debugger) beforeExecuteOpcode() {
+	if len(d.beforeExecuteOpcodeFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
 	for _, fn := range d.beforeExecuteOpcodeFns {
 		fn(state)
@@ -159,13 +165,21 @@ func (d *Debugger) beforeExecuteOpcode() {
 }
 
 func (d *Debugger) afterExecuteOpcode() {
+	if len(d.afterExecuteOpcodeFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
-	for _, fn := range d.afterExecuteOpcodefns {
+	for _, fn := range d.afterExecuteOpcodeFns {
 		fn(state)
 	}
 }
 
 func (d *Debugger) afterExecution() {
+	if len(d.afterExecutionFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
 	for _, fn := range d.afterExecutionFns {
 		fn(state)
@@ -173,6 +187,10 @@ func (d *Debugger) afterExecution() {
 }
 
 func (d *Debugger) afterSuccess() {
+	if len(d.afterSuccessFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
 	for _, fn := range d.afterSuccessFns {
 		fn(state)
@@ -180,6 +198,10 @@ func (d *Debugger) afterSuccess() {
 }
 
 func (d *Debugger) afterError(err error) {
+	if len(d.afterErrorFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
 	for _, fn := range d.afterErrorFns {
 		fn(state, err)
@@ -187,6 +209,10 @@ func (d *Debugger) afterError(err error) {
 }
 
 func (d *Debugger) beforeStackPush(data []byte) {
+	if len(d.beforeStackPushFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
 	for _, fn := range d.beforeStackPushFns {
 		fn(state, data)
@@ -194,6 +220,10 @@ func (d *Debugger) beforeStackPush(data []byte) {
 }
 
 func (d *Debugger) afterStackPush(data []byte) {
+	if len(d.afterStackPushFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
 	for _, fn := range d.afterStackPushFns {
 		fn(state, data)
@@ -201,6 +231,10 @@ func (d *Debugger) afterStackPush(data []byte) {
 }
 
 func (d *Debugger) beforeStackPop() {
+	if len(d.beforeStackPopFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
 	for _, fn := range d.beforeStackPopFns {
 		fn(state)
@@ -208,6 +242,10 @@ func (d *Debugger) beforeStackPop() {
 }
 
 func (d *Debugger) afterStackPop(data []byte) {
+	if len(d.afterStackPopFns) == 0 {
+		return
+	}
+
 	state := d.ts.state()
 	for _, fn := range d.afterStackPopFns {
 		fn(state, data)
