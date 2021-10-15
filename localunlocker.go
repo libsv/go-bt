@@ -9,21 +9,21 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
-// LocalSignatureUnlockerGetter implements the UnlockerGetter interface. It unlocks a Tx locally,
+// LocalUnlockerGetter implements the UnlockerGetter interface. It unlocks a Tx locally,
 // using a bec PrivateKey.
-type LocalSignatureUnlockerGetter struct {
+type LocalUnlockerGetter struct {
 	PrivateKey *bec.PrivateKey
 }
 
 // Unlocker builds a new *bt.LocalSignatureUnlocker with the same private key
 // as the calling *bt.LocalSignatureUnlockerGetter.
-func (lg *LocalSignatureUnlockerGetter) Unlocker(ctx context.Context, lockingScript *bscript.Script) (Unlocker, error) {
-	return &LocalSignatureUnlocker{PrivateKey: lg.PrivateKey}, nil
+func (lg *LocalUnlockerGetter) Unlocker(ctx context.Context, lockingScript *bscript.Script) (Unlocker, error) {
+	return &LocalUnlocker{PrivateKey: lg.PrivateKey}, nil
 }
 
-// LocalSignatureUnlocker implements the unlocker interface. It is used to unlock a tx locally using a
+// LocalUnlocker implements the unlocker interface. It is used to unlock a tx locally using a
 // bec Private Key.
-type LocalSignatureUnlocker struct {
+type LocalUnlocker struct {
 	PrivateKey *bec.PrivateKey
 }
 
@@ -33,7 +33,7 @@ type LocalSignatureUnlocker struct {
 // as well as the public key corresponding to the private key used. The produced
 // signature is deterministic (same message and same key yield the same signature) and
 // canonical in accordance with RFC6979 and BIP0062.
-func (lu *LocalSignatureUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32, shf sighash.Flag) error {
+func (lu *LocalUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32, shf sighash.Flag) error {
 	if shf == 0 {
 		shf = sighash.AllForkID
 	}

@@ -30,7 +30,7 @@ func TestLocalSignatureUnlocker_UnlockAll(t *testing.T) {
 	w, err = wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 	assert.NoError(t, err)
 
-	unlocker := bt.LocalSignatureUnlockerGetter{PrivateKey: w.PrivKey}
+	unlocker := bt.LocalUnlockerGetter{PrivateKey: w.PrivKey}
 	err = tx.UnlockAll(context.Background(), &unlocker)
 	assert.NoError(t, err)
 
@@ -93,7 +93,7 @@ func TestLocalSignatureUnlocker_ValidSignature(t *testing.T) {
 			w, err := wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 			assert.NoError(t, err)
 
-			unlocker := &bt.LocalSignatureUnlocker{PrivateKey: w.PrivKey}
+			unlocker := &bt.LocalUnlocker{PrivateKey: w.PrivKey}
 			assert.NoError(t, unlocker.Unlock(context.Background(), tx, 0, sighash.AllForkID))
 
 			parts, err := bscript.DecodeParts(*tx.Inputs[0].UnlockingScript)
