@@ -15,8 +15,8 @@ type LocalUnlockerGetter struct {
 	PrivateKey *bec.PrivateKey
 }
 
-// Unlocker builds a new *bt.LocalSignatureUnlocker with the same private key
-// as the calling *bt.LocalSignatureUnlockerGetter.
+// Unlocker builds a new *bt.LocalUnlocker with the same private key
+// as the calling *bt.LocalUnlockerGetter.
 func (lg *LocalUnlockerGetter) Unlocker(ctx context.Context, lockingScript *bscript.Script) (Unlocker, error) {
 	return &LocalUnlocker{PrivateKey: lg.PrivateKey}, nil
 }
@@ -27,7 +27,7 @@ type LocalUnlocker struct {
 	PrivateKey *bec.PrivateKey
 }
 
-// Unlock a transaction at a given input using the PrivateKey passed in through the LocalSignatureUnlocker
+// Unlock a transaction at a given input using the PrivateKey passed in through the LocalUnlocker
 // struct.
 // Unlock generates, applies, and returns an ECDSA signature for the provided hash digest using the private key
 // as well as the public key corresponding to the private key used. The produced

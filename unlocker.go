@@ -8,7 +8,7 @@ import (
 )
 
 // Unlocker interface to allow custom implementations of different unlocking mechanisms.
-// Implement the Unlocker function as shown in LocalSignatureUnlocker, for example.
+// Implement the Unlocker function as shown in LocalUnlocker, for example.
 type Unlocker interface {
 	Unlock(ctx context.Context, tx *Tx, idx uint32, shf sighash.Flag) error
 }
