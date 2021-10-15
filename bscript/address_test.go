@@ -49,7 +49,7 @@ func TestNewAddressFromString(t *testing.T) {
 		addr, err := bscript.NewAddressFromString(unsupportedAddress)
 		assert.Error(t, err)
 		assert.Nil(t, addr)
-		assert.EqualError(t, err, "address "+unsupportedAddress+" is not supported")
+		assert.EqualError(t, err, "address not supported "+unsupportedAddress)
 	})
 
 }

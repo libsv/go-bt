@@ -3,9 +3,9 @@ package bt
 import (
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/pkg/errors"
 )
 
 type txJSON struct {
@@ -32,7 +32,7 @@ type outputJSON struct {
 // MarshalJSON will serialise a transaction to json.
 func (tx *Tx) MarshalJSON() ([]byte, error) {
 	if tx == nil {
-		return nil, errors.New("tx is nil so cannot be marshalled")
+		return nil, errors.Wrap(ErrTxNil, "cannot marshal tx")
 	}
 	return json.Marshal(txJSON{
 		TxID:     tx.TxID(),

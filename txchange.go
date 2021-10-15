@@ -1,8 +1,6 @@
 package bt
 
 import (
-	"errors"
-
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
@@ -38,7 +36,7 @@ func (tx *Tx) Change(s *bscript.Script, f *FeeQuote) error {
 // If an invalid index is supplied and error is returned.
 func (tx *Tx) ChangeToExistingOutput(index uint, f *FeeQuote) error {
 	if int(index) > tx.OutputCount()-1 {
-		return errors.New("index is greater than number of Inputs in transaction")
+		return ErrOutputNoExist
 	}
 	available, hasChange, err := tx.change(f, nil)
 	if err != nil {
@@ -61,13 +59,13 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 	inputAmount := tx.TotalInputSatoshis()
 	outputAmount := tx.TotalOutputSatoshis()
 	if inputAmount < outputAmount {
-		return 0, false, errors.New("satoshis inputted to the tx are less than the outputted satoshis")
+		return 0, false, ErrInsufficientInputs
 	}
 
 	available := inputAmount - outputAmount
 	standardFees, err := f.Fee(FeeTypeStandard)
 	if err != nil {
-		return 0, false, errors.New("standard fees not found")
+		return 0, false, err
 	}
 
 	var txFees *TxFees

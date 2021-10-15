@@ -5,20 +5,11 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"strings"
 
 	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bk/bip32"
 	"github.com/libsv/go-bk/crypto"
-)
-
-// Sentinel errors raised by the package.
-var (
-	ErrInvalidPKLen  = errors.New("invalid public key length")
-	ErrInvalidOpCode = errors.New("invalid opcode data")
-	ErrEmptyScript   = errors.New("script is empty")
-	ErrNotP2PKH      = errors.New("not a P2PKH")
 )
 
 // ScriptKey types.

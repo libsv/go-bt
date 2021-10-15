@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
-	"fmt"
 
 	"github.com/libsv/go-bk/crypto"
 
@@ -33,13 +31,6 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
                  timestamp when transaction is final
 --------------------------------------------------------
 */
-
-// Sentinel errors for transactions.
-var (
-
-	// ErrInvalidTxID is used for an invalid txID
-	ErrInvalidTxID = errors.New("invalid TxID")
-)
 
 // Tx wraps a bitcoin transaction
 //
@@ -77,7 +68,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 	}
 
 	if used != len(b) {
-		return nil, fmt.Errorf("nLockTime length must be 4 bytes long")
+		return nil, ErrNLockTimeLength
 	}
 
 	return tx, nil
@@ -88,7 +79,7 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 // many transactions one after another.
 func NewTxFromStream(b []byte) (*Tx, int, error) {
 	if len(b) < 10 {
-		return nil, 0, fmt.Errorf("too short to be a tx - even an empty tx has 10 bytes")
+		return nil, 0, ErrTxTooShort
 	}
 
 	var offset int
@@ -341,7 +332,7 @@ func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 
 	for _, in := range tempTx.Inputs {
 		if !in.PreviousTxScript.IsP2PKH() {
-			return nil, errors.New("non-P2PKH input used in the tx - unsupported")
+			return nil, ErrUnsupportedScript
 		}
 		if in.UnlockingScript == nil || len(*in.UnlockingScript) == 0 {
 			// nolint:lll // insert dummy p2pkh unlocking script (sig + pubkey)
