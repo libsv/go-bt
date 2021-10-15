@@ -17,6 +17,8 @@ const (
 	ScriptTypePubKey      = "pubkey"
 	ScriptTypePubKeyHash  = "pubkeyhash"
 	ScriptTypeNonStandard = "nonstandard"
+	ScriptTypeEmpty       = "empty"
+	ScriptTypeSecureHash  = "securehash"
 	ScriptTypeMultiSig    = "multisig"
 	ScriptTypeNullData    = "nulldata"
 )
@@ -340,7 +342,7 @@ func (s *Script) PublicKeyHash() ([]byte, error) {
 // ScriptType returns the type of script this is as a string.
 func (s *Script) ScriptType() string {
 	if len(*s) == 0 {
-		return ScriptTypeNonStandard
+		return ScriptTypeEmpty
 	}
 	if s.IsP2PKH() {
 		return ScriptTypePubKeyHash

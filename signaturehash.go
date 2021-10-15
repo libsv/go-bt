@@ -194,17 +194,15 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 		}
 	}
 
-	switch shf & sighash.Mask { // nolint:exhaustive // no need
-	case sighash.None:
+	if shf.HasWithMask(sighash.None) {
 		txCopy.Outputs = txCopy.Outputs[0:0]
 		for i := range txCopy.Inputs {
 			if i != int(inputNumber) {
 				txCopy.Inputs[i].SequenceNumber = 0
 			}
 		}
-	case sighash.Single:
+	} else if shf.HasWithMask(sighash.Single) {
 		txCopy.Outputs = txCopy.Outputs[:inputNumber+1]
-
 		for i := 0; i < int(inputNumber); i++ {
 			txCopy.Outputs[i].Satoshis = 18446744073709551615 // -1 but underflowed
 			txCopy.Outputs[i].LockingScript = &bscript.Script{}
@@ -215,8 +213,6 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 				txCopy.Inputs[i].SequenceNumber = 0
 			}
 		}
-	case sighash.Old, sighash.All:
-	default:
 	}
 
 	if shf&sighash.AnyOneCanPay != 0 {
