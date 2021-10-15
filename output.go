@@ -3,7 +3,6 @@ package bt
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/libsv/go-bt/v2/bscript"
@@ -25,124 +24,6 @@ Txout-script / scriptPubKey   Script                                      <out-s
 type Output struct {
 	Satoshis      uint64
 	LockingScript *bscript.Script
-}
-
-type outputJSON struct {
-	Value        float64 `json:"value"`
-	Satoshis     uint64  `json:"satoshis"`
-	Index        int     `json:"n"`
-	ScriptPubKey *struct {
-		Asm     string `json:"asm"`
-		Hex     string `json:"hex"`
-		ReqSigs int    `json:"reqSigs,omitempty"`
-		Type    string `json:"type"`
-	} `json:"scriptPubKey,omitempty"`
-	LockingScript *struct {
-		Asm     string `json:"asm"`
-		Hex     string `json:"hex"`
-		ReqSigs int    `json:"reqSigs,omitempty"`
-		Type    string `json:"type"`
-	} `json:"lockingScript,omitempty"`
-}
-
-func (o *outputJSON) toOutput() (*Output, error) {
-	out := &Output{}
-	script := o.LockingScript
-	if script == nil {
-		script = o.ScriptPubKey
-	}
-	s, err := bscript.NewFromHexString(script.Hex)
-	if err != nil {
-		return nil, err
-	}
-	if o.Satoshis > 0 {
-		out.Satoshis = o.Satoshis
-	} else {
-		out.Satoshis = uint64(o.Value * 100000000)
-	}
-	out.LockingScript = s
-	return out, nil
-}
-
-// MarshalJSON will serialise an output to json.
-func (o *Output) MarshalJSON() ([]byte, error) {
-	asm, err := o.LockingScript.ToASM()
-	if err != nil {
-		return nil, err
-	}
-	addresses, err := o.LockingScript.Addresses()
-	if err != nil {
-		return nil, err
-	}
-
-	output := &outputJSON{
-		Value:    float64(o.Satoshis) / 100000000,
-		Satoshis: o.Satoshis,
-		Index:    0,
-		LockingScript: &struct {
-			Asm     string `json:"asm"`
-			Hex     string `json:"hex"`
-			ReqSigs int    `json:"reqSigs,omitempty"`
-			Type    string `json:"type"`
-		}{
-			Asm:     asm,
-			Hex:     o.LockingScriptHexString(),
-			ReqSigs: len(addresses),
-			Type:    o.LockingScript.ScriptType(),
-		},
-	}
-	return json.Marshal(output)
-}
-
-func (o *Output) toJSON() (*outputJSON, error) {
-	asm, err := o.LockingScript.ToASM()
-	if err != nil {
-		return nil, err
-	}
-	addresses, err := o.LockingScript.Addresses()
-	if err != nil {
-		return nil, err
-	}
-
-	return &outputJSON{
-		Value:    float64(o.Satoshis) / 100000000,
-		Satoshis: o.Satoshis,
-		Index:    0,
-		LockingScript: &struct {
-			Asm     string `json:"asm"`
-			Hex     string `json:"hex"`
-			ReqSigs int    `json:"reqSigs,omitempty"`
-			Type    string `json:"type"`
-		}{
-			Asm:     asm,
-			Hex:     o.LockingScriptHexString(),
-			ReqSigs: len(addresses),
-			Type:    o.LockingScript.ScriptType(),
-		},
-	}, nil
-}
-
-// UnmarshalJSON will convert a json serialised output to a bt Output.
-func (o *Output) UnmarshalJSON(b []byte) error {
-	var oj outputJSON
-	if err := json.Unmarshal(b, &oj); err != nil {
-		return err
-	}
-	script := oj.LockingScript
-	if script == nil {
-		script = oj.ScriptPubKey
-	}
-	s, err := bscript.NewFromHexString(script.Hex)
-	if err != nil {
-		return err
-	}
-	if oj.Satoshis > 0 {
-		o.Satoshis = oj.Satoshis
-	} else {
-		o.Satoshis = uint64(oj.Value * 100000000)
-	}
-	o.LockingScript = s
-	return nil
 }
 
 // LockingScriptHexString returns the locking script

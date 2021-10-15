@@ -2,10 +2,13 @@ package bscript
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"strings"
 
 	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/bip32"
 	"github.com/libsv/go-bk/crypto"
 )
 
@@ -128,6 +131,28 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 		AppendOpCode(OpCHECKSIG)
 
 	return s, nil
+}
+
+// NewP2PKHFromBip32ExtKey takes a *bip32.ExtendedKey and creates a P2PKH script from it,
+// using an internally random generated seed, returning the script and derivation path used.
+func NewP2PKHFromBip32ExtKey(privKey *bip32.ExtendedKey) (*Script, string, error) {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return nil, "", err
+	}
+
+	derivationPath := bip32.DerivePath(binary.LittleEndian.Uint64(b[:]))
+	pubKey, err := privKey.DerivePublicKeyFromPath(derivationPath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	lockingScript, err := NewP2PKHFromPubKeyBytes(pubKey)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return lockingScript, derivationPath, nil
 }
 
 // AppendPushData takes data bytes and appends them to the script

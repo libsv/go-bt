@@ -1,11 +1,14 @@
 package bscript_test
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"strings"
 	"testing"
 
 	"github.com/libsv/go-bk/bec"
+	"github.com/libsv/go-bk/bip32"
+	"github.com/libsv/go-bk/chaincfg"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/libsv/go-bt/v2/bscript"
@@ -40,6 +43,38 @@ func TestNewP2PKHFromPubKey(t *testing.T) {
 		"76a9144d5d1920331b71735a97a606d9734aed83cb3dfa88ac",
 		hex.EncodeToString(*scriptP2PKH),
 	)
+}
+
+func TestNewP2PKHFromBip32ExtKey(t *testing.T) {
+	t.Parallel()
+
+	t.Run("output is added", func(t *testing.T) {
+		var b [64]byte
+		_, err := rand.Read(b[:])
+		assert.NoError(t, err)
+
+		key, err := bip32.NewMaster(b[:], &chaincfg.TestNet)
+		assert.NoError(t, err)
+
+		script, derivationPath, err := bscript.NewP2PKHFromBip32ExtKey(key)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, derivationPath)
+		assert.NotNil(t, script)
+		assert.True(t, script.IsP2PKH())
+	})
+
+	t.Run("invalid key errors", func(t *testing.T) {
+		var b [64]byte
+		_, err := rand.Read(b[:])
+		assert.NoError(t, err)
+
+		script, derivationPath, err := bscript.NewP2PKHFromBip32ExtKey(&bip32.ExtendedKey{})
+
+		assert.Error(t, err)
+		assert.Empty(t, derivationPath)
+		assert.Nil(t, script)
+	})
 }
 
 func TestNewFromHexString(t *testing.T) {

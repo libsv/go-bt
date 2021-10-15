@@ -1,6 +1,7 @@
 package bt_test
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/libsv/go-bk/bip32"
+	"github.com/libsv/go-bk/chaincfg"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
 )
@@ -221,4 +224,33 @@ func TestTx_PayTo(t *testing.T) {
 			assert.Equal(t, 0, tx.OutputCount())
 		})
 	}
+}
+
+func TestTx_AddP2PKHOutputFromBip32ExtKey(t *testing.T) {
+	t.Run("output is added", func(t *testing.T) {
+		tx := bt.NewTx()
+
+		var b [64]byte
+		_, err := rand.Read(b[:])
+		assert.NoError(t, err)
+
+		key, err := bip32.NewMaster(b[:], &chaincfg.TestNet)
+		assert.NoError(t, err)
+
+		derivationPath, err := tx.AddP2PKHOutputFromBip32ExtKey(key, 6000)
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, derivationPath)
+		assert.Equal(t, 1, len(tx.Outputs))
+		assert.Equal(t, uint64(6000), tx.Outputs[0].Satoshis)
+	})
+
+	t.Run("invalid private key errors", func(t *testing.T) {
+		tx := bt.NewTx()
+		derivationPath, err := tx.AddP2PKHOutputFromBip32ExtKey(&bip32.ExtendedKey{}, 6000)
+
+		assert.Error(t, err)
+		assert.Empty(t, derivationPath)
+		assert.Equal(t, 0, len(tx.Outputs))
+	})
 }
