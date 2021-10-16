@@ -3,7 +3,6 @@ package bscript
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 )
 
@@ -20,7 +19,7 @@ func EncodeParts(parts [][]byte) ([]byte, error) {
 	for i, part := range parts {
 		pd, err := PushDataPrefix(part)
 		if err != nil {
-			return nil, fmt.Errorf("part %d is too big", i)
+			return nil, fmt.Errorf("%w '%d'", ErrPartTooBig, i)
 		}
 
 		b = append(b, pd...)
@@ -61,7 +60,7 @@ func PushDataPrefix(data []byte) ([]byte, error) {
 		b = append(b, lenBuf...)
 
 	} else {
-		return nil, fmt.Errorf("data too big")
+		return nil, ErrDataTooBig
 	}
 
 	return b, nil
@@ -88,14 +87,14 @@ func DecodeParts(b []byte) ([][]byte, error) {
 		switch b[0] {
 		case OpPUSHDATA1:
 			if len(b) < 2 {
-				return r, errors.New("not enough data")
+				return r, ErrDataTooSmall
 			}
 
 			l := int(b[1])
 			b = b[2:]
 
 			if len(b) < l {
-				return r, errors.New("not enough data")
+				return r, ErrDataTooSmall
 			}
 
 			part := b[:l]
@@ -104,7 +103,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 
 		case OpPUSHDATA2:
 			if len(b) < 3 {
-				return r, errors.New("not enough data")
+				return r, ErrDataTooSmall
 			}
 
 			l := int(binary.LittleEndian.Uint16(b[1:]))
@@ -112,7 +111,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			b = b[3:]
 
 			if len(b) < l {
-				return r, errors.New("not enough data")
+				return r, ErrDataTooSmall
 			}
 
 			part := b[:l]
@@ -121,7 +120,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 
 		case OpPUSHDATA4:
 			if len(b) < 5 {
-				return r, errors.New("not enough data")
+				return r, ErrDataTooSmall
 			}
 
 			l := int(binary.LittleEndian.Uint32(b[1:]))
@@ -129,7 +128,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			b = b[5:]
 
 			if len(b) < l {
-				return r, errors.New("not enough data")
+				return r, ErrDataTooSmall
 			}
 
 			part := b[:l]
@@ -141,7 +140,7 @@ func DecodeParts(b []byte) ([][]byte, error) {
 			if b[0] >= 0x01 && b[0] <= OpPUSHDATA4 {
 				l := b[0]
 				if len(b) < int(1+l) {
-					return r, errors.New("not enough data")
+					return r, ErrDataTooSmall
 				}
 				part := b[1 : l+1]
 				r = append(r, part)

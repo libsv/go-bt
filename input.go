@@ -2,7 +2,6 @@ package bt
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/libsv/go-bt/v2/bscript"
@@ -34,70 +33,6 @@ type Input struct {
 	UnlockingScript    *bscript.Script
 	PreviousTxOutIndex uint32
 	SequenceNumber     uint32
-}
-
-// inputJSON is used to convert an input to and from json.
-// Script is duplicated as we have our own name for unlockingScript
-// but want to be compatible with node json also.
-type inputJSON struct {
-	UnlockingScript *struct {
-		Asm string `json:"asm"`
-		Hex string `json:"hex"`
-	} `json:"unlockingScript,omitempty"`
-	ScriptSig *struct {
-		Asm string `json:"asm"`
-		Hex string `json:"hex"`
-	} `json:"scriptSig,omitempty"`
-	TxID     string `json:"txid"`
-	Vout     uint32 `json:"vout"`
-	Sequence uint32 `json:"sequence"`
-}
-
-// MarshalJSON will convert an input to json, expanding upon the
-// input struct to add additional fields.
-func (i *Input) MarshalJSON() ([]byte, error) {
-	asm, err := i.UnlockingScript.ToASM()
-	if err != nil {
-		return nil, err
-	}
-	input := &inputJSON{
-		TxID: hex.EncodeToString(i.previousTxID),
-		Vout: i.PreviousTxOutIndex,
-		UnlockingScript: &struct {
-			Asm string `json:"asm"`
-			Hex string `json:"hex"`
-		}{
-			Asm: asm,
-			Hex: i.UnlockingScript.String(),
-		},
-		Sequence: i.SequenceNumber,
-	}
-	return json.Marshal(input)
-}
-
-// UnmarshalJSON will convert a JSON input to an input.
-func (i *Input) UnmarshalJSON(b []byte) error {
-	var ij inputJSON
-	if err := json.Unmarshal(b, &ij); err != nil {
-		return err
-	}
-	ptxID, err := hex.DecodeString(ij.TxID)
-	if err != nil {
-		return err
-	}
-	sig := ij.UnlockingScript
-	if sig == nil {
-		sig = ij.ScriptSig
-	}
-	s, err := bscript.NewFromHexString(sig.Hex)
-	if err != nil {
-		return err
-	}
-	i.UnlockingScript = s
-	i.previousTxID = ptxID
-	i.PreviousTxOutIndex = ij.Vout
-	i.SequenceNumber = ij.Sequence
-	return nil
 }
 
 // PreviousTxIDAdd will add the supplied txID bytes to the Input,

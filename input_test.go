@@ -1,10 +1,9 @@
-package bt_test
+package bt
 
 import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/libsv/go-bt/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,33 +15,33 @@ func TestNewInputFromBytes(t *testing.T) {
 		b, err := hex.DecodeString(rawHex)
 		assert.NoError(t, err)
 
-		var i *bt.Input
+		var i *Input
 		var s int
-		i, s, err = bt.NewInputFromBytes(b)
+		i, s, err = newInputFromBytes(b)
 		assert.NoError(t, err)
 		assert.NotNil(t, i)
 		assert.Equal(t, 148, s)
 		assert.Equal(t, uint32(1), i.PreviousTxOutIndex)
 		assert.Equal(t, 107, len(*i.UnlockingScript))
-		assert.Equal(t, bt.DefaultSequenceNumber, i.SequenceNumber)
+		assert.Equal(t, DefaultSequenceNumber, i.SequenceNumber)
 	})
 
 	t.Run("empty bytes", func(t *testing.T) {
-		i, s, err := bt.NewInputFromBytes([]byte(""))
+		i, s, err := newInputFromBytes([]byte(""))
 		assert.Error(t, err)
 		assert.Nil(t, i)
 		assert.Equal(t, 0, s)
 	})
 
 	t.Run("invalid input, too short", func(t *testing.T) {
-		i, s, err := bt.NewInputFromBytes([]byte("invalid"))
+		i, s, err := newInputFromBytes([]byte("invalid"))
 		assert.Error(t, err)
 		assert.Nil(t, i)
 		assert.Equal(t, 0, s)
 	})
 
 	t.Run("invalid input, too short + script", func(t *testing.T) {
-		i, s, err := bt.NewInputFromBytes([]byte("000000000000000000000000000000000000000000000000000000000000000000000000"))
+		i, s, err := newInputFromBytes([]byte("000000000000000000000000000000000000000000000000000000000000000000000000"))
 		assert.Error(t, err)
 		assert.Nil(t, i)
 		assert.Equal(t, 0, s)
@@ -55,9 +54,9 @@ func TestInput_String(t *testing.T) {
 		b, err := hex.DecodeString(rawHex)
 		assert.NoError(t, err)
 
-		var i *bt.Input
+		var i *Input
 		var s int
-		i, s, err = bt.NewInputFromBytes(b)
+		i, s, err = newInputFromBytes(b)
 		assert.NoError(t, err)
 		assert.NotNil(t, i)
 		assert.Equal(t, 148, s)

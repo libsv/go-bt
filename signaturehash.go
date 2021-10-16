@@ -3,7 +3,6 @@ package bt
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 
 	"github.com/libsv/go-bk/crypto"
 	"github.com/libsv/go-bt/v2/bscript"
@@ -60,15 +59,15 @@ func (tx *Tx) CalcInputSignatureHash(inputNumber uint32, sigHashFlag sighash.Fla
 // see https://github.com/bitcoin-sv/bitcoin-sv/blob/master/doc/abc/replay-protected-sighash.md#digest-algorithm
 func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([]byte, error) {
 	if tx.InputIdx(int(inputNumber)) == nil {
-		return nil, errors.New("specified input does not exist")
+		return nil, ErrInputNoExist
 	}
 	in := tx.InputIdx(int(inputNumber))
 
 	if len(in.PreviousTxID()) == 0 {
-		return nil, errors.New("'PreviousTxID' not supplied")
+		return nil, ErrEmptyPreviousTxID
 	}
 	if in.PreviousTxScript == nil {
-		return nil, errors.New("'PreviousTxScript' not supplied")
+		return nil, ErrEmptyPreviousTxScript
 	}
 
 	hashPreviousOuts := make([]byte, 32)
@@ -149,15 +148,15 @@ func (tx *Tx) CalcInputPreimage(inputNumber uint32, sigHashFlag sighash.Flag) ([
 // see https://wiki.bitcoinsv.io/index.php/Legacy_Sighash_Algorithm
 func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]byte, error) {
 	if tx.InputIdx(int(inputNumber)) == nil {
-		return nil, errors.New("specified input does not exist")
+		return nil, ErrInputNoExist
 	}
 	in := tx.InputIdx(int(inputNumber))
 
 	if len(in.PreviousTxID()) == 0 {
-		return nil, errors.New("'PreviousTxID' not supplied")
+		return nil, ErrEmptyPreviousTxID
 	}
 	if in.PreviousTxScript == nil {
-		return nil, errors.New("'PreviousTxScript' not supplied")
+		return nil, ErrEmptyPreviousTxScript
 	}
 
 	// The SigHashSingle signature type signs only the corresponding input
@@ -195,17 +194,15 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 		}
 	}
 
-	switch shf & sighash.Mask { // nolint:exhaustive // no need
-	case sighash.None:
+	if shf.HasWithMask(sighash.None) {
 		txCopy.Outputs = txCopy.Outputs[0:0]
 		for i := range txCopy.Inputs {
 			if i != int(inputNumber) {
 				txCopy.Inputs[i].SequenceNumber = 0
 			}
 		}
-	case sighash.Single:
+	} else if shf.HasWithMask(sighash.Single) {
 		txCopy.Outputs = txCopy.Outputs[:inputNumber+1]
-
 		for i := 0; i < int(inputNumber); i++ {
 			txCopy.Outputs[i].Satoshis = 18446744073709551615 // -1 but underflowed
 			txCopy.Outputs[i].LockingScript = &bscript.Script{}
@@ -216,8 +213,6 @@ func (tx *Tx) CalcInputPreimageLegacy(inputNumber uint32, shf sighash.Flag) ([]b
 				txCopy.Inputs[i].SequenceNumber = 0
 			}
 		}
-	case sighash.Old, sighash.All:
-	default:
 	}
 
 	if shf&sighash.AnyOneCanPay != 0 {

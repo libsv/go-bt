@@ -2,7 +2,6 @@ package bscript
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -35,7 +34,7 @@ func (a *a25) set58(s []byte) error {
 	for _, s1 := range s {
 		c := bytes.IndexByte(tmpl, s1)
 		if c < 0 {
-			return errors.New("bad char")
+			return ErrEncodingBadChar
 		}
 		for j := 24; j >= 0; j-- {
 			c += 58 * int(a[j])
@@ -43,7 +42,7 @@ func (a *a25) set58(s []byte) error {
 			c /= 256
 		}
 		if c > 0 {
-			return errors.New("too long")
+			return ErrEncodingTooLong
 		}
 	}
 	return nil
@@ -68,11 +67,11 @@ func validA58(a58 []byte) (bool, error) {
 		return false, err
 	}
 	if a[0] != 0 && a[0] != 0x6f {
-		return false, errors.New("not version 0 or 6f")
+		return false, ErrEncodingInvalidVersion
 	}
 
 	if a.embeddedChecksum() != a.computeChecksum() {
-		return false, errors.New("checksum failed")
+		return false, ErrEncodingChecksumFailed
 	}
 
 	return true, nil
