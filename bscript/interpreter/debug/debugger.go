@@ -40,8 +40,6 @@ type DefaultDebugger interface {
 }
 
 type debugger struct {
-	sh interpreter.StateHandler
-
 	beforeExecuteFns []ThreadStateFunc
 	afterExecuteFns  []ThreadStateFunc
 
