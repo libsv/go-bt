@@ -29,17 +29,17 @@ type ParsedOpcode struct {
 }
 
 // Name returns the human readable name for the current opcode.
-func (o *ParsedOpcode) Name() string {
+func (o ParsedOpcode) Name() string {
 	return o.op.name
 }
 
 // Value returns the byte value of the opcode.
-func (o *ParsedOpcode) Value() byte {
+func (o ParsedOpcode) Value() byte {
 	return o.op.val
 }
 
 // Length returns the data length of the opcode.
-func (o *ParsedOpcode) Length() int {
+func (o ParsedOpcode) Length() int {
 	return o.op.length
 }
 

@@ -1,253 +1,86 @@
 package interpreter
 
-// ThreadState a snapshot of a threads state during execution.
-type ThreadState struct {
-	DStack    [][]byte
-	AStack    [][]byte
-	Opcode    ParsedOpcode
-	Scripts   []ParsedScript
-	ScriptIdx int
-	OpcodeIdx int
-}
-
-type (
-	// DebugThreadStateFunc debug handler for a threads state.
-	DebugThreadStateFunc func(state *ThreadState)
-
-	// DebugStackFunc debug handler for stack operations.
-	DebugStackFunc func(state *ThreadState, data []byte)
-
-	// DebugExecutionErrorFunc debug handler for execution failure.
-	DebugExecutionErrorFunc func(state *ThreadState, err error)
-)
-
-type threadState interface {
-	state() *ThreadState
-}
-
-type nopThreadState struct{}
-
-func (n *nopThreadState) state() *ThreadState {
-	return &ThreadState{}
-}
-
-// Debugger for debugging execution.
-type Debugger struct {
-	ts threadState
-
-	beforeExecuteOpcodeFns []DebugThreadStateFunc
-	afterExecuteOpcodeFns  []DebugThreadStateFunc
-
-	afterExecutionFns []DebugThreadStateFunc
-	afterSuccessFns   []DebugThreadStateFunc
-	afterErrorFns     []DebugExecutionErrorFunc
-
-	beforeStackPushFns []DebugStackFunc
-	afterStackPushFns  []DebugStackFunc
-
-	beforeStackPopFns []DebugThreadStateFunc
-	afterStackPopFns  []DebugStackFunc
-}
-
-// NewDebugger returns an empty debugger which is to be configured with the `Attach`
-// functions.
+// Debugger implement to enable debugging.
+// If enabled, copies of state are provided to each of the functions on
+// call.
 //
-// Example usage:
-//  debugger := interpreter.NewDebugger()
-//  debugger.AttachBeforeExecuteOpcode(func (state *interpreter.ThreadState) {
-//      fmt.Println(state.DStack)
-//  })
-//  debugger.AttachAfterStackPush(func (state *interpreter.ThreadState, data []byte) {
-//      fmt.Println(hex.EncodeToString(data))
-//  })
-//  engine.Execute(interpreter.WithDebugger(debugger))
-func NewDebugger() *Debugger {
-	return &Debugger{
-		ts:                     &nopThreadState{},
-		beforeExecuteOpcodeFns: make([]DebugThreadStateFunc, 0),
-		afterExecuteOpcodeFns:  make([]DebugThreadStateFunc, 0),
-		afterExecutionFns:      make([]DebugThreadStateFunc, 0),
-		afterSuccessFns:        make([]DebugThreadStateFunc, 0),
-		afterErrorFns:          make([]DebugExecutionErrorFunc, 0),
-		beforeStackPushFns:     make([]DebugStackFunc, 0),
-		afterStackPushFns:      make([]DebugStackFunc, 0),
-		beforeStackPopFns:      make([]DebugThreadStateFunc, 0),
-		afterStackPopFns:       make([]DebugStackFunc, 0),
-	}
+// Each function is called during its stage of a threads lifecycle.
+// A high level overview of this lifecycle is:
+//
+//   BeforeExecute
+//   for step
+//      BeforeStep
+//      BeforeExecuteOpcode
+//      for each stack push
+//        BeforeStackPush
+//        AfterStackPush
+//      end for
+//      for each stack pop
+//        BeforeStackPop
+//        AfterStackPop
+//      end for
+//      AfterExecuteOpcode
+//      if end of script
+//        BeforeScriptChange
+//        AfterScriptChange
+//      end if
+//      if bip16 and end of final script
+//        BeforeStackPush
+//        AfterStackPush
+//      end if
+//      AfterStep
+//   end for
+//   AfterExecute
+//   if success
+//     AfterSuccess
+//   end if
+//   if error
+//     AfterError
+//   end if
+type Debugger interface {
+	BeforeExecute(*State)
+	AfterExecute(*State)
+	BeforeStep(*State)
+	AfterStep(*State)
+	BeforeExecuteOpcode(*State)
+	AfterExecuteOpcode(*State)
+	BeforeScriptChange(*State)
+	AfterScriptChange(*State)
+	AfterSuccess(*State)
+	AfterError(*State, error)
+
+	BeforeStackPush(*State, []byte)
+	AfterStackPush(*State, []byte)
+	BeforeStackPop(*State)
+	AfterStackPop(*State, []byte)
 }
 
-func (d *Debugger) attach(t threadState) {
-	d.ts = t
-}
+type nopDebugger struct{}
 
-// AttachBeforeExecuteOpcode attach the provided function to be executed before
-// an opcodes execution.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachBeforeExecuteOpcode(fn DebugThreadStateFunc) {
-	d.beforeExecuteOpcodeFns = append(d.beforeExecuteOpcodeFns, fn)
-}
+func (n *nopDebugger) BeforeExecute(*State) {}
 
-// AttachAfterExecuteOpcode attach the provided function to be executed after
-// an opcodes execution.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachAfterExecuteOpcode(fn DebugThreadStateFunc) {
-	d.afterExecuteOpcodeFns = append(d.afterExecuteOpcodeFns, fn)
-}
+func (n *nopDebugger) AfterExecute(*State) {}
 
-// AttachAfterExecution attach the provided function to be executed after
-// all scripts have completed execution, but before the final stack value
-// is checked.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachAfterExecution(fn DebugThreadStateFunc) {
-	d.afterExecutionFns = append(d.afterExecutionFns, fn)
-}
+func (n *nopDebugger) BeforeStep(*State) {}
 
-// AttachAfterSuccess attach the provided function to be executed on
-// successful execution.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachAfterSuccess(fn DebugThreadStateFunc) {
-	d.afterSuccessFns = append(d.afterSuccessFns, fn)
-}
+func (n *nopDebugger) AfterStep(*State) {}
 
-// AttachAfterError attach the provided function to be executed on execution
-// error.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachAfterError(fn DebugExecutionErrorFunc) {
-	d.afterErrorFns = append(d.afterErrorFns, fn)
-}
+func (n *nopDebugger) BeforeExecuteOpcode(*State) {}
 
-// AttachBeforeStackPush attach the provided function to be executed just before
-// a push to a stack.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachBeforeStackPush(fn DebugStackFunc) {
-	d.beforeStackPushFns = append(d.beforeStackPushFns, fn)
-}
+func (n *nopDebugger) AfterExecuteOpcode(*State) {}
 
-// AttachAfterStackPush attach the provided function to be executed immediately
-// after a push to a stack.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachAfterStackPush(fn DebugStackFunc) {
-	d.afterStackPushFns = append(d.afterStackPushFns, fn)
-}
+func (n *nopDebugger) BeforeScriptChange(*State) {}
 
-// AttachBeforeStackPop attach the provided function to be executed just before
-// a pop to a stack.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachBeforeStackPop(fn DebugThreadStateFunc) {
-	d.beforeStackPopFns = append(d.beforeStackPopFns, fn)
-}
+func (n *nopDebugger) AfterScriptChange(*State) {}
 
-// AttachAfterStackPop attach the provided function to be executed immediately
-// after a pop from a stack.
-// If this is called multiple times, provided funcs are executed on a
-// FIFO basis.
-func (d *Debugger) AttachAfterStackPop(fn DebugStackFunc) {
-	d.afterStackPopFns = append(d.afterStackPopFns, fn)
-}
+func (n *nopDebugger) BeforeStackPush(*State, []byte) {}
 
-func (d *Debugger) beforeExecuteOpcode() {
-	if len(d.beforeExecuteOpcodeFns) == 0 {
-		return
-	}
+func (n *nopDebugger) AfterStackPush(*State, []byte) {}
 
-	state := d.ts.state()
-	for _, fn := range d.beforeExecuteOpcodeFns {
-		fn(state)
-	}
-}
+func (n *nopDebugger) BeforeStackPop(*State) {}
 
-func (d *Debugger) afterExecuteOpcode() {
-	if len(d.afterExecuteOpcodeFns) == 0 {
-		return
-	}
+func (n *nopDebugger) AfterStackPop(*State, []byte) {}
 
-	state := d.ts.state()
-	for _, fn := range d.afterExecuteOpcodeFns {
-		fn(state)
-	}
-}
+func (n *nopDebugger) AfterSuccess(*State) {}
 
-func (d *Debugger) afterExecution() {
-	if len(d.afterExecutionFns) == 0 {
-		return
-	}
-
-	state := d.ts.state()
-	for _, fn := range d.afterExecutionFns {
-		fn(state)
-	}
-}
-
-func (d *Debugger) afterSuccess() {
-	if len(d.afterSuccessFns) == 0 {
-		return
-	}
-
-	state := d.ts.state()
-	for _, fn := range d.afterSuccessFns {
-		fn(state)
-	}
-}
-
-func (d *Debugger) afterError(err error) {
-	if len(d.afterErrorFns) == 0 {
-		return
-	}
-
-	state := d.ts.state()
-	for _, fn := range d.afterErrorFns {
-		fn(state, err)
-	}
-}
-
-func (d *Debugger) beforeStackPush(data []byte) {
-	if len(d.beforeStackPushFns) == 0 {
-		return
-	}
-
-	state := d.ts.state()
-	for _, fn := range d.beforeStackPushFns {
-		fn(state, data)
-	}
-}
-
-func (d *Debugger) afterStackPush(data []byte) {
-	if len(d.afterStackPushFns) == 0 {
-		return
-	}
-
-	state := d.ts.state()
-	for _, fn := range d.afterStackPushFns {
-		fn(state, data)
-	}
-}
-
-func (d *Debugger) beforeStackPop() {
-	if len(d.beforeStackPopFns) == 0 {
-		return
-	}
-
-	state := d.ts.state()
-	for _, fn := range d.beforeStackPopFns {
-		fn(state)
-	}
-}
-
-func (d *Debugger) afterStackPop(data []byte) {
-	if len(d.afterStackPopFns) == 0 {
-		return
-	}
-
-	state := d.ts.state()
-	for _, fn := range d.afterStackPopFns {
-		fn(state, data)
-	}
-}
+func (n *nopDebugger) AfterError(*State, error) {}
