@@ -950,7 +950,7 @@ func opcodeCat(op *ParsedOp, t *thread) error {
 		return err
 	}
 
-	c := append(a, b...)
+	c := bytes.Join([][]byte{a, b}, []byte{})
 	if len(c) > t.cfg.MaxScriptElementSize() {
 		return errs.NewError(errs.ErrElementTooBig,
 			"concatenated size %d exceeds max allowed size %d", len(c), t.cfg.MaxScriptElementSize())
