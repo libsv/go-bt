@@ -825,3 +825,106 @@ func TestCheckHashTypeEncoding(t *testing.T) {
 		}
 	}
 }
+
+func TestEngine_WithState(t *testing.T) {
+	tests := map[string]struct {
+		ls    string
+		uls   string
+		state *State
+	}{
+		"start midway": {
+			ls:  "5253958852529387",
+			uls: "5456",
+			state: &State{
+				ScriptIdx: 1,
+				OpcodeIdx: 1,
+				DataStack: func() [][]byte {
+					return [][]byte{{4}, {6}, {2}}
+				}(),
+				AltStack:             [][]byte{},
+				CondStack:            []int{},
+				ElseStack:            [][]byte{},
+				Flags:                scriptflag.UTXOAfterGenesis | scriptflag.EnableSighashForkID,
+				LastCodeSeperatorIdx: 0,
+				NumOps:               3,
+				SavedFirstStack:      [][]byte{},
+				Scripts: func() []ParsedScript {
+					ls, err := bscript.NewFromHexString("5253958852529387")
+					assert.NoError(t, err)
+					uls, err := bscript.NewFromHexString("5456")
+					assert.NoError(t, err)
+
+					var parser DefaultOpcodeParser
+					pls, err := parser.Parse(ls)
+					assert.NoError(t, err)
+
+					puls, err := parser.Parse(uls)
+					assert.NoError(t, err)
+
+					return []ParsedScript{puls, pls}
+				}(),
+				Genesis: struct {
+					AfterGenesis bool
+					EarlyReturn  bool
+				}{
+					AfterGenesis: true,
+				},
+			},
+		},
+		"start at operation": {
+			ls:  "5253958852529387",
+			uls: "5456",
+			state: &State{
+				ScriptIdx: 1,
+				OpcodeIdx: 6,
+				DataStack: func() [][]byte {
+					return [][]byte{{4}, {2}, {2}}
+				}(),
+				AltStack:             [][]byte{},
+				CondStack:            []int{},
+				ElseStack:            [][]byte{},
+				Flags:                scriptflag.UTXOAfterGenesis | scriptflag.EnableSighashForkID,
+				LastCodeSeperatorIdx: 0,
+				NumOps:               8,
+				SavedFirstStack:      [][]byte{},
+				Scripts: func() []ParsedScript {
+					ls, err := bscript.NewFromHexString("5253958852529387")
+					assert.NoError(t, err)
+					uls, err := bscript.NewFromHexString("5456")
+					assert.NoError(t, err)
+
+					var parser DefaultOpcodeParser
+					pls, err := parser.Parse(ls)
+					assert.NoError(t, err)
+
+					puls, err := parser.Parse(uls)
+					assert.NoError(t, err)
+
+					return []ParsedScript{puls, pls}
+				}(),
+				Genesis: struct {
+					AfterGenesis bool
+					EarlyReturn  bool
+				}{
+					AfterGenesis: true,
+				},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			ls, err := bscript.NewFromHexString(test.ls)
+			assert.NoError(t, err)
+			uls, err := bscript.NewFromHexString(test.uls)
+			assert.NoError(t, err)
+
+			assert.NoError(t, NewEngine().Execute(
+				WithScripts(ls, uls),
+				WithForkID(),
+				WithAfterGenesis(),
+				WithState(test.state),
+			))
+		})
+	}
+}

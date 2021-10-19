@@ -66,6 +66,10 @@ func WithDebugger(debugger Debugger) ExecutionOptionFunc {
 // WithState inject the provided state into the execution thread. This assumes
 // that the state is correct for the scripts provided.
 //
+// NOTE: This is highly experimental and is unstable when used with unintended states,
+// and likely still when used in a happy path scenario. Therefore, it is recommended
+// to only be used for debugging purposes.
+//
 // The safest recommended *interpreter.State records for a given script can be
 // are those which can be captured during `debugger.BeforeStep` and `debugger.AfterStep`.
 func WithState(state *State) ExecutionOptionFunc {

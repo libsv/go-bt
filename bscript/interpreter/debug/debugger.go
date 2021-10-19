@@ -17,14 +17,6 @@ type debugOpts struct {
 	rewind bool
 }
 
-type rewind struct {
-	states []*interpreter.State
-}
-
-func (r *rewind) saveState(state *interpreter.State) {
-	r.states = append(r.states, state)
-}
-
 // DefaultDebugger exposes attachment points via the way of functions, which
 // are to be appended to via a series of function calls.
 type DefaultDebugger interface {
@@ -50,8 +42,6 @@ type DefaultDebugger interface {
 type debugger struct {
 	sh interpreter.StateHandler
 
-	rewind *rewind
-
 	beforeExecuteFns []ThreadStateFunc
 	afterExecuteFns  []ThreadStateFunc
 
@@ -74,13 +64,6 @@ type debugger struct {
 	afterStackPopFns  []StackFunc
 }
 
-type nopThreadState struct{}
-
-func (n *nopThreadState) State() *interpreter.State {
-	return &interpreter.State{}
-}
-func (n *nopThreadState) SetState(state *interpreter.State) {}
-
 // NewDebugger returns an empty debugger which is to be configured with the `Attach`
 // functions.
 //
@@ -100,8 +83,6 @@ func NewDebugger(oo ...DebuggerOptionFunc) DefaultDebugger {
 	}
 
 	return &debugger{
-		sh: &nopThreadState{},
-
 		beforeExecuteFns: make([]ThreadStateFunc, 0),
 		afterExecuteFns:  make([]ThreadStateFunc, 0),
 
@@ -120,15 +101,6 @@ func NewDebugger(oo ...DebuggerOptionFunc) DefaultDebugger {
 		beforeStackPopFns: make([]ThreadStateFunc, 0),
 		afterStackPopFns:  make([]StackFunc, 0),
 	}
-}
-
-func (d *debugger) Attach(t interpreter.StateHandler) {
-	d.sh = t
-}
-
-func (d *debugger) Rewind() {
-	d.sh.SetState(d.rewind.states[len(d.rewind.states)-1])
-	d.rewind.states = d.rewind.states[:len(d.rewind.states)-1]
 }
 
 // AttachBeforeExecute attach the provided function to be executed before
