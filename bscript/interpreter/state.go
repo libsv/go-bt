@@ -22,10 +22,15 @@ type State struct {
 	}
 }
 
-// Opcode return the current interpreter.ParsedOpcode from the
+// Opcode the current interpreter.ParsedOpcode from the
 // threads program counter.
 func (s *State) Opcode() ParsedOpcode {
 	return s.Scripts[s.ScriptIdx][s.OpcodeIdx]
+}
+
+// RemainingScript the remaining script to be executed.
+func (s *State) RemainingScript() ParsedScript {
+	return s.Scripts[s.ScriptIdx][s.OpcodeIdx:]
 }
 
 // StateHandler interfaces getting and applying state.
