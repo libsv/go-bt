@@ -43,6 +43,9 @@ type Tx struct {
 	LockTime uint32
 }
 
+// Txs a collection of *bt.Tx.
+type Txs []*Tx
+
 // NewTx creates a new transaction object with default values.
 func NewTx() *Tx {
 	return &Tx{Version: 1, LockTime: 0, Inputs: make([]*Input, 0)}
@@ -234,8 +237,20 @@ func (tx *Tx) Clone() *Tx {
 // Unmarshalling usage example:
 //  tx := bt.NewTx()
 //  if err := json.Unmarshal(bb, tx.NodeJSON()); err != nil {}
-func (tx *Tx) NodeJSON() *nodeWrapper {
-	return &nodeWrapper{Tx: tx}
+func (tx *Tx) NodeJSON() *nodeTxWrapper {
+	return &nodeTxWrapper{Tx: tx}
+}
+
+// NodeJSON returns a wrapped bt.Txs for marshalling/unmarshalling into a node tx format.
+//
+// Marshalling usage example:
+//  bb, err := json.Marshal(txs.NodeJSON())
+//
+// Unmarshalling usage example:
+//  txs := make(bt.Txs, 0)
+//  if err := json.Unmarshal(bb, txs.NodeJSON()); err != nil {}
+func (tt *Txs) NodeJSON() *nodeTxsWrapper {
+	return (*nodeTxsWrapper)(tt)
 }
 
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {

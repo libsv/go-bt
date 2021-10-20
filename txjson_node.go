@@ -7,19 +7,11 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-type nodeWrapper struct {
+type nodeTxWrapper struct {
 	*Tx
 }
 
-// Node a json wrapper for *Tx, used for marshalling and unmarshalling json
-// to/from node format.
-//
-// Marshal example:
-//  bb, err := json.Marshal(txjson.Node(tx))
-//
-// Unmarshal example:
-//  tx := NewTx()
-//  if err := json.Unmarshal(bb, txjson.Node(tx)); err != nil {}
+type nodeTxsWrapper Txs
 
 type nodeTxJSON struct {
 	Version  uint32            `json:"version"`
@@ -53,7 +45,7 @@ type nodeOutputJSON struct {
 	} `json:"scriptPubKey,omitempty"`
 }
 
-func (n *nodeWrapper) MarshalJSON() ([]byte, error) {
+func (n *nodeTxWrapper) MarshalJSON() ([]byte, error) {
 	if n == nil || n.Tx == nil {
 		return nil, errors.New("tx is nil so cannot be marshalled")
 	}
@@ -89,7 +81,7 @@ func (n *nodeWrapper) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
-func (n *nodeWrapper) UnmarshalJSON(b []byte) error {
+func (n *nodeTxWrapper) UnmarshalJSON(b []byte) error {
 	tx := n.Tx
 
 	var txj nodeTxJSON
@@ -203,5 +195,31 @@ func (i *nodeInputJSON) fromInput(input *Input) error {
 	i.Sequence = input.SequenceNumber
 	i.TxID = input.PreviousTxIDStr()
 
+	return nil
+}
+
+func (nn nodeTxsWrapper) MarshalJSON() ([]byte, error) {
+	txs := make([]*nodeTxWrapper, len(nn))
+	for i, n := range nn {
+		txs[i] = n.NodeJSON()
+	}
+	return json.Marshal(txs)
+}
+
+// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+func (nn *nodeTxsWrapper) UnmarshalJSON(b []byte) error {
+	var jj []json.RawMessage
+	if err := json.Unmarshal(b, &jj); err != nil {
+		return err
+	}
+
+	*nn = make(nodeTxsWrapper, 0)
+	for _, j := range jj {
+		tx := NewTx()
+		if err := json.Unmarshal(j, tx.NodeJSON()); err != nil {
+			return err
+		}
+		*nn = append(*nn, tx)
+	}
 	return nil
 }
