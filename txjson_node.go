@@ -198,6 +198,7 @@ func (i *nodeInputJSON) fromInput(input *Input) error {
 	return nil
 }
 
+// MarshalJSON will marshal a transaction that has been marshalled with this library.
 func (nn nodeTxsWrapper) MarshalJSON() ([]byte, error) {
 	txs := make([]*nodeTxWrapper, len(nn))
 	for i, n := range nn {
@@ -206,7 +207,7 @@ func (nn nodeTxsWrapper) MarshalJSON() ([]byte, error) {
 	return json.Marshal(txs)
 }
 
-// UnmarshalJSON will unmarshall a transaction that has been marshalled with this library.
+// UnmarshalJSON will unmarshal a transaction that has been marshalled with this library.
 func (nn *nodeTxsWrapper) UnmarshalJSON(b []byte) error {
 	var jj []json.RawMessage
 	if err := json.Unmarshal(b, &jj); err != nil {
