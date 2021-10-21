@@ -202,7 +202,7 @@ func (i *nodeInputJSON) fromInput(input *Input) error {
 func (nn nodeTxsWrapper) MarshalJSON() ([]byte, error) {
 	txs := make([]*nodeTxWrapper, len(nn))
 	for i, n := range nn {
-		txs[i] = n.NodeJSON()
+		txs[i] = n.NodeJSON().(*nodeTxWrapper)
 	}
 	return json.Marshal(txs)
 }

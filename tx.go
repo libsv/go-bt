@@ -237,7 +237,7 @@ func (tx *Tx) Clone() *Tx {
 // Unmarshalling usage example:
 //  tx := bt.NewTx()
 //  if err := json.Unmarshal(bb, tx.NodeJSON()); err != nil {}
-func (tx *Tx) NodeJSON() *nodeTxWrapper {
+func (tx *Tx) NodeJSON() interface{} {
 	return &nodeTxWrapper{Tx: tx}
 }
 
@@ -249,7 +249,7 @@ func (tx *Tx) NodeJSON() *nodeTxWrapper {
 // Unmarshalling usage example:
 //  txs := make(bt.Txs, 0)
 //  if err := json.Unmarshal(bb, txs.NodeJSON()); err != nil {}
-func (tt *Txs) NodeJSON() *nodeTxsWrapper {
+func (tt *Txs) NodeJSON() interface{} {
 	return (*nodeTxsWrapper)(tt)
 }
 
