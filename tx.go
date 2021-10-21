@@ -247,7 +247,7 @@ func (tx *Tx) NodeJSON() interface{} {
 //  bb, err := json.Marshal(txs.NodeJSON())
 //
 // Unmarshalling usage example:
-//  txs := make(bt.Txs, 0)
+//  var txs bt.Txs
 //  if err := json.Unmarshal(bb, txs.NodeJSON()); err != nil {}
 func (tt *Txs) NodeJSON() interface{} {
 	return (*nodeTxsWrapper)(tt)
