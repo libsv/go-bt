@@ -200,20 +200,22 @@ func (s *Script) ToASM() (string, error) {
 	parts, err := DecodeParts(*s)
 	// if err != nil, we will append [error] to the ASM script below (as done in the node).
 
-	var asmScript string
+	var asmScript strings.Builder
+
 	for _, p := range parts {
+		asmScript.WriteString(" ")
 		if len(p) == 1 {
-			asmScript = asmScript + " " + opCodeValues[p[0]]
+			asmScript.WriteString(opCodeValues[p[0]])
 		} else {
-			asmScript = asmScript + " " + hex.EncodeToString(p)
+			asmScript.WriteString(hex.EncodeToString(p))
 		}
 	}
 
 	if err != nil {
-		asmScript += " [error]"
+		asmScript.WriteString(" [error]")
 	}
 
-	return strings.TrimSpace(asmScript), nil
+	return strings.TrimSpace(asmScript.String()), nil
 }
 
 // IsP2PKH returns true if this is a pay to pubkey hash output script.
