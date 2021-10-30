@@ -66,3 +66,7 @@ func (o *Output) BytesForSigHash() []byte {
 
 	return buf
 }
+
+func (o *Output) NodeJSON() interface{} {
+	return &nodeOutputWrapper{Output: o}
+}
