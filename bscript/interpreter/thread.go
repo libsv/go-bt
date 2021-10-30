@@ -429,10 +429,8 @@ func (t *thread) apply(opts *execOpts) error {
 		t.bip16 = true
 	}
 
-	if t.hasFlag(scriptflag.VerifyMinimalData) {
-		t.dstack.verifyMinimalData = true
-		t.astack.verifyMinimalData = true
-	}
+	t.dstack = newStack(t.cfg, t.hasFlag(scriptflag.VerifyMinimalData))
+	t.astack = newStack(t.cfg, t.hasFlag(scriptflag.VerifyMinimalData))
 
 	if t.tx != nil {
 		t.tx.InputIdx(t.inputIdx).PreviousTxScript = t.prevOutput.LockingScript
