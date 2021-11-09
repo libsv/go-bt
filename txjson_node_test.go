@@ -627,3 +627,141 @@ func TestTxsJSON_Node_UnmarshalJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestOutput_Node_JSON(t *testing.T) {
+	tests := map[string]struct {
+		output  *bt.Output
+		expJSON string
+	}{
+		"node json": {
+			output: &bt.Output{
+				Satoshis: 10000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewFromASM("OP_4 OP_2 OP_2 OP_ADD OP_EQUAL")
+					assert.NoError(t, err)
+
+					return s
+				}(),
+			},
+			expJSON: `{
+	"value": 0.0001,
+	"n": 0,
+	"scriptPubKey": {
+		"asm": "OP_4 OP_2 OP_2 OP_ADD OP_EQUAL",
+		"hex": "5452529387",
+		"type": "nonstandard"
+	}
+}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			bb, err := json.MarshalIndent(test.output.NodeJSON(), "", "\t")
+			assert.NoError(t, err)
+
+			assert.Equal(t, test.expJSON, string(bb))
+		})
+	}
+}
+
+func TestOutput_JSON(t *testing.T) {
+	tests := map[string]struct {
+		output  *bt.Output
+		expJSON string
+	}{
+		"standard json": {
+			output: &bt.Output{
+				Satoshis: 10000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewFromASM("OP_4 OP_2 OP_2 OP_ADD OP_EQUAL")
+					assert.NoError(t, err)
+
+					return s
+				}(),
+			},
+			expJSON: `{
+	"satoshis": 10000,
+	"lockingScript": "5452529387"
+}`,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			bb, err := json.MarshalIndent(test.output, "", "\t")
+			assert.NoError(t, err)
+
+			assert.Equal(t, test.expJSON, string(bb))
+		})
+	}
+}
+
+func TestOutput_Node_UnmarshalJSON(t *testing.T) {
+	tests := map[string]struct {
+		json      string
+		expOutput *bt.Output
+	}{
+		"node json": {
+			json: `{
+	"value": 0.0001,
+	"n": 0,
+	"scriptPubKey": {
+		"asm": "OP_4 OP_2 OP_2 OP_ADD OP_EQUAL",
+		"hex": "5452529387",
+		"type": "nonstandard"
+	}
+}`,
+			expOutput: &bt.Output{
+				Satoshis: 10000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewFromASM("OP_4 OP_2 OP_2 OP_ADD OP_EQUAL")
+					assert.NoError(t, err)
+
+					return s
+				}(),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			output := &bt.Output{}
+			assert.NoError(t, json.Unmarshal([]byte(test.json), output.NodeJSON()))
+
+			assert.Equal(t, *test.expOutput, *output)
+		})
+	}
+}
+
+func TestOutput_UnmarshalJSON(t *testing.T) {
+	tests := map[string]struct {
+		json      string
+		expOutput *bt.Output
+	}{
+		"node json": {
+			json: `{
+	"satoshis": 10000,
+	"lockingScript": "5452529387"
+}`,
+			expOutput: &bt.Output{
+				Satoshis: 10000,
+				LockingScript: func() *bscript.Script {
+					s, err := bscript.NewFromASM("OP_4 OP_2 OP_2 OP_ADD OP_EQUAL")
+					assert.NoError(t, err)
+
+					return s
+				}(),
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			output := &bt.Output{}
+			assert.NoError(t, json.Unmarshal([]byte(test.json), output))
+
+			assert.Equal(t, *test.expOutput, *output)
+		})
+	}
+}
