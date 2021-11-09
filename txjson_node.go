@@ -13,6 +13,10 @@ type nodeTxWrapper struct {
 
 type nodeTxsWrapper Txs
 
+type nodeOutputWrapper struct {
+	*Output
+}
+
 type nodeTxJSON struct {
 	Version  uint32            `json:"version"`
 	LockTime uint32            `json:"locktime"`
@@ -222,5 +226,29 @@ func (nn *nodeTxsWrapper) UnmarshalJSON(b []byte) error {
 		}
 		*nn = append(*nn, tx)
 	}
+	return nil
+}
+
+func (n *nodeOutputWrapper) MarshalJSON() ([]byte, error) {
+	oj := &nodeOutputJSON{}
+	if err := oj.fromOutput(n.Output); err != nil {
+		return nil, err
+	}
+	return json.Marshal(oj)
+}
+
+func (n *nodeOutputWrapper) UnmarshalJSON(b []byte) error {
+	oj := &nodeOutputJSON{}
+	if err := json.Unmarshal(b, &oj); err != nil {
+		return err
+	}
+
+	o, err := oj.toOutput()
+	if err != nil {
+		return err
+	}
+
+	*n.Output = *o
+
 	return nil
 }
