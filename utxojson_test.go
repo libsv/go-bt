@@ -106,7 +106,7 @@ func TestUTXO_Node_JSON(t *testing.T) {
 			bb, err := json.Marshal(test.utxo.NodeJSON())
 			assert.NoError(t, err)
 
-			var utxo bt.UTXO
+			utxo := &bt.UTXO{}
 			assert.NoError(t, json.Unmarshal(bb, utxo.NodeJSON()))
 
 			bb2, err := json.Marshal(utxo.NodeJSON())

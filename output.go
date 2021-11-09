@@ -67,6 +67,14 @@ func (o *Output) BytesForSigHash() []byte {
 	return buf
 }
 
+// NodeJSON returns a wrapped *bt.Output for marshalling/unmarshalling into a node output format.
+//
+// Marshalling usage example:
+//  bb, err := json.Marshal(output.NodeJSON())
+//
+// Unmarshalling usage example:
+//  output := &bt.Output{}
+//  if err := json.Unmarshal(bb, output.NodeJSON()); err != nil {}
 func (o *Output) NodeJSON() interface{} {
 	return &nodeOutputWrapper{Output: o}
 }

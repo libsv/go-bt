@@ -231,14 +231,16 @@ func (nn *nodeTxsWrapper) UnmarshalJSON(b []byte) error {
 
 func (n *nodeOutputWrapper) MarshalJSON() ([]byte, error) {
 	oj := &nodeOutputJSON{}
-	oj.fromOutput(n.Output)
+	if err := oj.fromOutput(n.Output); err != nil {
+		return nil, err
+	}
 	return json.Marshal(oj)
 }
 
 func (n *nodeOutputWrapper) UnmarshalJSON(b []byte) error {
 	oj := &nodeOutputJSON{}
 	if err := json.Unmarshal(b, &oj); err != nil {
-		return nil
+		return err
 	}
 
 	o, err := oj.toOutput()

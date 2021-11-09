@@ -40,7 +40,7 @@ func (f Flag) HasWithMask(shf Flag) bool {
 }
 
 func (f Flag) String() string {
-	switch f {
+	switch f { // nolint:exhaustive // not needed
 	case All:
 		return "ALL"
 	case None:
