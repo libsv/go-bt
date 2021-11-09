@@ -950,7 +950,7 @@ func opcodeCat(op *ParsedOp, t *thread) error {
 		return err
 	}
 
-	c := append(a, b...)
+	c := bytes.Join([][]byte{a, b}, nil)
 	if len(c) > t.cfg.MaxScriptElementSize() {
 		return errs.NewError(errs.ErrElementTooBig,
 			"concatenated size %d exceeds max allowed size %d", len(c), t.cfg.MaxScriptElementSize())
@@ -1008,7 +1008,7 @@ func opcodeNum2bin(op *ParsedOp, t *thread) error {
 
 	size := int(n.Int32())
 	if size > t.cfg.MaxScriptElementSize() {
-		return errs.NewError(errs.ErrNumberTooBig, "n is larger than the max of %d", defaultScriptNumLen)
+		return errs.NewError(errs.ErrNumberTooBig, "n is larger than the max of %d", t.cfg.MaxScriptElementSize())
 	}
 
 	// encode a as a script num so that we we take the bytes it
@@ -1058,8 +1058,8 @@ func opcodeBin2num(op *ParsedOp, t *thread) error {
 	if err != nil {
 		return err
 	}
-	if len(n.Bytes()) > defaultScriptNumLen {
-		return errs.NewError(errs.ErrNumberTooBig, "script numbers are limited to %d bytes", defaultScriptNumLen)
+	if len(n.Bytes()) > t.cfg.MaxScriptNumberLength() {
+		return errs.NewError(errs.ErrNumberTooBig, "script numbers are limited to %d bytes", t.cfg.MaxScriptNumberLength())
 	}
 
 	t.dstack.PushInt(n)

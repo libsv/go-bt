@@ -7,6 +7,7 @@ type config interface {
 	MaxStackSize() int
 	MaxScriptSize() int
 	MaxScriptElementSize() int
+	MaxScriptNumberLength() int
 	MaxPubKeysPerMultiSig() int
 }
 
@@ -16,6 +17,7 @@ const (
 	MaxStackSizeBeforeGenesis          = 1000
 	MaxScriptSizeBeforeGenesis         = 10000
 	MaxScriptElementSizeBeforeGenesis  = 520
+	MaxScriptNumberLengthBeforeGenesis = 4
 	MaxPubKeysPerMultiSigBeforeGenesis = 20
 )
 
@@ -44,6 +46,14 @@ func (a *afterGenesisConfig) MaxScriptElementSize() int {
 
 func (b *beforeGenesisConfig) MaxScriptElementSize() int {
 	return MaxScriptElementSizeBeforeGenesis
+}
+
+func (a *afterGenesisConfig) MaxScriptNumberLength() int {
+	return 750 * 1000 // 750 * 1Kb
+}
+
+func (b *beforeGenesisConfig) MaxScriptNumberLength() int {
+	return MaxScriptNumberLengthBeforeGenesis
 }
 
 func (a *afterGenesisConfig) MaxOps() int {
