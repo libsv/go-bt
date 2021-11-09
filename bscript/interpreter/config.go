@@ -3,6 +3,7 @@ package interpreter
 import "math"
 
 type config interface {
+	AfterGenesis() bool
 	MaxOps() int
 	MaxStackSize() int
 	MaxScriptSize() int
@@ -23,6 +24,14 @@ const (
 
 type beforeGenesisConfig struct{}
 type afterGenesisConfig struct{}
+
+func (a *afterGenesisConfig) AfterGenesis() bool {
+	return true
+}
+
+func (b *beforeGenesisConfig) AfterGenesis() bool {
+	return false
+}
 
 func (a *afterGenesisConfig) MaxStackSize() int {
 	return math.MaxInt32

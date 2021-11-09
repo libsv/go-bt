@@ -638,7 +638,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOp, t *thread) error {
 	if err != nil {
 		return err
 	}
-	lockTime, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5)
+	lockTime, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5, t.afterGenesis)
 	if err != nil {
 		return err
 	}
@@ -708,7 +708,7 @@ func opcodeCheckSequenceVerify(op *ParsedOp, t *thread) error {
 	if err != nil {
 		return err
 	}
-	stackSequence, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5)
+	stackSequence, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5, t.afterGenesis)
 	if err != nil {
 		return err
 	}
@@ -996,7 +996,8 @@ func opcodeSplit(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: a b bscript.OpNUM2BIN -> x
 func opcodeNum2bin(op *ParsedOp, t *thread) error {
-	n, err := t.dstack.PopInt()
+	//n, err := t.dstack.PopInt()
+	n, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
@@ -1006,23 +1007,24 @@ func opcodeNum2bin(op *ParsedOp, t *thread) error {
 		return err
 	}
 
-	size := int(n.Int32())
-	if size > t.cfg.MaxScriptElementSize() {
+	//size := int(n.Int32())
+	if n.GreaterThanInt(int64(t.cfg.MaxScriptElementSize())) {
+		//if size > t.cfg.MaxScriptElementSize() {
 		return errs.NewError(errs.ErrNumberTooBig, "n is larger than the max of %d", t.cfg.MaxScriptElementSize())
 	}
 
 	// encode a as a script num so that we we take the bytes it
 	// will be minimally encoded.
-	sn, err := makeScriptNum(a, false, len(a))
+	sn, err := makeScriptNum(a, false, len(a), t.afterGenesis)
 	if err != nil {
 		return err
 	}
 
 	b := sn.Bytes()
-	if len(b) > size {
+	if n.LessThanInt(int64(len(b))) {
 		return errs.NewError(errs.ErrNumberTooSmall, "cannot fit it into n sized array")
 	}
-	if len(b) == size {
+	if n.EqualInt(int64(len(b))) {
 		t.dstack.PushByteArray(b)
 		return nil
 	}
@@ -1033,7 +1035,8 @@ func opcodeNum2bin(op *ParsedOp, t *thread) error {
 		b[len(b)-1] &= 0x7f
 	}
 
-	for len(b) < size-1 {
+	for n.GreaterThanInt(int64(len(b) + 1)) {
+		//for len(b) < size-1 {
 		b = append(b, 0x00)
 	}
 
@@ -1054,15 +1057,19 @@ func opcodeBin2num(op *ParsedOp, t *thread) error {
 		return err
 	}
 
-	n, err := makeScriptNum(a, false, len(a))
-	if err != nil {
-		return err
-	}
-	if len(n.Bytes()) > t.cfg.MaxScriptNumberLength() {
+	//n, err := makeScriptNum(a, false, len(a))
+	//if err != nil {
+	//	return err
+	//}
+
+	//t.dstack.PushInt(n)
+
+	b := minimallyEncode(a)
+	if len(b) > t.cfg.MaxScriptNumberLength() {
 		return errs.NewError(errs.ErrNumberTooBig, "script numbers are limited to %d bytes", t.cfg.MaxScriptNumberLength())
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushByteArray(b)
 	return nil
 }
 
@@ -1216,12 +1223,12 @@ func opcodeEqualVerify(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... x1 x2+1]
 func opcode1Add(op *ParsedOp, t *thread) error {
-	m, err := t.dstack.PopInt()
+	m, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	t.dstack.PushInt(m + 1)
+	t.dstack.PushNumber(m.Incr())
 	return nil
 }
 
@@ -1230,12 +1237,12 @@ func opcode1Add(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... x1 x2-1]
 func opcode1Sub(op *ParsedOp, t *thread) error {
-	m, err := t.dstack.PopInt()
+	m, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	t.dstack.PushInt(m - 1)
+	t.dstack.PushNumber(m.Decr())
 	return nil
 }
 
@@ -1244,12 +1251,12 @@ func opcode1Sub(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... x1 -x2]
 func opcodeNegate(op *ParsedOp, t *thread) error {
-	m, err := t.dstack.PopInt()
+	m, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	t.dstack.PushInt(-m)
+	t.dstack.PushNumber(m.Neg())
 	return nil
 }
 
@@ -1258,16 +1265,12 @@ func opcodeNegate(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... x1 abs(x2)]
 func opcodeAbs(op *ParsedOp, t *thread) error {
-	m, err := t.dstack.PopInt()
+	m, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	if m < 0 {
-		m = -m
-	}
-
-	t.dstack.PushInt(m)
+	t.dstack.PushNumber(m.Abs())
 	return nil
 }
 
@@ -1323,17 +1326,17 @@ func opcode0NotEqual(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... x1+x2]
 func opcodeAdd(op *ParsedOp, t *thread) error {
-	v0, err := t.dstack.PopInt()
+	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	v1, err := t.dstack.PopInt()
+	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	t.dstack.PushInt(v0 + v1)
+	t.dstack.PushNumber(v0.Add(v1))
 	return nil
 }
 
@@ -1343,17 +1346,17 @@ func opcodeAdd(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... x1-x2]
 func opcodeSub(op *ParsedOp, t *thread) error {
-	v0, err := t.dstack.PopInt()
+	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	v1, err := t.dstack.PopInt()
+	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	t.dstack.PushInt(v1 - v0)
+	t.dstack.PushNumber(v1.Sub(v0))
 	return nil
 }
 
@@ -1361,19 +1364,17 @@ func opcodeSub(op *ParsedOp, t *thread) error {
 // them with the result of subtracting the top entry from the second-to-top
 // entry.
 func opcodeMul(op *ParsedOp, t *thread) error {
-	n1, err := t.dstack.PopInt()
+	n1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	n2, err := t.dstack.PopInt()
+	n2, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	n3 := n1.Int64() * n2.Int64()
-
-	t.dstack.PushInt(scriptNum(n3))
+	t.dstack.PushNumber(n1.Mul(n2))
 	return nil
 }
 
@@ -1382,21 +1383,21 @@ func opcodeMul(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: a b bscript.OpDIV -> out
 func opcodeDiv(op *ParsedOp, t *thread) error {
-	b, err := t.dstack.PopInt()
+	b, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	a, err := t.dstack.PopInt()
+	a, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	if b == 0 {
+	if b.IsZero() {
 		return errs.NewError(errs.ErrDivideByZero, "divide by zero")
 	}
 
-	t.dstack.PushInt(a / b)
+	t.dstack.PushNumber(a.Div(b))
 	return nil
 }
 
@@ -1405,21 +1406,21 @@ func opcodeDiv(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: a b bscript.OpMOD -> out
 func opcodeMod(op *ParsedOp, t *thread) error {
-	b, err := t.dstack.PopInt()
+	b, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	a, err := t.dstack.PopInt()
+	a, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	if b == 0 {
+	if b.IsZero() {
 		return errs.NewError(errs.ErrDivideByZero, "mod by zero")
 	}
 
-	t.dstack.PushInt(a % b)
+	t.dstack.PushNumber(a.Mod(b))
 	return nil
 }
 
@@ -1533,18 +1534,20 @@ func opcodeBoolOr(op *ParsedOp, t *thread) error {
 // Stack transformation (x1==x2): [... 5 5] -> [... 1]
 // Stack transformation (x1!=x2): [... 5 7] -> [... 0]
 func opcodeNumEqual(op *ParsedOp, t *thread) error {
-	v0, err := t.dstack.PopInt()
+	//v0, err := t.dstack.PopInt()
+	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	v1, err := t.dstack.PopInt()
+	//v1, err := t.dstack.PopInt()
+	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
 	var n scriptNum
-	if v0 == v1 {
+	if v0.Equal(v1) {
 		n = 1
 	}
 
@@ -1574,18 +1577,20 @@ func opcodeNumEqualVerify(op *ParsedOp, t *thread) error {
 // Stack transformation (x1==x2): [... 5 5] -> [... 0]
 // Stack transformation (x1!=x2): [... 5 7] -> [... 1]
 func opcodeNumNotEqual(op *ParsedOp, t *thread) error {
-	v0, err := t.dstack.PopInt()
+	//v0, err := t.dstack.PopInt()
+	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	v1, err := t.dstack.PopInt()
+	//v1, err := t.dstack.PopInt()
+	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
 	var n scriptNum
-	if v0 != v1 {
+	if !v0.Equal(v1) {
 		n = 1
 	}
 
@@ -1599,18 +1604,18 @@ func opcodeNumNotEqual(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... bool]
 func opcodeLessThan(op *ParsedOp, t *thread) error {
-	v0, err := t.dstack.PopInt()
+	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	v1, err := t.dstack.PopInt()
+	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
 	var n scriptNum
-	if v1 < v0 {
+	if v1.LessThan(v0) {
 		n = 1
 	}
 
@@ -1624,18 +1629,18 @@ func opcodeLessThan(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... bool]
 func opcodeGreaterThan(op *ParsedOp, t *thread) error {
-	v0, err := t.dstack.PopInt()
+	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	v1, err := t.dstack.PopInt()
+	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
 	var n scriptNum
-	if v1 > v0 {
+	if v1.GreaterThan(v0) {
 		n = 1
 	}
 
@@ -1649,18 +1654,18 @@ func opcodeGreaterThan(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... bool]
 func opcodeLessThanOrEqual(op *ParsedOp, t *thread) error {
-	v0, err := t.dstack.PopInt()
+	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	v1, err := t.dstack.PopInt()
+	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
 	var n scriptNum
-	if v1 <= v0 {
+	if v1.LessThanOrEqual(v0) {
 		n = 1
 	}
 
@@ -1674,18 +1679,18 @@ func opcodeLessThanOrEqual(op *ParsedOp, t *thread) error {
 //
 // Stack transformation: [... x1 x2] -> [... bool]
 func opcodeGreaterThanOrEqual(op *ParsedOp, t *thread) error {
-	v0, err := t.dstack.PopInt()
+	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	v1, err := t.dstack.PopInt()
+	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
 	var n scriptNum
-	if v1 >= v0 {
+	if v1.GreaterThanOrEqual(v0) {
 		n = 1
 	}
 

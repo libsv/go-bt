@@ -11,7 +11,14 @@ import (
 const (
 	maxInt32 = 1<<31 - 1
 	minInt32 = -1 << 31
+
+	maxInt64 = 1<<63 - 1
+	minInt64 = -1 << 63
 )
+
+type scriptNumber interface {
+	Bytes() []byte
+}
 
 // scriptNum represents a numeric value used in the scripting engine with
 // special handling to deal with the subtle semantics required by consensus.
@@ -151,7 +158,13 @@ func (n scriptNum) Int32() int32 {
 }
 
 func (n scriptNum) Int64() int64 {
-	return int64(n.Int32())
+	if n > maxInt64 {
+		return maxInt64
+	}
+	if n < minInt64 {
+		return minInt64
+	}
+	return int64(n)
 }
 
 // makeScriptNum interprets the passed serialised bytes as an encoded integer
@@ -180,7 +193,7 @@ func (n scriptNum) Int64() int64 {
 // overflows.
 //
 // See the Bytes function documentation for example encodings.
-func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int) (scriptNum, error) {
+func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int, bigInt bool) (scriptNum, error) {
 	// Interpreting data requires that it is not larger than
 	// the passed scriptNumLen value.
 	if len(v) > scriptNumLen {
@@ -203,6 +216,16 @@ func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int) (scriptNum, 
 		return 0, nil
 	}
 
+	//if bigInt {
+	//	tmp := make([]byte, len(v))
+	//	copy(tmp, v)
+	//	for i := 0; i < len(tmp)/2; i++ {
+	//		tmp[i], tmp[len(tmp)-i-1] = tmp[len(tmp)-i-1], tmp[i]
+	//	}
+	//	b := new(big.Int).SetBytes(tmp)
+	//	return scriptNum(b.Int64()), nil
+	//}
+
 	// Decode from little endian.
 	var result int64
 	for i, val := range v {
@@ -221,4 +244,38 @@ func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int) (scriptNum, 
 	}
 
 	return scriptNum(result), nil
+}
+
+func minimallyEncode(data []byte) []byte {
+	if len(data) == 0 {
+		return data
+	}
+
+	last := data[len(data)-1]
+	if last&0x7f != 0 {
+		return data
+	}
+
+	if len(data) == 1 {
+		return []byte{}
+	}
+
+	if data[len(data)-2]&0x80 != 0 {
+		return data
+	}
+
+	for i := len(data) - 1; i > 0; i-- {
+		if data[i-1] != 0 {
+			if data[i-1]&0x80 != 0 {
+				data[i] = last
+				i++
+			} else {
+				data[i-1] |= last
+			}
+
+			return data[:i]
+		}
+	}
+
+	return []byte{}
 }

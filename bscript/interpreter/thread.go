@@ -1,6 +1,8 @@
 package interpreter
 
 import (
+	"encoding/hex"
+	"fmt"
 	"math/big"
 
 	"github.com/libsv/go-bk/bec"
@@ -250,6 +252,19 @@ func (t *thread) Step() (bool, error) {
 
 	opcode := t.scripts[t.scriptIdx][t.scriptOff]
 	t.scriptOff++
+
+	//if 720 <= t.numOps && t.numOps <= 725 {
+	//	fmt.Println(t.numOps, opcode.Name())
+	//}
+
+	if len(t.dstack.stk) > 0 {
+		fmt.Println()
+		fmt.Println("---", "OPERATION", t.numOps, "---")
+		//for _, s := range t.dstack.stk {
+		//	fmt.Println(hex.EncodeToString(s))
+		//}
+		fmt.Println(hex.EncodeToString(t.dstack.stk[len(t.dstack.stk)-1]))
+	}
 
 	// Execute the opcode while taking into account several things such as
 	// disabled opcodes, illegal opcodes, maximum allowed operations per

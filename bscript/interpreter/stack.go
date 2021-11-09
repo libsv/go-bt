@@ -39,12 +39,14 @@ func fromBool(v bool) []byte {
 type stack struct {
 	stk               [][]byte
 	maxNumLength      int
+	afterGenesis      bool
 	verifyMinimalData bool
 }
 
 func newStack(cfg config, verifyMinimalData bool) stack {
 	return stack{
 		maxNumLength:      cfg.MaxScriptNumberLength(),
+		afterGenesis:      cfg.AfterGenesis(),
 		verifyMinimalData: verifyMinimalData,
 	}
 }
@@ -67,6 +69,10 @@ func (s *stack) PushByteArray(so []byte) {
 // Stack transformation: [... x1 x2] -> [... x1 x2 int]
 func (s *stack) PushInt(val scriptNum) {
 	s.PushByteArray(val.Bytes())
+}
+
+func (s *stack) PushNumber(n *Number) {
+	s.PushByteArray(n.Bytes())
 }
 
 // PushBool converts the provided boolean to a suitable byte array then pushes
@@ -95,7 +101,16 @@ func (s *stack) PopInt() (scriptNum, error) {
 		return 0, err
 	}
 
-	return makeScriptNum(so, s.verifyMinimalData, s.maxNumLength)
+	return makeScriptNum(so, s.verifyMinimalData, s.maxNumLength, s.afterGenesis)
+}
+
+func (s *stack) PopNumber() (*Number, error) {
+	so, err := s.PopByteArray()
+	if err != nil {
+		return nil, err
+	}
+
+	return NewNumber(so, s.maxNumLength, s.verifyMinimalData, s.afterGenesis)
 }
 
 // PopBool pops the value off the top of the stack, converts it into a bool, and
@@ -130,7 +145,7 @@ func (s *stack) PeekInt(idx int32) (scriptNum, error) {
 		return 0, err
 	}
 
-	return makeScriptNum(so, s.verifyMinimalData, s.maxNumLength)
+	return makeScriptNum(so, s.verifyMinimalData, s.maxNumLength, s.afterGenesis)
 }
 
 // PeekBool returns the Nth item on the stack as a bool without removing it.
