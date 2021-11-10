@@ -2,63 +2,52 @@ package bt
 
 import (
 	"encoding/hex"
-	"encoding/json"
 
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
 // UTXO an unspent transaction output, used for creating inputs
 type UTXO struct {
-	TxID          []byte
-	Vout          uint32
-	LockingScript *bscript.Script
-	Satoshis      uint64
+	TxID           []byte
+	Vout           uint32
+	LockingScript  *bscript.Script
+	Satoshis       uint64
+	SequenceNumber uint32
 }
 
-type utxoJSON struct {
-	TxID         string  `json:"txid"`
-	Vout         uint32  `json:"vout"`
-	ScriptPubKey string  `json:"scriptPubKey"`
-	Value        float64 `json:"value"`
-	Satoshis     uint64  `json:"satoshis"`
+// UTXOs a collection of *bt.UTXO.
+type UTXOs []*UTXO
+
+// NodeJSON returns a wrapped *bt.UTXO for marshalling/unmarshalling into a node utxo format.
+//
+// Marshalling usage example:
+//  bb, err := json.Marshal(utxo.NodeJSON())
+//
+// Unmarshalling usage example:
+//  utxo := &bt.UTXO{}
+//  if err := json.Unmarshal(bb, utxo.NodeJSON()); err != nil {}
+func (u *UTXO) NodeJSON() interface{} {
+	return &nodeUTXOWrapper{UTXO: u}
 }
 
-// UnmarshalJSON will convert a json serialised utxo to a bt.UTXO.
-func (u *UTXO) UnmarshalJSON(body []byte) error {
-	var j utxoJSON
-	if err := json.Unmarshal(body, &j); err != nil {
-		return err
-	}
-
-	txID, err := hex.DecodeString(j.TxID)
-	if err != nil {
-		return err
-	}
-
-	ls, err := bscript.NewFromHexString(j.ScriptPubKey)
-	if err != nil {
-		return err
-	}
-
-	u.TxID = txID
-	u.LockingScript = ls
-	u.Vout = j.Vout
-	if j.Satoshis > 0 {
-		u.Satoshis = j.Satoshis
-	} else {
-		u.Satoshis = uint64(j.Value * 100000000)
-	}
-
-	return nil
+// NodeJSON returns a wrapped bt.UTXOs for marshalling/unmarshalling into a node utxo format.
+//
+// Marshalling usage example:
+//  bb, err := json.Marshal(utxos.NodeJSON())
+//
+// Unmarshalling usage example:
+//  var txs bt.UTXOs
+//  if err := json.Unmarshal(bb, utxos.NodeJSON()); err != nil {}
+func (u *UTXOs) NodeJSON() interface{} {
+	return (*nodeUTXOsWrapper)(u)
 }
 
-// MarshalJSON will serialise a utxo to json.
-func (u *UTXO) MarshalJSON() ([]byte, error) {
-	return json.Marshal(utxoJSON{
-		TxID:         hex.EncodeToString(u.TxID),
-		Value:        float64(u.Satoshis) / 100000000,
-		Satoshis:     u.Satoshis,
-		Vout:         u.Vout,
-		ScriptPubKey: u.LockingScript.String(),
-	})
+// TxIDStr return the tx id as a string.
+func (u *UTXO) TxIDStr() string {
+	return hex.EncodeToString(u.TxID)
+}
+
+// LockingScriptHexString retur nthe locking script in hex format.
+func (u *UTXO) LockingScriptHexString() string {
+	return u.LockingScript.String()
 }

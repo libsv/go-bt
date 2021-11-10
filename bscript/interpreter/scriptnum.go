@@ -11,10 +11,6 @@ import (
 const (
 	maxInt32 = 1<<31 - 1
 	minInt32 = -1 << 31
-
-	// defaultScriptNumLen is the default number of bytes
-	// data being interpreted as an integer may be.
-	defaultScriptNumLen = 4
 )
 
 // scriptNum represents a numeric value used in the scripting engine with

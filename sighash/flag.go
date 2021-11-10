@@ -38,3 +38,34 @@ func (f Flag) Has(shf Flag) bool {
 func (f Flag) HasWithMask(shf Flag) bool {
 	return f&Mask == shf
 }
+
+func (f Flag) String() string {
+	switch f { // nolint:exhaustive // not needed
+	case All:
+		return "ALL"
+	case None:
+		return "NONE"
+	case Single:
+		return "SINGLE"
+	case All | AnyOneCanPay:
+		return "ALL|ANYONECANPAY"
+	case None | AnyOneCanPay:
+		return "NONE|ANYONECANPAY"
+	case Single | AnyOneCanPay:
+		return "SINGLE|ANYONECANPAY"
+	case AllForkID:
+		return "ALL|FORKID"
+	case NoneForkID:
+		return "NONE|FORKID"
+	case SingleForkID:
+		return "SINGLE|FORKID"
+	case AllForkID | AnyOneCanPay:
+		return "ALL|FORKID|ANYONECANPAY"
+	case NoneForkID | AnyOneCanPay:
+		return "NONE|FORKID|ANYONECANPAY"
+	case SingleForkID | AnyOneCanPay:
+		return "SINGLE|FORKID|ANYONECANPAY"
+	}
+
+	return "ALL"
+}

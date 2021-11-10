@@ -175,9 +175,9 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}}
 			}(),
 			expTotalInputs: 2,
@@ -194,11 +194,11 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}}
 			}(),
 			expTotalInputs: 3,
@@ -220,11 +220,11 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}}
 			}(),
 			expTotalInputs: 2,
@@ -241,9 +241,9 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}}
 			}(),
 			expTotalInputs: 2,
@@ -260,21 +260,21 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 500,
+					txid, 0, script, 500, 0xffffff,
 				}, {
-					txid, 0, script, 670,
+					txid, 0, script, 670, 0xffffff,
 				}, {
-					txid, 0, script, 700,
+					txid, 0, script, 700, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 650,
+					txid, 0, script, 650, 0xffffff,
 				}}
 			}(),
 			expTotalInputs: 8,
@@ -299,21 +299,21 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 500,
+					txid, 0, script, 500, 0xffffff,
 				}, {
-					txid, 0, script, 670,
+					txid, 0, script, 670, 0xffffff,
 				}, {
-					txid, 0, script, 700,
+					txid, 0, script, 700, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 650,
+					txid, 0, script, 650, 0xffffff,
 				}}
 			}(),
 			expTotalInputs: 7,
@@ -339,21 +339,21 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 500,
+					txid, 0, script, 500, 0xffffff,
 				}, {
-					txid, 0, script, 670,
+					txid, 0, script, 670, 0xffffff,
 				}, {
-					txid, 0, script, 700,
+					txid, 0, script, 700, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 650,
+					txid, 0, script, 650, 0xffffff,
 				}}
 			}(),
 			expErr: bt.ErrInsufficientFunds,
@@ -383,21 +383,21 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 500,
+					txid, 0, script, 500, 0xffffff,
 				}, {
-					txid, 0, script, 670,
+					txid, 0, script, 670, 0xffffff,
 				}, {
-					txid, 0, script, 700,
+					txid, 0, script, 700, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 1000,
+					txid, 0, script, 1000, 0xffffff,
 				}, {
-					txid, 0, script, 650,
+					txid, 0, script, 650, 0xffffff,
 				}}
 			}(),
 			utxoGetterFuncOverrider: func(utxos []*bt.UTXO) bt.UTXOGetterFunc {
@@ -461,11 +461,11 @@ func TestTx_Fund_Deficit(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}}
 			}(),
 			iteration:   1,
@@ -484,11 +484,11 @@ func TestTx_Fund_Deficit(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}}
 			}(),
 			iteration:   2,
@@ -511,27 +511,27 @@ func TestTx_Fund_Deficit(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 4000,
+					txid, 0, script, 4000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 6000,
+					txid, 0, script, 6000, 0xffffff,
 				}, {
-					txid, 0, script, 4000,
+					txid, 0, script, 4000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 8000,
+					txid, 0, script, 8000, 0xffffff,
 				}, {
-					txid, 0, script, 3000,
+					txid, 0, script, 3000, 0xffffff,
 				}}
 			}(),
 			iteration:   1,
@@ -554,27 +554,27 @@ func TestTx_Fund_Deficit(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 4000,
+					txid, 0, script, 4000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 6000,
+					txid, 0, script, 6000, 0xffffff,
 				}, {
-					txid, 0, script, 4000,
+					txid, 0, script, 4000, 0xffffff,
 				}, {
-					txid, 0, script, 2000,
+					txid, 0, script, 2000, 0xffffff,
 				}, {
-					txid, 0, script, 8000,
+					txid, 0, script, 8000, 0xffffff,
 				}, {
-					txid, 0, script, 3000,
+					txid, 0, script, 3000, 0xffffff,
 				}}
 			}(),
 			iteration:   3,

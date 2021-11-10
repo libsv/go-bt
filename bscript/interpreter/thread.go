@@ -249,17 +249,6 @@ func (t *thread) apply(opts *execOpts) error {
 		return err
 	}
 
-	t.state = t
-	if opts.debugger == nil {
-		opts.debugger = &nopDebugger{}
-		t.state = &nopStateHandler{}
-	}
-	t.debug = opts.debugger
-	t.dstack.debug = t.debug
-	t.dstack.sh = t.state
-	t.astack.debug = t.debug
-	t.astack.sh = t.state
-
 	if opts.unlockingScript == nil {
 		opts.unlockingScript = opts.tx.Inputs[opts.inputIdx].UnlockingScript
 	}
@@ -358,15 +347,24 @@ func (t *thread) apply(opts *execOpts) error {
 		t.bip16 = true
 	}
 
-	if t.hasFlag(scriptflag.VerifyMinimalData) {
-		t.dstack.verifyMinimalData = true
-		t.astack.verifyMinimalData = true
-	}
+	t.dstack = newStack(t.cfg, t.hasFlag(scriptflag.VerifyMinimalData))
+	t.astack = newStack(t.cfg, t.hasFlag(scriptflag.VerifyMinimalData))
 
 	if t.tx != nil {
 		t.tx.InputIdx(t.inputIdx).PreviousTxScript = t.prevOutput.LockingScript
 		t.tx.InputIdx(t.inputIdx).PreviousTxSatoshis = t.prevOutput.Satoshis
 	}
+
+	t.state = t
+	if opts.debugger == nil {
+		opts.debugger = &nopDebugger{}
+		t.state = &nopStateHandler{}
+	}
+	t.debug = opts.debugger
+	t.dstack.debug = t.debug
+	t.dstack.sh = t.state
+	t.astack.debug = t.debug
+	t.astack.sh = t.state
 
 	if opts.state != nil {
 		t.SetState(opts.state)

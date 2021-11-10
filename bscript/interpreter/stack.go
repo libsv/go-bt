@@ -38,9 +38,19 @@ func fromBool(v bool) []byte {
 // stack.
 type stack struct {
 	stk               [][]byte
+	maxNumLength      int
 	verifyMinimalData bool
 	debug             Debugger
 	sh                StateHandler
+}
+
+func newStack(cfg config, verifyMinimalData bool) stack {
+	return stack{
+		maxNumLength:      cfg.MaxScriptNumberLength(),
+		verifyMinimalData: verifyMinimalData,
+		debug:             &nopDebugger{},
+		sh:                &nopStateHandler{},
+	}
 }
 
 // Depth returns the number of items on the stack.
@@ -97,7 +107,7 @@ func (s *stack) PopInt() (scriptNum, error) {
 		return 0, err
 	}
 
-	return makeScriptNum(so, s.verifyMinimalData, defaultScriptNumLen)
+	return makeScriptNum(so, s.verifyMinimalData, s.maxNumLength)
 }
 
 // PopBool pops the value off the top of the stack, converts it into a bool, and
@@ -132,7 +142,7 @@ func (s *stack) PeekInt(idx int32) (scriptNum, error) {
 		return 0, err
 	}
 
-	return makeScriptNum(so, s.verifyMinimalData, defaultScriptNumLen)
+	return makeScriptNum(so, s.verifyMinimalData, s.maxNumLength)
 }
 
 // PeekBool returns the Nth item on the stack as a bool without removing it.
