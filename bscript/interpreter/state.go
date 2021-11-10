@@ -116,7 +116,7 @@ func (t *thread) SetState(state *State) {
 	setStack(&t.astack, state.AltStack)
 	t.elseStack = &nopBoolStack{}
 	if state.Genesis.AfterGenesis {
-		es := &stack{debug: &nopDebugger{}}
+		es := &stack{debug: &nopDebugger{}, sh: &nopStateHandler{}}
 		setStack(es, state.ElseStack)
 		t.elseStack = es
 	}
