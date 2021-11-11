@@ -40,12 +40,16 @@ type stack struct {
 	stk               [][]byte
 	maxNumLength      int
 	verifyMinimalData bool
+	debug             Debugger
+	sh                StateHandler
 }
 
 func newStack(cfg config, verifyMinimalData bool) stack {
 	return stack{
 		maxNumLength:      cfg.MaxScriptNumberLength(),
 		verifyMinimalData: verifyMinimalData,
+		debug:             &nopDebugger{},
+		sh:                &nopStateHandler{},
 	}
 }
 
@@ -58,6 +62,8 @@ func (s *stack) Depth() int32 {
 //
 // Stack transformation: [... x1 x2] -> [... x1 x2 data]
 func (s *stack) PushByteArray(so []byte) {
+	defer s.afterStackPush(so)
+	s.beforeStackPush(so)
 	s.stk = append(s.stk, so)
 }
 
@@ -81,7 +87,13 @@ func (s *stack) PushBool(val bool) {
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x2]
 func (s *stack) PopByteArray() ([]byte, error) {
-	return s.nipN(0)
+	s.beforeStackPop()
+	data, err := s.nipN(0)
+	if err != nil {
+		return nil, err
+	}
+	s.afterStackPop(data)
+	return data, nil
 }
 
 // PopInt pops the value off the top of the stack, converts it into a script
@@ -359,10 +371,27 @@ func (s *stack) String() string {
 	return result
 }
 
+func (s *stack) beforeStackPush(bb []byte) {
+	s.debug.BeforeStackPush(s.sh.State(), bb)
+}
+
+func (s *stack) afterStackPush(bb []byte) {
+	s.debug.AfterStackPush(s.sh.State(), bb)
+}
+
+func (s *stack) beforeStackPop() {
+	s.debug.BeforeStackPop(s.sh.State())
+}
+
+func (s *stack) afterStackPop(bb []byte) {
+	s.debug.AfterStackPop(s.sh.State(), bb)
+}
+
 type boolStack interface {
 	PushBool(b bool)
 	PopBool() (bool, error)
 	PeekBool(int32) (bool, error)
+	Depth() int32
 }
 
 type nopBoolStack struct{}
@@ -375,4 +404,8 @@ func (n *nopBoolStack) PopBool() (bool, error) {
 
 func (n *nopBoolStack) PeekBool(int32) (bool, error) {
 	return false, nil
+}
+
+func (n *nopBoolStack) Depth() int32 {
+	return 0
 }
