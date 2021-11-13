@@ -1,8 +1,6 @@
 package interpreter
 
 import (
-	"encoding/hex"
-	"fmt"
 	"math/big"
 
 	"github.com/libsv/go-bk/bec"
@@ -23,6 +21,9 @@ type thread struct {
 	elseStack boolStack
 
 	cfg config
+
+	debug Debugger
+	state StateHandler
 
 	scripts         []ParsedScript
 	condStack       []int
@@ -49,7 +50,7 @@ type thread struct {
 func createThread(opts *execOpts) (*thread, error) {
 	th := &thread{
 		scriptParser: &DefaultOpcodeParser{
-			ErrorOnCheckSig: opts.Tx == nil || opts.PreviousTxOut == nil,
+			ErrorOnCheckSig: opts.tx == nil || opts.previousTxOut == nil,
 		},
 		cfg: &beforeGenesisConfig{},
 	}
@@ -69,39 +70,41 @@ func createThread(opts *execOpts) (*thread, error) {
 // If checksig operaitons are to be executed without a Tx or a PreviousTxOut supplied,
 // the engine will return an ErrInvalidParams on execute.
 type execOpts struct {
-	LockingScript   *bscript.Script
-	UnlockingScript *bscript.Script
-	PreviousTxOut   *bt.Output
-	Tx              *bt.Tx
-	InputIdx        int
-	Flags           scriptflag.Flag
+	lockingScript   *bscript.Script
+	unlockingScript *bscript.Script
+	previousTxOut   *bt.Output
+	tx              *bt.Tx
+	inputIdx        int
+	flags           scriptflag.Flag
+	debugger        Debugger
+	state           *State
 }
 
 func (o execOpts) validate() error {
 	// The provided transaction input index must refer to a valid input.
-	if o.InputIdx < 0 || (o.Tx != nil && o.InputIdx > o.Tx.InputCount()-1) {
+	if o.inputIdx < 0 || (o.tx != nil && o.inputIdx > o.tx.InputCount()-1) {
 		return errs.NewError(
 			errs.ErrInvalidIndex,
-			"transaction input index %d is negative or >= %d", o.InputIdx, len(o.Tx.Inputs),
+			"transaction input index %d is negative or >= %d", o.inputIdx, len(o.tx.Inputs),
 		)
 	}
 
-	outputHasLockingScript := o.PreviousTxOut != nil && o.PreviousTxOut.LockingScript != nil
-	txHasUnlockingScript := o.Tx != nil && o.Tx.Inputs != nil && len(o.Tx.Inputs) > 0 &&
-		o.Tx.Inputs[o.InputIdx] != nil && o.Tx.Inputs[o.InputIdx].UnlockingScript != nil
+	outputHasLockingScript := o.previousTxOut != nil && o.previousTxOut.LockingScript != nil
+	txHasUnlockingScript := o.tx != nil && o.tx.Inputs != nil && len(o.tx.Inputs) > 0 &&
+		o.tx.Inputs[o.inputIdx] != nil && o.tx.Inputs[o.inputIdx].UnlockingScript != nil
 	// If no locking script was provided
-	if o.LockingScript == nil && !outputHasLockingScript {
+	if o.lockingScript == nil && !outputHasLockingScript {
 		return errs.NewError(errs.ErrInvalidParams, "no locking script provided")
 	}
 
 	// If no unlocking script was provided
-	if o.UnlockingScript == nil && !txHasUnlockingScript {
+	if o.unlockingScript == nil && !txHasUnlockingScript {
 		return errs.NewError(errs.ErrInvalidParams, "no unlocking script provided")
 	}
 
 	// If both a locking script and previous output were provided, make sure the scripts match
-	if o.LockingScript != nil && outputHasLockingScript {
-		if !o.LockingScript.Equals(o.PreviousTxOut.LockingScript) {
+	if o.lockingScript != nil && outputHasLockingScript {
+		if !o.lockingScript.Equals(o.previousTxOut.LockingScript) {
 			return errs.NewError(
 				errs.ErrInvalidParams,
 				"locking script does not match the previous outputs locking script",
@@ -110,8 +113,8 @@ func (o execOpts) validate() error {
 	}
 
 	// If both a unlocking script and an input were provided, make sure the scripts match
-	if o.UnlockingScript != nil && txHasUnlockingScript {
-		if !o.UnlockingScript.Equals(o.Tx.Inputs[o.InputIdx].UnlockingScript) {
+	if o.unlockingScript != nil && txHasUnlockingScript {
+		if !o.unlockingScript.Equals(o.tx.Inputs[o.inputIdx].UnlockingScript) {
 			return errs.NewError(
 				errs.ErrInvalidParams,
 				"unlocking script does not match the unlocking script of the requested input",
@@ -146,7 +149,7 @@ func (t *thread) isBranchExecuting() bool {
 // executeOpcode performs execution on the passed opcode. It takes into account
 // whether it is hidden by conditionals, but some rules still must be
 // tested in this case.
-func (t *thread) executeOpcode(pop ParsedOp) error {
+func (t *thread) executeOpcode(pop ParsedOpcode) error {
 	if len(pop.Data) > t.cfg.MaxScriptElementSize() {
 		return errs.NewError(errs.ErrElementTooBig,
 			"element size %d exceeds max allowed size %d", len(pop.Data), t.cfg.MaxScriptElementSize())
@@ -165,7 +168,7 @@ func (t *thread) executeOpcode(pop ParsedOp) error {
 	}
 
 	// Note that this includes OP_RESERVED which counts as a push operation.
-	if pop.Op.val > bscript.Op16 {
+	if pop.op.val > bscript.Op16 {
 		t.numOps++
 		if t.numOps > t.cfg.MaxOps() {
 			return errs.NewError(errs.ErrTooManyOperations, "exceeded max operation limit of %d", t.cfg.MaxOps())
@@ -186,8 +189,8 @@ func (t *thread) executeOpcode(pop ParsedOp) error {
 
 	// Ensure all executed data push opcodes use the minimal encoding when
 	// the minimal data verification flag is set.
-	if t.dstack.verifyMinimalData && t.isBranchExecuting() && pop.Op.val <= bscript.OpPUSHDATA4 && exec {
-		if err := pop.EnforceMinimumDataPush(); err != nil {
+	if t.dstack.verifyMinimalData && t.isBranchExecuting() && pop.op.val <= bscript.OpPUSHDATA4 && exec {
+		if err := pop.enforceMinimumDataPush(); err != nil {
 			return err
 		}
 	}
@@ -198,7 +201,7 @@ func (t *thread) executeOpcode(pop ParsedOp) error {
 		return nil
 	}
 
-	return pop.Op.exec(&pop, t)
+	return pop.op.exec(&pop, t)
 }
 
 // validPC returns an error if the current script position is valid for
@@ -235,110 +238,11 @@ func (t *thread) CheckErrorCondition(finalScript bool) error {
 		return errs.NewError(errs.ErrEvalFalse, "false stack entry at end of script execution")
 	}
 
+	if finalScript {
+		t.afterSuccess()
+	}
+
 	return nil
-}
-
-// Step will execute the next instruction and move the program counter to the
-// next opcode in the script, or the next script if the current has ended.  Step
-// will return true in the case that the last opcode was successfully executed.
-//
-// The result of calling Step or any other method is undefined if an error is
-// returned.
-func (t *thread) Step() (bool, error) {
-	// Verify that it is pointing to a valid script address.
-	if err := t.validPC(); err != nil {
-		return true, err
-	}
-
-	opcode := t.scripts[t.scriptIdx][t.scriptOff]
-	t.scriptOff++
-
-	//if 720 <= t.numOps && t.numOps <= 725 {
-	//	fmt.Println(t.numOps, opcode.Name())
-	//}
-
-	if len(t.dstack.stk) > 0 {
-		fmt.Println()
-		fmt.Println("---", "OPERATION", t.numOps, "---")
-		//for _, s := range t.dstack.stk {
-		//	fmt.Println(hex.EncodeToString(s))
-		//}
-		fmt.Println(hex.EncodeToString(t.dstack.stk[len(t.dstack.stk)-1]))
-	}
-
-	// Execute the opcode while taking into account several things such as
-	// disabled opcodes, illegal opcodes, maximum allowed operations per
-	// script, maximum script element sizes, and conditionals.
-	if err := t.executeOpcode(opcode); err != nil {
-		if ok := errs.IsErrorCode(err, errs.ErrOK); ok {
-			// If returned early, move onto the next script
-			t.shiftScript()
-			return t.scriptIdx >= len(t.scripts), nil
-		}
-		return true, err
-	}
-
-	// The number of elements in the combination of the data and alt stacks
-	// must not exceed the maximum number of stack elements allowed.
-	combinedStackSize := t.dstack.Depth() + t.astack.Depth()
-	if combinedStackSize > int32(t.cfg.MaxStackSize()) {
-		return false, errs.NewError(errs.ErrStackOverflow,
-			"combined stack size %d > max allowed %d", combinedStackSize, t.cfg.MaxStackSize())
-	}
-
-	if t.scriptOff < len(t.scripts[t.scriptIdx]) {
-		return false, nil
-	}
-
-	// Prepare for next instruction.
-	// Illegal to have an `if' that straddles two scripts.
-	if len(t.condStack) != 0 {
-		return false, errs.NewError(errs.ErrUnbalancedConditional, "end of script reached in conditional execution")
-	}
-
-	// Alt stack doesn't persist.
-	_ = t.astack.DropN(t.astack.Depth())
-
-	// Move onto the next script
-	t.shiftScript()
-
-	if t.bip16 && !t.afterGenesis && t.scriptIdx <= 2 {
-		switch t.scriptIdx {
-		case 1:
-			t.savedFirstStack = t.GetStack()
-		case 2:
-			// Put us past the end for CheckErrorCondition()
-			// Check script ran successfully and pull the script
-			// out of the first stack and execute that.
-			if err := t.CheckErrorCondition(false); err != nil {
-				return false, err
-			}
-
-			script := t.savedFirstStack[len(t.savedFirstStack)-1]
-			pops, err := t.scriptParser.Parse(bscript.NewFromBytes(script))
-			if err != nil {
-				return false, err
-			}
-
-			t.scripts = append(t.scripts, pops)
-
-			// Set stack to be the stack from first script minus the
-			// script itself
-			t.SetStack(t.savedFirstStack[:len(t.savedFirstStack)-1])
-		}
-	}
-
-	// there are zero length scripts in the wild
-	if t.scriptIdx < len(t.scripts) && t.scriptOff >= len(t.scripts[t.scriptIdx]) {
-		t.scriptIdx++
-	}
-
-	t.lastCodeSep = 0
-	if t.scriptIdx >= len(t.scripts) {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 func (t *thread) apply(opts *execOpts) error {
@@ -346,17 +250,17 @@ func (t *thread) apply(opts *execOpts) error {
 		return err
 	}
 
-	if opts.UnlockingScript == nil {
-		opts.UnlockingScript = opts.Tx.Inputs[opts.InputIdx].UnlockingScript
+	if opts.unlockingScript == nil {
+		opts.unlockingScript = opts.tx.Inputs[opts.inputIdx].UnlockingScript
 	}
-	if opts.LockingScript == nil {
-		opts.LockingScript = opts.PreviousTxOut.LockingScript
+	if opts.lockingScript == nil {
+		opts.lockingScript = opts.previousTxOut.LockingScript
 	}
 
-	t.tx = opts.Tx
-	t.flags = opts.Flags
-	t.inputIdx = opts.InputIdx
-	t.prevOutput = opts.PreviousTxOut
+	t.tx = opts.tx
+	t.flags = opts.flags
+	t.inputIdx = opts.inputIdx
+	t.prevOutput = opts.previousTxOut
 
 	// The clean stack flag (ScriptVerifyCleanStack) is not allowed without
 	// the pay-to-script-hash (P2SH) evaluation (ScriptBip16).
@@ -372,13 +276,13 @@ func (t *thread) apply(opts *execOpts) error {
 
 	t.elseStack = &nopBoolStack{}
 	if t.hasFlag(scriptflag.UTXOAfterGenesis) {
-		t.elseStack = &stack{}
+		t.elseStack = &stack{debug: &nopDebugger{}, sh: &nopStateHandler{}}
 		t.afterGenesis = true
 		t.cfg = &afterGenesisConfig{}
 	}
 
-	uls := opts.UnlockingScript
-	ls := opts.LockingScript
+	uls := opts.unlockingScript
+	ls := opts.lockingScript
 
 	// When both the signature script and public key script are empty the
 	// result is necessarily an error since the stack would end up being
@@ -452,21 +356,139 @@ func (t *thread) apply(opts *execOpts) error {
 		t.tx.InputIdx(t.inputIdx).PreviousTxSatoshis = t.prevOutput.Satoshis
 	}
 
+	t.state = t
+	if opts.debugger == nil {
+		opts.debugger = &nopDebugger{}
+		t.state = &nopStateHandler{}
+	}
+	t.debug = opts.debugger
+	t.dstack.debug = t.debug
+	t.dstack.sh = t.state
+	t.astack.debug = t.debug
+	t.astack.sh = t.state
+
+	if opts.state != nil {
+		t.SetState(opts.state)
+	}
+
 	return nil
 }
 
 func (t *thread) execute() error {
-	for {
-		done, err := t.Step()
-		if err != nil {
-			return err
+	if err := func() error {
+		defer t.afterExecute()
+		t.beforeExecute()
+		for {
+			t.beforeStep()
+
+			done, err := t.Step()
+			if err != nil {
+				return err
+			}
+
+			t.afterStep()
+			if done {
+				return nil
+			}
 		}
-		if done {
-			break
-		}
+	}(); err != nil {
+		return err
 	}
 
 	return t.CheckErrorCondition(true)
+}
+
+// Step will execute the next instruction and move the program counter to the
+// next opcode in the script, or the next script if the current has ended.  Step
+// will return true in the case that the last opcode was successfully executed.
+//
+// The result of calling Step or any other method is undefined if an error is
+// returned.
+func (t *thread) Step() (bool, error) {
+	// Verify that it is pointing to a valid script address.
+	if err := t.validPC(); err != nil {
+		return true, err
+	}
+
+	opcode := t.scripts[t.scriptIdx][t.scriptOff]
+
+	t.beforeExecuteOpcode()
+	// Execute the opcode while taking into account several things such as
+	// disabled opcodes, illegal opcodes, maximum allowed operations per
+	// script, maximum script element sizes, and conditionals.
+	if err := t.executeOpcode(opcode); err != nil {
+		if ok := errs.IsErrorCode(err, errs.ErrOK); ok {
+			// If returned early, move onto the next script
+			t.shiftScript()
+			return t.scriptIdx >= len(t.scripts), nil
+		}
+		return true, err
+	}
+	t.afterExecuteOpcode()
+
+	t.scriptOff++
+
+	// The number of elements in the combination of the data and alt stacks
+	// must not exceed the maximum number of stack elements allowed.
+	combinedStackSize := t.dstack.Depth() + t.astack.Depth()
+	if combinedStackSize > int32(t.cfg.MaxStackSize()) {
+		return false, errs.NewError(errs.ErrStackOverflow,
+			"combined stack size %d > max allowed %d", combinedStackSize, t.cfg.MaxStackSize())
+	}
+
+	if t.scriptOff < len(t.scripts[t.scriptIdx]) {
+		return false, nil
+	}
+
+	// Prepare for next instruction.
+	// Illegal to have an `if' that straddles two scripts.
+	if len(t.condStack) != 0 {
+		return false, errs.NewError(errs.ErrUnbalancedConditional, "end of script reached in conditional execution")
+	}
+
+	// Alt stack doesn't persist.
+	_ = t.astack.DropN(t.astack.Depth())
+
+	// Move onto the next script
+	t.shiftScript()
+
+	if t.bip16 && !t.afterGenesis && t.scriptIdx <= 2 {
+		switch t.scriptIdx {
+		case 1:
+			t.savedFirstStack = t.GetStack()
+		case 2:
+			// Put us past the end for CheckErrorCondition()
+			// Check script ran successfully and pull the script
+			// out of the first stack and execute that.
+			if err := t.CheckErrorCondition(false); err != nil {
+				return false, err
+			}
+
+			script := t.savedFirstStack[len(t.savedFirstStack)-1]
+			pops, err := t.scriptParser.Parse(bscript.NewFromBytes(script))
+			if err != nil {
+				return false, err
+			}
+
+			t.scripts = append(t.scripts, pops)
+
+			// Set stack to be the stack from first script minus the
+			// script itself
+			t.SetStack(t.savedFirstStack[:len(t.savedFirstStack)-1])
+		}
+	}
+
+	// there are zero length scripts in the wild
+	if t.scriptIdx < len(t.scripts) && t.scriptOff >= len(t.scripts[t.scriptIdx]) {
+		t.scriptIdx++
+	}
+
+	t.lastCodeSep = 0
+	if t.scriptIdx >= len(t.scripts) {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // GetStack returns the contents of the primary stack as an array. where the
@@ -741,7 +763,7 @@ func setStack(stack *stack, data [][]byte) {
 
 // shouldExec returns true if the engine should execute the passed in operation,
 // based on its own internal state.
-func (t *thread) shouldExec(pop ParsedOp) bool {
+func (t *thread) shouldExec(pop ParsedOpcode) bool {
 	if !t.afterGenesis {
 		return true
 	}
@@ -753,12 +775,55 @@ func (t *thread) shouldExec(pop ParsedOp) bool {
 		}
 	}
 
-	return cf && (!t.earlyReturnAfterGenesis || pop.Op.val == bscript.OpRETURN)
+	return cf && (!t.earlyReturnAfterGenesis || pop.op.val == bscript.OpRETURN)
 }
 
 func (t *thread) shiftScript() {
+	defer t.afterScriptChange()
+	t.beforeScriptChange()
+
 	t.numOps = 0
 	t.scriptOff = 0
 	t.scriptIdx++
 	t.earlyReturnAfterGenesis = false
+}
+
+func (t *thread) beforeExecute() {
+	t.debug.BeforeExecute(t.state.State())
+}
+
+func (t *thread) afterExecute() {
+	t.debug.AfterExecute(t.state.State())
+}
+
+func (t *thread) beforeStep() {
+	t.debug.BeforeStep(t.state.State())
+}
+
+func (t *thread) afterStep() {
+	t.debug.AfterStep(t.state.State())
+}
+
+func (t *thread) beforeExecuteOpcode() {
+	t.debug.BeforeExecuteOpcode(t.state.State())
+}
+
+func (t *thread) afterExecuteOpcode() {
+	t.debug.AfterExecuteOpcode(t.state.State())
+}
+
+func (t *thread) beforeScriptChange() {
+	t.debug.BeforeScriptChange(t.state.State())
+}
+
+func (t *thread) afterScriptChange() {
+	t.debug.AfterScriptChange(t.state.State())
+}
+
+func (t *thread) afterError(err error) {
+	t.debug.AfterError(t.state.State(), err)
+}
+
+func (t *thread) afterSuccess() {
+	t.debug.AfterSuccess(t.state.State())
 }

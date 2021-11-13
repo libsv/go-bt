@@ -25,7 +25,7 @@ func NewEngine() Engine {
 //
 // Execute with tx example:
 //  if err := engine.Execute(
-//      interpreter.WithTx(tx, inputIdx previousOutput),
+//      interpreter.WithTx(tx, inputIdx, previousOutput),
 //      interpreter.WithAfterGenesis(),
 //      interpreter.WithForkID(),
 //  ); err != nil {
@@ -47,10 +47,15 @@ func (e *engine) Execute(oo ...ExecutionOptionFunc) error {
 		o(opts)
 	}
 
-	th, err := createThread(opts)
+	t, err := createThread(opts)
 	if err != nil {
 		return err
 	}
 
-	return th.execute()
+	if err := t.execute(); err != nil {
+		t.afterError(err)
+		return err
+	}
+
+	return nil
 }

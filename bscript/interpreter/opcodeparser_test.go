@@ -19,7 +19,7 @@ func TestOpcodeDisabled(t *testing.T) {
 
 	tests := []byte{bscript.Op2MUL, bscript.Op2DIV}
 	for _, opcodeVal := range tests {
-		pop := ParsedOp{Op: opcodeArray[opcodeVal], Data: nil}
+		pop := ParsedOpcode{op: opcodeArray[opcodeVal], Data: nil}
 		err := opcodeDisabled(&pop, nil)
 		if !errs.IsErrorCode(err, errs.ErrDisabledOpcode) {
 			t.Errorf("opcodeDisabled: unexpected error - got %v, "+
