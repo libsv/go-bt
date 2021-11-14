@@ -16,10 +16,6 @@ const (
 	minInt64 = -1 << 63
 )
 
-type scriptNumber interface {
-	Bytes() []byte
-}
-
 // scriptNum represents a numeric value used in the scripting engine with
 // special handling to deal with the subtle semantics required by consensus.
 //

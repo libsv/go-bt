@@ -996,7 +996,6 @@ func opcodeSplit(op *ParsedOpcode, t *thread) error {
 //
 // Stack transformation: a b bscript.OpNUM2BIN -> x
 func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
-	//n, err := t.dstack.PopInt()
 	n, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
@@ -1008,7 +1007,6 @@ func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
 	}
 
 	if n.GreaterThanInt(int64(t.cfg.MaxScriptElementSize())) {
-		//if size > t.cfg.MaxScriptElementSize() {
 		return errs.NewError(errs.ErrNumberTooBig, "n is larger than the max of %d", t.cfg.MaxScriptElementSize())
 	}
 
