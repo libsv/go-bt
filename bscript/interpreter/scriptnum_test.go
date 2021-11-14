@@ -200,17 +200,17 @@ func TestMakeScriptNum(t *testing.T) {
 	for _, test := range tests {
 		// Ensure the error code is of the expected type and the error
 		// code matches the value specified in the test instance.
-		gotNum, err := makeScriptNum(test.serialised, test.minimalEncoding,
-			test.numLen)
+		//gotNum, err := makeScriptNum(test.serialised, test.minimalEncoding, test.numLen)
+		//gotNum, err := NewNumber(test.serialised, test.numLen, test.minimalEncoding, true)
+		gotNum, err := makeScriptNum(test.serialised, test.minimalEncoding, test.numLen)
 		if e := tstCheckScriptError(err, test.err); e != nil {
 			t.Errorf("makeScriptNum(%#x): %v", test.serialised, e)
 			continue
 		}
 
 		if gotNum != test.num {
-			t.Errorf("makeScriptNum(%#x): did not get expected "+
-				"number - got %d, want %d", test.serialised,
-				gotNum, test.num)
+			t.Errorf("makeScriptNum(%#x): did not get expected number - got %d, want %d",
+				test.serialised, gotNum, test.num)
 			continue
 		}
 	}

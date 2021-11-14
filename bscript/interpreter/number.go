@@ -160,6 +160,24 @@ func (n *Number) Abs() *Number {
 	return n
 }
 
+func (n *Number) Int() int {
+	return int(n.val.Int64())
+}
+
+func (n *Number) Int32() int32 {
+	return int32(n.val.Int64())
+}
+
+func (n *Number) Int64() int64 {
+	return n.val.Int64()
+}
+
+func (n *Number) Set(i int64) *Number {
+	val := big.NewInt(i)
+	*n.val = *val
+	return n
+}
+
 // Bytes return the receiver in Bytes form.
 func (n *Number) Bytes() []byte {
 	if n.val.Int64() == 0 {
