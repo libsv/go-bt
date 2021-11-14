@@ -1007,7 +1007,6 @@ func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	//size := int(n.Int32())
 	if n.GreaterThanInt(int64(t.cfg.MaxScriptElementSize())) {
 		//if size > t.cfg.MaxScriptElementSize() {
 		return errs.NewError(errs.ErrNumberTooBig, "n is larger than the max of %d", t.cfg.MaxScriptElementSize())
@@ -1015,7 +1014,7 @@ func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
 
 	// encode a as a script num so that we we take the bytes it
 	// will be minimally encoded.
-	sn, err := makeScriptNum(a, false, len(a), t.afterGenesis)
+	sn, err := NewNumber(a, len(a), false, t.afterGenesis)
 	if err != nil {
 		return err
 	}
@@ -1031,12 +1030,11 @@ func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
 
 	signbit := byte(0x00)
 	if len(b) > 0 {
-		signbit = b[0] & 0x80
+		signbit = b[len(b)-1] & 0x80
 		b[len(b)-1] &= 0x7f
 	}
 
 	for n.GreaterThanInt(int64(len(b) + 1)) {
-		//for len(b) < size-1 {
 		b = append(b, 0x00)
 	}
 
