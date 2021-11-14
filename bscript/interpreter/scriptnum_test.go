@@ -201,7 +201,7 @@ func TestMakeScriptNum(t *testing.T) {
 		// Ensure the error code is of the expected type and the error
 		// code matches the value specified in the test instance.
 		gotNum, err := makeScriptNum(test.serialised, test.minimalEncoding,
-			test.numLen, false)
+			test.numLen)
 		if e := tstCheckScriptError(err, test.err); e != nil {
 			t.Errorf("makeScriptNum(%#x): %v", test.serialised, e)
 			continue

@@ -638,7 +638,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-	lockTime, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5, t.afterGenesis)
+	lockTime, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5)
 	if err != nil {
 		return err
 	}
@@ -708,7 +708,7 @@ func opcodeCheckSequenceVerify(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-	stackSequence, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5, t.afterGenesis)
+	stackSequence, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5)
 	if err != nil {
 		return err
 	}
@@ -1054,13 +1054,6 @@ func opcodeBin2num(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-
-	//n, err := makeScriptNum(a, false, len(a))
-	//if err != nil {
-	//	return err
-	//}
-
-	//t.dstack.PushInt(n)
 
 	b := minimallyEncode(a)
 	if len(b) > t.cfg.MaxScriptNumberLength() {
@@ -1532,13 +1525,11 @@ func opcodeBoolOr(op *ParsedOpcode, t *thread) error {
 // Stack transformation (x1==x2): [... 5 5] -> [... 1]
 // Stack transformation (x1!=x2): [... 5 7] -> [... 0]
 func opcodeNumEqual(op *ParsedOpcode, t *thread) error {
-	//v0, err := t.dstack.PopInt()
 	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	//v1, err := t.dstack.PopInt()
 	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
@@ -1575,13 +1566,11 @@ func opcodeNumEqualVerify(op *ParsedOpcode, t *thread) error {
 // Stack transformation (x1==x2): [... 5 5] -> [... 0]
 // Stack transformation (x1!=x2): [... 5 7] -> [... 1]
 func opcodeNumNotEqual(op *ParsedOpcode, t *thread) error {
-	//v0, err := t.dstack.PopInt()
 	v0, err := t.dstack.PopNumber()
 	if err != nil {
 		return err
 	}
 
-	//v1, err := t.dstack.PopInt()
 	v1, err := t.dstack.PopNumber()
 	if err != nil {
 		return err

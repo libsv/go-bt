@@ -193,7 +193,7 @@ func (n scriptNum) Int64() int64 {
 // overflows.
 //
 // See the Bytes function documentation for example encodings.
-func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int, bigInt bool) (scriptNum, error) {
+func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int) (scriptNum, error) {
 	// Interpreting data requires that it is not larger than
 	// the passed scriptNumLen value.
 	if len(v) > scriptNumLen {
@@ -215,16 +215,6 @@ func makeScriptNum(v []byte, requireMinimal bool, scriptNumLen int, bigInt bool)
 	if len(v) == 0 {
 		return 0, nil
 	}
-
-	//if bigInt {
-	//	tmp := make([]byte, len(v))
-	//	copy(tmp, v)
-	//	for i := 0; i < len(tmp)/2; i++ {
-	//		tmp[i], tmp[len(tmp)-i-1] = tmp[len(tmp)-i-1], tmp[i]
-	//	}
-	//	b := new(big.Int).SetBytes(tmp)
-	//	return scriptNum(b.Int64()), nil
-	//}
 
 	// Decode from little endian.
 	var result int64

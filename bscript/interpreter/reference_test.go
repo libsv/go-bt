@@ -438,9 +438,6 @@ func TestScripts(t *testing.T) {
 
 		// Ensure there were no errors when the expected result is OK.
 		if resultStr == "OK" {
-			if name == "test (Round towards zero 2)" {
-				fmt.Println("found ls", scriptPubKey.String(), "uls", scriptSig.String())
-			}
 			if err != nil {
 				t.Errorf("%s failed to execute: %v", name, err)
 			}
