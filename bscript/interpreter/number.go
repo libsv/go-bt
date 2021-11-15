@@ -120,36 +120,31 @@ func makeScriptNumber(bb []byte, scriptNumLen int, requireMinimal, afterGenesis 
 
 // Add adds the receiver and the number, sets the result over the receiver and returns.
 func (n *scriptNumber) Add(o *scriptNumber) *scriptNumber {
-	result := n.val.Add(n.val, o.val)
-	*n.val = *result
+	*n.val = *new(big.Int).Add(n.val, o.val)
 	return n
 }
 
 // Sub subtracts the number from the receiver, sets the result over the receiver and returns.
 func (n *scriptNumber) Sub(o *scriptNumber) *scriptNumber {
-	result := n.val.Sub(n.val, o.val)
-	*n.val = *result
+	*n.val = *new(big.Int).Sub(n.val, o.val)
 	return n
 }
 
 // Mul multiplies the receiver by the number, sets the result over the receiver and returns.
 func (n *scriptNumber) Mul(o *scriptNumber) *scriptNumber {
-	result := n.val.Mul(n.val, o.val)
-	*n.val = *result
+	*n.val = *new(big.Int).Mul(n.val, o.val)
 	return n
 }
 
 // Div divides the receiver by the number, sets the result over the receiver and returns.
 func (n *scriptNumber) Div(o *scriptNumber) *scriptNumber {
-	result := n.val.Quo(n.val, o.val)
-	*n.val = *result
+	*n.val = *new(big.Int).Quo(n.val, o.val)
 	return n
 }
 
 // Mod divides the receiver by the number, sets the remainder over the receiver and returns.
 func (n *scriptNumber) Mod(o *scriptNumber) *scriptNumber {
-	result := n.val.Rem(n.val, o.val)
-	*n.val = *result
+	*n.val = *new(big.Int).Rem(n.val, o.val)
 	return n
 }
 
@@ -200,29 +195,25 @@ func (n *scriptNumber) IsZero() bool {
 
 // Incr increment the receiver by one.
 func (n *scriptNumber) Incr() *scriptNumber {
-	result := n.val.Add(n.val, one)
-	*n.val = *result
+	*n.val = *new(big.Int).Add(n.val, one)
 	return n
 }
 
 // Decr decrement the receiver by one.
 func (n *scriptNumber) Decr() *scriptNumber {
-	result := n.val.Sub(n.val, one)
-	*n.val = *result
+	*n.val = *new(big.Int).Sub(n.val, one)
 	return n
 }
 
 // Neg sets the receiver to the negative of the receiver.
 func (n *scriptNumber) Neg() *scriptNumber {
-	result := n.val.Neg(n.val)
-	*n.val = *result
+	*n.val = *new(big.Int).Neg(n.val)
 	return n
 }
 
 // Abs sets the receiver to the absolute value of hte receiver.
 func (n *scriptNumber) Abs() *scriptNumber {
-	result := n.val.Abs(n.val)
-	*n.val = *result
+	*n.val = *new(big.Int).Abs(n.val)
 	return n
 }
 
@@ -280,8 +271,7 @@ func (n *scriptNumber) Int64() int64 {
 
 // Set the value of the receiver.
 func (n *scriptNumber) Set(i int64) *scriptNumber {
-	val := big.NewInt(i)
-	*n.val = *val
+	*n.val = *new(big.Int).SetInt64(i)
 	return n
 }
 
