@@ -651,14 +651,14 @@ func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
 	// arithmetic being done first, you can always use
 	// 0 bscript.OpMAX bscript.OpCHECKLOCKTIMEVERIFY.
 	if lockTime.LessThanInt(0) {
-		return errs.NewError(errs.ErrNegativeLockTime, "negative lock time: %d", lockTime.val.Int64())
+		return errs.NewError(errs.ErrNegativeLockTime, "negative lock time: %d", lockTime.Int64())
 	}
 
 	// The lock time field of a transaction is either a block height at
 	// which the transaction is finalised or a timestamp depending on if the
 	// value is before the interpreter.LockTimeThreshold.  When it is under the
 	// threshold it is a block height.
-	if err = verifyLockTime(int64(t.tx.LockTime), LockTimeThreshold, lockTime.val.Int64()); err != nil {
+	if err = verifyLockTime(int64(t.tx.LockTime), LockTimeThreshold, lockTime.Int64()); err != nil {
 		return err
 	}
 
@@ -721,10 +721,10 @@ func opcodeCheckSequenceVerify(op *ParsedOpcode, t *thread) error {
 	// arithmetic being done first, you can always use
 	// 0 bscript.OpMAX bscript.OpCHECKSEQUENCEVERIFY.
 	if stackSequence.LessThanInt(0) {
-		return errs.NewError(errs.ErrNegativeLockTime, "negative sequence: %d", stackSequence.val.Int64())
+		return errs.NewError(errs.ErrNegativeLockTime, "negative sequence: %d", stackSequence.Int64())
 	}
 
-	sequence := stackSequence.val.Int64()
+	sequence := stackSequence.Int64()
 
 	// To provide for future soft-fork extensibility, if the
 	// operand has the disabled lock-time flag set,

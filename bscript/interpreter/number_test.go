@@ -84,11 +84,8 @@ func TestScriptNumBytes(t *testing.T) {
 
 	for _, test := range tests {
 		n := &scriptNumber{val: big.NewInt(test.num)}
-		gotBytes := n.Bytes()
-		if !bytes.Equal(gotBytes, test.serialised) {
-			t.Errorf("Bytes: did not get expected bytes for %d - "+
-				"got %x, want %x", test.num, gotBytes,
-				test.serialised)
+		if !bytes.Equal(n.Bytes(), test.serialised) {
+			t.Errorf("Bytes: did not get expected bytes for %d - got %x, want %x", test.num, n.Bytes(), test.serialised)
 			continue
 		}
 	}
@@ -200,9 +197,7 @@ func TestMakeScriptNum(t *testing.T) {
 		{hexToBytes("0009000100"), 16779520, 5, false, nil},
 	}
 
-	var i int
 	for _, test := range tests {
-		i++
 		// Ensure the error code is of the expected type and the error
 		// code matches the value specified in the test instance.
 		gotNum, err := makeScriptNumber(test.serialised, test.numLen, test.minimalEncoding, true)
@@ -272,9 +267,8 @@ func TestScriptNumInt32(t *testing.T) {
 
 	for _, test := range tests {
 		n := &scriptNumber{val: big.NewInt(test.in)}
-		got := n.Int32()
-		if got != test.want {
-			t.Errorf("Int32: did not get expected value for %d - got %d, want %d", test.in, got, test.want)
+		if n.Int32() != test.want {
+			t.Errorf("Int32: did not get expected value for %d - got %d, want %d", test.in, n.Int32(), test.want)
 			continue
 		}
 	}
@@ -333,9 +327,8 @@ func TestScriptNumInt64(t *testing.T) {
 
 	for _, test := range tests {
 		n := &scriptNumber{val: test.in}
-		got := n.Int64()
-		if got != test.want {
-			t.Errorf("Int64: did not get expected value for %d - got %d, want %d", test.in, got, test.want)
+		if n.Int64() != test.want {
+			t.Errorf("Int64: did not get expected value for %d - got %d, want %d", test.in, n.Int64(), test.want)
 			continue
 		}
 	}
