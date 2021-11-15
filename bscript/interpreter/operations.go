@@ -642,7 +642,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-	lockTime, err := makeScriptNumber(so, 5, t.dstack.verifyMinimalData, t.cfg.AfterGenesis())
+	lockTime, err := makeScriptNumber(so, 5, t.dstack.verifyMinimalData, t.afterGenesis)
 	if err != nil {
 		return err
 	}
@@ -712,7 +712,7 @@ func opcodeCheckSequenceVerify(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-	stackSequence, err := makeScriptNumber(so, 5, t.dstack.verifyMinimalData, t.cfg.AfterGenesis())
+	stackSequence, err := makeScriptNumber(so, 5, t.dstack.verifyMinimalData, t.afterGenesis)
 	if err != nil {
 		return err
 	}
@@ -1298,7 +1298,7 @@ func opcodeNot(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1503,7 +1503,7 @@ func opcodeBoolAnd(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1533,7 +1533,7 @@ func opcodeBoolOr(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1561,7 +1561,7 @@ func opcodeNumEqual(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1605,7 +1605,7 @@ func opcodeNumNotEqual(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1633,7 +1633,7 @@ func opcodeLessThan(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1661,7 +1661,7 @@ func opcodeGreaterThan(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1689,7 +1689,7 @@ func opcodeLessThanOrEqual(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1717,7 +1717,7 @@ func opcodeGreaterThanOrEqual(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
@@ -1801,7 +1801,7 @@ func opcodeWithin(op *ParsedOpcode, t *thread) error {
 
 	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
-		afterGenesis: t.cfg.AfterGenesis(),
+		afterGenesis: t.afterGenesis,
 	})
 	return nil
 }
