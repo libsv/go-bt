@@ -335,7 +335,7 @@ func TestScriptNumInt64(t *testing.T) {
 		n := &scriptNumber{val: test.in}
 		got := n.Int64()
 		if got != test.want {
-			t.Errorf("Int32: did not get expected value for %d - got %d, want %d", test.in, got, test.want)
+			t.Errorf("Int64: did not get expected value for %d - got %d, want %d", test.in, got, test.want)
 			continue
 		}
 	}

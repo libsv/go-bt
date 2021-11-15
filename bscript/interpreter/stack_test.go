@@ -186,7 +186,7 @@ func TestStack(t *testing.T) {
 			nil,
 		},
 		{
-			"popNumber 0",
+			"popInt 0",
 			[][]byte{{0x0}},
 			func(s *stack) error {
 				v, err := s.PopInt()
@@ -194,7 +194,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != 0 {
-					return errors.New("0 != 0 on popNumber")
+					return errors.New("0 != 0 on popInt")
 				}
 				return nil
 			},
@@ -202,7 +202,7 @@ func TestStack(t *testing.T) {
 			nil,
 		},
 		{
-			"popNumber -0",
+			"popInt -0",
 			[][]byte{{0x80}},
 			func(s *stack) error {
 				v, err := s.PopInt()
@@ -210,7 +210,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != 0 {
-					return errors.New("-0 != 0 on popNumber")
+					return errors.New("-0 != 0 on popInt")
 				}
 				return nil
 			},
@@ -218,7 +218,7 @@ func TestStack(t *testing.T) {
 			nil,
 		},
 		{
-			"popNumber 1",
+			"popInt 1",
 			[][]byte{{0x01}},
 			func(s *stack) error {
 				v, err := s.PopInt()
@@ -226,7 +226,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != 1 {
-					return errors.New("1 != 1 on popNumber")
+					return errors.New("1 != 1 on popInt")
 				}
 				return nil
 			},
@@ -234,7 +234,7 @@ func TestStack(t *testing.T) {
 			nil,
 		},
 		{
-			"popNumber 1 leading 0",
+			"popInt 1 leading 0",
 			[][]byte{{0x01, 0x00, 0x00, 0x00}},
 			func(s *stack) error {
 				v, err := s.PopInt()
@@ -242,7 +242,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != 1 {
-					return errors.New("1 != 1 on popNumber")
+					return errors.New("1 != 1 on popInt")
 				}
 				return nil
 			},
@@ -250,7 +250,7 @@ func TestStack(t *testing.T) {
 			nil,
 		},
 		{
-			"popNumber -1",
+			"popInt -1",
 			[][]byte{{0x81}},
 			func(s *stack) error {
 				v, err := s.PopInt()
@@ -258,7 +258,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != -1 {
-					return errors.New("-1 != -1 on popNumber")
+					return errors.New("-1 != -1 on popInt")
 				}
 				return nil
 			},
@@ -266,7 +266,7 @@ func TestStack(t *testing.T) {
 			nil,
 		},
 		{
-			"popNumber -1 leading 0",
+			"popInt -1 leading 0",
 			[][]byte{{0x01, 0x00, 0x00, 0x80}},
 			func(s *stack) error {
 				v, err := s.PopInt()
@@ -274,7 +274,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != -1 {
-					return errors.New("-1 != -1 on popNumber")
+					return errors.New("-1 != -1 on popInt")
 				}
 				return nil
 			},
@@ -283,7 +283,7 @@ func TestStack(t *testing.T) {
 		},
 		// Triggers the multibyte case in asInt
 		{
-			"popNumber -513",
+			"popInt -513",
 			[][]byte{{0x1, 0x82}},
 			func(s *stack) error {
 				v, err := s.PopInt()
@@ -291,7 +291,7 @@ func TestStack(t *testing.T) {
 					return err
 				}
 				if v.Int() != -513 {
-					return errors.New("-513 != -513 on popNumber")
+					return errors.New("-513 != -513 on popInt")
 				}
 				return nil
 			},
@@ -868,7 +868,7 @@ func TestStack(t *testing.T) {
 			[][]byte{{0}},
 		},
 		{
-			"pop number",
+			"pop int",
 			nil,
 			func(s *stack) error {
 				s.PushInt(&scriptNumber{val: big.NewInt(1)})

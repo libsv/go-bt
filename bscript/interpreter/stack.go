@@ -69,7 +69,7 @@ func (s *stack) PushByteArray(so []byte) {
 	s.stk = append(s.stk, so)
 }
 
-// PushInt converts the provided Number to a suitable byte array then pushes
+// PushInt converts the provided scriptNumber to a suitable byte array then pushes
 // it onto the top of the stack.
 //
 // Stack transformation: [... x1 x2] -> [... x1 x2 int]
@@ -98,7 +98,7 @@ func (s *stack) PopByteArray() ([]byte, error) {
 	return data, nil
 }
 
-// PopInt pops the value off the top of the stack, converts it into a Number,
+// PopInt pops the value off the top of the stack, converts it into a scriptNumber,
 // and returns it.  The act of converting to a script num enforces the
 // consensus rules imposed on data interpreted as numbers.
 //
