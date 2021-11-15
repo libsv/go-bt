@@ -207,12 +207,12 @@ func TestMakeScriptNum(t *testing.T) {
 		// code matches the value specified in the test instance.
 		gotNum, err := makeScriptNumber(test.serialised, test.numLen, test.minimalEncoding, true)
 		if e := tstCheckScriptError(err, test.err); e != nil {
-			t.Errorf("makeScriptNum(%#x): %v", test.serialised, e)
+			t.Errorf("makeScriptNumber(%#x): %v", test.serialised, e)
 			continue
 		}
 
 		if gotNum.Int() != test.num {
-			t.Errorf("makeScriptNum(%#x): did not get expected number - got %d, want %d",
+			t.Errorf("makeScriptNumber(%#x): did not get expected number - got %d, want %d",
 				test.serialised, gotNum.Int64(), test.num)
 			continue
 		}

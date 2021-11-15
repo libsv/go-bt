@@ -239,7 +239,7 @@ func (n *scriptNumber) Int() int {
 // provide this behaviour.
 //
 // In practice, for most opcodes, the number should never be out of range since
-// it will have been created with makeScriptNum using the defaultScriptLen
+// it will have been created with makeScriptNumber using the defaultScriptLen
 // value, which rejects them.  In case something in the future ends up calling
 // this function against the result of some arithmetic, which IS allowed to be
 // out of range before being reinterpreted as an integer, this will provide the
@@ -263,7 +263,7 @@ func (n *scriptNumber) Int32() int32 {
 // provide this behaviour.
 //
 // In practice, for most opcodes, the number should never be out of range since
-// it will have been created with makeScriptNum using the defaultScriptLen
+// it will have been created with makeScriptNumber using the defaultScriptLen
 // value, which rejects them.  In case something in the future ends up calling
 // this function against the result of some arithmetic, which IS allowed to be
 // out of range before being reinterpreted as an integer, this will provide the
