@@ -366,7 +366,10 @@ func opcodePushData(op *ParsedOpcode, t *thread) error {
 
 // opcode1Negate pushes -1, encoded as a number, to the data stack.
 func opcode1Negate(op *ParsedOpcode, t *thread) error {
-	t.dstack.PushInt(-1)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(-1),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -376,7 +379,7 @@ func opcode1Negate(op *ParsedOpcode, t *thread) error {
 func opcodeN(op *ParsedOpcode, t *thread) error {
 	// The opcodes are all defined consecutively, so the numeric value is
 	// the difference.
-	t.dstack.PushInt(scriptNum((op.op.val - (bscript.Op1 - 1))))
+	t.dstack.PushByteArray([]byte{(op.op.val - (bscript.Op1 - 1))})
 	return nil
 }
 
@@ -639,7 +642,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-	lockTime, err := NewNumber(so, 5, t.dstack.verifyMinimalData, t.cfg.AfterGenesis())
+	lockTime, err := makeScriptNumber(so, 5, t.dstack.verifyMinimalData, t.cfg.AfterGenesis())
 	if err != nil {
 		return err
 	}
@@ -709,7 +712,7 @@ func opcodeCheckSequenceVerify(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-	stackSequence, err := NewNumber(so, 5, t.dstack.verifyMinimalData, t.cfg.AfterGenesis())
+	stackSequence, err := makeScriptNumber(so, 5, t.dstack.verifyMinimalData, t.cfg.AfterGenesis())
 	if err != nil {
 		return err
 	}
@@ -852,7 +855,10 @@ func opcodeIfDup(op *ParsedOpcode, t *thread) error {
 // Example with 2 items: [x1 x2] -> [x1 x2 2]
 // Example with 3 items: [x1 x2 x3] -> [x1 x2 x3 3]
 func opcodeDepth(op *ParsedOpcode, t *thread) error {
-	t.dstack.PushInt(scriptNum(t.dstack.Depth()))
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(int64(t.dstack.Depth())),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1013,7 +1019,7 @@ func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
 
 	// encode a as a script num so that we we take the bytes it
 	// will be minimally encoded.
-	sn, err := NewNumber(a, len(a), false, t.afterGenesis)
+	sn, err := makeScriptNumber(a, len(a), false, t.afterGenesis)
 	if err != nil {
 		return err
 	}
@@ -1073,7 +1079,10 @@ func opcodeSize(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushInt(scriptNum(len(so)))
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(int64(len(so))),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1218,7 +1227,7 @@ func opcode1Add(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushNumber(m.Incr())
+	t.dstack.PushInt(m.Incr())
 	return nil
 }
 
@@ -1232,7 +1241,7 @@ func opcode1Sub(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushNumber(m.Decr())
+	t.dstack.PushInt(m.Decr())
 	return nil
 }
 
@@ -1246,7 +1255,7 @@ func opcodeNegate(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushNumber(m.Neg())
+	t.dstack.PushInt(m.Neg())
 	return nil
 }
 
@@ -1260,7 +1269,7 @@ func opcodeAbs(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushNumber(m.Abs())
+	t.dstack.PushInt(m.Abs())
 	return nil
 }
 
@@ -1287,7 +1296,7 @@ func opcodeNot(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1310,7 +1319,7 @@ func opcode0NotEqual(op *ParsedOpcode, t *thread) error {
 		m.Set(1)
 	}
 
-	t.dstack.PushNumber(m)
+	t.dstack.PushInt(m)
 	return nil
 }
 
@@ -1329,7 +1338,7 @@ func opcodeAdd(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushNumber(v0.Add(v1))
+	t.dstack.PushInt(v0.Add(v1))
 	return nil
 }
 
@@ -1349,7 +1358,7 @@ func opcodeSub(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushNumber(v1.Sub(v0))
+	t.dstack.PushInt(v1.Sub(v0))
 	return nil
 }
 
@@ -1367,7 +1376,7 @@ func opcodeMul(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushNumber(n1.Mul(n2))
+	t.dstack.PushInt(n1.Mul(n2))
 	return nil
 }
 
@@ -1390,7 +1399,7 @@ func opcodeDiv(op *ParsedOpcode, t *thread) error {
 		return errs.NewError(errs.ErrDivideByZero, "divide by zero")
 	}
 
-	t.dstack.PushNumber(a.Div(b))
+	t.dstack.PushInt(a.Div(b))
 	return nil
 }
 
@@ -1413,7 +1422,7 @@ func opcodeMod(op *ParsedOpcode, t *thread) error {
 		return errs.NewError(errs.ErrDivideByZero, "mod by zero")
 	}
 
-	t.dstack.PushNumber(a.Mod(b))
+	t.dstack.PushInt(a.Mod(b))
 	return nil
 }
 
@@ -1492,7 +1501,7 @@ func opcodeBoolAnd(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1522,7 +1531,7 @@ func opcodeBoolOr(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1550,7 +1559,7 @@ func opcodeNumEqual(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1594,7 +1603,7 @@ func opcodeNumNotEqual(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1622,7 +1631,7 @@ func opcodeLessThan(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1650,7 +1659,7 @@ func opcodeGreaterThan(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1678,7 +1687,7 @@ func opcodeLessThanOrEqual(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1706,7 +1715,7 @@ func opcodeGreaterThanOrEqual(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
@@ -1733,7 +1742,7 @@ func opcodeMin(op *ParsedOpcode, t *thread) error {
 		n = v1
 	}
 
-	t.dstack.PushNumber(n)
+	t.dstack.PushInt(n)
 	return nil
 }
 
@@ -1757,7 +1766,7 @@ func opcodeMax(op *ParsedOpcode, t *thread) error {
 		n = v1
 	}
 
-	t.dstack.PushNumber(n)
+	t.dstack.PushInt(n)
 	return nil
 }
 
@@ -1790,7 +1799,7 @@ func opcodeWithin(op *ParsedOpcode, t *thread) error {
 		n = 1
 	}
 
-	t.dstack.PushNumber(&Number{
+	t.dstack.PushInt(&scriptNumber{
 		val:          big.NewInt(n),
 		afterGenesis: t.cfg.AfterGenesis(),
 	})
