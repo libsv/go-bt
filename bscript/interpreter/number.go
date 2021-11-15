@@ -96,6 +96,12 @@ func makeScriptNumber(bb []byte, scriptNumLen int, requireMinimal, afterGenesis 
 	}
 
 	// Decode from little endian.
+	//
+	// The following is the equivalent of:
+	//    var v int64
+	//    for i, b := range bb {
+	//        v |= int64(b) << uint8(8*i)
+	//    }
 	v := new(big.Int)
 	for i, b := range bb {
 		v.Or(v, new(big.Int).Lsh(new(big.Int).SetBytes([]byte{b}), uint(8*i)))
@@ -104,6 +110,12 @@ func makeScriptNumber(bb []byte, scriptNumLen int, requireMinimal, afterGenesis 
 	// When the most significant byte of the input bytes has the sign bit
 	// set, the result is negative.  So, remove the sign bit from the result
 	// and make it negative.
+	//
+	// The following is the equivalent of:
+	//    if bb[len(bb)-1]&0x80 != 0 {
+	//        v &= ^(int64(0x80) << uint8(8*(len(bb)-1)))
+	//        return -v, nil
+	//    }
 	if bb[len(bb)-1]&0x80 != 0 {
 		// The maximum length of bb has already been determined to be 4
 		// above, so uint8 is enough to cover the max possible shift
@@ -316,12 +328,19 @@ func (n *scriptNumber) Bytes() []byte {
 		bb = n.val.Bytes()
 	}
 
-	// Encode to little endian.  The maximum number of encoded bytes is 9
+	// Encode to little endian.  The maximum number of encoded bytes is len(bb)+1
 	// (8 bytes for max int64 plus a potential byte for sign extension).
-	tmp := make([]byte, 0, len(bb)+1)
+	//
+	// The following is the equivalent of:
+	//    result := make([]byte, 0, len(bb)+1)
+	//    for n > 0 {
+	//        result = append(result, byte(n&0xff))
+	//        n >>= 8
+	//    }
+	result := make([]byte, 0, len(bb)+1)
 	cpy := new(big.Int).SetBytes(n.val.Bytes())
 	for cpy.Cmp(zero) == 1 {
-		tmp = append(tmp, byte(cpy.Int64()&0xff))
+		result = append(result, byte(cpy.Int64()&0xff))
 		cpy.Rsh(cpy, 8)
 	}
 
@@ -332,17 +351,17 @@ func (n *scriptNumber) Bytes() []byte {
 	//
 	// Otherwise, when the most significant byte does not already have the
 	// high bit set, use it to indicate the value is negative, if needed.
-	if tmp[len(tmp)-1]&0x80 != 0 {
+	if result[len(result)-1]&0x80 != 0 {
 		extraByte := byte(0x00)
 		if isNegative {
 			extraByte = 0x80
 		}
-		tmp = append(tmp, extraByte)
+		result = append(result, extraByte)
 	} else if isNegative {
-		tmp[len(tmp)-1] |= 0x80
+		result[len(result)-1] |= 0x80
 	}
 
-	return tmp
+	return result
 }
 
 func minimallyEncode(data []byte) []byte {
