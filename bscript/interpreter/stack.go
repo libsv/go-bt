@@ -39,6 +39,7 @@ func fromBool(v bool) []byte {
 type stack struct {
 	stk               [][]byte
 	maxNumLength      int
+	afterGenesis      bool
 	verifyMinimalData bool
 	debug             Debugger
 	sh                StateHandler
@@ -47,6 +48,7 @@ type stack struct {
 func newStack(cfg config, verifyMinimalData bool) stack {
 	return stack{
 		maxNumLength:      cfg.MaxScriptNumberLength(),
+		afterGenesis:      cfg.AfterGenesis(),
 		verifyMinimalData: verifyMinimalData,
 		debug:             &nopDebugger{},
 		sh:                &nopStateHandler{},
@@ -67,12 +69,12 @@ func (s *stack) PushByteArray(so []byte) {
 	s.stk = append(s.stk, so)
 }
 
-// PushInt converts the provided scriptNum to a suitable byte array then pushes
+// PushInt converts the provided scriptNumber to a suitable byte array then pushes
 // it onto the top of the stack.
 //
 // Stack transformation: [... x1 x2] -> [... x1 x2 int]
-func (s *stack) PushInt(val scriptNum) {
-	s.PushByteArray(val.Bytes())
+func (s *stack) PushInt(n *scriptNumber) {
+	s.PushByteArray(n.Bytes())
 }
 
 // PushBool converts the provided boolean to a suitable byte array then pushes
@@ -96,18 +98,18 @@ func (s *stack) PopByteArray() ([]byte, error) {
 	return data, nil
 }
 
-// PopInt pops the value off the top of the stack, converts it into a script
-// num, and returns it.  The act of converting to a script num enforces the
+// PopInt pops the value off the top of the stack, converts it into a scriptNumber,
+// and returns it.  The act of converting to a script num enforces the
 // consensus rules imposed on data interpreted as numbers.
 //
 // Stack transformation: [... x1 x2 x3] -> [... x1 x2]
-func (s *stack) PopInt() (scriptNum, error) {
+func (s *stack) PopInt() (*scriptNumber, error) {
 	so, err := s.PopByteArray()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return makeScriptNum(so, s.verifyMinimalData, s.maxNumLength)
+	return makeScriptNumber(so, s.maxNumLength, s.verifyMinimalData, s.afterGenesis)
 }
 
 // PopBool pops the value off the top of the stack, converts it into a bool, and
@@ -136,13 +138,13 @@ func (s *stack) PeekByteArray(idx int32) ([]byte, error) {
 // PeekInt returns the Nth item on the stack as a script num without removing
 // it.  The act of converting to a script num enforces the consensus rules
 // imposed on data interpreted as numbers.
-func (s *stack) PeekInt(idx int32) (scriptNum, error) {
+func (s *stack) PeekInt(idx int32) (*scriptNumber, error) {
 	so, err := s.PeekByteArray(idx)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	return makeScriptNum(so, s.verifyMinimalData, s.maxNumLength)
+	return makeScriptNumber(so, s.maxNumLength, s.verifyMinimalData, s.afterGenesis)
 }
 
 // PeekBool returns the Nth item on the stack as a bool without removing it.

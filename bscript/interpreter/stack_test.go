@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math/big"
 	"reflect"
 	"testing"
 
@@ -192,7 +193,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if v != 0 {
+				if v.Int() != 0 {
 					return errors.New("0 != 0 on popInt")
 				}
 				return nil
@@ -208,7 +209,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if v != 0 {
+				if v.Int() != 0 {
 					return errors.New("-0 != 0 on popInt")
 				}
 				return nil
@@ -224,7 +225,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if v != 1 {
+				if v.Int() != 1 {
 					return errors.New("1 != 1 on popInt")
 				}
 				return nil
@@ -240,8 +241,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if v != 1 {
-					fmt.Printf("%v != %v\n", v, 1)
+				if v.Int() != 1 {
 					return errors.New("1 != 1 on popInt")
 				}
 				return nil
@@ -257,7 +257,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if v != -1 {
+				if v.Int() != -1 {
 					return errors.New("-1 != -1 on popInt")
 				}
 				return nil
@@ -273,8 +273,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if v != -1 {
-					fmt.Printf("%v != %v\n", v, -1)
+				if v.Int() != -1 {
 					return errors.New("-1 != -1 on popInt")
 				}
 				return nil
@@ -291,9 +290,8 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if v != -513 {
-					fmt.Printf("%v != %v\n", v, -513)
-					return errors.New("1 != 1 on popInt")
+				if v.Int() != -513 {
+					return errors.New("-513 != -513 on popInt")
 				}
 				return nil
 			},
@@ -309,8 +307,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if v != -1 {
-					fmt.Printf("%v != %v\n", v, -1)
+				if v.Int() != -1 {
 					return errors.New("-1 != -1 on popInt")
 				}
 				return nil
@@ -322,7 +319,7 @@ func TestStack(t *testing.T) {
 			"PushInt 0",
 			nil,
 			func(s *stack) error {
-				s.PushInt(scriptNum(0))
+				s.PushInt(&scriptNumber{val: big.NewInt(0)})
 				return nil
 			},
 			nil,
@@ -332,7 +329,7 @@ func TestStack(t *testing.T) {
 			"PushInt 1",
 			nil,
 			func(s *stack) error {
-				s.PushInt(scriptNum(1))
+				s.PushInt(&scriptNumber{val: big.NewInt(1)})
 				return nil
 			},
 			nil,
@@ -342,7 +339,7 @@ func TestStack(t *testing.T) {
 			"PushInt -1",
 			nil,
 			func(s *stack) error {
-				s.PushInt(scriptNum(-1))
+				s.PushInt(&scriptNumber{val: big.NewInt(-1)})
 				return nil
 			},
 			nil,
@@ -352,7 +349,7 @@ func TestStack(t *testing.T) {
 			"PushInt two bytes",
 			nil,
 			func(s *stack) error {
-				s.PushInt(scriptNum(256))
+				s.PushInt(&scriptNumber{val: big.NewInt(256)})
 				return nil
 			},
 			nil,
@@ -364,7 +361,7 @@ func TestStack(t *testing.T) {
 			nil,
 			func(s *stack) error {
 				// this will have the highbit set
-				s.PushInt(scriptNum(128))
+				s.PushInt(&scriptNumber{val: big.NewInt(128)})
 				return nil
 			},
 			nil,
@@ -486,7 +483,7 @@ func TestStack(t *testing.T) {
 			"PushInt PopBool",
 			nil,
 			func(s *stack) error {
-				s.PushInt(scriptNum(1))
+				s.PushInt(&scriptNumber{val: big.NewInt(1)})
 				val, err := s.PopBool()
 				if err != nil {
 					return err
@@ -504,7 +501,7 @@ func TestStack(t *testing.T) {
 			"PushInt PopBool 2",
 			nil,
 			func(s *stack) error {
-				s.PushInt(scriptNum(0))
+				s.PushInt(&scriptNumber{val: big.NewInt(0)})
 				val, err := s.PopBool()
 				if err != nil {
 					return err
@@ -844,7 +841,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if val != 1 {
+				if val.Int() != 1 {
 					return errors.New("invalid result")
 				}
 				return nil
@@ -862,7 +859,7 @@ func TestStack(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				if val != 0 {
+				if val.Int() != 0 {
 					return errors.New("invalid result")
 				}
 				return nil
@@ -874,14 +871,14 @@ func TestStack(t *testing.T) {
 			"pop int",
 			nil,
 			func(s *stack) error {
-				s.PushInt(scriptNum(1))
+				s.PushInt(&scriptNumber{val: big.NewInt(1)})
 				// Peek int is otherwise pretty well tested,
 				// just check it works.
 				val, err := s.PopInt()
 				if err != nil {
 					return err
 				}
-				if val != 1 {
+				if val.Int() != 1 {
 					return errors.New("invalid result")
 				}
 				return nil

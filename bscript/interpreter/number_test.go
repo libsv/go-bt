@@ -7,6 +7,8 @@ package interpreter
 import (
 	"bytes"
 	"encoding/hex"
+	"math"
+	"math/big"
 	"testing"
 
 	"github.com/libsv/go-bt/v2"
@@ -33,7 +35,7 @@ func TestScriptNumBytes(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		num        scriptNum
+		num        int64
 		serialised []byte
 	}{
 		{0, nil},
@@ -81,11 +83,9 @@ func TestScriptNumBytes(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		gotBytes := test.num.Bytes()
-		if !bytes.Equal(gotBytes, test.serialised) {
-			t.Errorf("Bytes: did not get expected bytes for %d - "+
-				"got %x, want %x", test.num, gotBytes,
-				test.serialised)
+		n := &scriptNumber{val: big.NewInt(test.num)}
+		if !bytes.Equal(n.Bytes(), test.serialised) {
+			t.Errorf("Bytes: did not get expected bytes for %d - got %x, want %x", test.num, n.Bytes(), test.serialised)
 			continue
 		}
 	}
@@ -103,7 +103,7 @@ func TestMakeScriptNum(t *testing.T) {
 
 	tests := []struct {
 		serialised      []byte
-		num             scriptNum
+		num             int
 		numLen          int
 		minimalEncoding bool
 		err             error
@@ -200,17 +200,15 @@ func TestMakeScriptNum(t *testing.T) {
 	for _, test := range tests {
 		// Ensure the error code is of the expected type and the error
 		// code matches the value specified in the test instance.
-		gotNum, err := makeScriptNum(test.serialised, test.minimalEncoding,
-			test.numLen)
+		gotNum, err := makeScriptNumber(test.serialised, test.numLen, test.minimalEncoding, true)
 		if e := tstCheckScriptError(err, test.err); e != nil {
-			t.Errorf("makeScriptNum(%#x): %v", test.serialised, e)
+			t.Errorf("makeScriptNumber(%#x): %v", test.serialised, e)
 			continue
 		}
 
-		if gotNum != test.num {
-			t.Errorf("makeScriptNum(%#x): did not get expected "+
-				"number - got %d, want %d", test.serialised,
-				gotNum, test.num)
+		if gotNum.Int() != test.num {
+			t.Errorf("makeScriptNumber(%#x): did not get expected number - got %d, want %d",
+				test.serialised, gotNum.Int64(), test.num)
 			continue
 		}
 	}
@@ -222,7 +220,7 @@ func TestScriptNumInt32(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		in   scriptNum
+		in   int64
 		want int32
 	}{
 		// Values inside the valid int32 range are just the values
@@ -268,10 +266,69 @@ func TestScriptNumInt32(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		got := test.in.Int32()
-		if got != test.want {
-			t.Errorf("Int32: did not get expected value for %d - "+
-				"got %d, want %d", test.in, got, test.want)
+		n := &scriptNumber{val: big.NewInt(test.in)}
+		if n.Int32() != test.want {
+			t.Errorf("Int32: did not get expected value for %d - got %d, want %d", test.in, n.Int32(), test.want)
+			continue
+		}
+	}
+}
+
+func TestScriptNumInt64(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		in   *big.Int
+		want int64
+	}{
+		// Values inside the valid int64 range are just the values
+		// themselves cast to an int64.
+		{big.NewInt(0), 0},
+		{big.NewInt(1), 1},
+		{big.NewInt(-1), -1},
+		{big.NewInt(127), 127},
+		{big.NewInt(-127), -127},
+		{big.NewInt(128), 128},
+		{big.NewInt(-128), -128},
+		{big.NewInt(129), 129},
+		{big.NewInt(-129), -129},
+		{big.NewInt(256), 256},
+		{big.NewInt(-256), -256},
+		{big.NewInt(32767), 32767},
+		{big.NewInt(-32767), -32767},
+		{big.NewInt(32768), 32768},
+		{big.NewInt(-32768), -32768},
+		{big.NewInt(65535), 65535},
+		{big.NewInt(-65535), -65535},
+		{big.NewInt(524288), 524288},
+		{big.NewInt(-524288), -524288},
+		{big.NewInt(7340032), 7340032},
+		{big.NewInt(-7340032), -7340032},
+		{big.NewInt(8388608), 8388608},
+		{big.NewInt(-8388608), -8388608},
+		{big.NewInt(2147483647), 2147483647},
+		{big.NewInt(-2147483647), -2147483647},
+		{big.NewInt(-2147483648), -2147483648},
+		{big.NewInt(2147483648), 2147483648},
+		{big.NewInt(-2147483649), -2147483649},
+		{big.NewInt(1152921504606846975), 1152921504606846975},
+		{big.NewInt(-1152921504606846975), -1152921504606846975},
+		{big.NewInt(2305843009213693951), 2305843009213693951},
+		{big.NewInt(-2305843009213693951), -2305843009213693951},
+		{big.NewInt(4611686018427387903), 4611686018427387903},
+		{big.NewInt(-4611686018427387903), -4611686018427387903},
+		{big.NewInt(9223372036854775807), 9223372036854775807},
+		{big.NewInt(-9223372036854775808), -9223372036854775808},
+
+		// Values outside of the valid int64 range are limited to int64.
+		{new(big.Int).Add(big.NewInt(9223372036854775807), big.NewInt(5)), math.MaxInt64},
+		{new(big.Int).Sub(big.NewInt(-9223372036854775808), big.NewInt(600)), math.MinInt64},
+	}
+
+	for _, test := range tests {
+		n := &scriptNumber{val: test.in}
+		if n.Int64() != test.want {
+			t.Errorf("Int64: did not get expected value for %d - got %d, want %d", test.in, n.Int64(), test.want)
 			continue
 		}
 	}

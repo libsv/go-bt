@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"strconv"
 	"strings"
 	"testing"
@@ -92,7 +93,8 @@ func parseShortForm(script string) (*bscript.Script, error) {
 			} else if num == -1 || (1 <= num && num <= 16) {
 				scr.AppendOpCode((bscript.Op1 - 1) + byte(num))
 			} else {
-				scr.AppendPushData(scriptNum(num).Bytes())
+				n := &scriptNumber{val: big.NewInt(num)}
+				scr.AppendPushData(n.Bytes())
 			}
 			continue
 		} else if bts, err := parseHex(tok); err == nil {

@@ -5,6 +5,7 @@ import (
 	"crypto/sha1" //nolint:gosec // OP_SHA1 support requires this
 	"crypto/sha256"
 	"hash"
+	"math/big"
 
 	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bk/crypto"
@@ -365,7 +366,10 @@ func opcodePushData(op *ParsedOpcode, t *thread) error {
 
 // opcode1Negate pushes -1, encoded as a number, to the data stack.
 func opcode1Negate(op *ParsedOpcode, t *thread) error {
-	t.dstack.PushInt(-1)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(-1),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -375,7 +379,7 @@ func opcode1Negate(op *ParsedOpcode, t *thread) error {
 func opcodeN(op *ParsedOpcode, t *thread) error {
 	// The opcodes are all defined consecutively, so the numeric value is
 	// the difference.
-	t.dstack.PushInt(scriptNum((op.op.val - (bscript.Op1 - 1))))
+	t.dstack.PushByteArray([]byte{(op.op.val - (bscript.Op1 - 1))})
 	return nil
 }
 
@@ -638,7 +642,7 @@ func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-	lockTime, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5)
+	lockTime, err := makeScriptNumber(so, 5, t.dstack.verifyMinimalData, t.afterGenesis)
 	if err != nil {
 		return err
 	}
@@ -646,15 +650,15 @@ func opcodeCheckLockTimeVerify(op *ParsedOpcode, t *thread) error {
 	// In the rare event that the argument needs to be < 0 due to some
 	// arithmetic being done first, you can always use
 	// 0 bscript.OpMAX bscript.OpCHECKLOCKTIMEVERIFY.
-	if lockTime < 0 {
-		return errs.NewError(errs.ErrNegativeLockTime, "negative lock time: %d", lockTime)
+	if lockTime.LessThanInt(0) {
+		return errs.NewError(errs.ErrNegativeLockTime, "negative lock time: %d", lockTime.Int64())
 	}
 
 	// The lock time field of a transaction is either a block height at
 	// which the transaction is finalised or a timestamp depending on if the
 	// value is before the interpreter.LockTimeThreshold.  When it is under the
 	// threshold it is a block height.
-	if err = verifyLockTime(int64(t.tx.LockTime), LockTimeThreshold, int64(lockTime)); err != nil {
+	if err = verifyLockTime(int64(t.tx.LockTime), LockTimeThreshold, lockTime.Int64()); err != nil {
 		return err
 	}
 
@@ -708,7 +712,7 @@ func opcodeCheckSequenceVerify(op *ParsedOpcode, t *thread) error {
 	if err != nil {
 		return err
 	}
-	stackSequence, err := makeScriptNum(so, t.dstack.verifyMinimalData, 5)
+	stackSequence, err := makeScriptNumber(so, 5, t.dstack.verifyMinimalData, t.afterGenesis)
 	if err != nil {
 		return err
 	}
@@ -716,11 +720,11 @@ func opcodeCheckSequenceVerify(op *ParsedOpcode, t *thread) error {
 	// In the rare event that the argument needs to be < 0 due to some
 	// arithmetic being done first, you can always use
 	// 0 bscript.OpMAX bscript.OpCHECKSEQUENCEVERIFY.
-	if stackSequence < 0 {
-		return errs.NewError(errs.ErrNegativeLockTime, "negative sequence: %d", stackSequence)
+	if stackSequence.LessThanInt(0) {
+		return errs.NewError(errs.ErrNegativeLockTime, "negative sequence: %d", stackSequence.Int64())
 	}
 
-	sequence := int64(stackSequence)
+	sequence := stackSequence.Int64()
 
 	// To provide for future soft-fork extensibility, if the
 	// operand has the disabled lock-time flag set,
@@ -851,7 +855,10 @@ func opcodeIfDup(op *ParsedOpcode, t *thread) error {
 // Example with 2 items: [x1 x2] -> [x1 x2 2]
 // Example with 3 items: [x1 x2 x3] -> [x1 x2 x3 3]
 func opcodeDepth(op *ParsedOpcode, t *thread) error {
-	t.dstack.PushInt(scriptNum(t.dstack.Depth()))
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(int64(t.dstack.Depth())),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -978,12 +985,12 @@ func opcodeSplit(op *ParsedOpcode, t *thread) error {
 	if n.Int32() > int32(len(c)) {
 		return errs.NewError(errs.ErrNumberTooBig, "n is larger than length of array")
 	}
-	if n < 0 {
+	if n.LessThanInt(0) {
 		return errs.NewError(errs.ErrNumberTooSmall, "n is negative")
 	}
 
-	a := c[:n]
-	b := c[n:]
+	a := c[:n.Int()]
+	b := c[n.Int():]
 	t.dstack.PushByteArray(a)
 	t.dstack.PushByteArray(b)
 
@@ -1006,34 +1013,33 @@ func opcodeNum2bin(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	size := int(n.Int32())
-	if size > t.cfg.MaxScriptElementSize() {
+	if n.GreaterThanInt(int64(t.cfg.MaxScriptElementSize())) {
 		return errs.NewError(errs.ErrNumberTooBig, "n is larger than the max of %d", t.cfg.MaxScriptElementSize())
 	}
 
 	// encode a as a script num so that we we take the bytes it
 	// will be minimally encoded.
-	sn, err := makeScriptNum(a, false, len(a))
+	sn, err := makeScriptNumber(a, len(a), false, t.afterGenesis)
 	if err != nil {
 		return err
 	}
 
 	b := sn.Bytes()
-	if len(b) > size {
+	if n.LessThanInt(int64(len(b))) {
 		return errs.NewError(errs.ErrNumberTooSmall, "cannot fit it into n sized array")
 	}
-	if len(b) == size {
+	if n.EqualInt(int64(len(b))) {
 		t.dstack.PushByteArray(b)
 		return nil
 	}
 
 	signbit := byte(0x00)
 	if len(b) > 0 {
-		signbit = b[0] & 0x80
+		signbit = b[len(b)-1] & 0x80
 		b[len(b)-1] &= 0x7f
 	}
 
-	for len(b) < size-1 {
+	for n.GreaterThanInt(int64(len(b) + 1)) {
 		b = append(b, 0x00)
 	}
 
@@ -1054,15 +1060,12 @@ func opcodeBin2num(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	n, err := makeScriptNum(a, false, len(a))
-	if err != nil {
-		return err
-	}
-	if len(n.Bytes()) > t.cfg.MaxScriptNumberLength() {
+	b := minimallyEncode(a)
+	if len(b) > t.cfg.MaxScriptNumberLength() {
 		return errs.NewError(errs.ErrNumberTooBig, "script numbers are limited to %d bytes", t.cfg.MaxScriptNumberLength())
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushByteArray(b)
 	return nil
 }
 
@@ -1076,7 +1079,10 @@ func opcodeSize(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushInt(scriptNum(len(so)))
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(int64(len(so))),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1221,7 +1227,7 @@ func opcode1Add(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushInt(m + 1)
+	t.dstack.PushInt(m.Incr())
 	return nil
 }
 
@@ -1235,7 +1241,7 @@ func opcode1Sub(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushInt(m - 1)
+	t.dstack.PushInt(m.Decr())
 	return nil
 }
 
@@ -1249,7 +1255,7 @@ func opcodeNegate(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushInt(-m)
+	t.dstack.PushInt(m.Neg())
 	return nil
 }
 
@@ -1263,11 +1269,7 @@ func opcodeAbs(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	if m < 0 {
-		m = -m
-	}
-
-	t.dstack.PushInt(m)
+	t.dstack.PushInt(m.Abs())
 	return nil
 }
 
@@ -1289,12 +1291,15 @@ func opcodeNot(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if m == 0 {
+	var n int64
+	if m.IsZero() {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1310,8 +1315,8 @@ func opcode0NotEqual(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	if m != 0 {
-		m = 1
+	if !m.IsZero() {
+		m.Set(1)
 	}
 
 	t.dstack.PushInt(m)
@@ -1333,7 +1338,7 @@ func opcodeAdd(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushInt(v0 + v1)
+	t.dstack.PushInt(v0.Add(v1))
 	return nil
 }
 
@@ -1353,7 +1358,7 @@ func opcodeSub(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	t.dstack.PushInt(v1 - v0)
+	t.dstack.PushInt(v1.Sub(v0))
 	return nil
 }
 
@@ -1371,9 +1376,7 @@ func opcodeMul(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	n3 := n1.Int64() * n2.Int64()
-
-	t.dstack.PushInt(scriptNum(n3))
+	t.dstack.PushInt(n1.Mul(n2))
 	return nil
 }
 
@@ -1392,11 +1395,11 @@ func opcodeDiv(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	if b == 0 {
+	if b.IsZero() {
 		return errs.NewError(errs.ErrDivideByZero, "divide by zero")
 	}
 
-	t.dstack.PushInt(a / b)
+	t.dstack.PushInt(a.Div(b))
 	return nil
 }
 
@@ -1415,21 +1418,22 @@ func opcodeMod(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	if b == 0 {
+	if b.IsZero() {
 		return errs.NewError(errs.ErrDivideByZero, "mod by zero")
 	}
 
-	t.dstack.PushInt(a % b)
+	t.dstack.PushInt(a.Mod(b))
 	return nil
 }
 
 func opcodeLShift(op *ParsedOpcode, t *thread) error {
-	n, err := t.dstack.PopInt()
+	num, err := t.dstack.PopInt()
 	if err != nil {
 		return err
 	}
+	n := num.Int()
 
-	if n.Int32() < 0 {
+	if n < 0 {
 		return errs.NewError(errs.ErrNumberTooSmall, "n less than 0")
 	}
 
@@ -1449,12 +1453,13 @@ func opcodeLShift(op *ParsedOpcode, t *thread) error {
 }
 
 func opcodeRShift(op *ParsedOpcode, t *thread) error {
-	n, err := t.dstack.PopInt()
+	num, err := t.dstack.PopInt()
 	if err != nil {
 		return err
 	}
+	n := num.Int()
 
-	if n.Int32() < 0 {
+	if n < 0 {
 		return errs.NewError(errs.ErrNumberTooSmall, "n less than 0")
 	}
 
@@ -1491,12 +1496,15 @@ func opcodeBoolAnd(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if v0 != 0 && v1 != 0 {
+	var n int64
+	if !v0.IsZero() && !v1.IsZero() {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1518,12 +1526,15 @@ func opcodeBoolOr(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if v0 != 0 || v1 != 0 {
+	var n int64
+	if !v0.IsZero() || !v1.IsZero() {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1543,12 +1554,15 @@ func opcodeNumEqual(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if v0 == v1 {
+	var n int64
+	if v0.Equal(v1) {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1584,12 +1598,15 @@ func opcodeNumNotEqual(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if v0 != v1 {
+	var n int64
+	if !v0.Equal(v1) {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1609,12 +1626,15 @@ func opcodeLessThan(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if v1 < v0 {
+	var n int64
+	if v1.LessThan(v0) {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1634,12 +1654,15 @@ func opcodeGreaterThan(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if v1 > v0 {
+	var n int64
+	if v1.GreaterThan(v0) {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1659,12 +1682,15 @@ func opcodeLessThanOrEqual(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if v1 <= v0 {
+	var n int64
+	if v1.LessThanOrEqual(v0) {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1684,12 +1710,15 @@ func opcodeGreaterThanOrEqual(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n scriptNum
-	if v1 >= v0 {
+	var n int64
+	if v1.GreaterThanOrEqual(v0) {
 		n = 1
 	}
 
-	t.dstack.PushInt(n)
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -1709,7 +1738,7 @@ func opcodeMin(op *ParsedOpcode, t *thread) error {
 	}
 
 	n := v0
-	if v1 < v0 {
+	if v1.LessThan(v0) {
 		n = v1
 	}
 
@@ -1733,7 +1762,7 @@ func opcodeMax(op *ParsedOpcode, t *thread) error {
 	}
 
 	n := v0
-	if v1 > v0 {
+	if v1.GreaterThan(v0) {
 		n = v1
 	}
 
@@ -1765,12 +1794,15 @@ func opcodeWithin(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	var n int
-	if minVal <= x && x < maxVal {
+	var n int64
+	if minVal.LessThanOrEqual(x) && x.LessThan(maxVal) {
 		n = 1
 	}
 
-	t.dstack.PushInt(scriptNum(n))
+	t.dstack.PushInt(&scriptNumber{
+		val:          big.NewInt(n),
+		afterGenesis: t.afterGenesis,
+	})
 	return nil
 }
 
@@ -2019,7 +2051,7 @@ func opcodeCheckMultiSig(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	numPubKeys := int(numKeys.Int32())
+	numPubKeys := numKeys.Int()
 	if numPubKeys < 0 {
 		return errs.NewError(errs.ErrInvalidPubKeyCount, "number of pubkeys %d is negative", numPubKeys)
 	}
@@ -2049,7 +2081,7 @@ func opcodeCheckMultiSig(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	numSignatures := int(numSigs.Int32())
+	numSignatures := numSigs.Int()
 	if numSignatures < 0 {
 		return errs.NewError(errs.ErrInvalidSignatureCount, "number of signatures %d is negative", numSignatures)
 	}

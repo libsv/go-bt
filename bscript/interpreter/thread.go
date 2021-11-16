@@ -241,6 +241,7 @@ func (t *thread) CheckErrorCondition(finalScript bool) error {
 	if finalScript {
 		t.afterSuccess()
 	}
+
 	return nil
 }
 
