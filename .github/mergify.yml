@@ -8,17 +8,12 @@ pull_request_rules:
     conditions:
       - -draft
       - author~=^dependabot(|-preview)\[bot\]$
-      - check-success='build (1.14.x, ubuntu-latest)'
-      - check-success='build (1.15.x, ubuntu-latest)'
       - check-success='build (1.16.x, ubuntu-latest)'
       - check-success='build (1.17.x, ubuntu-latest)'
-      - check-success='build (1.14.x, macos-latest)'
-      - check-success='build (1.15.x, macos-latest)'
       - check-success='build (1.16.x, macos-latest)'
       - check-success='build (1.17.x, macos-latest)'
-      - check-success='lint (1.15.x, ubuntu-latest)'
       - check-success='lint (1.16.x, ubuntu-latest)'
-      - check-success='lint (1.15.x, macos-latest)'
+      - check-success='lint (1.17.x, ubuntu-latest)'
       - check-success='lint (1.16.x, macos-latest)'
       - check-success='lint (1.17.x, macos-latest)'
       - check-success='Analyze (go)'
@@ -32,17 +27,12 @@ pull_request_rules:
   - name: Alert on major version detection
     conditions:
       - author~=^dependabot(|-preview)\[bot\]$
-      - check-success='build (1.14.x, ubuntu-latest)'
-      - check-success='build (1.15.x, ubuntu-latest)'
       - check-success='build (1.16.x, ubuntu-latest)'
       - check-success='build (1.17.x, ubuntu-latest)'
-      - check-success='build (1.14.x, macos-latest)'
-      - check-success='build (1.15.x, macos-latest)'
       - check-success='build (1.16.x, macos-latest)'
       - check-success='build (1.17.x, macos-latest)'
-      - check-success='lint (1.15.x, ubuntu-latest)'
       - check-success='lint (1.16.x, ubuntu-latest)'
-      - check-success='lint (1.15.x, macos-latest)'
+      - check-success='lint (1.17.x, ubuntu-latest)'
       - check-success='lint (1.16.x, macos-latest)'
       - check-success='lint (1.17.x, macos-latest)'
       - check-success='Analyze (go)'
@@ -59,17 +49,12 @@ pull_request_rules:
   - name: Automatic Merge ⬇️ on Approval ✔
     conditions:
       - "#approved-reviews-by>=1"
-      - check-success='build (1.14.x, ubuntu-latest)'
-      - check-success='build (1.15.x, ubuntu-latest)'
       - check-success='build (1.16.x, ubuntu-latest)'
       - check-success='build (1.17.x, ubuntu-latest)'
-      - check-success='build (1.14.x, macos-latest)'
-      - check-success='build (1.15.x, macos-latest)'
       - check-success='build (1.16.x, macos-latest)'
       - check-success='build (1.17.x, macos-latest)'
-      - check-success='lint (1.15.x, ubuntu-latest)'
       - check-success='lint (1.16.x, ubuntu-latest)'
-      - check-success='lint (1.15.x, macos-latest)'
+      - check-success='lint (1.17.x, ubuntu-latest)'
       - check-success='lint (1.16.x, macos-latest)'
       - check-success='lint (1.17.x, macos-latest)'
       - check-success='Analyze (go)'
