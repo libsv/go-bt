@@ -317,7 +317,7 @@ func TestScript_UnmarshalJSON(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			var out bscript.Script
+			var out *bscript.Script
 			assert.NoError(t, json.Unmarshal([]byte(test.jsonString), &out))
 			assert.Equal(t, test.exp, out.String())
 		})
