@@ -403,7 +403,7 @@ func (s *Script) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON covert from json into *bscript.Script.
 func (s *Script) UnmarshalJSON(bb []byte) error {
-	ss, err := NewFromHexString(string(bb))
+	ss, err := NewFromHexString(string(bytes.Trim(bb, `"`)))
 	if err != nil {
 		return err
 	}

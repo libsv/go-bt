@@ -3,6 +3,7 @@ package bscript_test
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -285,6 +286,40 @@ func TestScript_Equals(t *testing.T) {
 			assert.Equal(t, test.exp, test.script1.Equals(test.script2))
 			assert.Equal(t, test.exp, test.script1.EqualsBytes(*test.script2))
 			assert.Equal(t, test.exp, test.script1.EqualsHex(test.script2.String()))
+		})
+	}
+}
+
+func TestScript_MarshalJSON(t *testing.T) {
+	script, err := bscript.NewFromASM("OP_2 OP_2 OP_ADD OP_4 OP_EQUALVERIFY")
+	assert.NoError(t, err)
+
+	bb, err := json.Marshal(script)
+	assert.NoError(t, err)
+
+	assert.Equal(t, `"5252935488"`, string(bb))
+}
+
+func TestScript_UnmarshalJSON(t *testing.T) {
+	tests := map[string]struct {
+		jsonString string
+		exp        string
+	}{
+		"script with content": {
+			jsonString: `"5252935488"`,
+			exp:        "5252935488",
+		},
+		"empty script": {
+			jsonString: `""`,
+			exp:        "",
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			var out bscript.Script
+			assert.NoError(t, json.Unmarshal([]byte(test.jsonString), &out))
+			assert.Equal(t, test.exp, out.String())
 		})
 	}
 }
