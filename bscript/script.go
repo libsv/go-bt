@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"strings"
 
 	"github.com/libsv/go-bk/bec"
@@ -393,4 +394,20 @@ func (s *Script) EqualsBytes(b []byte) bool {
 // if they match then true is returned otherwise false.
 func (s *Script) EqualsHex(h string) bool {
 	return s.String() == h
+}
+
+// MarshalJSON convert script into json.
+func (s *Script) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, s.String())), nil
+}
+
+// UnmarshalJSON covert from json into *bscript.Script.
+func (s *Script) UnmarshalJSON(bb []byte) error {
+	ss, err := NewFromHexString(string(bytes.Trim(bb, `"`)))
+	if err != nil {
+		return err
+	}
+
+	*s = *ss
+	return nil
 }
