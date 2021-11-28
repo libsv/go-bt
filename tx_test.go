@@ -163,7 +163,7 @@ func TestNewTxFromReader(t *testing.T) {
 	var err error
 	var n int
 
-	f, err := os.Open("./block.bin")
+	f, err := os.Open("./testing/data/block.bin")
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
