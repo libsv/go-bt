@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/pkg/errors"
 )
 
 /*
@@ -30,17 +31,17 @@ type Output struct {
 func newOutputFromReader(r io.Reader) (*Output, error) {
 	satoshis := make([]byte, 8)
 	if n, err := io.ReadFull(r, satoshis); err != nil {
-		return nil, fmt.Errorf("Could not read satoshis(8), got %d bytes and err: %w", n, err)
+		return nil, errors.Wrapf(err, "satoshis(8): got %d bytes", n)
 	}
 
 	var l VarInt
 	if _, err := l.ReadFrom(r); err != nil {
-		return nil, fmt.Errorf("Could not read varint: %w", err)
+		return nil, err
 	}
 
 	script := make([]byte, l)
 	if n, err := io.ReadFull(r, script); err != nil {
-		return nil, fmt.Errorf("Could not read LockingScript(%d), got %d bytes and err: %w", l, n, err)
+		return nil, errors.Wrapf(err, "lockingScript(%d): got %d bytes", l, n)
 	}
 	return &Output{
 		Satoshis:      binary.LittleEndian.Uint64(satoshis),

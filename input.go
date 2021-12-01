@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/pkg/errors"
 )
 
 /*
@@ -40,28 +41,28 @@ type Input struct {
 // newInputFromReader returns a transaction input from the io.Reader provided.
 func newInputFromReader(r io.Reader) (*Input, error) {
 	previousTxID := make([]byte, 32)
-	if n, err := io.ReadFull(r, previousTxID); n != 32 || err != nil {
-		return nil, fmt.Errorf("Could not read previousTxID(32), got %d bytes and err: %w", n, err)
+	if n, err := io.ReadFull(r, previousTxID); err != nil {
+		return nil, errors.Wrapf(err, "previousTxID(32): got %d bytes", n)
 	}
 
 	prevIndex := make([]byte, 4)
-	if n, err := io.ReadFull(r, prevIndex); n != 4 || err != nil {
-		return nil, fmt.Errorf("Could not read prevIndex(4), got %d bytes and err: %w", n, err)
+	if n, err := io.ReadFull(r, prevIndex); err != nil {
+		return nil, errors.Wrapf(err, "previousTxID(4): got %d bytes", n)
 	}
 
 	var l VarInt
 	if _, err := l.ReadFrom(r); err != nil {
-		return nil, fmt.Errorf("Could not read varint: %w", err)
+		return nil, err
 	}
 
 	script := make([]byte, l)
 	if n, err := io.ReadFull(r, script); err != nil {
-		return nil, fmt.Errorf("Could not read script(%d), got %d bytes and err: %w", l, n, err)
+		return nil, errors.Wrapf(err, "script(%d): got %d bytes", l, n)
 	}
 
 	sequence := make([]byte, 4)
 	if n, err := io.ReadFull(r, sequence); err != nil {
-		return nil, fmt.Errorf("Could not read sequence(4), got %d bytes and err: %w", n, err)
+		return nil, errors.Wrapf(err, "sequence(4): got %d bytes", n)
 	}
 
 	return &Input{
