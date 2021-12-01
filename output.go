@@ -69,7 +69,7 @@ func (o *Output) Bytes() []byte {
 
 	h := make([]byte, 0)
 	h = append(h, b...)
-	h = append(h, VarInt((uint64(len(*o.LockingScript)))).Bytes()...)
+	h = append(h, VarInt(uint64(len(*o.LockingScript))).Bytes()...)
 	h = append(h, *o.LockingScript...)
 
 	return h
