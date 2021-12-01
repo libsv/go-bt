@@ -96,7 +96,7 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 // - not enough funds for change
 // We also return the change output fee amount, if we can add change
 func (tx *Tx) canAddChange(txFees *TxFees, standardFees *Fee) (uint64, bool) {
-	varIntUpper := VarIntUpperLimitInc(uint64(tx.OutputCount()))
+	varIntUpper := VarInt(uint64(tx.OutputCount())).UpperLimitInc()
 	if varIntUpper == -1 {
 		return 0, false // upper limit of Outputs in one tx reached
 	}

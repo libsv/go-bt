@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
 
 	"github.com/libsv/go-bt/v2/bscript"
 )
@@ -26,6 +27,27 @@ type Output struct {
 	LockingScript *bscript.Script
 }
 
+func newOutputFromReader(r io.Reader) (*Output, error) {
+	satoshis := make([]byte, 8)
+	if n, err := io.ReadFull(r, satoshis); err != nil {
+		return nil, fmt.Errorf("Could not read satoshis(8), got %d bytes and err: %w", n, err)
+	}
+
+	var l VarInt
+	if _, err := l.ReadFrom(r); err != nil {
+		return nil, fmt.Errorf("Could not read varint: %w", err)
+	}
+
+	script := make([]byte, l)
+	if n, err := io.ReadFull(r, script); err != nil {
+		return nil, fmt.Errorf("Could not read LockingScript(%d), got %d bytes and err: %w", l, n, err)
+	}
+	return &Output{
+		Satoshis:      binary.LittleEndian.Uint64(satoshis),
+		LockingScript: bscript.NewFromBytes(script),
+	}, nil
+}
+
 // LockingScriptHexString returns the locking script
 // of an output encoded as a hex string.
 func (o *Output) LockingScriptHexString() string {
@@ -46,7 +68,7 @@ func (o *Output) Bytes() []byte {
 
 	h := make([]byte, 0)
 	h = append(h, b...)
-	h = append(h, VarInt(uint64(len(*o.LockingScript)))...)
+	h = append(h, VarInt((uint64(len(*o.LockingScript)))).Bytes()...)
 	h = append(h, *o.LockingScript...)
 
 	return h
@@ -61,7 +83,7 @@ func (o *Output) BytesForSigHash() []byte {
 	binary.LittleEndian.PutUint64(satoshis, o.Satoshis)
 	buf = append(buf, satoshis...)
 
-	buf = append(buf, VarInt(uint64(len(*o.LockingScript)))...)
+	buf = append(buf, VarInt(uint64(len(*o.LockingScript))).Bytes()...)
 	buf = append(buf, *o.LockingScript...)
 
 	return buf

@@ -1,9 +1,11 @@
 package bt_test
 
 import (
+	"bufio"
 	"context"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"reflect"
@@ -13,6 +15,7 @@ import (
 	. "github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/testing/data"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -1114,4 +1117,52 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 			assert.Equal(t, test.expFees, fee.TotalFeePaid)
 		})
 	}
+}
+
+// This test reads a sample block from a file, but normally
+// we would get the block directly from the node via a REST GET...
+/*
+	resp, err := http.Get(fmt.Sprintf("%s/rest/block/%s.bin", b.client.serverAddr, blockHash))
+	if err != nil {
+		return nil, fmt.Errorf("Could not GET block: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		defer resp.Body.Close()
+		data, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read response body: %w", err)
+		}
+		return nil, fmt.Errorf("ERROR: code %d: %s", resp.StatusCode, data)
+	}
+	Then use resp.Body as in the test below
+*/
+func TestNewTxFromReader(t *testing.T) {
+	var err error
+
+	f, err := data.TxBinData.Open("block.bin")
+	defer func() {
+		if f != nil {
+			f.Close()
+		}
+	}()
+	assert.NoError(t, err)
+
+	r := bufio.NewReader(f)
+
+	header := make([]byte, 80)
+	_, err = io.ReadFull(f, header)
+	assert.NoError(t, err)
+
+	var txCount bt.VarInt
+	_, err = txCount.ReadFrom(r)
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(648), uint64(txCount))
+
+	var tx *bt.Tx
+	for i := uint64(0); i < uint64(txCount); i++ {
+		tx, err = bt.NewTxFromReader(r)
+		assert.NoError(t, err)
+	}
+
+	assert.Equal(t, "b7c59d7fa17a74bbe0a05e5381f42b9ac7fe23b8a1ca40005a74802fe5b8bb5a", tx.TxID())
 }

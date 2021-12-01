@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"io"
 
 	"github.com/libsv/go-bk/crypto"
 
@@ -91,14 +92,14 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	}
 	offset += 4
 
-	inputCount, size := DecodeVarInt(b[offset:])
+	inputCount, size := NewVarIntFromBytes(b[offset:])
 	offset += size
 
 	// create Inputs
 	var i uint64
 	var err error
 	var input *Input
-	for ; i < inputCount; i++ {
+	for ; i < uint64(inputCount); i++ {
 		input, size, err = newInputFromBytes(b[offset:])
 		if err != nil {
 			return nil, 0, err
@@ -108,11 +109,11 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	}
 
 	// create Outputs
-	var outputCount uint64
+	var outputCount VarInt
 	var output *Output
-	outputCount, size = DecodeVarInt(b[offset:])
+	outputCount, size = NewVarIntFromBytes(b[offset:])
 	offset += size
-	for i = 0; i < outputCount; i++ {
+	for i = 0; i < uint64(outputCount); i++ {
 		output, size, err = newOutputFromBytes(b[offset:])
 		if err != nil {
 			return nil, 0, err
@@ -125,6 +126,56 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	offset += 4
 
 	return &t, offset, nil
+}
+
+// NewTxFromReader creates a transaction from an io.Reader
+func NewTxFromReader(r io.Reader) (*Tx, error) {
+	tx := Tx{}
+
+	version := make([]byte, 4)
+	if _, err := io.ReadFull(r, version); err != nil {
+		return nil, err
+	}
+	tx.Version = binary.LittleEndian.Uint32(version)
+
+	var inputCount VarInt
+	if _, err := inputCount.ReadFrom(r); err != nil {
+		return nil, err
+	}
+
+	// create Inputs
+	var input *Input
+	var err error
+	for i := uint64(0); i < uint64(inputCount); i++ {
+		input, err = newInputFromReader(r)
+		if err != nil {
+			return nil, err
+		}
+		tx.Inputs = append(tx.Inputs, input)
+	}
+
+	var outputCount VarInt
+	if _, err := outputCount.ReadFrom(r); err != nil {
+		return nil, err
+	}
+
+	var output *Output
+	for i := uint64(0); i < uint64(outputCount); i++ {
+		output, err = newOutputFromReader(r)
+		if err != nil {
+			return nil, err
+		}
+
+		tx.Outputs = append(tx.Outputs, output)
+	}
+
+	locktime := make([]byte, 4)
+	if _, err := io.ReadFull(r, locktime); err != nil {
+		return nil, err
+	}
+	tx.LockTime = binary.LittleEndian.Uint32(locktime)
+
+	return &tx, nil
 }
 
 // HasDataOutputs returns true if the transaction has
@@ -258,19 +309,19 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 
 	h = append(h, LittleEndianBytes(tx.Version, 4)...)
 
-	h = append(h, VarInt(uint64(len(tx.Inputs)))...)
+	h = append(h, VarInt(uint64(len(tx.Inputs))).Bytes()...)
 
 	for i, in := range tx.Inputs {
 		s := in.Bytes(lockingScript != nil)
 		if i == index && lockingScript != nil {
-			h = append(h, VarInt(uint64(len(lockingScript)))...)
+			h = append(h, VarInt(uint64(len(lockingScript))).Bytes()...)
 			h = append(h, lockingScript...)
 		} else {
 			h = append(h, s...)
 		}
 	}
 
-	h = append(h, VarInt(uint64(len(tx.Outputs)))...)
+	h = append(h, VarInt(uint64(len(tx.Outputs))).Bytes()...)
 	for _, out := range tx.Outputs {
 		h = append(h, out.Bytes()...)
 	}
