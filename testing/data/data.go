@@ -6,6 +6,7 @@ import (
 	"path"
 )
 
+// TestDataDir a directory container test data.
 type TestDataDir struct {
 	prefix string
 	fs     embed.FS

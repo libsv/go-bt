@@ -155,7 +155,7 @@ func NewTxFromReader(r io.Reader) (*Tx, error) {
 	}
 
 	var outputCount VarInt
-	if _, err := outputCount.ReadFrom(r); err != nil {
+	if _, err = outputCount.ReadFrom(r); err != nil {
 		return nil, err
 	}
 

@@ -28,7 +28,7 @@ func NewVarIntFromBytes(bb []byte) (VarInt, int) {
 	}
 }
 
-// VarInt takes the underlying unsigned integer and returns a byte array in VarInt format.
+// Bytes takes the underlying unsigned integer and returns a byte array in VarInt format.
 // See http://learnmeabitcoin.com/glossary/varint
 func (v VarInt) Bytes() []byte {
 	b := make([]byte, 9)
