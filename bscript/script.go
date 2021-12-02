@@ -48,7 +48,7 @@ func NewFromASM(str string) (*Script, error) {
 
 	for _, section := range strings.Split(str, " ") {
 		if val, ok := opCodeStrings[section]; ok {
-			_ = s.AppendOpCodes(val)
+			_ = s.AppendOpcodes(val)
 		} else {
 			if err := s.AppendPushDataHexString(section); err != nil {
 				return nil, ErrInvalidOpCode
@@ -125,11 +125,11 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 	}
 
 	s := new(Script)
-	_ = s.AppendOpCodes(OpDUP, OpHASH160)
+	_ = s.AppendOpcodes(OpDUP, OpHASH160)
 	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
 		return nil, err
 	}
-	_ = s.AppendOpCodes(OpEQUALVERIFY, OpCHECKSIG)
+	_ = s.AppendOpcodes(OpEQUALVERIFY, OpCHECKSIG)
 
 	return s, nil
 }
@@ -208,8 +208,8 @@ func (s *Script) AppendPushDataStrings(pushDataStrings []string) error {
 	return s.AppendPushDataArray(dataBytes)
 }
 
-// AppendOpCodes appends an opcode type to the script
-func (s *Script) AppendOpCodes(oo ...uint8) error {
+// AppendOpcodes appends an opcode type to the script
+func (s *Script) AppendOpcodes(oo ...uint8) error {
 	for _, o := range oo {
 		switch o {
 		case OpPUSHDATA1, OpPUSHDATA2, OpPUSHDATA4:

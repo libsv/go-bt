@@ -89,9 +89,9 @@ func parseShortForm(script string) (*bscript.Script, error) {
 		// if parses as a plain number
 		if num, err := strconv.ParseInt(tok, 10, 64); err == nil {
 			if num == 0 {
-				scr.AppendOpCodes(bscript.Op0)
+				scr.AppendOpcodes(bscript.Op0)
 			} else if num == -1 || (1 <= num && num <= 16) {
-				scr.AppendOpCodes((bscript.Op1 - 1) + byte(num))
+				scr.AppendOpcodes((bscript.Op1 - 1) + byte(num))
 			} else {
 				n := &scriptNumber{val: big.NewInt(num)}
 				scr.AppendPushData(n.Bytes())

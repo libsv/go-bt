@@ -248,7 +248,7 @@ func TestScript_AppendOpCodes(t *testing.T) {
 			script, err := bscript.NewFromASM(test.script)
 			assert.NoError(t, err)
 
-			err = script.AppendOpCodes(test.appends...)
+			err = script.AppendOpcodes(test.appends...)
 			if test.expErr != nil {
 				assert.Error(t, err)
 				assert.EqualError(t, test.expErr, errors.Unwrap(err).Error())

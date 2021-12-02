@@ -135,18 +135,18 @@ func (tx *Tx) AddHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64)
 
 	s := &bscript.Script{}
 
-	_ = s.AppendOpCodes(bscript.OpHASH160)
+	_ = s.AppendOpcodes(bscript.OpHASH160)
 	secretBytesHash := crypto.Hash160([]byte(secret))
 
 	if err = s.AppendPushData(secretBytesHash); err != nil {
 		return err
 	}
-	_ = s.AppendOpCodes(bscript.OpEQUALVERIFY, bscript.OpDUP, bscript.OpHASH160)
+	_ = s.AppendOpcodes(bscript.OpEQUALVERIFY, bscript.OpDUP, bscript.OpHASH160)
 
 	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
 		return err
 	}
-	_ = s.AppendOpCodes(bscript.OpEQUALVERIFY, bscript.OpCHECKSIG)
+	_ = s.AppendOpcodes(bscript.OpEQUALVERIFY, bscript.OpCHECKSIG)
 
 	tx.AddOutput(&Output{
 		Satoshis:      satoshis,
@@ -181,7 +181,7 @@ func (tx *Tx) AddOpReturnPartsOutput(data [][]byte) error {
 func createOpReturnOutput(data [][]byte) (*Output, error) {
 	s := &bscript.Script{}
 
-	_ = s.AppendOpCodes(bscript.OpFALSE, bscript.OpRETURN)
+	_ = s.AppendOpcodes(bscript.OpFALSE, bscript.OpRETURN)
 	if err := s.AppendPushDataArray(data); err != nil {
 		return nil, err
 	}
