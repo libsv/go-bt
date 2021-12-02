@@ -371,17 +371,22 @@ func TestScript_MinPushSize(t *testing.T) {
 			}()},
 			expLen: 65536 + 5,
 		},
-		"OP_PUSHDATA4 + length byte + data returns len(data)+5 (max)": {
-			data: [][]byte{func() []byte {
-				return bytes.Repeat([]byte{0x00}, 0xffffffff)
-			}()},
-			expLen: 0xffffffff + 5,
-		},
-		"data too large returns 0": {
-			data: [][]byte{func() []byte {
-				return bytes.Repeat([]byte{0x00}, 0xffffffff+1)
-			}()},
-			expLen: 0,
+		// These tests cause the CI to OOM due to the massive slices being created
+		//"OP_PUSHDATA4 + length byte + data returns len(data)+5 (max)": {
+		//	data: [][]byte{func() []byte {
+		//		return bytes.Repeat([]byte{0x00}, 0xffffffff)
+		//	}()},
+		//	expLen: 0xffffffff + 5,
+		//},
+		//"data too large returns 0": {
+		//	data: [][]byte{func() []byte {
+		//		return bytes.Repeat([]byte{0x00}, 0xffffffff+1)
+		//	}()},
+		//	expLen: 0,
+		//},
+		"Op0 returns 1": {
+			data:   [][]byte{},
+			expLen: 1,
 		},
 	}
 

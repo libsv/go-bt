@@ -405,7 +405,6 @@ func (s *Script) MinPushSize(bb []byte) int {
 		return 0
 	}
 
-	// data is empty
 	if l == 0 {
 		return 1
 	}
