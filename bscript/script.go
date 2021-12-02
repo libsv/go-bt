@@ -396,6 +396,52 @@ func (s *Script) EqualsHex(h string) bool {
 	return s.String() == h
 }
 
+// MinPushSizeString returns the minimum size of a push operation of the given string data.
+func (s *Script) MinPushSizeString(ss string) int {
+	return s.MinPushSize([]byte(ss))
+}
+
+// MinPushSize returns the minimum size of a push operation of the given data.
+func (s *Script) MinPushSize(bb []byte) int {
+	l := len(bb)
+
+	// data length is larger than max supported
+	if l > 0xffffffff {
+		return 0
+	}
+
+	// data is empty
+	if l == 0 {
+		return 1
+	}
+
+	if l == 1 {
+		// data can be represented as Op1 to Op16, or OpNeg
+		if bb[0] <= 16 || bb[0] == 0x81 {
+			// OpX
+			return 1
+		}
+		// OP_DATA_1 + data
+		return 2
+	}
+
+	// OP_DATA_X + data
+	if l <= 75 {
+		return l + 1
+	}
+	// OP_PUSHDATA1 + length byte + data
+	if l <= 0xff {
+		return l + 2
+	}
+	// OP_PUSHDATA2 + two length bytes + data
+	if l <= 0xffff {
+		return l + 3
+	}
+
+	// OP_PUSHDATA4 + four length bytes + data
+	return l + 5
+}
+
 // MarshalJSON convert script into json.
 func (s *Script) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%s"`, s.String())), nil
