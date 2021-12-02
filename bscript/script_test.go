@@ -219,7 +219,7 @@ func TestErrorIsAppended(t *testing.T) {
 	assert.True(t, strings.HasSuffix(asm, "[error]"), "toASM() should end with [error]")
 }
 
-func TestScript_AppendOpCodes(t *testing.T) {
+func TestScript_AppendOpcodes(t *testing.T) {
 	tests := map[string]struct {
 		script    string
 		appends   []byte
