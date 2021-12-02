@@ -10,6 +10,7 @@ import (
 	"github.com/libsv/go-bk/bec"
 	"github.com/libsv/go-bk/bip32"
 	"github.com/libsv/go-bk/chaincfg"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/libsv/go-bt/v2/bscript"
@@ -216,6 +217,49 @@ func TestErrorIsAppended(t *testing.T) {
 	asm, err := s.ToASM()
 	assert.NoError(t, err)
 	assert.True(t, strings.HasSuffix(asm, "[error]"), "toASM() should end with [error]")
+}
+
+func TestScript_AppendOpCodes(t *testing.T) {
+	tests := map[string]struct {
+		script    string
+		appends   []byte
+		expScript string
+		expErr    error
+	}{
+		"successful single append": {
+			script:    "OP_2 OP_2 OP_ADD",
+			appends:   []byte{bscript.OpEQUALVERIFY},
+			expScript: "OP_2 OP_2 OP_ADD OP_EQUALVERIFY",
+		},
+		"successful multiple append": {
+			script:    "OP_2 OP_2 OP_ADD",
+			appends:   []byte{bscript.OpEQUAL, bscript.OpVERIFY},
+			expScript: "OP_2 OP_2 OP_ADD OP_EQUAL OP_VERIFY",
+		},
+		"unsuccessful push adata append": {
+			script:  "OP_2 OP_2 OP_ADD",
+			appends: []byte{bscript.OpEQUAL, bscript.OpPUSHDATA1, 0x44},
+			expErr:  bscript.ErrInvalidOpcodeType,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			script, err := bscript.NewFromASM(test.script)
+			assert.NoError(t, err)
+
+			err = script.AppendOpCodes(test.appends...)
+			if test.expErr != nil {
+				assert.Error(t, err)
+				assert.EqualError(t, test.expErr, errors.Unwrap(err).Error())
+			} else {
+				assert.NoError(t, err)
+				asm, err := script.ToASM()
+				assert.NoError(t, err)
+				assert.Equal(t, test.expScript, asm)
+			}
+		})
+	}
 }
 
 func TestScript_Equals(t *testing.T) {
