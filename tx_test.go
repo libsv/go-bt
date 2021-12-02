@@ -1158,11 +1158,14 @@ func TestNewTxFromReader(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(648), uint64(txCount))
 
-	var tx *bt.Tx
+	tx := new(bt.Tx)
+	var bytesRead int64
 	for i := uint64(0); i < uint64(txCount); i++ {
-		tx, err = bt.NewTxFromReader(r)
+		n, err := tx.ReadFrom(r)
+		bytesRead += n
 		assert.NoError(t, err)
 	}
 
 	assert.Equal(t, "b7c59d7fa17a74bbe0a05e5381f42b9ac7fe23b8a1ca40005a74802fe5b8bb5a", tx.TxID())
+	assert.Equal(t, int64(340216), bytesRead)
 }

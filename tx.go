@@ -128,54 +128,65 @@ func NewTxFromStream(b []byte) (*Tx, int, error) {
 	return &t, offset, nil
 }
 
-// NewTxFromReader creates a transaction from an io.Reader
-func NewTxFromReader(r io.Reader) (*Tx, error) {
-	tx := Tx{}
+// ReadFrom reads from the `io.Reader` into the `bt.Tx`.
+func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
+	*tx = Tx{}
+	var bytesRead int64
 
 	version := make([]byte, 4)
-	if _, err := io.ReadFull(r, version); err != nil {
-		return nil, err
+	n, err := io.ReadFull(r, version)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, err
 	}
+
 	tx.Version = binary.LittleEndian.Uint32(version)
 
 	var inputCount VarInt
-	if _, err := inputCount.ReadFrom(r); err != nil {
-		return nil, err
+	n64, err := inputCount.ReadFrom(r)
+	bytesRead += n64
+	if err != nil {
+		return bytesRead, err
 	}
 
 	// create Inputs
-	var input *Input
-	var err error
 	for i := uint64(0); i < uint64(inputCount); i++ {
-		input, err = newInputFromReader(r)
+		input := new(Input)
+		n64, err = input.ReadFrom(r)
+		bytesRead += n64
 		if err != nil {
-			return nil, err
+			return bytesRead, err
 		}
 		tx.Inputs = append(tx.Inputs, input)
 	}
 
 	var outputCount VarInt
-	if _, err = outputCount.ReadFrom(r); err != nil {
-		return nil, err
+	n64, err = outputCount.ReadFrom(r)
+	bytesRead += n64
+	if err != nil {
+		return bytesRead, err
 	}
 
-	var output *Output
 	for i := uint64(0); i < uint64(outputCount); i++ {
-		output, err = newOutputFromReader(r)
+		output := new(Output)
+		n64, err = output.ReadFrom(r)
+		bytesRead += n64
 		if err != nil {
-			return nil, err
+			return bytesRead, err
 		}
 
 		tx.Outputs = append(tx.Outputs, output)
 	}
 
 	locktime := make([]byte, 4)
-	if _, err := io.ReadFull(r, locktime); err != nil {
-		return nil, err
+	n, err = io.ReadFull(r, locktime)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, err
 	}
 	tx.LockTime = binary.LittleEndian.Uint32(locktime)
 
-	return &tx, nil
+	return bytesRead, nil
 }
 
 // HasDataOutputs returns true if the transaction has

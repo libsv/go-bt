@@ -28,25 +28,36 @@ type Output struct {
 	LockingScript *bscript.Script
 }
 
-func newOutputFromReader(r io.Reader) (*Output, error) {
+// ReadFrom reads from the `io.Reader` into the `bt.Output`.
+func (o *Output) ReadFrom(r io.Reader) (int64, error) {
+	*o = Output{}
+	var bytesRead int64
+
 	satoshis := make([]byte, 8)
-	if n, err := io.ReadFull(r, satoshis); err != nil {
-		return nil, errors.Wrapf(err, "satoshis(8): got %d bytes", n)
+	n, err := io.ReadFull(r, satoshis)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "satoshis(8): got %d bytes", n)
 	}
 
 	var l VarInt
-	if _, err := l.ReadFrom(r); err != nil {
-		return nil, err
+	n64, err := l.ReadFrom(r)
+	bytesRead += n64
+	if err != nil {
+		return bytesRead, err
 	}
 
 	script := make([]byte, l)
-	if n, err := io.ReadFull(r, script); err != nil {
-		return nil, errors.Wrapf(err, "lockingScript(%d): got %d bytes", l, n)
+	n, err = io.ReadFull(r, script)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "lockingScript(%d): got %d bytes", l, n)
 	}
-	return &Output{
-		Satoshis:      binary.LittleEndian.Uint64(satoshis),
-		LockingScript: bscript.NewFromBytes(script),
-	}, nil
+
+	o.Satoshis = binary.LittleEndian.Uint64(satoshis)
+	o.LockingScript = bscript.NewFromBytes(script)
+
+	return bytesRead, nil
 }
 
 // LockingScriptHexString returns the locking script

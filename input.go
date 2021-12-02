@@ -38,39 +38,52 @@ type Input struct {
 	SequenceNumber     uint32
 }
 
-// newInputFromReader returns a transaction input from the io.Reader provided.
-func newInputFromReader(r io.Reader) (*Input, error) {
+// ReadFrom reads from the `io.Reader` into the `bt.Input`.
+func (i *Input) ReadFrom(r io.Reader) (int64, error) {
+	*i = Input{}
+	var bytesRead int64
+
 	previousTxID := make([]byte, 32)
-	if n, err := io.ReadFull(r, previousTxID); err != nil {
-		return nil, errors.Wrapf(err, "previousTxID(32): got %d bytes", n)
+	n, err := io.ReadFull(r, previousTxID)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "previousTxID(32): got %d bytes", n)
 	}
 
 	prevIndex := make([]byte, 4)
-	if n, err := io.ReadFull(r, prevIndex); err != nil {
-		return nil, errors.Wrapf(err, "previousTxID(4): got %d bytes", n)
+	n, err = io.ReadFull(r, prevIndex)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "previousTxID(4): got %d bytes", n)
 	}
 
 	var l VarInt
-	if _, err := l.ReadFrom(r); err != nil {
-		return nil, err
+	n64, err := l.ReadFrom(r)
+	bytesRead += n64
+	if err != nil {
+		return bytesRead, err
 	}
 
 	script := make([]byte, l)
-	if n, err := io.ReadFull(r, script); err != nil {
-		return nil, errors.Wrapf(err, "script(%d): got %d bytes", l, n)
+	n, err = io.ReadFull(r, script)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "script(%d): got %d bytes", l, n)
 	}
 
 	sequence := make([]byte, 4)
-	if n, err := io.ReadFull(r, sequence); err != nil {
-		return nil, errors.Wrapf(err, "sequence(4): got %d bytes", n)
+	n, err = io.ReadFull(r, sequence)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "sequence(4): got %d bytes", n)
 	}
 
-	return &Input{
-		previousTxID:       ReverseBytes(previousTxID),
-		PreviousTxOutIndex: binary.LittleEndian.Uint32(prevIndex),
-		UnlockingScript:    bscript.NewFromBytes(script),
-		SequenceNumber:     binary.LittleEndian.Uint32(sequence),
-	}, nil
+	i.previousTxID = ReverseBytes(previousTxID)
+	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(prevIndex)
+	i.UnlockingScript = bscript.NewFromBytes(script)
+	i.SequenceNumber = binary.LittleEndian.Uint32(sequence)
+
+	return bytesRead, nil
 }
 
 // PreviousTxIDAdd will add the supplied txID bytes to the Input,
