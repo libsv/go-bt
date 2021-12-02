@@ -18,7 +18,7 @@ func newOutputFromBytes(bytes []byte) (*Output, int, error) {
 	}
 
 	offset := 8
-	l, size := DecodeVarInt(bytes[offset:])
+	l, size := NewVarIntFromBytes(bytes[offset:])
 	offset += size
 
 	totalLength := offset + int(l)

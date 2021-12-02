@@ -104,7 +104,7 @@ func TestNewOpReturnOutput(t *testing.T) {
 	assert.NoError(t, err)
 
 	script := tx.Outputs[0].LockingScriptHexString()
-	dataLength := bt.VarInt(uint64(len(dataBytes)))
+	dataLength := bt.VarInt(uint64(len(dataBytes))).Bytes()
 
 	assert.Equal(t, "006a4d2201"+hex.EncodeToString(dataBytes), script)
 	assert.Equal(t, "fd2201", fmt.Sprintf("%x", dataLength))

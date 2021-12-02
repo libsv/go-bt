@@ -29,7 +29,7 @@ func newInputFromBytes(bytes []byte) (*Input, int, error) {
 	}
 
 	offset := 36
-	l, size := DecodeVarInt(bytes[offset:])
+	l, size := NewVarIntFromBytes(bytes[offset:])
 	offset += size
 
 	totalLength := offset + int(l) + 4 // 4 bytes for nSeq

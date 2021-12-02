@@ -1,10 +1,13 @@
 package bt
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
 
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/pkg/errors"
 )
 
 /*
@@ -33,6 +36,54 @@ type Input struct {
 	UnlockingScript    *bscript.Script
 	PreviousTxOutIndex uint32
 	SequenceNumber     uint32
+}
+
+// ReadFrom reads from the `io.Reader` into the `bt.Input`.
+func (i *Input) ReadFrom(r io.Reader) (int64, error) {
+	*i = Input{}
+	var bytesRead int64
+
+	previousTxID := make([]byte, 32)
+	n, err := io.ReadFull(r, previousTxID)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "previousTxID(32): got %d bytes", n)
+	}
+
+	prevIndex := make([]byte, 4)
+	n, err = io.ReadFull(r, prevIndex)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "previousTxID(4): got %d bytes", n)
+	}
+
+	var l VarInt
+	n64, err := l.ReadFrom(r)
+	bytesRead += n64
+	if err != nil {
+		return bytesRead, err
+	}
+
+	script := make([]byte, l)
+	n, err = io.ReadFull(r, script)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "script(%d): got %d bytes", l, n)
+	}
+
+	sequence := make([]byte, 4)
+	n, err = io.ReadFull(r, sequence)
+	bytesRead += int64(n)
+	if err != nil {
+		return bytesRead, errors.Wrapf(err, "sequence(4): got %d bytes", n)
+	}
+
+	i.previousTxID = ReverseBytes(previousTxID)
+	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(prevIndex)
+	i.UnlockingScript = bscript.NewFromBytes(script)
+	i.SequenceNumber = binary.LittleEndian.Uint32(sequence)
+
+	return bytesRead, nil
 }
 
 // PreviousTxIDAdd will add the supplied txID bytes to the Input,
@@ -93,9 +144,9 @@ func (i *Input) Bytes(clear bool) []byte {
 		h = append(h, 0x00)
 	} else {
 		if i.UnlockingScript == nil {
-			h = append(h, VarInt(0)...)
+			h = append(h, VarInt(0).Bytes()...)
 		} else {
-			h = append(h, VarInt(uint64(len(*i.UnlockingScript)))...)
+			h = append(h, VarInt(uint64(len(*i.UnlockingScript))).Bytes()...)
 			h = append(h, *i.UnlockingScript...)
 		}
 	}

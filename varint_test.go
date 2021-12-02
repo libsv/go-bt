@@ -34,8 +34,8 @@ func TestDecodeVarInt(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			r, s := bt.DecodeVarInt(test.input)
-			assert.Equal(t, test.expectedResult, r)
+			r, s := bt.NewVarIntFromBytes(test.input)
+			assert.Equal(t, test.expectedResult, uint64(r))
 			assert.Equal(t, test.expectedSize, s)
 		})
 	}
@@ -60,7 +60,7 @@ func TestVarIntUpperLimitInc(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.testName, func(t *testing.T) {
-			r := bt.VarIntUpperLimitInc(test.input)
+			r := bt.VarInt(test.input).UpperLimitInc()
 			assert.Equal(t, test.expectedResult, r)
 		})
 	}
@@ -86,7 +86,7 @@ func TestVarInt(t *testing.T) {
 
 	for _, varIntTest := range varIntTests {
 		t.Run(varIntTest.testName, func(t *testing.T) {
-			assert.Equal(t, varIntTest.expectedLen, len(bt.VarInt(varIntTest.input)))
+			assert.Equal(t, varIntTest.expectedLen, len(bt.VarInt(varIntTest.input).Bytes()))
 		})
 	}
 }
