@@ -48,7 +48,7 @@ func NewFromASM(str string) (*Script, error) {
 
 	for _, section := range strings.Split(str, " ") {
 		if val, ok := opCodeStrings[section]; ok {
-			s.AppendOpCode(val)
+			_ = s.AppendOpcodes(val)
 		} else {
 			if err := s.AppendPushDataHexString(section); err != nil {
 				return nil, ErrInvalidOpCode
@@ -124,14 +124,12 @@ func NewP2PKHFromAddress(addr string) (*Script, error) {
 		return nil, err
 	}
 
-	s := new(Script).
-		AppendOpCode(OpDUP).
-		AppendOpCode(OpHASH160)
+	s := new(Script)
+	_ = s.AppendOpcodes(OpDUP, OpHASH160)
 	if err = s.AppendPushData(publicKeyHashBytes); err != nil {
 		return nil, err
 	}
-	s.AppendOpCode(OpEQUALVERIFY).
-		AppendOpCode(OpCHECKSIG)
+	_ = s.AppendOpcodes(OpEQUALVERIFY, OpCHECKSIG)
 
 	return s, nil
 }
@@ -210,10 +208,17 @@ func (s *Script) AppendPushDataStrings(pushDataStrings []string) error {
 	return s.AppendPushDataArray(dataBytes)
 }
 
-// AppendOpCode appends an opcode type to the script
-func (s *Script) AppendOpCode(o uint8) *Script {
-	*s = append(*s, o)
-	return s
+// AppendOpcodes appends opcodes type to the script.
+// This does not support appending OP_PUSHDATA opcodes, so use `Script.AppendPushData` instead.
+func (s *Script) AppendOpcodes(oo ...uint8) error {
+	for _, o := range oo {
+		switch o {
+		case OpPUSHDATA1, OpPUSHDATA2, OpPUSHDATA4:
+			return fmt.Errorf("%w: %s", ErrInvalidOpcodeType, opCodeValues[o])
+		}
+	}
+	*s = append(*s, oo...)
+	return nil
 }
 
 // String implements the stringer interface and returns the hex string of script.

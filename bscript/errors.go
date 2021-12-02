@@ -27,8 +27,9 @@ var (
 
 // Sentinel errors raised by the package.
 var (
-	ErrInvalidPKLen  = errors.New("invalid public key length")
-	ErrInvalidOpCode = errors.New("invalid opcode data")
-	ErrEmptyScript   = errors.New("script is empty")
-	ErrNotP2PKH      = errors.New("not a P2PKH")
+	ErrInvalidPKLen      = errors.New("invalid public key length")
+	ErrInvalidOpCode     = errors.New("invalid opcode data")
+	ErrEmptyScript       = errors.New("script is empty")
+	ErrNotP2PKH          = errors.New("not a P2PKH")
+	ErrInvalidOpcodeType = errors.New("use AppendPushData for push data funcs")
 )
