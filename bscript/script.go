@@ -208,7 +208,8 @@ func (s *Script) AppendPushDataStrings(pushDataStrings []string) error {
 	return s.AppendPushDataArray(dataBytes)
 }
 
-// AppendOpcodes appends an opcode type to the script
+// AppendOpcodes appends opcodes type to the script.
+// This does not support appending OP_PUSHDATA opcodes, so use `Script.AppendPushData` instead.
 func (s *Script) AppendOpcodes(oo ...uint8) error {
 	for _, o := range oo {
 		switch o {
