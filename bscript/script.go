@@ -410,7 +410,7 @@ func (s *Script) MinPushSize(bb []byte) int {
 	}
 
 	if l == 1 {
-		// data can be represented as Op1 to Op16, or OpNeg
+		// data can be represented as Op1 to Op16, or OpNegate
 		if bb[0] <= 16 || bb[0] == 0x81 {
 			// OpX
 			return 1
