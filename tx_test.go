@@ -1136,9 +1136,7 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 	}
 	Then use resp.Body as in the test below
 */
-func TestNewTxFromReader(t *testing.T) {
-	var err error
-
+func TestTx_ReadFrom(t *testing.T) {
 	f, err := data.TxBinData.Open("block.bin")
 	defer func() {
 		if f != nil {
