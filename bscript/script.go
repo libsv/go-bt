@@ -396,11 +396,6 @@ func (s *Script) EqualsHex(h string) bool {
 	return s.String() == h
 }
 
-// MinPushSizeString returns the minimum size of a push operation of the given string data.
-func (s *Script) MinPushSizeString(ss string) int {
-	return s.MinPushSize([]byte(ss))
-}
-
 // MinPushSize returns the minimum size of a push operation of the given data.
 func (s *Script) MinPushSize(bb []byte) int {
 	l := len(bb)
