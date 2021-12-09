@@ -212,8 +212,7 @@ func (s *Script) AppendPushDataStrings(pushDataStrings []string) error {
 // This does not support appending OP_PUSHDATA opcodes, so use `Script.AppendPushData` instead.
 func (s *Script) AppendOpcodes(oo ...uint8) error {
 	for _, o := range oo {
-		switch o {
-		case OpPUSHDATA1, OpPUSHDATA2, OpPUSHDATA4:
+		if OpDATA1 <= o && o <= OpPUSHDATA4 {
 			return fmt.Errorf("%w: %s", ErrInvalidOpcodeType, opCodeValues[o])
 		}
 	}
