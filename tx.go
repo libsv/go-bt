@@ -189,7 +189,7 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	return bytesRead, nil
 }
 
-// ReadFrom txs from a block in a `bt.Txs`. This assumes a preceeding varint detailing
+// ReadFrom txs from a block in a `bt.Txs`. This assumes a preceding varint detailing
 // the total number of txs that the reader will provide.
 func (tt *Txs) ReadFrom(r io.Reader) (int64, error) {
 	var bytesRead int64
