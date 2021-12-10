@@ -392,9 +392,8 @@ func TestScript_MinPushSize(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			s := new(bscript.Script)
 			for _, data := range test.data {
-				assert.Equal(t, test.expLen, s.MinPushSize(data), "data: %x", data)
+				assert.Equal(t, test.expLen, bscript.MinPushSize(data), "data: %x", data)
 			}
 		})
 	}
