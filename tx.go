@@ -203,7 +203,7 @@ func (tt *Txs) ReadFrom(r io.Reader) (int64, error) {
 
 	*tt = make([]*Tx, txCount)
 
-	for i := int64(0); i < int64(txCount); i++ {
+	for i := uint64(0); i < uint64(txCount); i++ {
 		tx := new(Tx)
 		n, err := tx.ReadFrom(r)
 		bytesRead += n
