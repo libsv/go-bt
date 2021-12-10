@@ -90,3 +90,41 @@ func TestVarInt(t *testing.T) {
 		})
 	}
 }
+
+func TestVarInt_Size(t *testing.T) {
+	tests := map[string]struct {
+		v       bt.VarInt
+		expSize int
+	}{
+		"252 returns 1": {
+			v:       bt.VarInt(252),
+			expSize: 1,
+		},
+		"253 returns 3": {
+			v:       bt.VarInt(253),
+			expSize: 3,
+		},
+		"65535 returns 3": {
+			v:       bt.VarInt(65535),
+			expSize: 3,
+		},
+		"65536 returns 5": {
+			v:       bt.VarInt(65536),
+			expSize: 5,
+		},
+		"4294967295 returns 5": {
+			v:       bt.VarInt(4294967295),
+			expSize: 5,
+		},
+		"4294967296 returns 9": {
+			v:       bt.VarInt(4294967296),
+			expSize: 9,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, test.expSize, test.v.Length())
+		})
+	}
+}
