@@ -200,7 +200,7 @@ func (f *FeeQuote) AddQuote(ft FeeType, fee *Fee) *FeeQuote {
 	return f
 }
 
-// Expired will return the expiry timestamp for the `bt.FeeQuote` in a threadsafe manner.
+// Expiry will return the expiry timestamp for the `bt.FeeQuote` in a threadsafe manner.
 func (f *FeeQuote) Expiry() time.Time {
 	f.mu.RLock()
 	defer f.mu.RUnlock()
