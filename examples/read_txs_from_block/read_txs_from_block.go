@@ -25,7 +25,7 @@ func main() {
 	// Create buffered reader for this file.
 	r := bufio.NewReader(f)
 
-	// Read file header. This is step is specific to file reading and
+	// Read file header. This step is specific to file reading and
 	// may need omitted or modified for other implentations.
 	_, err = io.ReadFull(f, make([]byte, 80))
 	if err != nil {
