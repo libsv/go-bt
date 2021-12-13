@@ -1167,3 +1167,26 @@ func TestTx_ReadFrom(t *testing.T) {
 	assert.Equal(t, "b7c59d7fa17a74bbe0a05e5381f42b9ac7fe23b8a1ca40005a74802fe5b8bb5a", tx.TxID())
 	assert.Equal(t, int64(340216), bytesRead)
 }
+
+func TestTxs_ReadFrom(t *testing.T) {
+	f, err := data.TxBinData.Open("block.bin")
+	defer func() {
+		if f != nil {
+			f.Close()
+		}
+	}()
+	assert.NoError(t, err)
+
+	r := bufio.NewReader(f)
+
+	header := make([]byte, 80)
+	_, err = io.ReadFull(f, header)
+	assert.NoError(t, err)
+
+	txs := bt.Txs{}
+	bytesRead, err := txs.ReadFrom(r)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "b7c59d7fa17a74bbe0a05e5381f42b9ac7fe23b8a1ca40005a74802fe5b8bb5a", txs[len(txs)-1].TxID())
+	assert.Equal(t, int64(340219), bytesRead)
+}

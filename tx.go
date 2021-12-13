@@ -189,6 +189,34 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	return bytesRead, nil
 }
 
+// ReadFrom txs from a block in a `bt.Txs`. This assumes a preceding varint detailing
+// the total number of txs that the reader will provide.
+func (tt *Txs) ReadFrom(r io.Reader) (int64, error) {
+	var bytesRead int64
+
+	var txCount VarInt
+	n, err := txCount.ReadFrom(r)
+	bytesRead += n
+	if err != nil {
+		return bytesRead, err
+	}
+
+	*tt = make([]*Tx, txCount)
+
+	for i := uint64(0); i < uint64(txCount); i++ {
+		tx := new(Tx)
+		n, err := tx.ReadFrom(r)
+		bytesRead += n
+		if err != nil {
+			return bytesRead, err
+		}
+
+		(*tt)[i] = tx
+	}
+
+	return bytesRead, nil
+}
+
 // HasDataOutputs returns true if the transaction has
 // at least one data (OP_RETURN) output in it.
 func (tx *Tx) HasDataOutputs() bool {
