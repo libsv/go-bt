@@ -200,6 +200,13 @@ func (f *FeeQuote) AddQuote(ft FeeType, fee *Fee) *FeeQuote {
 	return f
 }
 
+// Expiry will return the expiry timestamp for the `bt.FeeQuote` in a threadsafe manner.
+func (f *FeeQuote) Expiry() time.Time {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+	return f.expiryTime
+}
+
 // UpdateExpiry will update the expiry time of the quotes, this will be
 // used when you fetch a fresh set of quotes from a MAPI server which
 // should return an expiration time.

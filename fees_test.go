@@ -81,6 +81,13 @@ func TestFeeQuote_Expired(t *testing.T) {
 	assert.True(t, fq.Expired())
 }
 
+func TestFeeQuote_Expiry(t *testing.T) {
+	ts := time.Now().Add(1 * time.Hour)
+	fq := NewFeeQuote()
+	fq.UpdateExpiry(ts)
+	assert.Equal(t, ts, fq.Expiry())
+}
+
 func TestFeeQuote_AddQuote(t *testing.T) {
 	std := &Fee{
 		FeeType: FeeTypeStandard,
