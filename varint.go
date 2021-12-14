@@ -28,6 +28,20 @@ func NewVarIntFromBytes(bb []byte) (VarInt, int) {
 	}
 }
 
+// Length return the length of the underlying byte representation of the `bt.VarInt`.
+func (v VarInt) Length() int {
+	if v < 253 {
+		return 1
+	}
+	if v < 65536 {
+		return 3
+	}
+	if v < 4294967296 {
+		return 5
+	}
+	return 9
+}
+
 // Bytes takes the underlying unsigned integer and returns a byte array in VarInt format.
 // See http://learnmeabitcoin.com/glossary/varint
 func (v VarInt) Bytes() []byte {
