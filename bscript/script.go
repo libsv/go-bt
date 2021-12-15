@@ -227,6 +227,9 @@ func (s *Script) String() string {
 
 // ToASM returns the string ASM opcodes of the script.
 func (s *Script) ToASM() (string, error) {
+	if s == nil || len(*s) == 0 {
+		return "", nil
+	}
 	parts, err := DecodeParts(*s)
 	// if err != nil, we will append [error] to the ASM script below (as done in the node).
 
