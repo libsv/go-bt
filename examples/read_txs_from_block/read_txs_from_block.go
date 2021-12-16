@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/testing/data"
 )
 
 // In this example, all txs from a block are being read in via chunking, so at no point
@@ -17,10 +17,11 @@ import (
 
 func main() {
 	// Open file container block data.
-	f, err := os.Open("testing/data/tx/bin/block.bin")
+	f, err := data.TxBinData.Open("block.bin")
 	if err != nil {
 		panic(err)
 	}
+	defer f.Close()
 
 	// Create buffered reader for this file.
 	r := bufio.NewReader(f)
