@@ -95,17 +95,31 @@ func TestNewFromHexString(t *testing.T) {
 func TestScript_ToASM(t *testing.T) {
 	t.Parallel()
 
-	s, err := bscript.NewFromHexString("76a914e2a623699e81b291c0327f408fea765d534baa2a88ac")
-	assert.NoError(t, err)
-	assert.NotNil(t, s)
+	tests := map[string]struct {
+		script string
+		expASM string
+	}{
+		"valid script": {
+			script: "76a914e2a623699e81b291c0327f408fea765d534baa2a88ac",
+			expASM: "OP_DUP OP_HASH160 e2a623699e81b291c0327f408fea765d534baa2a OP_EQUALVERIFY OP_CHECKSIG",
+		},
+		"empty script:": {
+			script: "",
+			expASM: "",
+		},
+	}
 
-	var res string
-	res, err = s.ToASM()
-	assert.NoError(t, err)
-	assert.Equal(t,
-		"OP_DUP OP_HASH160 e2a623699e81b291c0327f408fea765d534baa2a OP_EQUALVERIFY OP_CHECKSIG",
-		res,
-	)
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			s, err := bscript.NewFromHexString(test.script)
+			assert.NoError(t, err)
+
+			asm, err := s.ToASM()
+			assert.NoError(t, err)
+
+			assert.Equal(t, test.expASM, asm)
+		})
+	}
 }
 
 func TestNewFromASM(t *testing.T) {
