@@ -8,12 +8,12 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
-// Unlock is used to unlock the transaction at a specific input index.
+// SignOff is used to unlock the transaction at a specific input index.
 // It takes an Unlocker interface as a parameter so that different
 // unlocking implementations can be used to unlock the transaction -
 // for example local or external unlocking (hardware wallet), or
 // signature/nonsignature based.
-func (tx *Tx) Unlock(ctx context.Context, u Unlocker, idx uint32, shf sighash.Flag) error {
+func (tx *Tx) SignOff(ctx context.Context, u Unlocker, idx uint32, shf sighash.Flag) error {
 	if shf == 0 {
 		shf = sighash.AllForkID
 	}
@@ -21,11 +21,11 @@ func (tx *Tx) Unlock(ctx context.Context, u Unlocker, idx uint32, shf sighash.Fl
 	return u.Unlock(ctx, tx, idx, shf)
 }
 
-// UnlockAll is used to sign all inputs. It takes an UnlockerGetter interface
+// SignOffAll is used to sign all inputs. It takes an UnlockerGetter interface
 // as a parameter so that different unlocking implementations can
 // be used to sign the transaction - for example local/external
 // signing, or P2PKH/contract signing.
-func (tx *Tx) UnlockAll(ctx context.Context, ug UnlockerGetter) error {
+func (tx *Tx) SignOffAll(ctx context.Context, ug UnlockerGetter) error {
 	shf := sighash.AllForkID // use SIGHASHALLFORFORKID to sign automatically
 
 	for i, in := range tx.Inputs {
@@ -34,7 +34,7 @@ func (tx *Tx) UnlockAll(ctx context.Context, ug UnlockerGetter) error {
 			return err
 		}
 
-		if err = tx.Unlock(ctx, u, uint32(i), shf); err != nil {
+		if err = tx.SignOff(ctx, u, uint32(i), shf); err != nil {
 			return err
 		}
 	}

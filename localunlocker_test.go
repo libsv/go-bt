@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLocalUnlocker_UnlockAll(t *testing.T) {
+func TestLocalUnlocker_SignOffAll(t *testing.T) {
 	t.Parallel()
 
-	incompleteTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
-	tx, err := bt.NewTxFromString(incompleteTx)
+	unsignedOffTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d25072326510000000000ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
+	tx, err := bt.NewTxFromString(unsignedOffTx)
 	assert.NoError(t, err)
 	assert.NotNil(t, tx)
 
@@ -31,12 +31,12 @@ func TestLocalUnlocker_UnlockAll(t *testing.T) {
 	assert.NoError(t, err)
 
 	unlocker := bt.LocalUnlockerGetter{PrivateKey: w.PrivKey}
-	err = tx.UnlockAll(context.Background(), &unlocker)
+	err = tx.SignOffAll(context.Background(), &unlocker)
 	assert.NoError(t, err)
 
 	expectedSignedTx := "010000000193a35408b6068499e0d5abd799d3e827d9bfe70c9b75ebe209c91d2507232651000000006b483045022100c1d77036dc6cd1f3fa1214b0688391ab7f7a16cd31ea4e5a1f7a415ef167df820220751aced6d24649fa235132f1e6969e163b9400f80043a72879237dab4a1190ad412103b8b40a84123121d260f5c109bc5a46ec819c2e4002e5ba08638783bfb4e01435ffffffff02404b4c00000000001976a91404ff367be719efa79d76e4416ffb072cd53b208888acde94a905000000001976a91404d03f746652cfcb6cb55119ab473a045137d26588ac00000000"
 	assert.Equal(t, expectedSignedTx, tx.String())
-	assert.NotEqual(t, incompleteTx, tx.String())
+	assert.NotEqual(t, unsignedOffTx, tx.String())
 }
 
 func TestLocalUnlocker_ValidSignature(t *testing.T) {
@@ -202,7 +202,7 @@ func TestLocalUnlocker_NonSignature(t *testing.T) {
 				t:            t,
 				unlockerFunc: test.unlockerFunc,
 			}
-			assert.NoError(t, tx.UnlockAll(context.Background(), ug))
+			assert.NoError(t, tx.SignOffAll(context.Background(), ug))
 			for i, script := range test.expUnlockingScripts {
 				asm, err := tx.Inputs[i].UnlockingScript.ToASM()
 				assert.NoError(t, err)

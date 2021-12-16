@@ -215,7 +215,7 @@ func TestTx_CreateTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, wif)
 
-	err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
+	err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
 	assert.NoError(t, err)
 }
 
@@ -249,7 +249,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
+		err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, true, tx.HasDataOutputs())
@@ -275,7 +275,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
+		err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, false, tx.HasDataOutputs())
@@ -646,7 +646,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
-				tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -667,7 +667,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -688,7 +688,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
 				return tx
 			}(),
@@ -711,7 +711,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
 				return tx
 			}(),
@@ -831,7 +831,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
-				tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -850,7 +850,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -869,7 +869,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
 				return tx
 			}(),
@@ -890,7 +890,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
 				return tx
 			}(),

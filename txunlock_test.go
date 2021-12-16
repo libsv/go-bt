@@ -13,7 +13,7 @@ func TestTx_Sign(t *testing.T) {
 	// todo: add tests
 }
 
-func TestTx_UnlockAll(t *testing.T) {
+func TestTx_SignOffAll(t *testing.T) {
 	t.Parallel()
 
 	t.Run("valid tx (basic)", func(t *testing.T) {
@@ -37,7 +37,7 @@ func TestTx_UnlockAll(t *testing.T) {
 
 		rawTxBefore := tx.String()
 
-		err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
+		err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.NotEqual(t, rawTxBefore, tx.String())
@@ -49,7 +49,7 @@ func TestTx_UnlockAll(t *testing.T) {
 
 		rawTxBefore := tx.String()
 
-		err := tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: nil})
+		err := tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: nil})
 		assert.NoError(t, err)
 
 		assert.Equal(t, rawTxBefore, tx.String())

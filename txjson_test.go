@@ -31,7 +31,7 @@ func TestTx_JSON(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, w)
 
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
@@ -54,7 +54,7 @@ func TestTx_JSON(t *testing.T) {
 				tx.AddOutput(&bt.Output{
 					LockingScript: s,
 				})
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
@@ -135,7 +135,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
 				assert.NotNil(t, w)
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
