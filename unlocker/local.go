@@ -18,6 +18,8 @@ type Getter struct {
 
 // Unlocker builds a new `*unlocker.Local` with the same private key
 // as the calling `*local.Getter`.
+//
+// For an example implementation, see `examples/unlocker_getter/`.
 func (g *Getter) Unlocker(ctx context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
 	return &Simple{PrivateKey: g.PrivateKey}, nil
 }
