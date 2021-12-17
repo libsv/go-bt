@@ -18,7 +18,8 @@ type LocalUnlockerGetter struct {
 // Unlocker builds a new *bt.LocalUnlocker with the same private key
 // as the calling *bt.LocalUnlockerGetter.
 func (lg *LocalUnlockerGetter) Unlocker(ctx context.Context, lockingScript *bscript.Script) (Unlocker, error) {
-	return &LocalUnlocker{PrivateKey: lg.PrivateKey}, nil
+	// return &LocalUnlocker{PrivateKey: lg.PrivateKey}, nil
+	return nil, nil
 }
 
 // LocalUnlocker implements the unlocker interface. It is used to unlock a tx locally using a
@@ -33,33 +34,33 @@ type LocalUnlocker struct {
 // as well as the public key corresponding to the private key used. The produced
 // signature is deterministic (same message and same key yield the same signature) and
 // canonical in accordance with RFC6979 and BIP0062.
-func (lu *LocalUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32, shf sighash.Flag) error {
-	if shf == 0 {
-		shf = sighash.AllForkID
+func (lu *LocalUnlocker) Unlock(ctx context.Context, tx *Tx, params UnlockerParams) (*bscript.Script, error) {
+	if params.SigHashFlags == 0 {
+		params.SigHashFlags = sighash.AllForkID
 	}
 
-	switch tx.Inputs[idx].PreviousTxScript.ScriptType() {
+	switch tx.Inputs[params.InputIdx].PreviousTxScript.ScriptType() {
 	case bscript.ScriptTypePubKeyHash:
-		sh, err := tx.CalcInputSignatureHash(idx, shf)
+		sh, err := tx.CalcInputSignatureHash(params.InputIdx, params.SigHashFlags)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		sig, err := lu.PrivateKey.Sign(sh)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		pubKey := lu.PrivateKey.PubKey().SerialiseCompressed()
 		signature := sig.Serialise()
 
-		uls, err := bscript.NewP2PKHUnlockingScript(pubKey, signature, shf)
+		uscript, err := bscript.NewP2PKHUnlockingScript(pubKey, signature, params.SigHashFlags)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		return tx.InsertInputUnlockingScript(idx, uls)
+		return uscript, nil
 	}
 
-	return errors.New("currently only p2pkh supported")
+	return nil, errors.New("currently only p2pkh supported")
 }

@@ -94,7 +94,10 @@ func TestLocalUnlocker_ValidSignature(t *testing.T) {
 			assert.NoError(t, err)
 
 			unlocker := &bt.LocalUnlocker{PrivateKey: w.PrivKey}
-			assert.NoError(t, unlocker.Unlock(context.Background(), tx, 0, sighash.AllForkID))
+			uscript, err := unlocker.Unlock(context.Background(), tx, bt.UnlockerParams{})
+			assert.NoError(t, err)
+
+			assert.NoError(t, tx.InsertInputUnlockingScript(0, uscript))
 
 			parts, err := bscript.DecodeParts(*tx.Inputs[0].UnlockingScript)
 			assert.NoError(t, err)
@@ -131,11 +134,11 @@ type mockUnlocker struct {
 	script string
 }
 
-func (m *mockUnlocker) Unlock(ctx context.Context, tx *bt.Tx, idx uint32, shf sighash.Flag) error {
-	script, err := bscript.NewFromASM(m.script)
+func (m *mockUnlocker) UnlockingScript(ctx context.Context, tx *bt.Tx, params bt.UnlockerParams) (*bscript.Script, error) {
+	uscript, err := bscript.NewFromASM(m.script)
 	assert.NoError(m.t, err)
 
-	return tx.InsertInputUnlockingScript(idx, script)
+	return uscript, nil
 }
 
 func TestLocalUnlocker_NonSignature(t *testing.T) {
