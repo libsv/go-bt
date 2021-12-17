@@ -135,7 +135,7 @@ func (m *mockUnlocker) Unlock(ctx context.Context, tx *bt.Tx, idx uint32, shf si
 	script, err := bscript.NewFromASM(m.script)
 	assert.NoError(m.t, err)
 
-	return tx.ApplyUnlockingScript(idx, script)
+	return tx.InsertInputUnlockingScript(idx, script)
 }
 
 func TestLocalUnlocker_NonSignature(t *testing.T) {

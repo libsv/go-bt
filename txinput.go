@@ -217,3 +217,14 @@ func (tx *Tx) SequenceHash() []byte {
 
 	return crypto.Sha256d(buf)
 }
+
+// InsertInputUnlockingScript applies a script to the transaction at a specific index in
+// unlocking script field.
+func (tx *Tx) InsertInputUnlockingScript(index uint32, s *bscript.Script) error {
+	if tx.Inputs[index] != nil {
+		tx.Inputs[index].UnlockingScript = s
+		return nil
+	}
+
+	return fmt.Errorf("no input at index %d", index)
+}

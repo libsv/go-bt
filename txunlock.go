@@ -2,9 +2,7 @@ package bt
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
@@ -58,26 +56,4 @@ func (tx *Tx) UnlockAllInputs(ctx context.Context, ug UnlockerGetter) error {
 	}
 
 	return nil
-}
-
-// ApplyP2PKHUnlockingScript applies a script to the transaction at a specific index in
-// unlocking script field.
-func (tx *Tx) ApplyP2PKHUnlockingScript(index uint32, pubKey []byte, sig []byte, shf sighash.Flag) error {
-	uls, err := bscript.NewP2PKHUnlockingScript(pubKey, sig, shf)
-	if err != nil {
-		return err
-	}
-
-	return tx.ApplyUnlockingScript(index, uls)
-}
-
-// ApplyUnlockingScript applies a script to the transaction at a specific index in
-// unlocking script field.
-func (tx *Tx) ApplyUnlockingScript(index uint32, s *bscript.Script) error {
-	if tx.Inputs[index] != nil {
-		tx.Inputs[index].UnlockingScript = s
-		return nil
-	}
-
-	return fmt.Errorf("no input at index %d", index)
 }

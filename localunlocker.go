@@ -38,22 +38,27 @@ func (lu *LocalUnlocker) Unlock(ctx context.Context, tx *Tx, idx uint32, shf sig
 		shf = sighash.AllForkID
 	}
 
-	sh, err := tx.CalcInputSignatureHash(idx, shf)
-	if err != nil {
-		return err
-	}
-
-	sig, err := lu.PrivateKey.Sign(sh)
-	if err != nil {
-		return err
-	}
-
-	pubKey := lu.PrivateKey.PubKey().SerialiseCompressed()
-	signature := sig.Serialise()
-
 	switch tx.Inputs[idx].PreviousTxScript.ScriptType() {
 	case bscript.ScriptTypePubKeyHash:
-		return tx.ApplyP2PKHUnlockingScript(idx, pubKey, signature, shf)
+		sh, err := tx.CalcInputSignatureHash(idx, shf)
+		if err != nil {
+			return err
+		}
+
+		sig, err := lu.PrivateKey.Sign(sh)
+		if err != nil {
+			return err
+		}
+
+		pubKey := lu.PrivateKey.PubKey().SerialiseCompressed()
+		signature := sig.Serialise()
+
+		uls, err := bscript.NewP2PKHUnlockingScript(pubKey, signature, shf)
+		if err != nil {
+			return err
+		}
+
+		return tx.InsertInputUnlockingScript(idx, uls)
 	}
 
 	return errors.New("currently only p2pkh supported")
