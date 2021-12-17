@@ -8,6 +8,7 @@ import (
 	"github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/unlocker"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,7 +32,7 @@ func TestTx_JSON(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, w)
 
-				err = tx.UnlockAllInputs(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
@@ -54,7 +55,7 @@ func TestTx_JSON(t *testing.T) {
 				tx.AddOutput(&bt.Output{
 					LockingScript: s,
 				})
-				err = tx.UnlockAllInputs(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
@@ -135,7 +136,7 @@ func TestTx_MarshallJSON(t *testing.T) {
 				w, err := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 				assert.NoError(t, err)
 				assert.NotNil(t, w)
-				err = tx.UnlockAllInputs(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				assert.NoError(t, err)
 				return tx
 			}(),
