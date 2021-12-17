@@ -28,8 +28,8 @@ type Local struct {
 	PrivateKey *bec.PrivateKey
 }
 
-// UnlockingScript create the unlocking script for a given input using the PrivateKey passed in through the `unlocker.Local`
-// struct.
+// UnlockingScript create the unlocking script for a given input using the PrivateKey passed in through the
+// the `unlock.Local` struct.
 //
 // UnlockingScript generates and uses an ECDSA signature for the provided hash digest using the private key
 // as well as the public key corresponding to the private key used. The produced
