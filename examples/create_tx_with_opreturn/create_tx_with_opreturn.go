@@ -24,7 +24,7 @@ func main() {
 
 	decodedWif, _ := wif.DecodeWIF("L3VJH2hcRGYYG6YrbWGmsxQC1zyYixA82YjgEyrEUWDs4ALgk8Vu")
 
-	err := tx.SignOffAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: decodedWif.PrivKey})
+	err := tx.UnlockAllInputs(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: decodedWif.PrivKey})
 	if err != nil {
 		log.Fatal(err.Error())
 	}

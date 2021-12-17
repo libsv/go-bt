@@ -11,6 +11,7 @@ var (
 	ErrEmptyValues       = errors.New("empty value or values passed, all arguments are required and cannot be empty")
 	ErrUnsupportedScript = errors.New("non-P2PKH input used in the tx - unsupported")
 	ErrInvalidScriptType = errors.New("invalid script type")
+	ErrNoUnlocker        = errors.New("unlocker not supplied")
 )
 
 // Sentinal errors reported by inputs.
