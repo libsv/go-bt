@@ -94,7 +94,7 @@ func TestLocalUnlocker_ValidSignature(t *testing.T) {
 			w, err := wif.DecodeWIF("cNGwGSc7KRrTmdLUZ54fiSXWbhLNDc2Eg5zNucgQxyQCzuQ5YRDq")
 			assert.NoError(t, err)
 
-			unlocker := &unlocker.Local{PrivateKey: w.PrivKey}
+			unlocker := &unlocker.Simple{PrivateKey: w.PrivKey}
 			uscript, err := unlocker.UnlockingScript(context.Background(), tx, bt.UnlockerParams{})
 			assert.NoError(t, err)
 

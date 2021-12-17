@@ -19,12 +19,12 @@ type Getter struct {
 // Unlocker builds a new `*unlocker.Local` with the same private key
 // as the calling `*local.Getter`.
 func (g *Getter) Unlocker(ctx context.Context, lockingScript *bscript.Script) (bt.Unlocker, error) {
-	return &Local{PrivateKey: g.PrivateKey}, nil
+	return &Simple{PrivateKey: g.PrivateKey}, nil
 }
 
-// Local implements the `bt.Unlocker` interface. It is used to unlock a tx locally using a
-// bec Private Key.
-type Local struct {
+// Simple implements the a simple `bt.Unlocker` interface. It is used to build an unlocking script
+// using a bec Private Key.
+type Simple struct {
 	PrivateKey *bec.PrivateKey
 }
 
@@ -37,7 +37,7 @@ type Local struct {
 // canonical in accordance with RFC6979 and BIP0062.
 //
 // For example usage, see `examples/create_tx/create_tx.go`
-func (l *Local) UnlockingScript(ctx context.Context, tx *bt.Tx, params bt.UnlockerParams) (*bscript.Script, error) {
+func (l *Simple) UnlockingScript(ctx context.Context, tx *bt.Tx, params bt.UnlockerParams) (*bscript.Script, error) {
 	if params.SigHashFlags == 0 {
 		params.SigHashFlags = sighash.AllForkID
 	}
