@@ -6,6 +6,7 @@ import (
 
 	"github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt/v2"
+	"github.com/libsv/go-bt/v2/unlocker"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 
 	decodedWif, _ := wif.DecodeWIF("KznvCNc6Yf4iztSThoMH6oHWzH9EgjfodKxmeuUGPq5DEX5maspS")
 
-	if err := tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: decodedWif.PrivKey}); err != nil {
+	if err := tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: decodedWif.PrivKey}); err != nil {
 		log.Fatal(err.Error())
 	}
 	log.Printf("tx: %s\n", tx)

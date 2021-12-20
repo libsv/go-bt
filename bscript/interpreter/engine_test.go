@@ -28,7 +28,7 @@ func TestBadPC(t *testing.T) {
 		{script: 0, off: 2},
 	}
 
-	uls, err := bscript.NewFromASM("OP_NOP")
+	uscript, err := bscript.NewFromASM("OP_NOP")
 	if err != nil {
 		t.Errorf("failed to create unlocking script %e", err)
 	}
@@ -37,7 +37,7 @@ func TestBadPC(t *testing.T) {
 		Version: 1,
 		Inputs: []*bt.Input{{
 			PreviousTxOutIndex: 0,
-			UnlockingScript:    uls,
+			UnlockingScript:    uscript,
 			SequenceNumber:     4294967295,
 		}},
 		Outputs: []*bt.Output{{
@@ -46,12 +46,12 @@ func TestBadPC(t *testing.T) {
 		LockTime: 0,
 	}
 
-	ls, err := bscript.NewFromASM("OP_NOP")
+	lscript, err := bscript.NewFromASM("OP_NOP")
 	if err != nil {
 		t.Errorf("failed to created locking script %e", err)
 	}
 	txOut := &bt.Output{
-		LockingScript: ls,
+		LockingScript: lscript,
 	}
 
 	for _, test := range tests {
@@ -103,12 +103,12 @@ func TestCheckErrorCondition(t *testing.T) {
 		LockTime: 0,
 	}
 
-	ls, err := bscript.NewFromASM("OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_TRUE")
+	lscript, err := bscript.NewFromASM("OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_NOP OP_TRUE")
 	if err != nil {
 		t.Errorf("failed to created locking script %e", err)
 	}
 	txOut := &bt.Output{
-		LockingScript: ls,
+		LockingScript: lscript,
 	}
 
 	vm := &thread{
@@ -126,12 +126,12 @@ func TestCheckErrorCondition(t *testing.T) {
 	}
 
 	var done bool
-	for i := 0; i < len(*ls); i++ {
+	for i := 0; i < len(*lscript); i++ {
 		done, err = vm.Step()
 		if err != nil {
 			t.Fatalf("failed to step %dth time: %v", i, err)
 		}
-		if done && i != len(*ls)-1 {
+		if done && i != len(*lscript)-1 {
 			t.Fatalf("finshed early on %dth time", i)
 		}
 	}
@@ -153,10 +153,10 @@ func TestValidateParams(t *testing.T) {
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
 					assert.NoError(t, err)
 
-					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					uscript, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
 					assert.NoError(t, err)
 
-					tx.Inputs[0].UnlockingScript = uls
+					tx.Inputs[0].UnlockingScript = uscript
 
 					return tx
 				}(),
@@ -221,10 +221,10 @@ func TestValidateParams(t *testing.T) {
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
 					assert.NoError(t, err)
 
-					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					uscript, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
 					assert.NoError(t, err)
 
-					tx.Inputs[0].UnlockingScript = uls
+					tx.Inputs[0].UnlockingScript = uscript
 
 					return tx
 				}(),
@@ -248,10 +248,10 @@ func TestValidateParams(t *testing.T) {
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
 					assert.NoError(t, err)
 
-					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					uscript, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
 					assert.NoError(t, err)
 
-					tx.Inputs[0].UnlockingScript = uls
+					tx.Inputs[0].UnlockingScript = uscript
 
 					return tx
 				}(),
@@ -306,10 +306,10 @@ func TestValidateParams(t *testing.T) {
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
 					assert.NoError(t, err)
 
-					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					uscript, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
 					assert.NoError(t, err)
 
-					tx.Inputs[0].UnlockingScript = uls
+					tx.Inputs[0].UnlockingScript = uscript
 
 					return tx
 				}(),
@@ -339,10 +339,10 @@ func TestValidateParams(t *testing.T) {
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
 					assert.NoError(t, err)
 
-					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					uscript, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
 					assert.NoError(t, err)
 
-					tx.Inputs[0].UnlockingScript = uls
+					tx.Inputs[0].UnlockingScript = uscript
 
 					return tx
 				}(),
@@ -362,10 +362,10 @@ func TestValidateParams(t *testing.T) {
 					err := tx.From("ae81577c1a2434929a1224cf19aa63e167d88029965e2ca6de24defff014d031", 0, "76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac", 0)
 					assert.NoError(t, err)
 
-					uls, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
+					uscript, err := bscript.NewFromHexString("483045022100a4d9da733aeb29f9ba94dcaa578e71662cf29dd9742ce4b022c098211f4fdb06022041d24db4eda239fa15a12cf91229f6c352adab3c1c10091fc2aa517fe0f487c5412102454c535854802e5eaeaf5cbecd20e0aa508486063b71194dfde34744f19f1a5d")
 					assert.NoError(t, err)
 
-					tx.Inputs[0].UnlockingScript = uls
+					tx.Inputs[0].UnlockingScript = uscript
 
 					return tx
 				}(),
@@ -404,7 +404,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 		scriptflag.VerifyCleanStack,
 	}
 
-	uls, err := bscript.NewFromASM("OP_NOP")
+	uscript, err := bscript.NewFromASM("OP_NOP")
 	if err != nil {
 		t.Errorf("failed to create unlocking script %e", err)
 	}
@@ -413,7 +413,7 @@ func TestInvalidFlagCombinations(t *testing.T) {
 		Version: 1,
 		Inputs: []*bt.Input{{
 			PreviousTxOutIndex: 0,
-			UnlockingScript:    uls,
+			UnlockingScript:    uscript,
 			SequenceNumber:     4294967295,
 		}},
 		Outputs: []*bt.Output{{
@@ -422,12 +422,12 @@ func TestInvalidFlagCombinations(t *testing.T) {
 		LockTime: 0,
 	}
 
-	ls, err := bscript.NewFromASM("OP_NOP")
+	lscript, err := bscript.NewFromASM("OP_NOP")
 	if err != nil {
 		t.Errorf("failed to created locking script %e", err)
 	}
 	txOut := &bt.Output{
-		LockingScript: ls,
+		LockingScript: lscript,
 	}
 
 	for i, test := range tests {
@@ -828,13 +828,13 @@ func TestCheckHashTypeEncoding(t *testing.T) {
 
 func TestEngine_WithState(t *testing.T) {
 	tests := map[string]struct {
-		ls    string
-		uls   string
-		state *State
+		lscript string
+		uscript string
+		state   *State
 	}{
 		"start midway": {
-			ls:  "5253958852529387",
-			uls: "5456",
+			lscript: "5253958852529387",
+			uscript: "5456",
 			state: &State{
 				ScriptIdx: 1,
 				OpcodeIdx: 1,
@@ -849,19 +849,19 @@ func TestEngine_WithState(t *testing.T) {
 				NumOps:               3,
 				SavedFirstStack:      [][]byte{},
 				Scripts: func() []ParsedScript {
-					ls, err := bscript.NewFromHexString("5253958852529387")
+					lscript, err := bscript.NewFromHexString("5253958852529387")
 					assert.NoError(t, err)
-					uls, err := bscript.NewFromHexString("5456")
+					uscript, err := bscript.NewFromHexString("5456")
 					assert.NoError(t, err)
 
 					var parser DefaultOpcodeParser
-					pls, err := parser.Parse(ls)
+					parsedLScript, err := parser.Parse(lscript)
 					assert.NoError(t, err)
 
-					puls, err := parser.Parse(uls)
+					parsedUScript, err := parser.Parse(uscript)
 					assert.NoError(t, err)
 
-					return []ParsedScript{puls, pls}
+					return []ParsedScript{parsedUScript, parsedLScript}
 				}(),
 				Genesis: struct {
 					AfterGenesis bool
@@ -872,8 +872,8 @@ func TestEngine_WithState(t *testing.T) {
 			},
 		},
 		"start at operation": {
-			ls:  "5253958852529387",
-			uls: "5456",
+			lscript: "5253958852529387",
+			uscript: "5456",
 			state: &State{
 				ScriptIdx: 1,
 				OpcodeIdx: 6,
@@ -888,19 +888,19 @@ func TestEngine_WithState(t *testing.T) {
 				NumOps:               8,
 				SavedFirstStack:      [][]byte{},
 				Scripts: func() []ParsedScript {
-					ls, err := bscript.NewFromHexString("5253958852529387")
+					lscript, err := bscript.NewFromHexString("5253958852529387")
 					assert.NoError(t, err)
-					uls, err := bscript.NewFromHexString("5456")
+					uscript, err := bscript.NewFromHexString("5456")
 					assert.NoError(t, err)
 
 					var parser DefaultOpcodeParser
-					pls, err := parser.Parse(ls)
+					parsedLScript, err := parser.Parse(lscript)
 					assert.NoError(t, err)
 
-					puls, err := parser.Parse(uls)
+					parsedUScript, err := parser.Parse(uscript)
 					assert.NoError(t, err)
 
-					return []ParsedScript{puls, pls}
+					return []ParsedScript{parsedUScript, parsedLScript}
 				}(),
 				Genesis: struct {
 					AfterGenesis bool
@@ -914,13 +914,13 @@ func TestEngine_WithState(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			ls, err := bscript.NewFromHexString(test.ls)
+			lscript, err := bscript.NewFromHexString(test.lscript)
 			assert.NoError(t, err)
-			uls, err := bscript.NewFromHexString(test.uls)
+			uscript, err := bscript.NewFromHexString(test.uscript)
 			assert.NoError(t, err)
 
 			assert.NoError(t, NewEngine().Execute(
-				WithScripts(ls, uls),
+				WithScripts(lscript, uscript),
 				WithForkID(),
 				WithAfterGenesis(),
 				WithState(test.state),

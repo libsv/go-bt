@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/sighash"
 )
 
 // UTXOGetterFunc is used for tx.Fund(...). It provides the amount of satoshis required
@@ -216,4 +217,61 @@ func (tx *Tx) SequenceHash() []byte {
 	}
 
 	return crypto.Sha256d(buf)
+}
+
+// InsertInputUnlockingScript applies a script to the transaction at a specific index in
+// unlocking script field.
+func (tx *Tx) InsertInputUnlockingScript(index uint32, s *bscript.Script) error {
+	if tx.Inputs[index] != nil {
+		tx.Inputs[index].UnlockingScript = s
+		return nil
+	}
+
+	return fmt.Errorf("no input at index %d", index)
+}
+
+// FillInput is used to unlock the transaction at a specific input index.
+// It takes an Unlocker interface as a parameter so that different
+// unlocking implementations can be used to unlock the transaction -
+// for example local or external unlocking (hardware wallet), or
+// signature/nonsignature based.
+func (tx *Tx) FillInput(ctx context.Context, unlocker Unlocker, params UnlockerParams) error {
+	if unlocker == nil {
+		return ErrNoUnlocker
+	}
+
+	if params.SigHashFlags == 0 {
+		params.SigHashFlags = sighash.AllForkID
+	}
+
+	uscript, err := unlocker.UnlockingScript(ctx, tx, params)
+	if err != nil {
+		return err
+	}
+
+	return tx.InsertInputUnlockingScript(params.InputIdx, uscript)
+}
+
+// FillAllInputs is used to sign all inputs. It takes an UnlockerGetter interface
+// as a parameter so that different unlocking implementations can
+// be used to sign the transaction - for example local/external
+// signing, or P2PKH/contract signing.
+//
+// Given this signs inputs and outputs, sighash `ALL|FORKID` is used.
+func (tx *Tx) FillAllInputs(ctx context.Context, ug UnlockerGetter) error {
+	for i, in := range tx.Inputs {
+		u, err := ug.Unlocker(ctx, in.PreviousTxScript)
+		if err != nil {
+			return err
+		}
+
+		if err = tx.FillInput(ctx, u, UnlockerParams{
+			InputIdx:     uint32(i),
+			SigHashFlags: sighash.AllForkID, // use SIGHASHALLFORFORKID to sign automatically
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -39,13 +39,13 @@ func (u *UTXO) UnmarshalJSON(body []byte) error {
 		return err
 	}
 
-	ls, err := bscript.NewFromHexString(j.LockingScript)
+	lscript, err := bscript.NewFromHexString(j.LockingScript)
 	if err != nil {
 		return err
 	}
 
 	u.TxID = txID
-	u.LockingScript = ls
+	u.LockingScript = lscript
 	u.Vout = j.Vout
 	u.Satoshis = j.Satoshis
 
@@ -83,14 +83,14 @@ func (n *nodeUTXOWrapper) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	ls, err := bscript.NewFromHexString(uj.ScriptPubKey)
+	lscript, err := bscript.NewFromHexString(uj.ScriptPubKey)
 	if err != nil {
 		return err
 	}
 
 	n.UTXO.Satoshis = uint64(uj.Amount * 100000000)
 	n.UTXO.Vout = uj.Vout
-	n.UTXO.LockingScript = ls
+	n.UTXO.LockingScript = lscript
 	n.UTXO.TxID = txID
 
 	return nil

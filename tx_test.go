@@ -16,6 +16,7 @@ import (
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/testing/data"
+	"github.com/libsv/go-bt/v2/unlocker"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -85,13 +86,13 @@ func TestNewTxFromString(t *testing.T) {
 		assert.Equal(t, 1, len(tx.Outputs))
 
 		// New output
-		var ls *bscript.Script
-		ls, err = bscript.NewFromHexString("76a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac")
+		var lscript *bscript.Script
+		lscript, err = bscript.NewFromHexString("76a91418392a59fc1f76ad6a3c7ffcea20cfcb17bda9eb88ac")
 		assert.NoError(t, err)
-		assert.NotNil(t, ls)
+		assert.NotNil(t, lscript)
 
 		// Check the type
-		o := bt.Output{Satoshis: 4999000000, LockingScript: ls}
+		o := bt.Output{Satoshis: 4999000000, LockingScript: lscript}
 		assert.Equal(t, true, reflect.DeepEqual(*tx.Outputs[0], o))
 	})
 }
@@ -215,7 +216,7 @@ func TestTx_CreateTx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, wif)
 
-	err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
+	err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: wif.PrivKey})
 	assert.NoError(t, err)
 }
 
@@ -249,7 +250,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
+		err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, true, tx.HasDataOutputs())
@@ -275,7 +276,7 @@ func TestTx_HasDataOutputs(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, wif)
 
-		err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: wif.PrivKey})
+		err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: wif.PrivKey})
 		assert.NoError(t, err)
 
 		assert.Equal(t, false, tx.HasDataOutputs())
@@ -646,7 +647,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
-				tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -667,7 +668,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -688,8 +689,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
-				assert.Nil(t, err)
+				assert.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey}))
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -711,8 +711,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
-				assert.Nil(t, err)
+				assert.Nil(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey}))
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -831,7 +830,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
 				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
-				tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -850,7 +849,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 904))
-				tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -869,7 +868,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
 				return tx
 			}(),
@@ -890,7 +889,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 895))
-				err = tx.UnlockAll(context.Background(), &bt.LocalUnlockerGetter{PrivateKey: w.PrivKey})
+				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
 				return tx
 			}(),

@@ -281,14 +281,14 @@ func (t *thread) apply(opts *execOpts) error {
 		t.cfg = &afterGenesisConfig{}
 	}
 
-	uls := opts.unlockingScript
-	ls := opts.lockingScript
+	uscript := opts.unlockingScript
+	lscript := opts.lockingScript
 
 	// When both the signature script and public key script are empty the
 	// result is necessarily an error since the stack would end up being
 	// empty which is equivalent to a false top element.  Thus, just return
 	// the relevant error now as an optimization.
-	if (uls == nil || len(*uls) == 0) && (ls == nil || len(*ls) == 0) {
+	if (uscript == nil || len(*uscript) == 0) && (lscript == nil || len(*lscript) == 0) {
 		return errs.NewError(errs.ErrEvalFalse, "false stack entry at end of script execution")
 	}
 
@@ -296,19 +296,19 @@ func (t *thread) apply(opts *execOpts) error {
 		return errs.NewError(errs.ErrInvalidFlags, "invalid scriptflag combination")
 	}
 
-	if len(*uls) > t.cfg.MaxScriptSize() {
+	if len(*uscript) > t.cfg.MaxScriptSize() {
 		return errs.NewError(
 			errs.ErrScriptTooBig,
 			"unlocking script size %d is larger than the max allowed size %d",
-			len(*uls),
+			len(*uscript),
 			t.cfg.MaxScriptSize(),
 		)
 	}
-	if len(*ls) > t.cfg.MaxScriptSize() {
+	if len(*lscript) > t.cfg.MaxScriptSize() {
 		return errs.NewError(
 			errs.ErrScriptTooBig,
 			"locking script size %d is larger than the max allowed size %d",
-			len(*uls),
+			len(*uscript),
 			t.cfg.MaxScriptSize(),
 		)
 	}
@@ -318,7 +318,7 @@ func (t *thread) apply(opts *execOpts) error {
 	// with a pay-to-script-hash transaction, there will be ultimately be
 	// a third script to execute.
 	t.scripts = make([]ParsedScript, 2)
-	for i, script := range []*bscript.Script{uls, ls} {
+	for i, script := range []*bscript.Script{uscript, lscript} {
 		pscript, err := t.scriptParser.Parse(script)
 		if err != nil {
 			return err
@@ -336,11 +336,11 @@ func (t *thread) apply(opts *execOpts) error {
 	// Advance the program counter to the public key script if the signature
 	// script is empty since there is nothing to execute for it in that
 	// case.
-	if len(*uls) == 0 {
+	if len(*uscript) == 0 {
 		t.scriptIdx++
 	}
 
-	if t.hasFlag(scriptflag.Bip16) && ls.IsP2SH() {
+	if t.hasFlag(scriptflag.Bip16) && lscript.IsP2SH() {
 		// Only accept input scripts that push data for P2SH.
 		if !t.scripts[0].IsPushOnly() {
 			return errs.NewError(errs.ErrNotPushOnly, "pay to script hash is not push only")
