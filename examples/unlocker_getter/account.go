@@ -17,10 +17,10 @@ import (
 type account struct {
 	// masterPrivKey of which all locking scripts and private keys are generated from.
 	masterPrivKey *bip32.ExtendedKey
+	// counter for deriving paths for public/private keys
+	counter uint64
 	// scriptToPathMap for mapping a locking script hex to its derivation path.
 	scriptToPathMap map[string]string
-	// pathToScriptMap for mapping a derivation path to its locking script.
-	pathToScriptMap map[string]*bscript.Script
 }
 
 func newAccount() *account {
@@ -37,16 +37,13 @@ func newAccount() *account {
 	return &account{
 		masterPrivKey:   privKey,
 		scriptToPathMap: make(map[string]string, 0),
-		pathToScriptMap: make(map[string]*bscript.Script, 0),
 	}
 }
 
 func (a *account) createDestination() *bscript.Script {
-	var path string
-	// key generating a new path until unique one is found
-	for ok := true; ok; _, ok = a.pathToScriptMap[path] {
-		path = bip32.DerivePath(randUint64())
-	}
+	// generate a new path until and increment the counter.
+	path := bip32.DerivePath(a.counter)
+	a.counter++
 
 	// Derive a public key from the new derivation path.
 	pubKey, err := a.masterPrivKey.DerivePublicKeyFromPath(path)
@@ -61,7 +58,6 @@ func (a *account) createDestination() *bscript.Script {
 	}
 
 	// Store the locking script and its path for later use.
-	a.pathToScriptMap[path] = s
 	a.scriptToPathMap[s.String()] = path
 
 	return s
