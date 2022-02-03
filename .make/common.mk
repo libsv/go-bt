@@ -31,42 +31,60 @@ ifndef DISTRIBUTIONS_DIR
 endif
 export DISTRIBUTIONS_DIR
 
+.PHONY: diff
+
+diff: ## Show the git diff
+	$(call print-target)
+	git diff --exit-code
+	RES=$$(git status --porcelain) ; if [ -n "$$RES" ]; then echo $$RES && exit 1 ; fi
+
 help: ## Show this help message
 	@egrep -h '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#'
 
+install-releaser: ## Install the GoReleaser application
+	@echo "installing GoReleaser..."
+	@curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
+
 release:: ## Full production release (creates release in Github)
+	@echo "releasing..."
 	@test $(github_token)
 	@export GITHUB_TOKEN=$(github_token) && goreleaser --rm-dist
 
 release-test: ## Full production test release (everything except deploy)
+	@echo "creating a release test..."
 	@goreleaser --skip-publish --rm-dist
 
 release-snap: ## Test the full release (build binaries)
+	@echo "creating a release snapshot..."
 	@goreleaser --snapshot --skip-publish --rm-dist
 
 replace-version: ## Replaces the version in HTML/JS (pre-deploy)
+	@echo "replacing version..."
 	@test $(version)
 	@test "$(path)"
 	@find $(path) -name "*.html" -type f -exec sed -i '' -e "s/{{version}}/$(version)/g" {} \;
 	@find $(path) -name "*.js" -type f -exec sed -i '' -e "s/{{version}}/$(version)/g" {} \;
 
 tag: ## Generate a new tag and push (tag version=0.0.0)
+	@echo "creating new tag..."
 	@test $(version)
 	@git tag -a v$(version) -m "Pending full release..."
 	@git push origin v$(version)
 	@git fetch --tags -f
 
 tag-remove: ## Remove a tag if found (tag-remove version=0.0.0)
+	@echo "removing tag..."
 	@test $(version)
 	@git tag -d v$(version)
 	@git push --delete origin v$(version)
 	@git fetch --tags
 
 tag-update: ## Update an existing tag to current commit (tag-update version=0.0.0)
+	@echo "updating tag to new commit..."
 	@test $(version)
 	@git push --force origin HEAD:refs/tags/v$(version)
 	@git fetch --tags -f
 
 update-releaser:  ## Update the goreleaser application
-	@brew update
-	@brew upgrade goreleaser
+	@echo "updating GoReleaser application..."
+	@$(MAKE) install-releaser
