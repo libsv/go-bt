@@ -282,7 +282,7 @@ type FeeUnit struct {
 // FeeType, for example 'standard' or 'data'
 // see https://github.com/bitcoin-sv-specs/brfc-misc/tree/master/feespec
 type Fee struct {
-	FeeType   FeeType `json:"-"` // standard || data
+	FeeType   FeeType `json:"feeType"` // standard || data
 	MiningFee FeeUnit `json:"miningFee"`
 	RelayFee  FeeUnit `json:"relayFee"` // Fee for retaining Tx in secondary mempool
 }
