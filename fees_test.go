@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExtractDataFee(t *testing.T) {
@@ -617,9 +618,10 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			bb, _ := json.Marshal(test.quote)
+			bb, err := json.Marshal(test.quote)
+			require.NoError(t, err)
 			var quote *FeeQuote
-			err := json.Unmarshal(bb, &quote)
+			err = json.Unmarshal(bb, &quote)
 			if test.err != nil {
 				assert.Error(t, err)
 				assert.EqualError(t, err, test.err.Error())
