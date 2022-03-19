@@ -250,10 +250,12 @@ func (s *Script) ToASM() (string, error) {
 			}
 		} else {
 			if data && len(p) <= 4 {
+				b := make([]byte, 0)
+				b = append(b, p...)
 				for i := 0; i < 4-len(p); i++ {
-					p = append(p, 0)
+					b = append(b, 0)
 				}
-				asm.WriteString(fmt.Sprintf("%d", binary.LittleEndian.Uint32(p)))
+				asmScript.WriteString(fmt.Sprintf("%d", binary.LittleEndian.Uint32(b)))
 			} else {
 				asm.WriteString(hex.EncodeToString(p))
 			}
