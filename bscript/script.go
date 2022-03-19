@@ -1,6 +1,7 @@
 package bscript
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -200,14 +201,30 @@ func (s *Script) ToASM() (string, error) {
 	parts, err := DecodeParts(*s)
 	// if err != nil, we will append [error] to the ASM script below (as done in the node).
 
+	data := false
+	if len(*s) > 1 && ((*s)[0] == 0x6a || ((*s)[0] == 0x00 && (*s)[1] == 0x6a)) {
+		data = true
+	}
+
 	var asmScript strings.Builder
 
 	for _, p := range parts {
 		asmScript.WriteString(" ")
 		if len(p) == 1 {
-			asmScript.WriteString(opCodeValues[p[0]])
+			if data && p[0] != 0x6a {
+				asmScript.WriteString(fmt.Sprintf("%d", p[0]))
+			} else {
+				asmScript.WriteString(opCodeValues[p[0]])
+			}
 		} else {
-			asmScript.WriteString(hex.EncodeToString(p))
+			if data && len(p) <= 4 {
+				for i := 0; i < 4-len(p); i++ {
+					p = append(p, 0)
+				}
+				asmScript.WriteString(fmt.Sprintf("%d", binary.LittleEndian.Uint32(p)))
+			} else {
+				asmScript.WriteString(hex.EncodeToString(p))
+			}
 		}
 	}
 
