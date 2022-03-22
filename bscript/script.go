@@ -255,7 +255,7 @@ func (s *Script) ToASM() (string, error) {
 				for i := 0; i < 4-len(p); i++ {
 					b = append(b, 0)
 				}
-				asmScript.WriteString(fmt.Sprintf("%d", binary.LittleEndian.Uint32(b)))
+				asm.WriteString(fmt.Sprintf("%d", binary.LittleEndian.Uint32(b)))
 			} else {
 				asm.WriteString(hex.EncodeToString(p))
 			}
