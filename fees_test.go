@@ -617,6 +617,7 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			// nolint:errchkjson // it's a test, who cares
 			bb, _ := json.Marshal(test.quote)
 			var quote *FeeQuote
 			err := json.Unmarshal(bb, &quote)
