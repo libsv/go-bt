@@ -523,13 +523,12 @@ func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 	if err != nil {
 		return nil, err
 	}
-	sFee := size.TotalStdBytes * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes)
-	dFee := size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes)
+
 	resp := &TxFees{
-		StdFeePaid:  sFee,
-		DataFeePaid: dFee,
+		StdFeePaid:  size.TotalStdBytes * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
+		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
 	}
-	resp.TotalFeePaid = sFee + dFee
+	resp.TotalFeePaid = resp.StdFeePaid + resp.DataFeePaid
 	return resp, nil
 
 }
