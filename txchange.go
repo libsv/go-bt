@@ -63,10 +63,6 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 	}
 
 	available := inputAmount - outputAmount
-	standardFees, err := f.Fee(FeeTypeStandard)
-	if err != nil {
-		return 0, false, err
-	}
 	size, err := tx.EstimateSizeWithTypes()
 	if err != nil {
 		return 0, false, err
@@ -79,61 +75,31 @@ func (tx *Tx) change(f *FeeQuote, output *changeOutput) (uint64, bool, error) {
 	if err != nil {
 		return 0, false, err
 	}
+	varIntUpper := VarInt(tx.OutputCount()).UpperLimitInc()
+	if varIntUpper == -1 {
+		return 0, false, nil
+	}
+	changeOutputFee := varIntUpper
+	changeP2pkhByteLen := uint64(0)
+	if output != nil && output.newOutput {
+		changeP2pkhByteLen = uint64(8 + 1 + 25)
+	}
 
-	sFees := float64(size.TotalStdBytes) * float64(stdFee.MiningFee.Satoshis) / float64(stdFee.MiningFee.Bytes)
-	dFees := float64(size.TotalDataBytes) * float64(dataFee.MiningFee.Satoshis) / float64(dataFee.MiningFee.Bytes)
-	txFees := sFees + dFees
+	sFees := (size.TotalStdBytes + changeP2pkhByteLen) * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes)
+	dFees := size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes)
+	txFees := sFees + dFees + uint64(changeOutputFee)
 
-	changeFee, canAdd := tx.canAddChange(txFees, standardFees)
-	if !canAdd {
-		return 0, false, err
+	// not enough to add change, no change to add
+	if available <= txFees || available-txFees <= DustLimit {
+		return 0, false, nil
 	}
 
 	// if we want to add to a new output, set
 	// newOutput to true, this will add the calculated change
-	// into a new output.
+	// into a new output
+	available -= txFees
 	if output != nil && output.newOutput {
-		available -= uint64(txFees + changeFee)
 		tx.AddOutput(&Output{Satoshis: available, LockingScript: output.lockingScript})
-		return available, true, nil
 	}
-
-	available -= uint64(txFees)
 	return available, true, nil
-}
-
-// canAddChange will return true / false if the tx can have a change output
-// added.
-// Reasons this could be false are:
-// - hitting max output limit
-// - change would be below dust limit
-// - not enough funds for change
-// We also return the change output fee amount, if we can add change
-func (tx *Tx) canAddChange(txFees float64, standardFees *Fee) (float64, bool) {
-	varIntUpper := VarInt(tx.OutputCount()).UpperLimitInc()
-	if varIntUpper == -1 {
-		return 0, false // upper limit of Outputs in one tx reached
-	}
-	changeOutputFee := float64(varIntUpper)
-	// 8 bytes for satoshi value +1 for varint length + 25 bytes for p2pkh script (e.g. 76a914cc...05388ac)
-	changeP2pkhByteLen := 8 + 1 + 25
-	changeOutputFee += float64(changeP2pkhByteLen) * float64(standardFees.MiningFee.Satoshis) /
-		float64(standardFees.MiningFee.Bytes)
-
-	inputAmount := tx.TotalInputSatoshis()
-	outputAmount := tx.TotalOutputSatoshis()
-	// shouldn't get this far, but if we do, there's no change to add
-	if inputAmount <= outputAmount {
-		return 0, false
-	}
-	available := float64(inputAmount - outputAmount)
-	// not enough to add change, no change to add
-	if available <= changeOutputFee+txFees {
-		return 0, false
-	}
-	// after fees the change would be lower than dust limit, don't add change
-	if available-changeOutputFee+txFees <= DustLimit {
-		return 0, false
-	}
-	return changeOutputFee, true
 }

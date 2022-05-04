@@ -969,7 +969,7 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				TotalFeePaid: 90,
+				TotalFeePaid: 89,
 				StdFeePaid:   83,
 				DataFeePaid:  6,
 			},
@@ -1064,7 +1064,6 @@ func Test_EstimateFeesPaid(t *testing.T) {
 			assert.Equal(t, test.expFees, resp)
 
 			swt, err := test.tx.EstimateSizeWithTypes()
-			fmt.Println(swt.TotalBytes)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expSize, swt)
 		})
