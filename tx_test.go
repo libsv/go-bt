@@ -688,7 +688,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000,
 				))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
-				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 89))
 				assert.NoError(t, tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey}))
 				return tx
 			}(),
@@ -867,14 +867,14 @@ func Test_IsFeePaidEnough(t *testing.T) {
 				assert.NoError(t, tx.From("160f06232540dcb0e9b6db9b36a27f01da1e7e473989df67859742cf098d498f",
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 1000))
 				assert.NoError(t, tx.AddOpReturnOutput([]byte("hellohello")))
-				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 894))
+				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 893))
 				err = tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				assert.Nil(t, err)
 				return tx
 			}(),
 			expSize: &bt.TxSize{
-				TotalBytes:     214,
-				TotalStdBytes:  201,
+				TotalBytes:     213,
+				TotalStdBytes:  200,
 				TotalDataBytes: 13,
 			},
 			isEnough: true,
@@ -969,7 +969,7 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				return tx
 			}(),
 			expFees: &bt.TxFees{
-				TotalFeePaid: 89,
+				TotalFeePaid: 90,
 				StdFeePaid:   83,
 				DataFeePaid:  6,
 			},
@@ -1064,6 +1064,7 @@ func Test_EstimateFeesPaid(t *testing.T) {
 			assert.Equal(t, test.expFees, resp)
 
 			swt, err := test.tx.EstimateSizeWithTypes()
+			fmt.Println(swt.TotalBytes)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expSize, swt)
 		})
