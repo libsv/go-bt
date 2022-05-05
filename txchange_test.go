@@ -158,7 +158,6 @@ func TestTx_Change(t *testing.T) {
 			"0100000001760595866e99c1ce920197844740f5598b34763878696371d41b3a7c0a65b0b7000000006a47304402206b5b0b6546dbaccab4cd9c5698eeab7883f79ddbd4cbc195d4458b48b7dba6460220297a4c4b145e644d23cebdd7593f407e8da9c5bb3c3219767207121d65658ae3412102c8803fdd437d902f08e3c2344cb33065c99d7c99982018ff9f7219c3dd352ff0ffffffff03f4010000000000001976a9147a1980655efbfec416b2b0c663a7b3ac0b6a25d288ac000000000000000011006a02686903686f770361726503796f7577010000000000001976a91484e50b300b009833b297dc671817c79b5459da1d88ac00000000",
 			tx.String(),
 		)
-
 		feePaid := tx.TotalInputSatoshis() - tx.TotalOutputSatoshis()
 		assert.Equal(t, uint64(125), feePaid)
 
@@ -166,8 +165,6 @@ func TestTx_Change(t *testing.T) {
 		assert.Equal(t, 251, txSize)
 
 		feeRate := float64(feePaid) / float64(txSize)
-		// note, due to the integer maths uses, this doesn't equal exactly 0.5, the fee is 125.5
-		// however, this is rounded down giving us the below final figure.
 		// The node will also perform the same deterministic fee cal to arrive at the above 125 sats.
 		assert.Equal(t, 0.49800796812749004, feeRate)
 	})
