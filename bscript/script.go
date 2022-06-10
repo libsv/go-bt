@@ -322,7 +322,7 @@ func (s *Script) IsMultiSigOut() bool {
 		}
 	}
 
-	return isSmallIntOp(parts[len(parts)-2][0]) &&
+	return len(parts[len(parts)-2]) > 0 && isSmallIntOp(parts[len(parts)-2][0]) && len(parts[len(parts)-1]) > 0 &&
 		parts[len(parts)-1][0] == OpCHECKMULTISIG
 }
 
