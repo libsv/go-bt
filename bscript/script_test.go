@@ -236,6 +236,17 @@ func TestScript_PublicKeyHash(t *testing.T) {
 		assert.Error(t, err)
 		assert.EqualError(t, err, "script is empty")
 	})
+
+	t.Run("nonstandard script", func(t *testing.T) {
+		// example tx 37d4cc9f8a3b62e7f2e7c97c07a3282bfa924739c0e174733ff1b764ef8e3ebc
+		s, err := bscript.NewFromHexString("76")
+		assert.NoError(t, err)
+		assert.NotNil(t, s)
+
+		_, err = s.PublicKeyHash()
+		assert.Error(t, err)
+		assert.EqualError(t, err, "not a P2PKH")
+	})
 }
 
 func TestErrorIsAppended(t *testing.T) {
