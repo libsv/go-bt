@@ -336,7 +336,7 @@ func (s *Script) PublicKeyHash() ([]byte, error) {
 		return nil, ErrEmptyScript
 	}
 
-	if (*s)[0] != OpDUP || (*s)[1] != OpHASH160 {
+	if (*s)[0] != OpDUP || len(*s) <= 2 || (*s)[1] != OpHASH160 {
 		return nil, ErrNotP2PKH
 	}
 
