@@ -341,7 +341,7 @@ func (s *Script) IsMultiSigOut() bool {
 		}
 	}
 
-	return isSmallIntOp(parts[len(parts)-2][0]) &&
+	return len(parts[len(parts)-2]) > 0 && isSmallIntOp(parts[len(parts)-2][0]) && len(parts[len(parts)-1]) > 0 &&
 		parts[len(parts)-1][0] == OpCHECKMULTISIG
 }
 
@@ -355,7 +355,7 @@ func (s *Script) PublicKeyHash() ([]byte, error) {
 		return nil, ErrEmptyScript
 	}
 
-	if (*s)[0] != OpDUP || (*s)[1] != OpHASH160 {
+	if (*s)[0] != OpDUP || len(*s) <= 2 || (*s)[1] != OpHASH160 {
 		return nil, ErrNotP2PKH
 	}
 

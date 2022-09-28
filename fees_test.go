@@ -618,7 +618,11 @@ func TestFeeQuote_MarshalUnmarshalJSON(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			bb, err := json.Marshal(test.quote)
-			assert.NoError(t, err)
+			if err != nil {
+				assert.Error(t, err)
+				assert.EqualError(t, err, test.err.Error())
+				return
+			}
 
 			var quote *FeeQuote
 			err = json.Unmarshal(bb, &quote)
