@@ -377,7 +377,7 @@ func TestScript_MinPushSize(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
 		data   [][]byte
-		expLen int
+		expLen uint
 	}{
 		"OpX / OpNeg returns 1": {
 			data: [][]byte{

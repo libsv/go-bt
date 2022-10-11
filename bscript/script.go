@@ -405,8 +405,8 @@ func (s *Script) EqualsHex(h string) bool {
 }
 
 // MinPushSize returns the minimum size of a push operation of the given data.
-func MinPushSize(bb []byte) int {
-	l := len(bb)
+func MinPushSize(bb []byte) uint {
+	l := uint(len(bb))
 
 	// data length is larger than max supported
 	if l > 0xffffffff {
