@@ -298,6 +298,8 @@ func (tx *Tx) Bytes() []byte {
 	return tx.toBytesHelper(0, nil, false)
 }
 
+// ExtendedBytes outputs the transaction into a byte array in extended format
+// (with PreviousTxSatoshis and PreviousTXScript included)
 func (tx *Tx) ExtendedBytes() []byte {
 	return tx.toBytesHelper(0, nil, true)
 }
