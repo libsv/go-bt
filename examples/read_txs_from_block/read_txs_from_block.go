@@ -12,7 +12,7 @@ import (
 // In this example, all txs from a block are being read in via chunking, so at no point
 // does the entire block have to be held in memory, and instead can be streamed.
 //
-// We represent the block by interatively reading a file, however it could be any data
+// We represent the block by interactively reading a file, however it could be any data
 // stream that satisfies the io.Reader interface.
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 	r := bufio.NewReader(f)
 
 	// Read file header. This step is specific to file reading and
-	// may need omitted or modified for other implentations.
+	// may need omitted or modified for other implementations.
 	_, err = io.ReadFull(f, make([]byte, 80))
 	if err != nil {
 		panic(err)
