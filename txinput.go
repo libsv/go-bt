@@ -23,30 +23,6 @@ import (
 // It is expected that bt.ErrNoUTXO will be returned once the utxo source is depleted.
 type UTXOGetterFunc func(ctx context.Context, deficit uint64) ([]*UTXO, error)
 
-// newInputFromBytes returns a transaction input from the bytes provided.
-func newInputFromBytes(bytes []byte) (*Input, int, error) {
-	if len(bytes) < 36 {
-		return nil, 0, fmt.Errorf("%w < 36", ErrInputTooShort)
-	}
-
-	offset := 36
-	l, size := NewVarIntFromBytes(bytes[offset:])
-	offset += size
-
-	totalLength := offset + int(l) + 4 // 4 bytes for nSeq
-
-	if len(bytes) < totalLength {
-		return nil, 0, fmt.Errorf("%w < 36 + script + 4", ErrInputTooShort)
-	}
-
-	return &Input{
-		previousTxID:       ReverseBytes(bytes[0:32]),
-		PreviousTxOutIndex: binary.LittleEndian.Uint32(bytes[32:36]),
-		SequenceNumber:     binary.LittleEndian.Uint32(bytes[offset+int(l):]),
-		UnlockingScript:    bscript.NewFromBytes(bytes[offset : offset+int(l)]),
-	}, totalLength, nil
-}
-
 // TotalInputSatoshis returns the total Satoshis inputted to the transaction.
 func (tx *Tx) TotalInputSatoshis() (total uint64) {
 	for _, in := range tx.Inputs {
@@ -137,25 +113,26 @@ func (tx *Tx) FromUTXOs(utxos ...*UTXO) error {
 // If insufficient utxos are provided from the UTXOGetterFunc, a bt.ErrInsufficientFunds is returned.
 //
 // Example usage:
-//    if err := tx.Fund(ctx, bt.NewFeeQuote(), func(ctx context.Context, deficit satoshis) ([]*bt.UTXO, error) {
-//        utxos := make([]*bt.UTXO, 0)
-//        for _, f := range funds {
-//            deficit -= satoshis
-//            utxos := append(utxos, &bt.UTXO{
-//                TxID: f.TxID,
-//                Vout: f.Vout,
-//                LockingScript: f.Script,
-//                Satoshis: f.Satoshis,
-//            })
-//            if deficit == 0 {
-//                return utxos, nil
-//            }
-//        }
-//        return nil, bt.ErrNoUTXO
-//    }); err != nil {
-//        if errors.Is(err, bt.ErrInsufficientFunds) { /* handle */ }
-//        return err
-//    }
+//
+//	if err := tx.Fund(ctx, bt.NewFeeQuote(), func(ctx context.Context, deficit satoshis) ([]*bt.UTXO, error) {
+//	    utxos := make([]*bt.UTXO, 0)
+//	    for _, f := range funds {
+//	        deficit -= satoshis
+//	        utxos := append(utxos, &bt.UTXO{
+//	            TxID: f.TxID,
+//	            Vout: f.Vout,
+//	            LockingScript: f.Script,
+//	            Satoshis: f.Satoshis,
+//	        })
+//	        if deficit == 0 {
+//	            return utxos, nil
+//	        }
+//	    }
+//	    return nil, bt.ErrNoUTXO
+//	}); err != nil {
+//	    if errors.Is(err, bt.ErrInsufficientFunds) { /* handle */ }
+//	    return err
+//	}
 func (tx *Tx) Fund(ctx context.Context, fq *FeeQuote, next UTXOGetterFunc) error {
 	deficit, err := tx.estimateDeficit(fq)
 	if err != nil {
@@ -234,7 +211,7 @@ func (tx *Tx) InsertInputUnlockingScript(index uint32, s *bscript.Script) error 
 // It takes an Unlocker interface as a parameter so that different
 // unlocking implementations can be used to unlock the transaction -
 // for example local or external unlocking (hardware wallet), or
-// signature/nonsignature based.
+// signature / non-signature based.
 func (tx *Tx) FillInput(ctx context.Context, unlocker Unlocker, params UnlockerParams) error {
 	if unlocker == nil {
 		return ErrNoUnlocker
@@ -244,12 +221,12 @@ func (tx *Tx) FillInput(ctx context.Context, unlocker Unlocker, params UnlockerP
 		params.SigHashFlags = sighash.AllForkID
 	}
 
-	uscript, err := unlocker.UnlockingScript(ctx, tx, params)
+	unlockingScript, err := unlocker.UnlockingScript(ctx, tx, params)
 	if err != nil {
 		return err
 	}
 
-	return tx.InsertInputUnlockingScript(params.InputIdx, uscript)
+	return tx.InsertInputUnlockingScript(params.InputIdx, unlockingScript)
 }
 
 // FillAllInputs is used to sign all inputs. It takes an UnlockerGetter interface

@@ -17,7 +17,7 @@ func TestTx_JSON(t *testing.T) {
 		tx  *bt.Tx
 		err error
 	}{
-		"standard tx should marshal and unmarshall correctly": {
+		"standard tx should marshal and unmarshal correctly": {
 			tx: func() *bt.Tx {
 				tx := bt.NewTx()
 				assert.NoError(t, tx.From(
