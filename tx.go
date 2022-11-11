@@ -117,8 +117,9 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	if inputCount == 0 {
 		// The next bytes are either 0xEF or a varint that specifies the number of outputs
 		// Read 1 more byte to see if this is in extended format...
-		n64, err = outputCount.ReadFrom(r)
-		bytesRead += n64
+		var o64 int64
+		o64, err = outputCount.ReadFrom(r)
+		bytesRead += o64
 		if err != nil {
 			return bytesRead, err
 		}
@@ -466,7 +467,7 @@ func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 			return nil, ErrUnsupportedScript
 		}
 		if in.UnlockingScript == nil || len(*in.UnlockingScript) == 0 {
-			// nolint:lll // insert dummy p2pkh unlocking script (sig + pubkey)
+			//nolint:lll // insert dummy p2pkh unlocking script (sig + pubkey)
 			dummyUnlockingScript, _ := hex.DecodeString("4830450221009c13cbcbb16f2cfedc7abf3a4af1c3fe77df1180c0e7eee30d9bcc53ebda39da02207b258005f1bc3cf9dffa06edb358d6db2bcfc87f50516fac8e3f4686fc2a03df412103107feff22788a1fc8357240bf450fd7bca4bd45d5f8bac63818c5a7b67b03876")
 			in.UnlockingScript = bscript.NewFromBytes(dummyUnlockingScript)
 		}
