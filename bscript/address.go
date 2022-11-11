@@ -1,3 +1,4 @@
+// Package bscript comment
 package bscript
 
 import (

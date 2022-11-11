@@ -1,3 +1,4 @@
+// Package sighash comment
 package sighash
 
 // Flag represents hash type bits at the end of a signature.

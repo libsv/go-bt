@@ -93,6 +93,9 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	*tx = Tx{}
 	var bytesRead int64
 
+	var n64 int64
+	var err error
+
 	version := make([]byte, 4)
 	n, err := io.ReadFull(r, version)
 	bytesRead += int64(n)
@@ -105,7 +108,8 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	extended := false
 
 	var inputCount VarInt
-	n64, err := inputCount.ReadFrom(r)
+
+	n64, err = inputCount.ReadFrom(r)
 	bytesRead += n64
 	if err != nil {
 		return bytesRead, err
@@ -117,9 +121,8 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	if inputCount == 0 {
 		// The next bytes are either 0xEF or a varint that specifies the number of outputs
 		// Read 1 more byte to see if this is in extended format...
-		var o64 int64
-		o64, err = outputCount.ReadFrom(r)
-		bytesRead += o64
+		n64, err = outputCount.ReadFrom(r)
+		bytesRead += n64
 		if err != nil {
 			return bytesRead, err
 		}
@@ -139,7 +142,7 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 
 			extended = true
 
-			n64, err := inputCount.ReadFrom(r)
+			n64, err = inputCount.ReadFrom(r)
 			bytesRead += n64
 			if err != nil {
 				return bytesRead, err

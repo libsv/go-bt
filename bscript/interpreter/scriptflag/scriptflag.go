@@ -1,3 +1,4 @@
+// Package scriptflag comment
 package scriptflag
 
 // Flag is a bitmask defining additional operations or tests that will be
