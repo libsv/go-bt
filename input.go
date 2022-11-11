@@ -42,7 +42,8 @@ func (i *Input) ReadFrom(r io.Reader) (int64, error) {
 	return i.readFrom(r, false)
 }
 
-// ReadFromExtended reads the `io.Reader` into the `bt.Input` when the reader is consuming an extended format transaction.
+// ReadFromExtended reads the `io.Reader` into the `bt.Input` when the reader is
+// consuming an extended format transaction.
 func (i *Input) ReadFromExtended(r io.Reader) (int64, error) {
 	return i.readFrom(r, true)
 }
