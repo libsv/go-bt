@@ -234,7 +234,7 @@ func (s *Script) ToASM() (string, error) {
 	// if err != nil, we will append [error] to the ASM script below (as done in the node).
 
 	data := false
-	if len(*s) > 1 && ((*s)[0] == 0x6a || ((*s)[0] == 0x00 && (*s)[1] == 0x6a)) {
+	if len(*s) > 1 && ((*s)[0] == OpRETURN || ((*s)[0] == OpFALSE && (*s)[1] == OpRETURN)) {
 		data = true
 	}
 

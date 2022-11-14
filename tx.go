@@ -93,6 +93,7 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	*tx = Tx{}
 	var bytesRead int64
 
+	// Define n64 and err here to avoid linter complaining about shadowing variables.
 	var n64 int64
 	var err error
 
@@ -118,9 +119,11 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	var outputCount VarInt
 	locktime := make([]byte, 4)
 
+	// ----------------------------------------------------------------------------------
+	// If the inputCount is 0, we may be parsing an incomplete transaction, or we may be
+	// both of these cases without needing to rewind (peek) the incoming stream of bytes.
+	// ----------------------------------------------------------------------------------
 	if inputCount == 0 {
-		// The next bytes are either 0xEF or a varint that specifies the number of outputs
-		// Read 1 more byte to see if this is in extended format...
 		n64, err = outputCount.ReadFrom(r)
 		bytesRead += n64
 		if err != nil {
@@ -149,6 +152,11 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 			}
 		}
 	}
+	// ----------------------------------------------------------------------------------
+	// If we have not returned from the previous block, we will have detected a sane
+	// transaction and we will know if it is extended format or not.
+	// We can now proceed with reading the rest of the transaction.
+	// ----------------------------------------------------------------------------------
 
 	// create Inputs
 	for i := uint64(0); i < uint64(inputCount); i++ {
