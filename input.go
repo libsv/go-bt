@@ -28,7 +28,6 @@ const DefaultSequenceNumber uint32 = 0xFFFFFFFF
 // Input is a representation of a transaction input
 //
 // DO NOT CHANGE ORDER - Optimised for memory via maligned
-//
 type Input struct {
 	previousTxID       []byte
 	PreviousTxSatoshis uint64
@@ -40,6 +39,16 @@ type Input struct {
 
 // ReadFrom reads from the `io.Reader` into the `bt.Input`.
 func (i *Input) ReadFrom(r io.Reader) (int64, error) {
+	return i.readFrom(r, false)
+}
+
+// ReadFromExtended reads the `io.Reader` into the `bt.Input` when the reader is
+// consuming an extended format transaction.
+func (i *Input) ReadFromExtended(r io.Reader) (int64, error) {
+	return i.readFrom(r, true)
+}
+
+func (i *Input) readFrom(r io.Reader, extended bool) (int64, error) {
 	*i = Input{}
 	var bytesRead int64
 
@@ -82,6 +91,37 @@ func (i *Input) ReadFrom(r io.Reader) (int64, error) {
 	i.PreviousTxOutIndex = binary.LittleEndian.Uint32(prevIndex)
 	i.UnlockingScript = bscript.NewFromBytes(script)
 	i.SequenceNumber = binary.LittleEndian.Uint32(sequence)
+
+	if extended {
+		prevSatoshis := make([]byte, 8)
+		var prevTxLockingScript bscript.Script
+
+		n, err = io.ReadFull(r, prevSatoshis)
+		bytesRead += int64(n)
+		if err != nil {
+			return bytesRead, errors.Wrapf(err, "prevSatoshis(8): got %d bytes", n)
+		}
+
+		// Read in the prevTxLockingScript
+		var scriptLen VarInt
+		n64, err := scriptLen.ReadFrom(r)
+		bytesRead += n64
+		if err != nil {
+			return bytesRead, err
+		}
+
+		script := make([]byte, scriptLen)
+		n, err := io.ReadFull(r, script)
+		bytesRead += int64(n)
+		if err != nil {
+			return bytesRead, errors.Wrapf(err, "script(%d): got %d bytes", scriptLen.Length(), n)
+		}
+
+		prevTxLockingScript = *bscript.NewFromBytes(script)
+
+		i.PreviousTxSatoshis = binary.LittleEndian.Uint64(prevSatoshis)
+		i.PreviousTxScript = bscript.NewFromBytes(prevTxLockingScript)
+	}
 
 	return bytesRead, nil
 }

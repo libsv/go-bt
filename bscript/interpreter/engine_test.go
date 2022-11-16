@@ -122,7 +122,7 @@ func TestCheckErrorCondition(t *testing.T) {
 		tx:            tx,
 	})
 	if err != nil {
-		t.Errorf("failed to configure thread %w", err)
+		t.Errorf("failed to configure thread %v", err)
 	}
 
 	var done bool
@@ -132,7 +132,7 @@ func TestCheckErrorCondition(t *testing.T) {
 			t.Fatalf("failed to step %dth time: %v", i, err)
 		}
 		if done && i != len(*lscript)-1 {
-			t.Fatalf("finshed early on %dth time", i)
+			t.Fatalf("finished early on %dth time", i)
 		}
 	}
 	err = vm.CheckErrorCondition(false)
@@ -289,7 +289,7 @@ func TestValidateParams(t *testing.T) {
 			},
 			expErr: errors.New("tx and previous output must be supplied for checksig"),
 		},
-		"provided locking script that differs from previoustxout's errors": {
+		"provided locking script that differs from previous txout's errors": {
 			params: execOpts{
 				lockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("52529387")
@@ -322,7 +322,7 @@ func TestValidateParams(t *testing.T) {
 			},
 			expErr: errors.New("locking script does not match the previous outputs locking script"),
 		},
-		"provided unlocking scropt that differs from tx input's errors": {
+		"provided unlocking script that differs from tx input's errors": {
 			params: execOpts{
 				lockingScript: func() *bscript.Script {
 					script, err := bscript.NewFromHexString("76a91454807ccc44c0eec0b0e187b3ce0e137e9c6cd65d88ac")
@@ -501,7 +501,7 @@ func TestCheckPubKeyEncoding(t *testing.T) {
 				"when it should have succeeded: %v", test.name,
 				err)
 		} else if err == nil && !test.isValid {
-			t.Errorf("checkSignatureEncooding test '%s' succeeded "+
+			t.Errorf("checkSignatureEncoding test '%s' succeeded "+
 				"when it should have failed", test.name)
 		}
 	}
@@ -673,7 +673,7 @@ func TestCheckSignatureEncoding(t *testing.T) {
 				"when it should have succeeded: %v", test.name,
 				err)
 		} else if err == nil && !test.isValid {
-			t.Errorf("checkSignatureEncooding test '%s' succeeded "+
+			t.Errorf("checkSignatureEncoding test '%s' succeeded "+
 				"when it should have failed", test.name)
 		}
 	}
@@ -845,7 +845,7 @@ func TestEngine_WithState(t *testing.T) {
 				CondStack:            []int{},
 				ElseStack:            [][]byte{},
 				Flags:                scriptflag.UTXOAfterGenesis | scriptflag.EnableSighashForkID,
-				LastCodeSeperatorIdx: 0,
+				LastCodeSeparatorIdx: 0,
 				NumOps:               3,
 				SavedFirstStack:      [][]byte{},
 				Scripts: func() []ParsedScript {
@@ -884,7 +884,7 @@ func TestEngine_WithState(t *testing.T) {
 				CondStack:            []int{},
 				ElseStack:            [][]byte{},
 				Flags:                scriptflag.UTXOAfterGenesis | scriptflag.EnableSighashForkID,
-				LastCodeSeperatorIdx: 0,
+				LastCodeSeparatorIdx: 0,
 				NumOps:               8,
 				SavedFirstStack:      [][]byte{},
 				Scripts: func() []ParsedScript {
