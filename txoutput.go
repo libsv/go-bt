@@ -178,6 +178,8 @@ func (tx *Tx) AddOpReturnPartsOutput(data [][]byte) error {
 	return nil
 }
 
+// CreateOpReturnOutput creates a new Output with OP_FALSE OP_RETURN and then
+// uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
 func CreateOpReturnOutput(data [][]byte) (*Output, error) {
 	s := &bscript.Script{}
 
