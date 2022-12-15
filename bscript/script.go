@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"math/bits"
 	"strings"
 
 	"github.com/libsv/go-bk/bec"
@@ -427,8 +428,8 @@ func (s *Script) EqualsHex(h string) bool {
 func MinPushSize(bb []byte) int {
 	l := len(bb)
 
-	// data length is larger than max supported
-	if l > 0xffffffff {
+	// data length is larger than max supported by the bitcoin protocol
+	if bits.UintSize == 64 && int64(l) > 0xffffffff {
 		return 0
 	}
 
