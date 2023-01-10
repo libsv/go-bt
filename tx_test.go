@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/libsv/go-bk/wif"
@@ -56,6 +57,25 @@ func TestNewTxFromString(t *testing.T) {
 		tx, err := bt.NewTxFromString("000000")
 		assert.Error(t, err)
 		assert.Nil(t, tx)
+	})
+
+	t.Run("test ASM", func(t *testing.T) {
+		hex := data.GetTestHex("./testing/data/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
+
+		tx, err := bt.NewTxFromString(hex)
+		assert.Nil(t, err)
+		assert.NotNil(t, tx)
+
+		asm, err := tx.Outputs[0].LockingScript.ToASM()
+		assert.Nil(t, err)
+
+		pushDatas := strings.Split(asm, " ")
+		assert.Equal(t, 10, len(pushDatas))
+		assert.Equal(t, "OP_RETURN", pushDatas[0])
+
+		addresses, err := tx.Inputs[0].UnlockingScript.Addresses()
+		assert.Nil(t, err)
+		assert.Equal(t, "1LC16EQVsqVYGeYTCrjvNf8j28zr4DwBuk", addresses[0])
 	})
 
 	t.Run("valid tx, 1 input, 1 output", func(t *testing.T) {

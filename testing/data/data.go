@@ -4,7 +4,9 @@ package data
 import (
 	"embed"
 	"io/fs"
+	"os"
 	"path"
+	"strings"
 )
 
 // testDataDir a directory container test data.
@@ -30,4 +32,13 @@ func (d *testDataDir) Open(file string) (fs.File, error) {
 // Load the data of a file.
 func (d *testDataDir) Load(file string) ([]byte, error) {
 	return d.fs.ReadFile(path.Join(d.prefix, file))
+}
+
+func GetTestHex(fileName string) string {
+	fileData, err := os.ReadFile(fileName) //nolint:gosec // only used in testing
+	if err != nil {
+		return ""
+	}
+
+	return strings.Trim(string(fileData), "\n")
 }
