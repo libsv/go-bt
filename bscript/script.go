@@ -402,16 +402,15 @@ func (s *Script) Addresses() ([]string, error) {
 		}
 		addresses = []string{a.AddressString}
 	} else {
-		// Support input scriptSigs
+		// Check for address in unlocking script (input)
 		// <sig> <pubkey>
-		scriptAsm, err := s.ToASM()
+		parts, err := DecodeParts(*s)
 		if err != nil {
 			return nil, err
 		}
-		scriptChunks := strings.Split(scriptAsm, " ")
-		if len(scriptChunks) == 2 {
-			// see if scriptChunks[1] is a public key
-			a, err := NewAddressFromPublicKeyString(scriptChunks[1], true)
+		if len(parts) == 2 {
+			partHex := hex.EncodeToString(parts[1])
+			a, err := NewAddressFromPublicKeyString(partHex, true)
 			if err != nil {
 				return nil, err
 			}
