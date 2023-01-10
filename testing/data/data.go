@@ -34,6 +34,7 @@ func (d *testDataDir) Load(file string) ([]byte, error) {
 	return d.fs.ReadFile(path.Join(d.prefix, file))
 }
 
+// GetTestHex is a convenience function for reading local .hex transaction files, returnins a string value
 func GetTestHex(fileName string) string {
 	fileData, err := os.ReadFile(fileName) //nolint:gosec // only used in testing
 	if err != nil {
