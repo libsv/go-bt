@@ -59,7 +59,7 @@ func TestNewTxFromString(t *testing.T) {
 		assert.Nil(t, tx)
 	})
 
-	t.Run("test ASM", func(t *testing.T) {
+	t.Run("test address frin unlocking script", func(t *testing.T) {
 		hex := data.GetTestHex("./testing/data/tx/98a5f6ef18eaea188bdfdc048f89a48af82627a15a76fd53584975f28ab3cc39.hex")
 
 		tx, err := bt.NewTxFromString(hex)
