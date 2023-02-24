@@ -6,7 +6,7 @@ require (
 	github.com/libsv/go-bk v0.1.6
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.0
-	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
+	golang.org/x/crypto v0.6.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
