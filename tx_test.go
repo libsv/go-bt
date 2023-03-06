@@ -530,8 +530,10 @@ func TestTx_Clone(t *testing.T) {
 			assert.Equal(t, input.SequenceNumber, cloneInput.SequenceNumber)
 			assert.Equal(t, input.PreviousTxOutIndex, cloneInput.PreviousTxOutIndex)
 			assert.Equal(t, *input.UnlockingScript, *cloneInput.UnlockingScript)
+			assert.False(t, input.UnlockingScript == cloneInput.UnlockingScript)
 			assert.Equal(t, input.PreviousTxSatoshis, cloneInput.PreviousTxSatoshis)
 			assert.Equal(t, *input.PreviousTxScript, *cloneInput.PreviousTxScript)
+			assert.False(t, input.PreviousTxScript == cloneInput.PreviousTxScript)
 		}
 
 		assert.Equal(t, tx.OutputCount(), clone.OutputCount())
@@ -540,10 +542,23 @@ func TestTx_Clone(t *testing.T) {
 			assert.Equal(t, output.Bytes(), cloneOutput.Bytes())
 			assert.Equal(t, output.BytesForSigHash(), cloneOutput.BytesForSigHash())
 			assert.Equal(t, *output.LockingScript, *cloneOutput.LockingScript)
+			assert.False(t, output.LockingScript == cloneOutput.LockingScript)
 			assert.Equal(t, output.Satoshis, cloneOutput.Satoshis)
 		}
 	})
 }
+
+func Benchmark_Clone(b *testing.B) {
+	tx, _ := bt.NewTxFromString("0200000003a9bc457fdc6a54d99300fb137b23714d860c350a9d19ff0f571e694a419ff3a0010000006b48304502210086c83beb2b2663e4709a583d261d75be538aedcafa7766bd983e5c8db2f8b2fc02201a88b178624ab0ad1748b37c875f885930166237c88f5af78ee4e61d337f935f412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff0092bb9a47e27bf64fc98f557c530c04d9ac25e2f2a8b600e92a0b1ae7c89c20010000006b483045022100f06b3db1c0a11af348401f9cebe10ae2659d6e766a9dcd9e3a04690ba10a160f02203f7fbd7dfcfc70863aface1a306fcc91bbadf6bc884c21a55ef0d32bd6b088c8412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff9d0d4554fa692420a0830ca614b6c60f1bf8eaaa21afca4aa8c99fb052d9f398000000006b483045022100d920f2290548e92a6235f8b2513b7f693a64a0d3fa699f81a034f4b4608ff82f0220767d7d98025aff3c7bd5f2a66aab6a824f5990392e6489aae1e1ae3472d8dffb412103e8be830d98bb3b007a0343ee5c36daa48796ae8bb57946b1e87378ad6e8a090dfeffffff02807c814a000000001976a9143a6bf34ebfcf30e8541bbb33a7882845e5a29cb488ac76b0e60e000000001976a914bd492b67f90cb85918494767ebb23102c4f06b7088ac67000000")
+
+	b.Run("clone", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			clone := tx.Clone()
+			_ = clone
+		}
+	})
+}
+
 func Test_EstimateIsFeePaidEnough(t *testing.T) {
 	tests := map[string]struct {
 		tx         *bt.Tx

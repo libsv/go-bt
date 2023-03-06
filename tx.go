@@ -322,14 +322,59 @@ func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 	return tx.toBytesHelper(index, lockingScript, false)
 }
 
-// Clone returns a clone of the tx
-func (tx *Tx) Clone() *Tx {
+// CloneTx returns a clone of the tx by bytes
+func (tx *Tx) CloneTx() *Tx {
 	// Ignore err as byte slice passed in is created from valid tx
 	clone, _ := NewTxFromBytes(tx.Bytes())
 
 	for i, input := range tx.Inputs {
 		clone.Inputs[i].PreviousTxSatoshis = input.PreviousTxSatoshis
-		clone.Inputs[i].PreviousTxScript = input.PreviousTxScript
+		if input.PreviousTxScript != nil {
+			clone.Inputs[i].PreviousTxScript = &bscript.Script{}
+			*clone.Inputs[i].PreviousTxScript = *input.PreviousTxScript
+		}
+	}
+
+	return clone
+}
+
+// Clone returns a clone of the tx
+func (tx *Tx) Clone() *Tx {
+	// Creating a new Tx from scratch is much faster than cloning from bytes
+	// ~ 420ns/op vs 2200ns/op of the above function in benchmarking
+	// this matters as we clone txs a couple of times when verifying signatures
+	clone := &Tx{
+		Version:  tx.Version,
+		LockTime: tx.LockTime,
+		Inputs:   make([]*Input, len(tx.Inputs)),
+		Outputs:  make([]*Output, len(tx.Outputs)),
+	}
+
+	for i, input := range tx.Inputs {
+		clone.Inputs[i] = &Input{
+			previousTxID:       input.previousTxID,
+			PreviousTxSatoshis: input.PreviousTxSatoshis,
+			PreviousTxOutIndex: input.PreviousTxOutIndex,
+			SequenceNumber:     input.SequenceNumber,
+		}
+		if input.UnlockingScript != nil {
+			clone.Inputs[i].UnlockingScript = &bscript.Script{}
+			*clone.Inputs[i].UnlockingScript = *input.UnlockingScript
+		}
+		if input.PreviousTxScript != nil {
+			clone.Inputs[i].PreviousTxScript = &bscript.Script{}
+			*clone.Inputs[i].PreviousTxScript = *input.PreviousTxScript
+		}
+	}
+
+	for i, output := range tx.Outputs {
+		clone.Outputs[i] = &Output{
+			Satoshis: output.Satoshis,
+		}
+		if output.LockingScript != nil {
+			clone.Outputs[i].LockingScript = &bscript.Script{}
+			*clone.Outputs[i].LockingScript = *output.LockingScript
+		}
 	}
 
 	return clone
