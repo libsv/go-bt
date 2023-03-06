@@ -12,7 +12,7 @@ type State struct {
 	Scripts              []ParsedScript
 	ScriptIdx            int
 	OpcodeIdx            int
-	LastCodeSeperatorIdx int
+	LastCodeSeparatorIdx int
 	NumOps               int
 	Flags                scriptflag.Flag
 	IsFinished           bool
@@ -66,7 +66,7 @@ func (t *thread) State() *State {
 		Scripts:              make([]ParsedScript, len(t.scripts)),
 		ScriptIdx:            scriptIdx,
 		OpcodeIdx:            offsetIdx,
-		LastCodeSeperatorIdx: t.lastCodeSep,
+		LastCodeSeparatorIdx: t.lastCodeSep,
 		NumOps:               t.numOps,
 		Flags:                t.flags,
 		IsFinished:           t.scriptIdx > scriptIdx,
@@ -127,7 +127,7 @@ func (t *thread) SetState(state *State) {
 	t.scripts = state.Scripts
 	t.scriptIdx = state.ScriptIdx
 	t.scriptOff = state.OpcodeIdx
-	t.lastCodeSep = state.LastCodeSeperatorIdx
+	t.lastCodeSep = state.LastCodeSeparatorIdx
 	t.numOps = state.NumOps
 	t.flags = state.Flags
 	t.afterGenesis = state.Genesis.AfterGenesis

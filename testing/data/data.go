@@ -1,3 +1,4 @@
+// Package data comment
 package data
 
 import (

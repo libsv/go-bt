@@ -1,3 +1,4 @@
+// Package bscript comment
 package bscript
 
 import (
@@ -83,7 +84,7 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 	if !mainnet {
 		bb[0] = 111
 	}
-	// nolint: makezero // we need to set up the array with 1
+	//nolint: makezero // we need to set up the array with 1
 	bb = append(bb, hash...)
 
 	return &Address{
@@ -105,7 +106,7 @@ func NewAddressFromPublicKey(pubKey *bec.PublicKey, mainnet bool) (*Address, err
 	if !mainnet {
 		bb[0] = 111
 	}
-	// nolint: makezero // we need to set up the array with 1
+	//nolint: makezero // we need to set up the array with 1
 	bb = append(bb, hash...)
 
 	return &Address{

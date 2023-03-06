@@ -158,7 +158,7 @@ func (tx *Tx) AddHashPuzzleOutput(secret, publicKeyHash string, satoshis uint64)
 // AddOpReturnOutput creates a new Output with OP_FALSE OP_RETURN and then the data
 // passed in encoded as hex.
 func (tx *Tx) AddOpReturnOutput(data []byte) error {
-	o, err := createOpReturnOutput([][]byte{data})
+	o, err := CreateOpReturnOutput([][]byte{data})
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (tx *Tx) AddOpReturnOutput(data []byte) error {
 // AddOpReturnPartsOutput creates a new Output with OP_FALSE OP_RETURN and then
 // uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
 func (tx *Tx) AddOpReturnPartsOutput(data [][]byte) error {
-	o, err := createOpReturnOutput(data)
+	o, err := CreateOpReturnOutput(data)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,9 @@ func (tx *Tx) AddOpReturnPartsOutput(data [][]byte) error {
 	return nil
 }
 
-func createOpReturnOutput(data [][]byte) (*Output, error) {
+// CreateOpReturnOutput creates a new Output with OP_FALSE OP_RETURN and then
+// uses OP_PUSHDATA format to encode the multiple byte arrays passed in.
+func CreateOpReturnOutput(data [][]byte) (*Output, error) {
 	s := &bscript.Script{}
 
 	_ = s.AppendOpcodes(bscript.OpFALSE, bscript.OpRETURN)

@@ -109,7 +109,7 @@ func TestTxJSON_Node_MarshallJSON(t *testing.T) {
 			"value": 0,
 			"n": 0,
 			"scriptPubKey": {
-				"asm": "OP_FALSE OP_RETURN 48656c6c6f",
+				"asm": "0 OP_RETURN 48656c6c6f",
 				"hex": "006a0548656c6c6f",
 				"type": "nulldata"
 			}
@@ -246,7 +246,7 @@ func TestTxJSON_Node_UnmarshalJSON(t *testing.T) {
 						"value": 0,
 						"n": 0,
 						"scriptPubKey": {
-							"asm": "OP_FALSE OP_RETURN 48656c6c6f",
+							"asm": "0 OP_RETURN 48656c6c6f",
 							"hex": "006a0548656c6c6f",
 							"type": "nulldata"
 						}
@@ -355,7 +355,7 @@ func TestTxsJSON_Node_MarshallJSON(t *testing.T) {
 				"value": 0,
 				"n": 0,
 				"scriptPubKey": {
-					"asm": "OP_FALSE OP_RETURN 48656c6c6f",
+					"asm": "0 OP_RETURN 48656c6c6f",
 					"hex": "006a0548656c6c6f",
 					"type": "nulldata"
 				}

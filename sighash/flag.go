@@ -1,3 +1,4 @@
+// Package sighash comment
 package sighash
 
 // Flag represents hash type bits at the end of a signature.
@@ -40,7 +41,7 @@ func (f Flag) HasWithMask(shf Flag) bool {
 }
 
 func (f Flag) String() string {
-	switch f { // nolint:exhaustive // not needed
+	switch f { //nolint:exhaustive // not needed
 	case All:
 		return "ALL"
 	case None:

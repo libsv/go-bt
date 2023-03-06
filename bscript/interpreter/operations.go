@@ -1836,7 +1836,7 @@ func opcodeSha1(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	hash := sha1.Sum(buf) // nolint:gosec // operation is for sha1
+	hash := sha1.Sum(buf) //nolint:gosec // operation is for sha1
 	t.dstack.PushByteArray(hash[:])
 	return nil
 }

@@ -36,7 +36,6 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 // Tx wraps a bitcoin transaction
 //
 // DO NOT CHANGE ORDER - Optimised memory via malign
-//
 type Tx struct {
 	Inputs   []*Input
 	Outputs  []*Output
@@ -82,56 +81,21 @@ func NewTxFromBytes(b []byte) (*Tx, error) {
 // Despite the name, this is not actually reading a stream in the true sense: it is a byte slice that contains
 // many transactions one after another.
 func NewTxFromStream(b []byte) (*Tx, int, error) {
-	if len(b) < 10 {
-		return nil, 0, ErrTxTooShort
-	}
+	tx := Tx{}
 
-	var offset int
-	t := Tx{
-		Version: binary.LittleEndian.Uint32(b[offset:4]),
-	}
-	offset += 4
+	bytesRead, err := tx.ReadFrom(bytes.NewReader(b))
 
-	inputCount, size := NewVarIntFromBytes(b[offset:])
-	offset += size
-
-	// create Inputs
-	var i uint64
-	var err error
-	var input *Input
-	for ; i < uint64(inputCount); i++ {
-		input, size, err = newInputFromBytes(b[offset:])
-		if err != nil {
-			return nil, 0, err
-		}
-		offset += size
-		t.addInput(input)
-	}
-
-	// create Outputs
-	var outputCount VarInt
-	var output *Output
-	outputCount, size = NewVarIntFromBytes(b[offset:])
-	offset += size
-	for i = 0; i < uint64(outputCount); i++ {
-		output, size, err = newOutputFromBytes(b[offset:])
-		if err != nil {
-			return nil, 0, err
-		}
-		offset += size
-		t.AddOutput(output)
-	}
-
-	t.LockTime = binary.LittleEndian.Uint32(b[offset:])
-	offset += 4
-
-	return &t, offset, nil
+	return &tx, int(bytesRead), err
 }
 
 // ReadFrom reads from the `io.Reader` into the `bt.Tx`.
 func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 	*tx = Tx{}
 	var bytesRead int64
+
+	// Define n64 and err here to avoid linter complaining about shadowing variables.
+	var n64 int64
+	var err error
 
 	version := make([]byte, 4)
 	n, err := io.ReadFull(r, version)
@@ -142,17 +106,62 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 
 	tx.Version = binary.LittleEndian.Uint32(version)
 
+	extended := false
+
 	var inputCount VarInt
-	n64, err := inputCount.ReadFrom(r)
+
+	n64, err = inputCount.ReadFrom(r)
 	bytesRead += n64
 	if err != nil {
 		return bytesRead, err
 	}
 
+	var outputCount VarInt
+	locktime := make([]byte, 4)
+
+	// ----------------------------------------------------------------------------------
+	// If the inputCount is 0, we may be parsing an incomplete transaction, or we may be
+	// both of these cases without needing to rewind (peek) the incoming stream of bytes.
+	// ----------------------------------------------------------------------------------
+	if inputCount == 0 {
+		n64, err = outputCount.ReadFrom(r)
+		bytesRead += n64
+		if err != nil {
+			return bytesRead, err
+		}
+
+		if outputCount == 0 {
+			// Read in lock time
+			n, err = io.ReadFull(r, locktime)
+			bytesRead += int64(n)
+			if err != nil {
+				return bytesRead, err
+			}
+
+			if binary.BigEndian.Uint32(locktime) != 0xEF {
+				tx.LockTime = binary.LittleEndian.Uint32(locktime)
+				return bytesRead, nil
+			}
+
+			extended = true
+
+			n64, err = inputCount.ReadFrom(r)
+			bytesRead += n64
+			if err != nil {
+				return bytesRead, err
+			}
+		}
+	}
+	// ----------------------------------------------------------------------------------
+	// If we have not returned from the previous block, we will have detected a sane
+	// transaction and we will know if it is extended format or not.
+	// We can now proceed with reading the rest of the transaction.
+	// ----------------------------------------------------------------------------------
+
 	// create Inputs
 	for i := uint64(0); i < uint64(inputCount); i++ {
-		input := new(Input)
-		n64, err = input.ReadFrom(r)
+		input := &Input{}
+		n64, err = input.readFrom(r, extended)
 		bytesRead += n64
 		if err != nil {
 			return bytesRead, err
@@ -160,11 +169,13 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 		tx.Inputs = append(tx.Inputs, input)
 	}
 
-	var outputCount VarInt
-	n64, err = outputCount.ReadFrom(r)
-	bytesRead += n64
-	if err != nil {
-		return bytesRead, err
+	if inputCount > 0 || extended {
+		// Re-read the actual output count...
+		n64, err = outputCount.ReadFrom(r)
+		bytesRead += n64
+		if err != nil {
+			return bytesRead, err
+		}
 	}
 
 	for i := uint64(0); i < uint64(outputCount); i++ {
@@ -178,7 +189,6 @@ func (tx *Tx) ReadFrom(r io.Reader) (int64, error) {
 		tx.Outputs = append(tx.Outputs, output)
 	}
 
-	locktime := make([]byte, 4)
 	n, err = io.ReadFull(r, locktime)
 	bytesRead += int64(n)
 	if err != nil {
@@ -297,13 +307,19 @@ func IsValidTxID(txid []byte) bool {
 // Bytes encodes the transaction into a byte array.
 // See https://chainquery.com/bitcoin-cli/decoderawtransaction
 func (tx *Tx) Bytes() []byte {
-	return tx.toBytesHelper(0, nil)
+	return tx.toBytesHelper(0, nil, false)
+}
+
+// ExtendedBytes outputs the transaction into a byte array in extended format
+// (with PreviousTxSatoshis and PreviousTXScript included)
+func (tx *Tx) ExtendedBytes() []byte {
+	return tx.toBytesHelper(0, nil, true)
 }
 
 // BytesWithClearedInputs encodes the transaction into a byte array but clears its Inputs first.
 // This is used when signing transactions.
 func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
-	return tx.toBytesHelper(index, lockingScript)
+	return tx.toBytesHelper(index, lockingScript, false)
 }
 
 // Clone returns a clone of the tx
@@ -322,11 +338,13 @@ func (tx *Tx) Clone() *Tx {
 // NodeJSON returns a wrapped *bt.Tx for marshalling/unmarshalling into a node tx format.
 //
 // Marshalling usage example:
-//  bb, err := json.Marshal(tx.NodeJSON())
+//
+//	bb, err := json.Marshal(tx.NodeJSON())
 //
 // Unmarshalling usage example:
-//  tx := bt.NewTx()
-//  if err := json.Unmarshal(bb, tx.NodeJSON()); err != nil {}
+//
+//	tx := bt.NewTx()
+//	if err := json.Unmarshal(bb, tx.NodeJSON()); err != nil {}
 func (tx *Tx) NodeJSON() interface{} {
 	return &nodeTxWrapper{Tx: tx}
 }
@@ -334,19 +352,25 @@ func (tx *Tx) NodeJSON() interface{} {
 // NodeJSON returns a wrapped bt.Txs for marshalling/unmarshalling into a node tx format.
 //
 // Marshalling usage example:
-//  bb, err := json.Marshal(txs.NodeJSON())
+//
+//	bb, err := json.Marshal(txs.NodeJSON())
 //
 // Unmarshalling usage example:
-//  var txs bt.Txs
-//  if err := json.Unmarshal(bb, txs.NodeJSON()); err != nil {}
+//
+//	var txs bt.Txs
+//	if err := json.Unmarshal(bb, txs.NodeJSON()); err != nil {}
 func (tt *Txs) NodeJSON() interface{} {
 	return (*nodeTxsWrapper)(tt)
 }
 
-func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
+func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []byte {
 	h := make([]byte, 0)
 
 	h = append(h, LittleEndianBytes(tx.Version, 4)...)
+
+	if extended {
+		h = append(h, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0xEF}...)
+	}
 
 	h = append(h, VarInt(uint64(len(tx.Inputs))).Bytes()...)
 
@@ -357,6 +381,20 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte) []byte {
 			h = append(h, lockingScript...)
 		} else {
 			h = append(h, s...)
+		}
+
+		if extended {
+			b := make([]byte, 8)
+			binary.LittleEndian.PutUint64(b, in.PreviousTxSatoshis)
+			h = append(h, b...)
+
+			if in.PreviousTxScript != nil {
+				l := uint64(len(*in.PreviousTxScript))
+				h = append(h, VarInt(l).Bytes()...)
+				h = append(h, *in.PreviousTxScript...)
+			} else {
+				h = append(h, 0x00) // The length of the script is zero
+			}
 		}
 	}
 
@@ -440,7 +478,7 @@ func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 			return nil, ErrUnsupportedScript
 		}
 		if in.UnlockingScript == nil || len(*in.UnlockingScript) == 0 {
-			// nolint:lll // insert dummy p2pkh unlocking script (sig + pubkey)
+			//nolint:lll // insert dummy p2pkh unlocking script (sig + pubkey)
 			dummyUnlockingScript, _ := hex.DecodeString("4830450221009c13cbcbb16f2cfedc7abf3a4af1c3fe77df1180c0e7eee30d9bcc53ebda39da02207b258005f1bc3cf9dffa06edb358d6db2bcfc87f50516fac8e3f4686fc2a03df412103107feff22788a1fc8357240bf450fd7bca4bd45d5f8bac63818c5a7b67b03876")
 			in.UnlockingScript = bscript.NewFromBytes(dummyUnlockingScript)
 		}
@@ -524,12 +562,12 @@ func (tx *Tx) feesPaid(size *TxSize, fees *FeeQuote) (*TxFees, error) {
 		return nil, err
 	}
 
-	resp := &TxFees{
+	txFees := &TxFees{
 		StdFeePaid:  size.TotalStdBytes * uint64(stdFee.MiningFee.Satoshis) / uint64(stdFee.MiningFee.Bytes),
 		DataFeePaid: size.TotalDataBytes * uint64(dataFee.MiningFee.Satoshis) / uint64(dataFee.MiningFee.Bytes),
 	}
-	resp.TotalFeePaid = resp.StdFeePaid + resp.DataFeePaid
-	return resp, nil
+	txFees.TotalFeePaid = txFees.StdFeePaid + txFees.DataFeePaid
+	return txFees, nil
 
 }
 
