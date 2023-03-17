@@ -18,6 +18,10 @@ var (
 var (
 	ErrInputNoExist  = errors.New("specified input does not exist")
 	ErrInputTooShort = errors.New("input length too short")
+
+	// You should not be able to spend an input with 0 Satoshi value.
+	// Most likely the input Satoshi value is not provided.
+	ErrInputSatsZero = errors.New("input satoshi value is not provided")
 )
 
 // Sentinal errors reported by outputs.
@@ -53,4 +57,9 @@ var (
 
 	// ErrInsufficientFunds insufficient funds provided for funding
 	ErrInsufficientFunds = errors.New("insufficient funds provided")
+)
+
+// Sentinal errors reported by ordinal inscriptions.
+var (
+	ErrOutputsNotEmpty = errors.New("transaction outputs must be empty to avoid messing with Ordinal ordering scheme")
 )
