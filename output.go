@@ -24,8 +24,8 @@ Txout-script / scriptPubKey   Script                                      <out-s
 
 // Output is a representation of a transaction output
 type Output struct {
-	Satoshis      uint64
-	LockingScript *bscript.Script
+	Satoshis      uint64          `json:"satoshis"`
+	LockingScript *bscript.Script `json:"locking_script"`
 }
 
 // ReadFrom reads from the `io.Reader` into the `bt.Output`.
