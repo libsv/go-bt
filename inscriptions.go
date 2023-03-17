@@ -4,7 +4,7 @@ import (
 	"github.com/libsv/go-bt/v2/bscript"
 )
 
-// ORD is the inscription protocol prefix.
+// OrdinalsPrefix contains 'ORD' the inscription protocol prefix.
 //
 // Check the docs here: https://docs.1satordinals.com/
 const OrdinalsPrefix = "ord"
@@ -27,7 +27,19 @@ type EnrichedInscriptionArgs struct {
 func (tx *Tx) Inscribe(ia *InscriptionArgs) error {
 	s := ia.LockingScriptPrefix
 
-	// add Inscription data (Example: OP_FALSE OP_IF OP_PUSH "ord" OP_1 OP_PUSH "text/plain;charset=utf-8" OP_0 OP_PUSH "Hello, world!" OP_ENDIF)
+	// add Inscription data
+	// (Example: 	OP_FALSE
+	// 						OP_IF
+	//						OP_PUSH
+	// 						"ord"
+	//						OP_1
+	//						OP_PUSH
+	//						"text/plain;charset=utf-8"
+	//						OP_0
+	//						OP_PUSH
+	//						"Hello, world!"
+	//						OP_ENDIF
+	// )
 	// see: https://docs.ordinals.com/inscriptions.html
 	_ = s.AppendOpcodes(bscript.OpFALSE, bscript.OpIF)
 	err := s.AppendPushDataString(OrdinalsPrefix)
@@ -79,7 +91,8 @@ func (tx *Tx) Inscribe(ia *InscriptionArgs) error {
 //
 // One output will be created with the extra Satoshis and then another
 // output will be created with 1 Satoshi with the inscription in it.
-func (tx *Tx) InscribeSpecificOrdinal(ia *InscriptionArgs, inputIdx uint32, satoshiIdx uint64, extraOutputScript *bscript.Script) error {
+func (tx *Tx) InscribeSpecificOrdinal(ia *InscriptionArgs, inputIdx uint32, satoshiIdx uint64,
+	extraOutputScript *bscript.Script) error {
 	amount, err := rangeAbove(tx.Inputs, inputIdx, satoshiIdx)
 	if err != nil {
 		return err
@@ -108,7 +121,8 @@ func (tx *Tx) InscribeSpecificOrdinal(ia *InscriptionArgs, inputIdx uint32, sato
 //
 // This is the way ordinals go from inputs to outputs:
 // [a b] [c] [d e f] → [? ? ? ?] [? ?]
-// To figure out which satoshi goes to which output, go through the input satoshis in order and assign each to a question mark:
+// To figure out which satoshi goes to which output, go through the input
+// satoshis in order and assign each to a question mark:
 // [a b] [c] [d e f] → [a b c d] [e f]
 //
 // For more info check the Ordinals Theory Handbook (https://docs.ordinals.com/faq.html).
@@ -117,7 +131,7 @@ func rangeAbove(is []*Input, inputIdx uint32, satIdx uint64) (uint64, error) {
 		return 0, ErrOutputNoExist
 	}
 
-	var acc uint64 = 0
+	var acc uint64
 	for i, in := range is {
 		if uint32(i) >= inputIdx {
 			break
