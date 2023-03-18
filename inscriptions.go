@@ -47,12 +47,12 @@ func (tx *Tx) Inscribe(ia *InscriptionArgs) error {
 		return err
 	}
 	_ = s.AppendOpcodes(bscript.Op1)
-	err = s.AppendPushData(ia.Data)
+	err = s.AppendPushData([]byte(ia.ContentType))
 	if err != nil {
 		return err
 	}
 	_ = s.AppendOpcodes(bscript.Op0)
-	err = s.AppendPushData([]byte(ia.ContentType))
+	err = s.AppendPushData(ia.Data)
 	if err != nil {
 		return err
 	}
