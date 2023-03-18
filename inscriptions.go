@@ -25,7 +25,7 @@ type EnrichedInscriptionArgs struct {
 
 // Inscribe adds an output to the transaction with an inscription.
 func (tx *Tx) Inscribe(ia *InscriptionArgs) error {
-	s := ia.LockingScriptPrefix
+	s := *ia.LockingScriptPrefix // deep copy
 
 	// add Inscription data
 	// (Example: 	OP_FALSE
@@ -77,7 +77,7 @@ func (tx *Tx) Inscribe(ia *InscriptionArgs) error {
 
 	tx.AddOutput(&Output{
 		Satoshis:      1,
-		LockingScript: s,
+		LockingScript: &s,
 	})
 	return nil
 }
