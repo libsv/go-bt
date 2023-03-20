@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -562,5 +563,22 @@ func TestRunScriptExample3(t *testing.T) {
 	expected := "0 OP_RETURN 3139694733575459537362796f7333754a373333794b347a45696f69314665734e55 0 666166383166326364346433663239383061623162363564616166656231656631333561626339643534386461633466366134656361623230653033656365362d30 30836 52"
 	if asm != expected {
 		t.Errorf("\nExpected %q\ngot      %q", expected, asm)
+	}
+}
+
+func TestParseInscription(t *testing.T) {
+	ect := "text/plain;charset=utf-8"
+	ed := []byte("Hello, world!")
+	es, _ := hex.DecodeString("76a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac0063036f72645118746578742f706c61696e3b636861727365743d7574662d38000d48656c6c6f2c20776f726c642168")
+	elsp, _ := hex.DecodeString("76a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac")
+	s := bscript.Script(es)
+
+	pi, err := s.ParseInscription()
+	assert.NoError(t, err)
+	assert.Equal(t, hex.EncodeToString(elsp), pi.LockingScriptPrefix.String())
+
+	assert.Equal(t, ect, pi.ContentType)
+	if !reflect.DeepEqual(ed, pi.Data) {
+		t.Errorf("expected %v, but got %v", ed, pi.Data)
 	}
 }

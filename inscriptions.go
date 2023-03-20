@@ -9,22 +9,8 @@ import (
 // Check the docs here: https://docs.1satordinals.com/
 const OrdinalsPrefix = "ord"
 
-// InscriptionArgs contains the Ordinal inscription data
-type InscriptionArgs struct {
-	LockingScriptPrefix *bscript.Script
-	Data                []byte
-	ContentType         string
-	EnrichedArgs        *EnrichedInscriptionArgs
-}
-
-// EnrichedInscriptionArgs contains data needed for enriched inscription
-// functionality found here: https://docs.1satordinals.com/op_return.
-type EnrichedInscriptionArgs struct {
-	OpReturnData [][]byte
-}
-
 // Inscribe adds an output to the transaction with an inscription.
-func (tx *Tx) Inscribe(ia *InscriptionArgs) error {
+func (tx *Tx) Inscribe(ia *bscript.InscriptionArgs) error {
 	s := *ia.LockingScriptPrefix // deep copy
 
 	// add Inscription data
@@ -91,7 +77,7 @@ func (tx *Tx) Inscribe(ia *InscriptionArgs) error {
 //
 // One output will be created with the extra Satoshis and then another
 // output will be created with 1 Satoshi with the inscription in it.
-func (tx *Tx) InscribeSpecificOrdinal(ia *InscriptionArgs, inputIdx uint32, satoshiIdx uint64,
+func (tx *Tx) InscribeSpecificOrdinal(ia *bscript.InscriptionArgs, inputIdx uint32, satoshiIdx uint64,
 	extraOutputScript *bscript.Script) error {
 	amount, err := rangeAbove(tx.Inputs, inputIdx, satoshiIdx)
 	if err != nil {

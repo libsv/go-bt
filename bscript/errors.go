@@ -15,6 +15,11 @@ var (
 	ErrUnsupportedAddress   = errors.New("address not supported")
 )
 
+// Sentinel errors raised by inscriptions.
+var (
+	ErrP2PKHInscriptionNotFound = errors.New("no P2PKH inscription found")
+)
+
 // Sentinel errors raised through encoding.
 var (
 	ErrEncodingBadChar         = errors.New("bad char")
