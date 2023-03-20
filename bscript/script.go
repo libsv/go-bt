@@ -389,7 +389,8 @@ func (s *Script) IsP2PKHInscription() bool {
 // isP2PKHInscriptionHelper helper so that we don't need to call
 // `DecodeParts()` multiple times, such as in `ParseInscription()`
 func isP2PKHInscriptionHelper(parts [][]byte) bool {
-	return parts[0][0] == OpDUP &&
+	return len(parts) == 13 &&
+		parts[0][0] == OpDUP &&
 		parts[1][0] == OpHASH160 &&
 		parts[3][0] == OpEQUALVERIFY &&
 		parts[4][0] == OpCHECKSIG &&
