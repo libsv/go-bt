@@ -66,7 +66,7 @@ func TestInscribe(t *testing.T) {
 			_ = expectedLockingScript.AppendOpcodes(bscript.Op1)
 			_ = expectedLockingScript.AppendPushData([]byte(test.ia.ContentType))
 			_ = expectedLockingScript.AppendOpcodes(bscript.Op0)
-			_ = expectedLockingScript.AppendPushData([]byte(test.ia.Data))
+			_ = expectedLockingScript.AppendPushData(test.ia.Data)
 			_ = expectedLockingScript.AppendOpcodes(bscript.OpENDIF)
 
 			if !tx.Outputs[0].LockingScript.Equals(&expectedLockingScript) {
@@ -122,7 +122,7 @@ func TestMultipleInscriptionsIn1Tx(t *testing.T) {
 	_ = expectedLockingScript.AppendPushData([]byte("Hello, world!"))
 	_ = expectedLockingScript.AppendOpcodes(bscript.OpENDIF)
 
-	for i, _ := range tx.Outputs {
+	for i := range tx.Outputs {
 		if !tx.Outputs[i].LockingScript.Equals(expectedLockingScript) {
 			t.Fatalf("Inscribe failed: expected LockingScript value %s, got %s at index %d", expectedLockingScript.String(), tx.Outputs[i].LockingScript.String(), i)
 		}

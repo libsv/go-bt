@@ -567,7 +567,7 @@ func TestRunScriptExample3(t *testing.T) {
 }
 
 func TestParseInscription(t *testing.T) {
-	ect := "text/plain;charset=utf-8"
+	ec := "text/plain;charset=utf-8"
 	ed := []byte("Hello, world!")
 	es, _ := hex.DecodeString("76a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac0063036f72645118746578742f706c61696e3b636861727365743d7574662d38000d48656c6c6f2c20776f726c642168")
 	elsp, _ := hex.DecodeString("76a914b6aa34534d2b11e66b438c7525f819aee01e397c88ac")
@@ -577,7 +577,7 @@ func TestParseInscription(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, hex.EncodeToString(elsp), pi.LockingScriptPrefix.String())
 
-	assert.Equal(t, ect, pi.ContentType)
+	assert.Equal(t, ec, pi.ContentType)
 	if !reflect.DeepEqual(ed, pi.Data) {
 		t.Errorf("expected %v, but got %v", ed, pi.Data)
 	}
