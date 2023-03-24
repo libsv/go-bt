@@ -50,7 +50,7 @@ var (
 	ErrUnknownFeeType   = errors.New("unknown fee type")
 )
 
-// Sentinel errors reported by Fund
+// Sentinel errors reported by Fund.
 var (
 	// ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
 	ErrNoUTXO = errors.New("no remaining utxos")
@@ -62,4 +62,9 @@ var (
 // Sentinal errors reported by ordinal inscriptions.
 var (
 	ErrOutputsNotEmpty = errors.New("transaction outputs must be empty to avoid messing with Ordinal ordering scheme")
+)
+
+// Sentinal errors reported by PSBTs.
+var (
+	ErrDummyInput = errors.New("failed to add dummy input 0")
 )
