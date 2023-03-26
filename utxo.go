@@ -13,6 +13,7 @@ type UTXO struct {
 	LockingScript  *bscript.Script `json:"locking_script"`
 	Satoshis       uint64          `json:"satoshis"`
 	SequenceNumber uint32          `json:"sequence_number"`
+	Unlocker       *Unlocker
 }
 
 // UTXOs a collection of *bt.UTXO.

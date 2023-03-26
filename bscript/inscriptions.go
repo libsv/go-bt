@@ -1,6 +1,6 @@
 package bscript
 
-// InscriptionArgs contains the Ordinal inscription data
+// InscriptionArgs contains the Ordinal inscription data.
 type InscriptionArgs struct {
 	LockingScriptPrefix *Script
 	Data                []byte

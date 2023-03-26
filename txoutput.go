@@ -212,10 +212,3 @@ func (tx *Tx) PayTo(script *bscript.Script, satoshis uint64) error {
 func (tx *Tx) PayToAddress(addr string, satoshis uint64) error {
 	return tx.AddP2PKHOutputFromAddress(addr, satoshis)
 }
-
-func (tx *Tx) AddDummyOutput() {
-	tx.AddOutput(&Output{
-		Satoshis:      0,
-		LockingScript: &bscript.Script{0},
-	})
-}

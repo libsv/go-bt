@@ -474,7 +474,7 @@ func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 	tempTx := tx.Clone()
 
 	for _, in := range tempTx.Inputs {
-		if !in.PreviousTxScript.IsP2PKH() {
+		if !(in.PreviousTxScript.IsP2PKH() || in.PreviousTxScript.IsP2PKHInscription()) {
 			return nil, ErrUnsupportedScript
 		}
 		if in.UnlockingScript == nil || len(*in.UnlockingScript) == 0 {

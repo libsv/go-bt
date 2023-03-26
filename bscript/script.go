@@ -16,13 +16,14 @@ import (
 
 // ScriptKey types.
 const (
-	ScriptTypePubKey      = "pubkey"
-	ScriptTypePubKeyHash  = "pubkeyhash"
-	ScriptTypeNonStandard = "nonstandard"
-	ScriptTypeEmpty       = "empty"
-	ScriptTypeSecureHash  = "securehash"
-	ScriptTypeMultiSig    = "multisig"
-	ScriptTypeNullData    = "nulldata"
+	// TODO: change to p2pk/p2pkh
+	ScriptTypePubKey                = "pubkey"
+	ScriptTypePubKeyHash            = "pubkeyhash"
+	ScriptTypeNonStandard           = "nonstandard"
+	ScriptTypeEmpty                 = "empty"
+	ScriptTypeMultiSig              = "multisig"
+	ScriptTypeNullData              = "nulldata"
+	ScriptTypePubKeyHashInscription = "pubkeyhashinscription"
 )
 
 // Script type
@@ -389,6 +390,7 @@ func (s *Script) IsP2PKHInscription() bool {
 // isP2PKHInscriptionHelper helper so that we don't need to call
 // `DecodeParts()` multiple times, such as in `ParseInscription()`
 func isP2PKHInscriptionHelper(parts [][]byte) bool {
+	// TODO: cleanup
 	return len(parts) == 13 &&
 		parts[0][0] == OpDUP &&
 		parts[1][0] == OpHASH160 &&
@@ -500,6 +502,9 @@ func (s *Script) ScriptType() string {
 	}
 	if s.IsData() {
 		return ScriptTypeNullData
+	}
+	if s.IsP2PKHInscription() {
+		return ScriptTypePubKeyHashInscription
 	}
 	return ScriptTypeNonStandard
 }

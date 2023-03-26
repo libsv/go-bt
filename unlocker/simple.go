@@ -46,7 +46,7 @@ func (l *Simple) UnlockingScript(ctx context.Context, tx *bt.Tx, params bt.Unloc
 	}
 
 	switch tx.Inputs[params.InputIdx].PreviousTxScript.ScriptType() {
-	case bscript.ScriptTypePubKeyHash:
+	case bscript.ScriptTypePubKeyHash, bscript.ScriptTypePubKeyHashInscription:
 		sh, err := tx.CalcInputSignatureHash(params.InputIdx, params.SigHashFlags)
 		if err != nil {
 			return nil, err

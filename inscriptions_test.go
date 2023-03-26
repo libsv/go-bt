@@ -49,6 +49,8 @@ func TestInscribe(t *testing.T) {
 			err := tx.Inscribe(test.ia)
 			assert.NoError(t, err)
 
+			fmt.Println(tx.String())
+
 			// Check if the transaction has the expected number of outputs
 			if len(tx.Outputs) != 1 {
 				t.Fatalf("Inscribe failed: expected 1 output, got %d", len(tx.Outputs))
@@ -131,7 +133,7 @@ func TestMultipleInscriptionsIn1Tx(t *testing.T) {
 	log.Println("tx: ", tx.String())
 }
 
-func TestInscription(t *testing.T) {
+func TestInscribeFromFile(t *testing.T) {
 	decodedWif, _ := wif.DecodeWIF("KznpA63DPFrmHecASyL6sFmcRgrNT9oM8Ebso8mwq1dfJF3ZgZ3V")
 
 	// get public key bytes and address

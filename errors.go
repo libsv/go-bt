@@ -66,5 +66,6 @@ var (
 
 // Sentinal errors reported by PSBTs.
 var (
-	ErrDummyInput = errors.New("failed to add dummy input 0")
+	ErrDummyInput        = errors.New("failed to add dummy input 0")
+	ErrInsufficientUTXOs = errors.New("need at least 3 utxos")
 )
