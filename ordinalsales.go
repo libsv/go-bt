@@ -12,7 +12,7 @@ import (
 
 // ListOrdinalArgs contains the arguments
 // needed to make an offer to sell an
-// ordinal (PSBT).
+// ordinal.
 type ListOrdinalArgs struct {
 	SellerReceiveOutput *Output
 	OrdinalUTXO         *UTXO
@@ -45,7 +45,7 @@ func ListOrdinalForSale(ctx context.Context, msoa *ListOrdinalArgs) (*Tx, error)
 
 // AcceptListingArgs contains the arguments
 // needed to make an offer to sell an
-// ordinal (PSBT).
+// ordinal.
 type AcceptListingArgs struct {
 	PSTx                      *Tx
 	Utxos                     []*UTXO
