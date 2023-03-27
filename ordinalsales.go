@@ -43,7 +43,15 @@ func ListOrdinalForSale(ctx context.Context, msoa *ListOrdinalArgs) (*Tx, error)
 	return tx, nil
 }
 
-func ValidateSellOffer(pstx *Tx, lou *UTXO) bool {
+// ValidateBidArgs are the arguments needed to
+// validate a specific bid to buy an ordinal.
+type ValidateListingArgs struct {
+	ListedOrdinalUTXO *UTXO
+}
+
+// Validate an ordinal sale offer listing
+// given specific validation parameters.
+func (vla *ValidateListingArgs) Validate(pstx *Tx) bool {
 	if pstx.InputCount() != 1 {
 		return false
 	}
@@ -53,13 +61,13 @@ func ValidateSellOffer(pstx *Tx, lou *UTXO) bool {
 
 	// check lou (ListedOrdinalUTXO) matches supplied pstx input index 0
 	pstxOrdinalInput := pstx.Inputs[0]
-	if lou == nil {
+	if vla.ListedOrdinalUTXO == nil {
 		return false
 	}
-	if !bytes.Equal(pstxOrdinalInput.PreviousTxID(), lou.TxID) {
+	if !bytes.Equal(pstxOrdinalInput.PreviousTxID(), vla.ListedOrdinalUTXO.TxID) {
 		return false
 	}
-	if uint64(pstxOrdinalInput.PreviousTxOutIndex) != uint64(lou.Vout) {
+	if uint64(pstxOrdinalInput.PreviousTxOutIndex) != uint64(vla.ListedOrdinalUTXO.Vout) {
 		return false
 	}
 
@@ -75,7 +83,6 @@ func ValidateSellOffer(pstx *Tx, lou *UTXO) bool {
 // needed to make an offer to sell an
 // ordinal.
 type AcceptListingArgs struct {
-	ListedOrdinalUTXO         UTXO
 	PSTx                      *Tx
 	UTXOs                     []*UTXO
 	BuyerReceiveOrdinalScript *bscript.Script
@@ -89,8 +96,8 @@ type AcceptListingArgs struct {
 // you will need to provide at least 3 UTXOs - with the first 2
 // being dummy utxos that will just pass through, and the rest with
 // the required payment and tx fees.
-func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx, error) {
-	if valid := ValidateSellOffer(asoa.PSTx, &asoa.ListedOrdinalUTXO); !valid {
+func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, asoa *AcceptListingArgs) (*Tx, error) { // TODO: add validationArgs
+	if valid := vla.Validate(asoa.PSTx); !valid {
 		return nil, ErrInvalidSellOffer
 	}
 	sellerOrdinalInput := asoa.PSTx.Inputs[0]

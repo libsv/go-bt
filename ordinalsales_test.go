@@ -22,6 +22,20 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 		ordUnlockerGetter := unlocker.Getter{PrivateKey: ordWif.PrivKey}
 		ordUnlocker, _ := ordUnlockerGetter.Unlocker(context.Background(), ordPrefixScript)
 
+		ordUTXO := &bt.UTXO{
+			TxID: func() []byte {
+				t, _ := hex.DecodeString("8f027fb1361ae46ac165e1d90e5436ed9c11d4eeaa60669ab90386a3abd9ce6a")
+				return t
+			}(),
+			Vout: uint32(0),
+			LockingScript: func() *bscript.Script {
+				// hello world (text/plain) test inscription
+				s, _ := bscript.NewFromHexString("76a914c25e9a2b70ec83d7b4fbd0f36f00a86723a48e6b88ac0063036f72645118746578742f706c61696e3b636861727365743d7574662d38000d48656c6c6f2c20776f726c642168")
+				return s
+			}(),
+			Satoshis: 1,
+		}
+
 		pstx, err := bt.ListOrdinalForSale(context.Background(), &bt.ListOrdinalArgs{
 			SellerReceiveOutput: &bt.Output{
 				Satoshis: 500,
@@ -30,19 +44,7 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 					return s
 				}(),
 			},
-			OrdinalUTXO: &bt.UTXO{
-				TxID: func() []byte {
-					t, _ := hex.DecodeString("8f027fb1361ae46ac165e1d90e5436ed9c11d4eeaa60669ab90386a3abd9ce6a")
-					return t
-				}(),
-				Vout: uint32(0),
-				LockingScript: func() *bscript.Script {
-					// hello world (text/plain) test inscription
-					s, _ := bscript.NewFromHexString("76a914c25e9a2b70ec83d7b4fbd0f36f00a86723a48e6b88ac0063036f72645118746578742f706c61696e3b636861727365743d7574662d38000d48656c6c6f2c20776f726c642168")
-					return s
-				}(),
-				Satoshis: 1,
-			},
+			OrdinalUTXO:     ordUTXO,
 			OrdinalUnlocker: ordUnlocker,
 		})
 
@@ -85,14 +87,17 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 		dummyS, _ := bscript.NewP2PKHFromAddress("19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo")    // L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH
 		changeS, _ := bscript.NewP2PKHFromAddress("19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo")   // L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH
 
-		_, err = bt.AcceptOrdinalSaleListing(context.Background(), &bt.AcceptListingArgs{
-			PSTx:                      pstx,
-			Utxos:                     us,
-			BuyerReceiveOrdinalScript: buyerOrdS,
-			DummyOutputScript:         dummyS,
-			ChangeScript:              changeS,
-			FQ:                        bt.NewFeeQuote(),
-		})
+		_, err = bt.AcceptOrdinalSaleListing(context.Background(), &bt.ValidateListingArgs{
+			ListedOrdinalUTXO: ordUTXO,
+		},
+			&bt.AcceptListingArgs{
+				PSTx:                      pstx,
+				UTXOs:                     us,
+				BuyerReceiveOrdinalScript: buyerOrdS,
+				DummyOutputScript:         dummyS,
+				ChangeScript:              changeS,
+				FQ:                        bt.NewFeeQuote(),
+			})
 		assert.NoError(t, err)
 	})
 }
