@@ -724,10 +724,35 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 		},
 		// TODO: add tests for different fee type values
 	}
+
+	std := &bt.Fee{
+		FeeType: bt.FeeTypeStandard,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	data := &bt.Fee{
+		FeeType: bt.FeeTypeData,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	fq := bt.NewFeeQuote().
+		AddQuote(bt.FeeTypeStandard, std).
+		AddQuote(bt.FeeTypeData, data)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fee := bt.NewFeeQuote()
-			isEnough, err := test.tx.EstimateIsFeePaidEnough(fee)
+			isEnough, err := test.tx.EstimateIsFeePaidEnough(fq)
 			assert.NoError(t, err)
 			assert.Equal(t, test.isEnough, isEnough)
 
@@ -903,10 +928,36 @@ func Test_IsFeePaidEnough(t *testing.T) {
 		},
 		// TODO: add tests for different fee type values
 	}
+
+	std := &bt.Fee{
+		FeeType: bt.FeeTypeStandard,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	data := &bt.Fee{
+		FeeType: bt.FeeTypeData,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	fq := bt.NewFeeQuote().
+		AddQuote(bt.FeeTypeStandard, std).
+		AddQuote(bt.FeeTypeData, data)
+
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fee := bt.NewFeeQuote()
-			isEnough, err := test.tx.IsFeePaidEnough(fee)
+			isEnough, err := test.tx.IsFeePaidEnough(fq)
 			assert.NoError(t, err)
 			assert.Equal(t, test.isEnough, isEnough)
 
@@ -1057,10 +1108,34 @@ func Test_EstimateFeesPaid(t *testing.T) {
 			},
 		},
 	}
+	std := &bt.Fee{
+		FeeType: bt.FeeTypeStandard,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	data := &bt.Fee{
+		FeeType: bt.FeeTypeData,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	fq := bt.NewFeeQuote().
+		AddQuote(bt.FeeTypeStandard, std).
+		AddQuote(bt.FeeTypeData, data)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			fee := bt.NewFeeQuote()
-			resp, err := test.tx.EstimateFeesPaid(fee)
+			resp, err := test.tx.EstimateFeesPaid(fq)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expFees, resp)
 
@@ -1089,7 +1164,34 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
-			fees:    bt.NewFeeQuote(),
+			fees: func() *bt.FeeQuote {
+				std := &bt.Fee{
+					FeeType: bt.FeeTypeStandard,
+					MiningFee: bt.FeeUnit{
+						Satoshis: 5,
+						Bytes:    10,
+					},
+					RelayFee: bt.FeeUnit{
+						Satoshis: 5,
+						Bytes:    10,
+					},
+				}
+				data := &bt.Fee{
+					FeeType: bt.FeeTypeData,
+					MiningFee: bt.FeeUnit{
+						Satoshis: 5,
+						Bytes:    10,
+					},
+					RelayFee: bt.FeeUnit{
+						Satoshis: 5,
+						Bytes:    10,
+					},
+				}
+				return bt.NewFeeQuote().
+					AddQuote(bt.FeeTypeStandard, std).
+					AddQuote(bt.FeeTypeData, data)
+
+			}(),
 			expFees: 96,
 		}, "Transaction with one input 4 Outputs should return 147": {
 			tx: func() *bt.Tx {
@@ -1106,7 +1208,34 @@ func TestTx_EstimateFeesPaidTotal(t *testing.T) {
 				assert.NoError(t, tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 500))
 				return tx
 			}(),
-			fees:    bt.NewFeeQuote(),
+			fees: func() *bt.FeeQuote {
+				std := &bt.Fee{
+					FeeType: bt.FeeTypeStandard,
+					MiningFee: bt.FeeUnit{
+						Satoshis: 5,
+						Bytes:    10,
+					},
+					RelayFee: bt.FeeUnit{
+						Satoshis: 5,
+						Bytes:    10,
+					},
+				}
+				data := &bt.Fee{
+					FeeType: bt.FeeTypeData,
+					MiningFee: bt.FeeUnit{
+						Satoshis: 5,
+						Bytes:    10,
+					},
+					RelayFee: bt.FeeUnit{
+						Satoshis: 5,
+						Bytes:    10,
+					},
+				}
+				return bt.NewFeeQuote().
+					AddQuote(bt.FeeTypeStandard, std).
+					AddQuote(bt.FeeTypeData, data)
+
+			}(),
 			expFees: 147,
 		},
 	}
