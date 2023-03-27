@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/libsv/go-bk/crypto"
 
@@ -326,7 +327,10 @@ func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 // Clone returns a clone of the tx
 func (tx *Tx) Clone() *Tx {
 	// Ignore err as byte slice passed in is created from valid tx
-	clone, _ := NewTxFromBytes(tx.Bytes())
+	clone, err := NewTxFromBytes(tx.Bytes())
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for i, input := range tx.Inputs {
 		clone.Inputs[i].PreviousTxSatoshis = input.PreviousTxSatoshis

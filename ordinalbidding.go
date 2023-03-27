@@ -83,7 +83,7 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error)
 	tx.AddOutput(&Output{
 		Satoshis: mba.BidAmount,
 		LockingScript: func() *bscript.Script { // add dummy p2pkh script to calc fees accurately
-			s, _ := bscript.NewP2PKHFromAddress("1C3V9TTJefP8Hft96sVf54mQyDJh8Ze4w4")
+			s, _ := bscript.NewP2PKHFromAddress("1FunnyJoke111111111111111112AVXh5")
 			return s
 		}(),
 	})

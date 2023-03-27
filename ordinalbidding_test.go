@@ -25,7 +25,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 	us := []*bt.UTXO{
 		{
 			TxID: func() []byte {
-				t, _ := hex.DecodeString("272ccf2b83f24e3531b2327dfc8bb4c483e21ecb7620c3a41e75103327a2a8f9")
+				t, _ := hex.DecodeString("411084d83d4f380cfc331ed849946bd7f354ca17138dbd723a6420ec9f5f4bd1")
 				return t
 			}(),
 			Vout:          uint32(0),
@@ -35,7 +35,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 		},
 		{
 			TxID: func() []byte {
-				t, _ := hex.DecodeString("272ccf2b83f24e3531b2327dfc8bb4c483e21ecb7620c3a41e75103327a2a8f9")
+				t, _ := hex.DecodeString("411084d83d4f380cfc331ed849946bd7f354ca17138dbd723a6420ec9f5f4bd1")
 				return t
 			}(),
 			Vout:          uint32(1),
@@ -45,12 +45,12 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 		},
 		{
 			TxID: func() []byte {
-				t, _ := hex.DecodeString("272ccf2b83f24e3531b2327dfc8bb4c483e21ecb7620c3a41e75103327a2a8f9")
+				t, _ := hex.DecodeString("4d815adc39a740810cb438eb285f6e08ae3957fdc4e4806399babfa806dfc456")
 				return t
 			}(),
-			Vout:          uint32(2),
+			Vout:          uint32(0),
 			LockingScript: fundingScript,
-			Satoshis:      1520,
+			Satoshis:      100000000,
 			Unlocker:      &fundingUnlocker,
 		},
 	}
@@ -63,10 +63,10 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 
 	ordUTXO := &bt.UTXO{
 		TxID: func() []byte {
-			t, _ := hex.DecodeString("976465589a195b70720666ddbf400b5a566bb829bcf1d6a1e076d3ab2c53cf75")
+			t, _ := hex.DecodeString("e17d7856c375640427943395d2341b6ed75f73afc8b22bb3681987278978a584")
 			return t
 		}(),
-		Vout: uint32(1),
+		Vout: uint32(81),
 		LockingScript: func() *bscript.Script {
 			s, _ := bscript.NewFromHexString("76a914b69e544cbf33c4eabdd5cf8792cd4e53f5ed6d1788ac")
 			return s
