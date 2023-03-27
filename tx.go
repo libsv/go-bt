@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"io"
 
 	"github.com/libsv/go-bk/crypto"
@@ -473,7 +474,10 @@ func (tx *Tx) EstimateSizeWithTypes() (*TxSize, error) {
 func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 	tempTx := tx.Clone()
 
-	for _, in := range tempTx.Inputs {
+	for i, in := range tempTx.Inputs {
+		if in.PreviousTxScript == nil {
+			return nil, fmt.Errorf("%w at index %d in order to calc expected UnlockingScript", ErrEmptyPreviousTxScript, i)
+		}
 		if !(in.PreviousTxScript.IsP2PKH() || in.PreviousTxScript.IsP2PKHInscription()) {
 			return nil, ErrUnsupportedScript
 		}
