@@ -48,7 +48,7 @@ func ListOrdinalForSale(ctx context.Context, msoa *ListOrdinalArgs) (*Tx, error)
 // ordinal.
 type AcceptListingArgs struct {
 	PSTx                      *Tx
-	Utxos                     []*UTXO
+	UTXOs                     []*UTXO
 	BuyerReceiveOrdinalScript *bscript.Script
 	DummyOutputScript         *bscript.Script
 	ChangeScript              *bscript.Script
@@ -65,14 +65,14 @@ func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx
 	// TODO: ValidateSellOffer()
 	// check if input 1 sat
 
-	if len(asoa.Utxos) < 3 {
+	if len(asoa.UTXOs) < 3 {
 		return nil, ErrInsufficientUTXOs
 	}
 
 	tx := NewTx()
 
 	// add dummy inputs
-	err := tx.FromUTXOs(asoa.Utxos[0], asoa.Utxos[1])
+	err := tx.FromUTXOs(asoa.UTXOs[0], asoa.UTXOs[1])
 	if err != nil {
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
 	}
@@ -81,7 +81,7 @@ func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx
 	tx.addInput(sellerOrdinalInput)
 
 	// add payment input(s)
-	err = tx.FromUTXOs(asoa.Utxos[2:]...)
+	err = tx.FromUTXOs(asoa.UTXOs[2:]...)
 	if err != nil {
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
 	}
@@ -89,7 +89,7 @@ func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx
 	// add dummy output to passthrough dummy inputs
 	tx.AddOutput(&Output{
 		LockingScript: asoa.DummyOutputScript,
-		Satoshis:      asoa.Utxos[0].Satoshis + asoa.Utxos[1].Satoshis,
+		Satoshis:      asoa.UTXOs[0].Satoshis + asoa.UTXOs[1].Satoshis,
 	})
 
 	// add ordinal receive output
@@ -106,15 +106,21 @@ func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx
 		return nil, err
 	}
 
-	for i, u := range asoa.Utxos {
+	for i, u := range asoa.UTXOs {
 		// skip 3rd input (ordinals input)
 		j := i
 		if i >= 2 {
 			j++
 		}
 
+		if tx.Inputs[j] == nil {
+			return nil, fmt.Errorf("input expected at index %d doesn't exist", j)
+		}
 		if !(bytes.Equal(u.TxID, tx.Inputs[j].previousTxID)) {
-			return nil, errors.New("input and utxo mismatch") // TODO: move to errors.go
+			return nil, ErrUTXOInputMismatch
+		}
+		if *u.Unlocker == nil {
+			return nil, fmt.Errorf("UTXO unlocker at index %d not found", i)
 		}
 		err = tx.FillInput(context.Background(), *u.Unlocker, UnlockerParams{InputIdx: uint32(j)})
 		if err != nil {
