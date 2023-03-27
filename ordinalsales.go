@@ -43,10 +43,39 @@ func ListOrdinalForSale(ctx context.Context, msoa *ListOrdinalArgs) (*Tx, error)
 	return tx, nil
 }
 
+func ValidateSellOffer(pstx *Tx, lou *UTXO) bool {
+	if pstx.InputCount() != 1 {
+		return false
+	}
+	if pstx.OutputCount() != 1 {
+		return false
+	}
+
+	// check lou (ListedOrdinalUTXO) matches supplied pstx input index 0
+	pstxOrdinalInput := pstx.Inputs[0]
+	if lou == nil {
+		return false
+	}
+	if !bytes.Equal(pstxOrdinalInput.PreviousTxID(), lou.TxID) {
+		return false
+	}
+	if uint64(pstxOrdinalInput.PreviousTxOutIndex) != uint64(lou.Vout) {
+		return false
+	}
+
+	// no need to check output value equals the listed value
+	// since it's already signed by the input unlocking script
+
+	// TODO: check signature valid
+
+	return true
+}
+
 // AcceptListingArgs contains the arguments
 // needed to make an offer to sell an
 // ordinal.
 type AcceptListingArgs struct {
+	ListedOrdinalUTXO         UTXO
 	PSTx                      *Tx
 	UTXOs                     []*UTXO
 	BuyerReceiveOrdinalScript *bscript.Script
@@ -61,9 +90,11 @@ type AcceptListingArgs struct {
 // being dummy utxos that will just pass through, and the rest with
 // the required payment and tx fees.
 func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx, error) {
-
-	// TODO: ValidateSellOffer()
-	// check if input 1 sat
+	if valid := ValidateSellOffer(asoa.PSTx, &asoa.ListedOrdinalUTXO); !valid {
+		return nil, ErrInvalidSellOffer
+	}
+	sellerOrdinalInput := asoa.PSTx.Inputs[0]
+	sellerOutput := asoa.PSTx.Outputs[0]
 
 	if len(asoa.UTXOs) < 3 {
 		return nil, ErrInsufficientUTXOs
@@ -77,7 +108,6 @@ func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
 	}
 
-	sellerOrdinalInput := asoa.PSTx.Inputs[0] // TODO: get from psbt
 	tx.addInput(sellerOrdinalInput)
 
 	// add payment input(s)
@@ -98,7 +128,6 @@ func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx
 		Satoshis:      1,
 	})
 
-	sellerOutput := asoa.PSTx.Outputs[0] // TODO: get from psbt
 	tx.AddOutput(sellerOutput)
 
 	err = tx.Change(asoa.ChangeScript, asoa.FQ)
