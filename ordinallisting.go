@@ -7,7 +7,6 @@ import (
 
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
-	"github.com/pkg/errors"
 )
 
 // ListOrdinalArgs contains the arguments
