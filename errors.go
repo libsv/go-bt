@@ -69,7 +69,7 @@ var (
 	ErrDummyInput           = errors.New("failed to add dummy input 0")
 	ErrInsufficientUTXOs    = errors.New("need at least 3 utxos")
 	ErrUTXOInputMismatch    = errors.New("utxo and input mismatch")
-	ErrInvalidSellOffer     = errors.New("invalid sell offer (paritally signed tx)")
+	ErrInvalidSellOffer     = errors.New("invalid sell offer (partially signed tx)")
 	ErrOrdinalOutputNoExist = errors.New("ordinal output expected in index 2 doesn't exist")
 	ErrOrdinalInputNoExist  = errors.New("ordinal input expected in index 2 doesn't exist")
 )

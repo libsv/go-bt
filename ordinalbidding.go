@@ -27,7 +27,7 @@ type MakeBidArgs struct {
 
 // MakeBidToBuy1SatOrdinal makes a bid offer to buy a 1 sat ordinal
 // at a specific price - this tx will be partially signed and will
-// need to be completed by the seller if they accept the bid. Mulitple
+// need to be completed by the seller if they accept the bid. Multiple
 // people can make different bids and the seller will need to choose
 // only one to go through and broadcast to the node network.
 //
@@ -53,12 +53,11 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error)
 	tx.addInput(&Input{
 		previousTxID:       OrdinalTxIDBytes,
 		PreviousTxOutIndex: mba.OrdinalVOut,
-		// add dummy ordinal PreviousTxScript
-		// so that the change function can estimate
-		// UnlockingScript sizes
 		PreviousTxScript: func() *bscript.Script {
-			// hello world (text/plain) test inscription
-			s, _ := bscript.NewFromHexString("76a914c25e9a2b70ec83d7b4fbd0f36f00a86723a48e6b88ac0063036f72645118746578742f706c61696e3b636861727365743d7574662d38000d48656c6c6f2c20776f726c642168")
+			//nolint:lll // add dummy ordinal PreviousTxScript
+			// so that the change function can estimate
+			// UnlockingScript sizes
+			s, _ := bscript.NewFromHexString("76a914c25e9a2b70ec83d7b4fbd0f36f00a86723a48e6b88ac0063036f72645118746578742f706c61696e3b636861727365743d7574662d38000d48656c6c6f2c20776f726c642168") // hello world (text/plain) test inscription
 			return s
 		}(),
 	})
@@ -110,7 +109,7 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error)
 		if *u.Unlocker == nil {
 			return nil, fmt.Errorf("UTXO unlocker at index %d not found", i)
 		}
-		err = tx.FillInput(context.Background(), *u.Unlocker, UnlockerParams{
+		err = tx.FillInput(ctx, *u.Unlocker, UnlockerParams{
 			InputIdx:     uint32(j),
 			SigHashFlags: sighash.SingleForkID,
 		})

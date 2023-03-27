@@ -42,8 +42,8 @@ func ListOrdinalForSale(ctx context.Context, msoa *ListOrdinalArgs) (*Tx, error)
 	return tx, nil
 }
 
-// ValidateBidArgs are the arguments needed to
-// validate a specific bid to buy an ordinal.
+// ValidateListingArgs are the arguments needed to
+// validate a specific listing to sell an ordinal.
 type ValidateListingArgs struct {
 	ListedOrdinalUTXO *UTXO
 }
@@ -95,7 +95,7 @@ type AcceptListingArgs struct {
 // you will need to provide at least 3 UTXOs - with the first 2
 // being dummy utxos that will just pass through, and the rest with
 // the required payment and tx fees.
-func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, asoa *AcceptListingArgs) (*Tx, error) { // TODO: add validationArgs
+func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, asoa *AcceptListingArgs) (*Tx, error) {
 	if valid := vla.Validate(asoa.PSTx); !valid {
 		return nil, ErrInvalidSellOffer
 	}
@@ -157,7 +157,7 @@ func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, aso
 		if *u.Unlocker == nil {
 			return nil, fmt.Errorf("UTXO unlocker at index %d not found", i)
 		}
-		err = tx.FillInput(context.Background(), *u.Unlocker, UnlockerParams{InputIdx: uint32(j)})
+		err = tx.FillInput(ctx, *u.Unlocker, UnlockerParams{InputIdx: uint32(j)})
 		if err != nil {
 			return nil, err
 		}
