@@ -22,7 +22,7 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 		ordUnlockerGetter := unlocker.Getter{PrivateKey: ordWif.PrivKey}
 		ordUnlocker, _ := ordUnlockerGetter.Unlocker(context.Background(), ordPrefixScript)
 
-		pstx, err := bt.MakeOfferToSellOrdinal(context.Background(), &bt.MakeSellOfferArgs{
+		pstx, err := bt.ListOrdinalForSale(context.Background(), &bt.ListOrdinalArgs{
 			SellerReceiveOutput: &bt.Output{
 				Satoshis: 500,
 				LockingScript: func() *bscript.Script {
@@ -85,7 +85,7 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 		dummyS, _ := bscript.NewP2PKHFromAddress("19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo")    // L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH
 		changeS, _ := bscript.NewP2PKHFromAddress("19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo")   // L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH
 
-		_, err = bt.AcceptOfferToSellOrdinal(context.Background(), &bt.AcceptSellOfferArgs{
+		_, err = bt.AcceptOrdinalSaleListing(context.Background(), &bt.AcceptListingArgs{
 			PSTx:                      pstx,
 			Utxos:                     us,
 			BuyerReceiveOrdinalScript: buyerOrdS,

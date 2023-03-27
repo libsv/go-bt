@@ -10,19 +10,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-// MakeSellOfferArgs contains the arguments
+// ListOrdinalArgs contains the arguments
 // needed to make an offer to sell an
 // ordinal (PSBT).
-type MakeSellOfferArgs struct {
+type ListOrdinalArgs struct {
 	SellerReceiveOutput *Output
 	OrdinalUTXO         *UTXO
 	OrdinalUnlocker     Unlocker
 }
 
-// MakeOfferToSellOrdinal creates a PBST (Partially Signed Bitcoin
+// ListOrdinalForSale creates a PBST (Partially Signed Bitcoin
 // Transaction) that offers a specific ordinal UTXO for sale at a
 // specific price.
-func MakeOfferToSellOrdinal(ctx context.Context, msoa *MakeSellOfferArgs) (*Tx, error) {
+func ListOrdinalForSale(ctx context.Context, msoa *ListOrdinalArgs) (*Tx, error) {
 	tx := NewTx()
 
 	err := tx.FromUTXOs(msoa.OrdinalUTXO)
@@ -43,10 +43,10 @@ func MakeOfferToSellOrdinal(ctx context.Context, msoa *MakeSellOfferArgs) (*Tx, 
 	return tx, nil
 }
 
-// AcceptSellOfferArgs contains the arguments
+// AcceptListingArgs contains the arguments
 // needed to make an offer to sell an
 // ordinal (PSBT).
-type AcceptSellOfferArgs struct {
+type AcceptListingArgs struct {
 	PSTx                      *Tx
 	Utxos                     []*UTXO
 	BuyerReceiveOrdinalScript *bscript.Script
@@ -55,12 +55,12 @@ type AcceptSellOfferArgs struct {
 	FQ                        *FeeQuote
 }
 
-// AcceptOfferToSellOrdinal accepts a partially signed Bitcoin
+// AcceptOrdinalSaleListing accepts a partially signed Bitcoin
 // transaction offer to sell an ordinal. When accepting the offer,
 // you will need to provide at least 3 UTXOs - with the first 2
 // being dummy utxos that will just pass through, and the rest with
 // the required payment and tx fees.
-func AcceptOfferToSellOrdinal(ctx context.Context, asoa *AcceptSellOfferArgs) (*Tx, error) {
+func AcceptOrdinalSaleListing(ctx context.Context, asoa *AcceptListingArgs) (*Tx, error) {
 
 	// TODO: ValidateSellOffer()
 	// check if input 1 sat
