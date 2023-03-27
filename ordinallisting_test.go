@@ -13,8 +13,6 @@ import (
 )
 
 func TestOfferToSellPSBTNoErrors(t *testing.T) {
-	// t.Run("create PSBT to make an offer to sell ordinal", func(t *testing.T) {
-
 	ordWif, _ := wif.DecodeWIF("L42PyNwEKE4XRaa8PzPh7JZurSAWJmx49nbVfaXYuiQg3RCubwn7") // 1JijRHzVfub38S2hizxkxEcVKQwuCTZmxJ
 	ordPrefixAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(ordWif.SerialisePubKey()), true)
 	ordPrefixScript, _ := bscript.NewP2PKHFromAddress(ordPrefixAddr.AddressString)
@@ -53,10 +51,10 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 	})
 
 	t.Run("validate PSBT to make an offer to sell ordinal", func(t *testing.T) {
-		vba := &bt.ValidateListingArgs{
+		vla := &bt.ValidateListingArgs{
 			ListedOrdinalUTXO: ordUTXO,
 		}
-		assert.True(t, vba.Validate(pstx))
+		assert.True(t, vla.Validate(pstx))
 	})
 
 	t.Run("no errors when accepting listing", func(t *testing.T) {
