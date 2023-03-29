@@ -1,4 +1,4 @@
-package bt
+package ord
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
 	"github.com/pkg/errors"
@@ -18,11 +19,11 @@ type MakeBidArgs struct {
 	BidAmount                 uint64
 	OrdinalTxID               string
 	OrdinalVOut               uint32
-	BidderUTXOs               []*UTXO
+	BidderUTXOs               []*bt.UTXO
 	BuyerReceiveOrdinalScript *bscript.Script
 	DummyOutputScript         *bscript.Script
 	ChangeScript              *bscript.Script
-	FQ                        *FeeQuote
+	FQ                        *bt.FeeQuote
 }
 
 // MakeBidToBuy1SatOrdinal makes a bid offer to buy a 1 sat ordinal
@@ -33,12 +34,12 @@ type MakeBidArgs struct {
 //
 // Note: this function is meant for ordinals in 1 satoshi outputs instead
 // of ordinal ranges in 1 output (>1 satoshi outputs).
-func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error) {
+func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*bt.Tx, error) {
 	if len(mba.BidderUTXOs) < 3 {
-		return nil, ErrInsufficientUTXOs
+		return nil, bt.ErrInsufficientUTXOs
 	}
 
-	tx := NewTx()
+	tx := bt.NewTx()
 
 	// add dummy inputs
 	err := tx.FromUTXOs(mba.BidderUTXOs[0], mba.BidderUTXOs[1])
@@ -50,8 +51,7 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error)
 	if err != nil {
 		return nil, err
 	}
-	tx.addInput(&Input{
-		previousTxID:       OrdinalTxIDBytes,
+	emptyOrdInput := &bt.Input{
 		PreviousTxOutIndex: mba.OrdinalVOut,
 		PreviousTxScript: func() *bscript.Script {
 			//nolint:lll // add dummy ordinal PreviousTxScript
@@ -60,7 +60,12 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error)
 			s, _ := bscript.NewFromHexString("76a914c25e9a2b70ec83d7b4fbd0f36f00a86723a48e6b88ac0063036f72645118746578742f706c61696e3b636861727365743d7574662d38000d48656c6c6f2c20776f726c642168") // hello world (text/plain) test inscription
 			return s
 		}(),
-	})
+	}
+	err = emptyOrdInput.PreviousTxIDAdd(OrdinalTxIDBytes)
+	if err != nil {
+		return nil, fmt.Errorf(`failed to add ordinal input: %w`, err)
+	}
+	tx.Inputs = append(tx.Inputs, emptyOrdInput)
 
 	// add payment input(s)
 	err = tx.FromUTXOs(mba.BidderUTXOs[2:]...)
@@ -69,18 +74,18 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error)
 	}
 
 	// add dummy output to passthrough dummy inputs
-	tx.AddOutput(&Output{
+	tx.AddOutput(&bt.Output{
 		LockingScript: mba.DummyOutputScript,
 		Satoshis:      mba.BidderUTXOs[0].Satoshis + mba.BidderUTXOs[1].Satoshis,
 	})
 
 	// add ordinal receive output
-	tx.AddOutput(&Output{
+	tx.AddOutput(&bt.Output{
 		LockingScript: mba.BuyerReceiveOrdinalScript,
 		Satoshis:      1,
 	})
 
-	tx.AddOutput(&Output{
+	tx.AddOutput(&bt.Output{
 		Satoshis: mba.BidAmount,
 		LockingScript: func() *bscript.Script { // add dummy p2pkh script to calc fees accurately
 			s, _ := bscript.NewP2PKHFromAddress("1FunnyJoke111111111111111112AVXh5")
@@ -103,13 +108,13 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error)
 		if tx.Inputs[j] == nil {
 			return nil, fmt.Errorf("input expected at index %d doesn't exist", j)
 		}
-		if !(bytes.Equal(u.TxID, tx.Inputs[j].previousTxID)) {
-			return nil, ErrUTXOInputMismatch
+		if !(bytes.Equal(u.TxID, tx.Inputs[j].PreviousTxID())) {
+			return nil, bt.ErrUTXOInputMismatch
 		}
 		if *u.Unlocker == nil {
 			return nil, fmt.Errorf("UTXO unlocker at index %d not found", i)
 		}
-		err = tx.FillInput(ctx, *u.Unlocker, UnlockerParams{
+		err = tx.FillInput(ctx, *u.Unlocker, bt.UnlockerParams{
 			InputIdx:     uint32(j),
 			SigHashFlags: sighash.SingleForkID,
 		})
@@ -126,14 +131,14 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*Tx, error)
 //
 // Note: index 2 should be the listed ordinal input.
 type ValidateBidArgs struct {
-	PreviousUTXOs []*UTXO // index 2 should be the listed ordinal input
+	PreviousUTXOs []*bt.UTXO // index 2 should be the listed ordinal input
 	BidAmount     uint64
-	ExpectedFQ    *FeeQuote
+	ExpectedFQ    *bt.FeeQuote
 }
 
 // Validate a bid to buy an ordinal
 // given specific validation parameters.
-func (vba *ValidateBidArgs) Validate(pstx *Tx) bool {
+func (vba *ValidateBidArgs) Validate(pstx *bt.Tx) bool {
 	if pstx.InputCount() < 4 {
 		return false
 	}
@@ -185,18 +190,18 @@ func (vba *ValidateBidArgs) Validate(pstx *Tx) bool {
 // needed to make an offer to sell an
 // ordinal.
 type AcceptBidArgs struct {
-	PSTx                       *Tx
+	PSTx                       *bt.Tx
 	SellerReceiveOrdinalScript *bscript.Script
-	OrdinalUnlocker            Unlocker
-	ExtraUTXOs                 []*UTXO
+	OrdinalUnlocker            bt.Unlocker
+	ExtraUTXOs                 []*bt.UTXO
 }
 
 // AcceptBidToBuy1SatOrdinal creates a PBST (Partially Signed Bitcoin
 // Transaction) that offers a specific ordinal UTXO for sale at a
 // specific price.
-func AcceptBidToBuy1SatOrdinal(ctx context.Context, vba *ValidateBidArgs, aba *AcceptBidArgs) (*Tx, error) {
+func AcceptBidToBuy1SatOrdinal(ctx context.Context, vba *ValidateBidArgs, aba *AcceptBidArgs) (*bt.Tx, error) {
 	if valid := vba.Validate(aba.PSTx); !valid {
-		return nil, ErrInvalidSellOffer
+		return nil, bt.ErrInvalidSellOffer
 	}
 
 	if !aba.SellerReceiveOrdinalScript.IsP2PKH() {
@@ -208,22 +213,22 @@ func AcceptBidToBuy1SatOrdinal(ctx context.Context, vba *ValidateBidArgs, aba *A
 		return nil, errors.New("only receive to p2pkh supported for now")
 	}
 
-	tx, err := NewTxFromBytes(aba.PSTx.Bytes())
+	tx, err := bt.NewTxFromBytes(aba.PSTx.Bytes())
 	if err != nil {
 		return nil, err
 	}
 
 	if tx.Outputs[2] == nil {
-		return nil, ErrOrdinalOutputNoExist
+		return nil, bt.ErrOrdinalOutputNoExist
 	}
 	tx.Outputs[2].LockingScript = aba.SellerReceiveOrdinalScript
 
 	if tx.Inputs[2] == nil {
-		return nil, ErrOrdinalInputNoExist
+		return nil, bt.ErrOrdinalInputNoExist
 	}
 	tx.Inputs[2].PreviousTxScript = vba.PreviousUTXOs[2].LockingScript
 	tx.Inputs[2].PreviousTxSatoshis = vba.PreviousUTXOs[2].Satoshis
-	err = tx.FillInput(ctx, aba.OrdinalUnlocker, UnlockerParams{InputIdx: 2})
+	err = tx.FillInput(ctx, aba.OrdinalUnlocker, bt.UnlockerParams{InputIdx: 2})
 	if err != nil {
 		return nil, err
 	}

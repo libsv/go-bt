@@ -9,6 +9,7 @@ import (
 	"github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/ord"
 	"github.com/libsv/go-bt/v2/unlocker"
 )
 
@@ -54,7 +55,7 @@ func main() {
 		},
 	}
 
-	mba := &bt.MakeBidArgs{
+	mba := &ord.MakeBidArgs{
 		BidAmount:   uint64(bidAmount),
 		OrdinalTxID: "e17d7856c375640427943395d2341b6ed75f73afc8b22bb3681987278978a584",
 		OrdinalVOut: 81,
@@ -74,7 +75,7 @@ func main() {
 		FQ: bt.NewFeeQuote(),
 	}
 
-	pstx, err := bt.MakeBidToBuy1SatOrdinal(context.Background(), mba)
+	pstx, err := ord.MakeBidToBuy1SatOrdinal(context.Background(), mba)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

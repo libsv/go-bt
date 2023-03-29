@@ -1,14 +1,14 @@
-package bt_test
+package ord_test
 
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"testing"
 
 	"github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/ord"
 	"github.com/libsv/go-bt/v2/unlocker"
 	"github.com/stretchr/testify/assert"
 )
@@ -74,7 +74,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 		Satoshis: 1,
 	}
 
-	mba := &bt.MakeBidArgs{
+	pstx, CreateBidError := ord.MakeBidToBuy1SatOrdinal(context.Background(), &ord.MakeBidArgs{
 		BidAmount:   uint64(bidAmount),
 		OrdinalTxID: ordUTXO.TxIDStr(),
 		OrdinalVOut: ordUTXO.Vout,
@@ -92,17 +92,14 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 			return s
 		}(),
 		FQ: bt.NewFeeQuote(),
-	}
-
-	pstx, CreateBidError := bt.MakeBidToBuy1SatOrdinal(context.Background(), mba)
-	fmt.Println(pstx.String())
+	})
 
 	t.Run("no errors creating bid to buy ordinal", func(t *testing.T) {
 		assert.NoError(t, CreateBidError)
 	})
 
 	t.Run("validate PSBT bid to buy ordinal", func(t *testing.T) {
-		vba := &bt.ValidateBidArgs{
+		vba := &ord.ValidateBidArgs{
 			BidAmount:  uint64(bidAmount),
 			ExpectedFQ: bt.NewFeeQuote(),
 			// insert ordinal utxo at index 2
@@ -112,12 +109,12 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 	})
 
 	t.Run("no errors when accepting bid", func(t *testing.T) {
-		tx, err := bt.AcceptBidToBuy1SatOrdinal(context.Background(), &bt.ValidateBidArgs{
+		_, err := ord.AcceptBidToBuy1SatOrdinal(context.Background(), &ord.ValidateBidArgs{
 			BidAmount:     uint64(bidAmount),
 			ExpectedFQ:    bt.NewFeeQuote(),
 			PreviousUTXOs: append(us[:2], append([]*bt.UTXO{ordUTXO}, us[2:]...)...),
 		},
-			&bt.AcceptBidArgs{
+			&ord.AcceptBidArgs{
 				PSTx: pstx,
 				SellerReceiveOrdinalScript: func() *bscript.Script {
 					s, _ := bscript.NewP2PKHFromAddress("1C3V9TTJefP8Hft96sVf54mQyDJh8Ze4w4") // L1JWiLZtCkkqin41XtQ2Jxo1XGxj1R4ydT2zmxPiaeQfuyUK631D
@@ -127,6 +124,5 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 			})
 
 		assert.NoError(t, err)
-		fmt.Println(tx.String())
 	})
 }

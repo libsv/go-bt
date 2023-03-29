@@ -1,4 +1,4 @@
-package bt_test
+package ord_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/libsv/go-bk/wif"
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/ord"
 	"github.com/libsv/go-bt/v2/unlocker"
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +35,7 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 		Satoshis: 1,
 	}
 
-	pstx, CreateListingError := bt.ListOrdinalForSale(context.Background(), &bt.ListOrdinalArgs{
+	pstx, CreateListingError := ord.ListOrdinalForSale(context.Background(), &ord.ListOrdinalArgs{
 		SellerReceiveOutput: &bt.Output{
 			Satoshis: 500,
 			LockingScript: func() *bscript.Script {
@@ -51,7 +52,7 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 	})
 
 	t.Run("validate PSBT to make an offer to sell ordinal", func(t *testing.T) {
-		vla := &bt.ValidateListingArgs{
+		vla := &ord.ValidateListingArgs{
 			ListedOrdinalUTXO: ordUTXO,
 		}
 		assert.True(t, vla.Validate(pstx))
@@ -95,10 +96,10 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 		dummyS, _ := bscript.NewP2PKHFromAddress("19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo")    // L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH
 		changeS, _ := bscript.NewP2PKHFromAddress("19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo")   // L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH
 
-		_, err := bt.AcceptOrdinalSaleListing(context.Background(), &bt.ValidateListingArgs{
+		_, err := ord.AcceptOrdinalSaleListing(context.Background(), &ord.ValidateListingArgs{
 			ListedOrdinalUTXO: ordUTXO,
 		},
-			&bt.AcceptListingArgs{
+			&ord.AcceptListingArgs{
 				PSTx:                      pstx,
 				UTXOs:                     us,
 				BuyerReceiveOrdinalScript: buyerOrdS,
