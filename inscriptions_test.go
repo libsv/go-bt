@@ -49,8 +49,6 @@ func TestInscribe(t *testing.T) {
 			err := tx.Inscribe(test.ia)
 			assert.NoError(t, err)
 
-			fmt.Println(tx.String())
-
 			// Check if the transaction has the expected number of outputs
 			if len(tx.Outputs) != 1 {
 				t.Fatalf("Inscribe failed: expected 1 output, got %d", len(tx.Outputs))
@@ -86,7 +84,6 @@ func TestMultipleInscriptionsIn1Tx(t *testing.T) {
 	pubkey := decodedWif.SerialisePubKey()
 	addr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(pubkey), true)
 	s, _ := bscript.NewP2PKHFromAddress(addr.AddressString)
-	fmt.Println(addr.AddressString)
 
 	tx := NewTx()
 
@@ -140,7 +137,6 @@ func TestInscribeFromFile(t *testing.T) {
 	pubkey := decodedWif.SerialisePubKey()
 	addr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(pubkey), true)
 	s, _ := bscript.NewP2PKHFromAddress(addr.AddressString)
-	fmt.Println(addr.AddressString)
 
 	tx := NewTx()
 

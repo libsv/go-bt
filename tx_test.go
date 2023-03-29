@@ -545,6 +545,29 @@ func TestTx_Clone(t *testing.T) {
 	})
 }
 func Test_EstimateIsFeePaidEnough(t *testing.T) {
+	FQPoint5SatPerByte := bt.NewFeeQuote().
+		AddQuote(bt.FeeTypeStandard, &bt.Fee{
+			FeeType: bt.FeeTypeStandard,
+			MiningFee: bt.FeeUnit{
+				Satoshis: 5,
+				Bytes:    10,
+			},
+			RelayFee: bt.FeeUnit{
+				Satoshis: 5,
+				Bytes:    10,
+			},
+		}).AddQuote(bt.FeeTypeData, &bt.Fee{
+		FeeType: bt.FeeTypeData,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	})
+
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -576,7 +599,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
-				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -647,7 +670,7 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 				))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
-				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
 				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
@@ -725,34 +748,9 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 		// TODO: add tests for different fee type values
 	}
 
-	std := &bt.Fee{
-		FeeType: bt.FeeTypeStandard,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	}
-	data := &bt.Fee{
-		FeeType: bt.FeeTypeData,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	}
-	fq := bt.NewFeeQuote().
-		AddQuote(bt.FeeTypeStandard, std).
-		AddQuote(bt.FeeTypeData, data)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			isEnough, err := test.tx.EstimateIsFeePaidEnough(fq)
+			isEnough, err := test.tx.EstimateIsFeePaidEnough(FQPoint5SatPerByte)
 			assert.NoError(t, err)
 			assert.Equal(t, test.isEnough, isEnough)
 
@@ -763,6 +761,29 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 }
 
 func Test_IsFeePaidEnough(t *testing.T) {
+	FQPoint5SatPerByte := bt.NewFeeQuote().
+		AddQuote(bt.FeeTypeStandard, &bt.Fee{
+			FeeType: bt.FeeTypeStandard,
+			MiningFee: bt.FeeUnit{
+				Satoshis: 5,
+				Bytes:    10,
+			},
+			RelayFee: bt.FeeUnit{
+				Satoshis: 5,
+				Bytes:    10,
+			},
+		}).AddQuote(bt.FeeTypeData, &bt.Fee{
+		FeeType: bt.FeeTypeData,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	})
+
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -790,7 +811,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 834709))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
-				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
 				return tx
 			}(),
 			expSize: &bt.TxSize{
@@ -855,7 +876,7 @@ func Test_IsFeePaidEnough(t *testing.T) {
 					0, "76a914ff8c9344d4e76c0580420142f697e5fc2ce5c98e88ac", 834709))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 256559))
-				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
 				tx.FillAllInputs(context.Background(), &unlocker.Getter{PrivateKey: w.PrivKey})
 				return tx
 			}(),
@@ -929,35 +950,9 @@ func Test_IsFeePaidEnough(t *testing.T) {
 		// TODO: add tests for different fee type values
 	}
 
-	std := &bt.Fee{
-		FeeType: bt.FeeTypeStandard,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	}
-	data := &bt.Fee{
-		FeeType: bt.FeeTypeData,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	}
-	fq := bt.NewFeeQuote().
-		AddQuote(bt.FeeTypeStandard, std).
-		AddQuote(bt.FeeTypeData, data)
-
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			isEnough, err := test.tx.IsFeePaidEnough(fq)
+			isEnough, err := test.tx.IsFeePaidEnough(FQPoint5SatPerByte)
 			assert.NoError(t, err)
 			assert.Equal(t, test.isEnough, isEnough)
 
@@ -968,6 +963,29 @@ func Test_IsFeePaidEnough(t *testing.T) {
 }
 
 func Test_EstimateFeesPaid(t *testing.T) {
+	FQPoint5SatPerByte := bt.NewFeeQuote().
+		AddQuote(bt.FeeTypeStandard, &bt.Fee{
+			FeeType: bt.FeeTypeStandard,
+			MiningFee: bt.FeeUnit{
+				Satoshis: 5,
+				Bytes:    10,
+			},
+			RelayFee: bt.FeeUnit{
+				Satoshis: 5,
+				Bytes:    10,
+			},
+		}).AddQuote(bt.FeeTypeData, &bt.Fee{
+		FeeType: bt.FeeTypeData,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	})
+
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -999,7 +1017,7 @@ func Test_EstimateFeesPaid(t *testing.T) {
 					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 1000))
 
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
-				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote()))
+				assert.NoError(t, tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte))
 				return tx
 			}(),
 			expFees: &bt.TxFees{
@@ -1068,7 +1086,7 @@ func Test_EstimateFeesPaid(t *testing.T) {
 					0, "76a91455b61be43392125d127f1780fb038437cd67ef9c88ac", 1000))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
-				tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote())
+				tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte)
 				return tx
 			}(),
 			expFees: &bt.TxFees{
@@ -1093,7 +1111,7 @@ func Test_EstimateFeesPaid(t *testing.T) {
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				assert.NoError(t, tx.AddP2PKHOutputFromAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", 100))
 				assert.NoError(t, tx.AddOpReturnOutput(make([]byte, 0x64)))
-				tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", bt.NewFeeQuote())
+				tx.ChangeToAddress("mtestD3vRB7AoYWK2n6kLdZmAMLbLhDsLr", FQPoint5SatPerByte)
 				return tx
 			}(),
 			expFees: &bt.TxFees{
@@ -1108,34 +1126,10 @@ func Test_EstimateFeesPaid(t *testing.T) {
 			},
 		},
 	}
-	std := &bt.Fee{
-		FeeType: bt.FeeTypeStandard,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	}
-	data := &bt.Fee{
-		FeeType: bt.FeeTypeData,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	}
-	fq := bt.NewFeeQuote().
-		AddQuote(bt.FeeTypeStandard, std).
-		AddQuote(bt.FeeTypeData, data)
+
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			resp, err := test.tx.EstimateFeesPaid(fq)
+			resp, err := test.tx.EstimateFeesPaid(FQPoint5SatPerByte)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expFees, resp)
 
