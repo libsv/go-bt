@@ -158,29 +158,6 @@ func TestTx_FromUTXOs(t *testing.T) {
 }
 
 func TestTx_Fund(t *testing.T) {
-	FQPoint5SatPerByte := bt.NewFeeQuote().
-		AddQuote(bt.FeeTypeStandard, &bt.Fee{
-			FeeType: bt.FeeTypeStandard,
-			MiningFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-			RelayFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-		}).AddQuote(bt.FeeTypeData, &bt.Fee{
-		FeeType: bt.FeeTypeData,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	})
-
 	t.Parallel()
 	tests := map[string]struct {
 		tx                      *bt.Tx
@@ -467,28 +444,6 @@ func TestTx_Fund(t *testing.T) {
 }
 
 func TestTx_Fund_Deficit(t *testing.T) {
-	FQPoint5SatPerByte := bt.NewFeeQuote().
-		AddQuote(bt.FeeTypeStandard, &bt.Fee{
-			FeeType: bt.FeeTypeStandard,
-			MiningFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-			RelayFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-		}).AddQuote(bt.FeeTypeData, &bt.Fee{
-		FeeType: bt.FeeTypeData,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	})
 	t.Parallel()
 	tests := map[string]struct {
 		utxos       []*bt.UTXO
@@ -700,29 +655,6 @@ func TestTx_FillInput(t *testing.T) {
 				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 				4000000,
 			))
-
-			FQPoint5SatPerByte := bt.NewFeeQuote().
-				AddQuote(bt.FeeTypeStandard, &bt.Fee{
-					FeeType: bt.FeeTypeStandard,
-					MiningFee: bt.FeeUnit{
-						Satoshis: 5,
-						Bytes:    10,
-					},
-					RelayFee: bt.FeeUnit{
-						Satoshis: 5,
-						Bytes:    10,
-					},
-				}).AddQuote(bt.FeeTypeData, &bt.Fee{
-				FeeType: bt.FeeTypeData,
-				MiningFee: bt.FeeUnit{
-					Satoshis: 5,
-					Bytes:    10,
-				},
-				RelayFee: bt.FeeUnit{
-					Satoshis: 5,
-					Bytes:    10,
-				},
-			})
 			assert.NoError(t, tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", FQPoint5SatPerByte))
 
 			err := tx.FillInput(context.Background(), test.unlocker, bt.UnlockerParams{
@@ -754,28 +686,6 @@ func TestTx_FillAllInputs(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		FQPoint5SatPerByte := bt.NewFeeQuote().
-			AddQuote(bt.FeeTypeStandard, &bt.Fee{
-				FeeType: bt.FeeTypeStandard,
-				MiningFee: bt.FeeUnit{
-					Satoshis: 5,
-					Bytes:    10,
-				},
-				RelayFee: bt.FeeUnit{
-					Satoshis: 5,
-					Bytes:    10,
-				},
-			}).AddQuote(bt.FeeTypeData, &bt.Fee{
-			FeeType: bt.FeeTypeData,
-			MiningFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-			RelayFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-		})
 		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", FQPoint5SatPerByte)
 		assert.NoError(t, err)
 

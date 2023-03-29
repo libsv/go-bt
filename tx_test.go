@@ -21,6 +21,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var FQPoint5SatPerByte = bt.NewFeeQuote().
+	AddQuote(bt.FeeTypeStandard, &bt.Fee{
+		FeeType: bt.FeeTypeStandard,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}).AddQuote(bt.FeeTypeData, &bt.Fee{
+	FeeType: bt.FeeTypeData,
+	MiningFee: bt.FeeUnit{
+		Satoshis: 5,
+		Bytes:    10,
+	},
+	RelayFee: bt.FeeUnit{
+		Satoshis: 5,
+		Bytes:    10,
+	},
+})
+
 func TestNewTx(t *testing.T) {
 	t.Parallel()
 
@@ -545,29 +568,6 @@ func TestTx_Clone(t *testing.T) {
 	})
 }
 func Test_EstimateIsFeePaidEnough(t *testing.T) {
-	FQPoint5SatPerByte := bt.NewFeeQuote().
-		AddQuote(bt.FeeTypeStandard, &bt.Fee{
-			FeeType: bt.FeeTypeStandard,
-			MiningFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-			RelayFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-		}).AddQuote(bt.FeeTypeData, &bt.Fee{
-		FeeType: bt.FeeTypeData,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	})
-
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -761,29 +761,6 @@ func Test_EstimateIsFeePaidEnough(t *testing.T) {
 }
 
 func Test_IsFeePaidEnough(t *testing.T) {
-	FQPoint5SatPerByte := bt.NewFeeQuote().
-		AddQuote(bt.FeeTypeStandard, &bt.Fee{
-			FeeType: bt.FeeTypeStandard,
-			MiningFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-			RelayFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-		}).AddQuote(bt.FeeTypeData, &bt.Fee{
-		FeeType: bt.FeeTypeData,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	})
-
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
@@ -963,29 +940,6 @@ func Test_IsFeePaidEnough(t *testing.T) {
 }
 
 func Test_EstimateFeesPaid(t *testing.T) {
-	FQPoint5SatPerByte := bt.NewFeeQuote().
-		AddQuote(bt.FeeTypeStandard, &bt.Fee{
-			FeeType: bt.FeeTypeStandard,
-			MiningFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-			RelayFee: bt.FeeUnit{
-				Satoshis: 5,
-				Bytes:    10,
-			},
-		}).AddQuote(bt.FeeTypeData, &bt.Fee{
-		FeeType: bt.FeeTypeData,
-		MiningFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-		RelayFee: bt.FeeUnit{
-			Satoshis: 5,
-			Bytes:    10,
-		},
-	})
-
 	tests := map[string]struct {
 		tx         *bt.Tx
 		dataLength uint64
