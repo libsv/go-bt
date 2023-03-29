@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"log"
 
 	"github.com/libsv/go-bk/crypto"
 
@@ -37,10 +39,10 @@ lock_time        if non-zero and sequence numbers are < 0xFFFFFFFF: block height
 //
 // DO NOT CHANGE ORDER - Optimised memory via malign
 type Tx struct {
-	Inputs   []*Input
-	Outputs  []*Output
-	Version  uint32
-	LockTime uint32
+	Inputs   []*Input  `json:"inputs"`
+	Outputs  []*Output `json:"outputs"`
+	Version  uint32    `json:"version"`
+	LockTime uint32    `json:"locktime"`
 }
 
 // Txs a collection of *bt.Tx.
@@ -325,7 +327,10 @@ func (tx *Tx) BytesWithClearedInputs(index int, lockingScript []byte) []byte {
 // Clone returns a clone of the tx
 func (tx *Tx) Clone() *Tx {
 	// Ignore err as byte slice passed in is created from valid tx
-	clone, _ := NewTxFromBytes(tx.Bytes())
+	clone, err := NewTxFromBytes(tx.Bytes())
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for i, input := range tx.Inputs {
 		clone.Inputs[i].PreviousTxSatoshis = input.PreviousTxSatoshis
@@ -473,8 +478,11 @@ func (tx *Tx) EstimateSizeWithTypes() (*TxSize, error) {
 func (tx *Tx) estimatedFinalTx() (*Tx, error) {
 	tempTx := tx.Clone()
 
-	for _, in := range tempTx.Inputs {
-		if !in.PreviousTxScript.IsP2PKH() {
+	for i, in := range tempTx.Inputs {
+		if in.PreviousTxScript == nil {
+			return nil, fmt.Errorf("%w at index %d in order to calc expected UnlockingScript", ErrEmptyPreviousTxScript, i)
+		}
+		if !(in.PreviousTxScript.IsP2PKH() || in.PreviousTxScript.IsP2PKHInscription()) {
 			return nil, ErrUnsupportedScript
 		}
 		if in.UnlockingScript == nil || len(*in.UnlockingScript) == 0 {
