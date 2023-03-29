@@ -45,8 +45,11 @@ func (l *Simple) UnlockingScript(ctx context.Context, tx *bt.Tx, params bt.Unloc
 		params.SigHashFlags = sighash.AllForkID
 	}
 
+	if tx.Inputs[params.InputIdx].PreviousTxScript == nil {
+		return nil, bt.ErrEmptyPreviousTxScript
+	}
 	switch tx.Inputs[params.InputIdx].PreviousTxScript.ScriptType() {
-	case bscript.ScriptTypePubKeyHash:
+	case bscript.ScriptTypePubKeyHash, bscript.ScriptTypePubKeyHashInscription:
 		sh, err := tx.CalcInputSignatureHash(params.InputIdx, params.SigHashFlags)
 		if err != nil {
 			return nil, err
