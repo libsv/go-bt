@@ -391,7 +391,7 @@ func (s *Script) IsP2PKHInscription() bool {
 // `DecodeParts()` multiple times, such as in `ParseInscription()`
 func isP2PKHInscriptionHelper(parts [][]byte) bool {
 	// TODO: cleanup
-	return len(parts) == 13 &&
+	return len(parts) >= 13 &&
 		parts[0][0] == OpDUP &&
 		parts[1][0] == OpHASH160 &&
 		parts[3][0] == OpEQUALVERIFY &&
