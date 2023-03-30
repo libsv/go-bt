@@ -15,7 +15,7 @@ func main() {
 	_ = tx.From(
 		"11b476ad8e0a48fcd40807a111a050af51114877e09283bfa7f3505081a1819d",
 		0,
-		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac6a0568656c6c6f",
+		"76a914eb0bd5edba389198e73f8efabddfc61666969ff788ac",
 		1500,
 	)
 
