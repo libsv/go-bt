@@ -66,10 +66,12 @@ var (
 
 // Sentinal errors reported by PSBTs.
 var (
-	ErrDummyInput           = errors.New("failed to add dummy input 0")
-	ErrInsufficientUTXOs    = errors.New("need at least 3 utxos")
-	ErrUTXOInputMismatch    = errors.New("utxo and input mismatch")
-	ErrInvalidSellOffer     = errors.New("invalid sell offer (partially signed tx)")
-	ErrOrdinalOutputNoExist = errors.New("ordinal output expected in index 2 doesn't exist")
-	ErrOrdinalInputNoExist  = errors.New("ordinal input expected in index 2 doesn't exist")
+	ErrDummyInput            = errors.New("failed to add dummy input 0")
+	ErrInsufficientUTXOs     = errors.New("need at least 2 utxos")
+	ErrInsufficientUTXOValue = errors.New("need at least 1 utxos which is > ordinal price")
+	ErrUTXOInputMismatch     = errors.New("utxo and input mismatch")
+	ErrInvalidSellOffer      = errors.New("invalid sell offer (partially signed tx)")
+	ErrOrdinalOutputNoExist  = errors.New("ordinal output expected in index 2 doesn't exist")
+	ErrOrdinalInputNoExist   = errors.New("ordinal input expected in index 2 doesn't exist")
+	ErrEmptyScripts          = errors.New("at least one of needed scripts is empty")
 )
