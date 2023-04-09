@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBidToBuyPSBTNoErrors(t *testing.T) {
+func TestBidToBuyPSBT2DNoErrors(t *testing.T) {
 	fundingWif, _ := wif.DecodeWIF("L5W2nyKUCsDStVUBwZj2Q3Ph5vcae4bgdzprZDYqDpvZA8AFguFH") // 19NfKd8aTwvb5ngfP29RxgfQzZt8KAYtQo
 	fundingAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(fundingWif.SerialisePubKey()), true)
 	fundingScript, _ := bscript.NewP2PKHFromAddress(fundingAddr.AddressString)
@@ -74,7 +74,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 		Satoshis: 1,
 	}
 
-	pstx, CreateBidError := ord.MakeBidToBuy1SatOrdinal(context.Background(), &ord.MakeBidArgs{
+	pstx, CreateBidError := ord.MakeBidToBuy1SatOrdinal2Dummies(context.Background(), &ord.MakeBid2DArgs{
 		BidAmount:   uint64(bidAmount),
 		OrdinalTxID: ordUTXO.TxIDStr(),
 		OrdinalVOut: ordUTXO.Vout,
@@ -99,7 +99,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 	})
 
 	t.Run("validate PSBT bid to buy ordinal", func(t *testing.T) {
-		vba := &ord.ValidateBidArgs{
+		vba := &ord.ValidateBid2DArgs{
 			BidAmount:  uint64(bidAmount),
 			ExpectedFQ: bt.NewFeeQuote(),
 			// insert ordinal utxo at index 2
@@ -109,12 +109,12 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 	})
 
 	t.Run("no errors when accepting bid", func(t *testing.T) {
-		_, err := ord.AcceptBidToBuy1SatOrdinal(context.Background(), &ord.ValidateBidArgs{
+		_, err := ord.AcceptBidToBuy1SatOrdinal2Dummies(context.Background(), &ord.ValidateBid2DArgs{
 			BidAmount:     uint64(bidAmount),
 			ExpectedFQ:    bt.NewFeeQuote(),
 			PreviousUTXOs: append(us[:2], append([]*bt.UTXO{ordUTXO}, us[2:]...)...),
 		},
-			&ord.AcceptBidArgs{
+			&ord.AcceptBid2DArgs{
 				PSTx: pstx,
 				SellerReceiveOrdinalScript: func() *bscript.Script {
 					s, _ := bscript.NewP2PKHFromAddress("1C3V9TTJefP8Hft96sVf54mQyDJh8Ze4w4") // L1JWiLZtCkkqin41XtQ2Jxo1XGxj1R4ydT2zmxPiaeQfuyUK631D

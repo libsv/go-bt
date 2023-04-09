@@ -9,7 +9,6 @@ import (
 	"github.com/libsv/go-bt/v2"
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/sighash"
-	"github.com/pkg/errors"
 )
 
 // MakeBidArgs contains the arguments
@@ -35,14 +34,28 @@ type MakeBidArgs struct {
 // Note: this function is meant for ordinals in 1 satoshi outputs instead
 // of ordinal ranges in 1 output (>1 satoshi outputs).
 func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*bt.Tx, error) {
-	if len(mba.BidderUTXOs) < 3 {
+	if len(mba.BidderUTXOs) < 2 {
 		return nil, bt.ErrInsufficientUTXOs
+	}
+
+	// check at least 1 utxo is larger than the listed ordinal price
+	validUTXOFound := false
+	for i, u := range mba.BidderUTXOs {
+		if u.Satoshis > mba.BidAmount {
+			// Move the UTXO at index i to the beginning
+			mba.BidderUTXOs = append([]*bt.UTXO{u}, append(mba.BidderUTXOs[:i], mba.BidderUTXOs[i+1:]...)...)
+			validUTXOFound = true
+			break
+		}
+	}
+	if !validUTXOFound {
+		return nil, bt.ErrInsufficientUTXOValue
 	}
 
 	tx := bt.NewTx()
 
 	// add dummy inputs
-	err := tx.FromUTXOs(mba.BidderUTXOs[0], mba.BidderUTXOs[1])
+	err := tx.FromUTXOs(mba.BidderUTXOs[0])
 	if err != nil {
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
 	}
@@ -68,21 +81,15 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*bt.Tx, err
 	tx.Inputs = append(tx.Inputs, emptyOrdInput)
 
 	// add payment input(s)
-	err = tx.FromUTXOs(mba.BidderUTXOs[2:]...)
+	err = tx.FromUTXOs(mba.BidderUTXOs[1:]...)
 	if err != nil {
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
 	}
 
-	// add dummy output to passthrough dummy inputs
+	// add dummy output
 	tx.AddOutput(&bt.Output{
 		LockingScript: mba.DummyOutputScript,
-		Satoshis:      mba.BidderUTXOs[0].Satoshis + mba.BidderUTXOs[1].Satoshis,
-	})
-
-	// add ordinal receive output
-	tx.AddOutput(&bt.Output{
-		LockingScript: mba.BuyerReceiveOrdinalScript,
-		Satoshis:      1,
+		Satoshis:      mba.BidderUTXOs[0].Satoshis - mba.BidAmount,
 	})
 
 	tx.AddOutput(&bt.Output{
@@ -93,15 +100,22 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*bt.Tx, err
 		}(),
 	})
 
+	// add ordinal receive output
+	tx.AddOutput(&bt.Output{
+		LockingScript: mba.BuyerReceiveOrdinalScript,
+		Satoshis:      1,
+	})
+
 	err = tx.Change(mba.ChangeScript, mba.FQ)
 	if err != nil {
 		return nil, err
 	}
 
+	//nolint: dupl // TODO: are 2 dummies useful or to be removed?
 	for i, u := range mba.BidderUTXOs {
-		// skip 3rd input (ordinals input)
+		// skip 2nd input (ordinals input)
 		j := i
-		if i >= 2 {
+		if i >= 1 {
 			j++
 		}
 
@@ -128,54 +142,36 @@ func MakeBidToBuy1SatOrdinal(ctx context.Context, mba *MakeBidArgs) (*bt.Tx, err
 
 // ValidateBidArgs are the arguments needed to
 // validate a specific bid to buy an ordinal.
-//
-// Note: index 2 should be the listed ordinal input.
+// as they appear in the tx.
 type ValidateBidArgs struct {
-	PreviousUTXOs []*bt.UTXO // index 2 should be the listed ordinal input
-	BidAmount     uint64
-	ExpectedFQ    *bt.FeeQuote
+	OrdinalUTXO *bt.UTXO
+	BidAmount   uint64
+	ExpectedFQ  *bt.FeeQuote
 }
 
 // Validate a bid to buy an ordinal
 // given specific validation parameters.
 func (vba *ValidateBidArgs) Validate(pstx *bt.Tx) bool {
-	if pstx.InputCount() < 4 {
+	if pstx.InputCount() < 3 {
 		return false
 	}
-	if pstx.OutputCount() < 4 {
-		return false
-	}
-
-	// check previous utxos match inputs
-	if len(vba.PreviousUTXOs) != pstx.InputCount() {
-		return false
-	}
-	for i := range vba.PreviousUTXOs {
-		if !bytes.Equal(pstx.Inputs[i].PreviousTxID(), vba.PreviousUTXOs[i].TxID) {
-			return false
-		}
-		if uint64(pstx.Inputs[i].PreviousTxOutIndex) != uint64(vba.PreviousUTXOs[i].Vout) {
-			return false
-		}
-	}
-
-	// check passthrough dummy inputs and output to avoid
-	// mismatching and losing the ordinal to another output
-	if (vba.PreviousUTXOs[0].Satoshis + vba.PreviousUTXOs[1].Satoshis) != pstx.Outputs[0].Satoshis {
+	if pstx.OutputCount() < 3 { // technically should have 4 including change
 		return false
 	}
 
-	// check lou (ListedOrdinalUTXO) matches supplied pstx input index 2
-	pstxOrdinalInput := pstx.Inputs[2]
-	if !bytes.Equal(pstxOrdinalInput.PreviousTxID(), vba.PreviousUTXOs[2].TxID) {
+	// check OrdinalUTXO matches supplied pstx input index 1
+	pstxOrdinalInput := pstx.Inputs[1]
+	if !bytes.Equal(pstxOrdinalInput.PreviousTxID(), vba.OrdinalUTXO.TxID) {
 		return false
 	}
-	if uint64(pstxOrdinalInput.PreviousTxOutIndex) != uint64(vba.PreviousUTXOs[2].Vout) {
+	if uint64(pstxOrdinalInput.PreviousTxOutIndex) != uint64(vba.OrdinalUTXO.Vout) {
 		return false
 	}
 
-	// check enough funds paid
-	pstx.Outputs[2].Satoshis = vba.BidAmount
+	// set the value of the output for the bid amount
+	pstx.Outputs[1].Satoshis = vba.BidAmount
+
+	// check enough fees paid
 	enough, err := pstx.IsFeePaidEnough(vba.ExpectedFQ)
 	if err != nil || !enough {
 		return false
@@ -187,48 +183,35 @@ func (vba *ValidateBidArgs) Validate(pstx *bt.Tx) bool {
 }
 
 // AcceptBidArgs contains the arguments
-// needed to make an offer to sell an
+// needed to accept a bid to buy an
 // ordinal.
 type AcceptBidArgs struct {
-	PSTx                       *bt.Tx
-	SellerReceiveOrdinalScript *bscript.Script
-	OrdinalUnlocker            bt.Unlocker
-	ExtraUTXOs                 []*bt.UTXO
+	PSTx                *bt.Tx
+	SellerReceiveScript *bscript.Script
+	OrdinalUnlocker     bt.Unlocker
 }
 
-// AcceptBidToBuy1SatOrdinal creates a PBST (Partially Signed Bitcoin
-// Transaction) that offers a specific ordinal UTXO for sale at a
-// specific price.
+// AcceptBidToBuy1SatOrdinal accepts a partially signed Bitcoin
+// transaction bid to buy an ordinal.
+//
 func AcceptBidToBuy1SatOrdinal(ctx context.Context, vba *ValidateBidArgs, aba *AcceptBidArgs) (*bt.Tx, error) {
 	if valid := vba.Validate(aba.PSTx); !valid {
 		return nil, bt.ErrInvalidSellOffer
 	}
 
-	if !aba.SellerReceiveOrdinalScript.IsP2PKH() {
-		// TODO: if a script different to/bigger than p2pkh is used to
-		// receive the ordinal, then the seller may need to add extra
-		// utxos `aba.ExtraUTXOs` to cover the extra bytes since the
-		// bidder only accounted for p2pkh script when calculating their
-		// change.
-		return nil, errors.New("only receive to p2pkh supported for now")
+	tx := aba.PSTx.Clone()
+
+	tx.Outputs[1].LockingScript = aba.SellerReceiveScript
+	// check if fees paid are still enough with new
+	// locking script
+	enough, err := tx.IsFeePaidEnough(vba.ExpectedFQ)
+	if err != nil || !enough {
+		return nil, bt.ErrInsufficientFees
 	}
 
-	tx, err := bt.NewTxFromBytes(aba.PSTx.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	if tx.Outputs[2] == nil {
-		return nil, bt.ErrOrdinalOutputNoExist
-	}
-	tx.Outputs[2].LockingScript = aba.SellerReceiveOrdinalScript
-
-	if tx.Inputs[2] == nil {
-		return nil, bt.ErrOrdinalInputNoExist
-	}
-	tx.Inputs[2].PreviousTxScript = vba.PreviousUTXOs[2].LockingScript
-	tx.Inputs[2].PreviousTxSatoshis = vba.PreviousUTXOs[2].Satoshis
-	err = tx.FillInput(ctx, aba.OrdinalUnlocker, bt.UnlockerParams{InputIdx: 2})
+	tx.Inputs[1].PreviousTxScript = vba.OrdinalUTXO.LockingScript
+	tx.Inputs[1].PreviousTxSatoshis = vba.OrdinalUTXO.Satoshis
+	err = tx.FillInput(ctx, aba.OrdinalUnlocker, bt.UnlockerParams{InputIdx: 1})
 	if err != nil {
 		return nil, err
 	}

@@ -93,9 +93,8 @@ type AcceptListingArgs struct {
 
 // AcceptOrdinalSaleListing accepts a partially signed Bitcoin
 // transaction offer to sell an ordinal. When accepting the offer,
-// you will need to provide at least 3 UTXOs - with the first 2
-// being dummy utxos that will just pass through, and the rest with
-// the required payment and tx fees.
+// you will need to provide at least 2 UTXOs - with at least 1 being
+// larger than the listed ordinal price.
 func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, asoa *AcceptListingArgs) (*bt.Tx, error) {
 	if valid := vla.Validate(asoa.PSTx); !valid {
 		return nil, bt.ErrInvalidSellOffer
@@ -103,31 +102,53 @@ func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, aso
 	sellerOrdinalInput := asoa.PSTx.Inputs[0]
 	sellerOutput := asoa.PSTx.Outputs[0]
 
-	if len(asoa.UTXOs) < 3 {
+	if len(asoa.UTXOs) < 2 {
 		return nil, bt.ErrInsufficientUTXOs
+	}
+
+	if asoa.BuyerReceiveOrdinalScript == nil ||
+		asoa.DummyOutputScript == nil ||
+		asoa.ChangeScript == nil {
+		return nil, bt.ErrEmptyScripts
+	}
+
+	// check at least 1 utxo is larger than the listed ordinal price
+	validUTXOFound := false
+	for i, u := range asoa.UTXOs {
+		if u.Satoshis > sellerOutput.Satoshis {
+			// Move the UTXO at index i to the beginning
+			asoa.UTXOs = append([]*bt.UTXO{u}, append(asoa.UTXOs[:i], asoa.UTXOs[i+1:]...)...)
+			validUTXOFound = true
+			break
+		}
+	}
+	if !validUTXOFound {
+		return nil, bt.ErrInsufficientUTXOValue
 	}
 
 	tx := bt.NewTx()
 
-	// add dummy inputs
-	err := tx.FromUTXOs(asoa.UTXOs[0], asoa.UTXOs[1])
+	// add first input to pay for ordinal
+	err := tx.FromUTXOs(asoa.UTXOs[0])
 	if err != nil {
-		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
+		return nil, fmt.Errorf(`failed to add input: %w`, err)
 	}
 
 	tx.Inputs = append(tx.Inputs, sellerOrdinalInput)
 
-	// add payment input(s)
-	err = tx.FromUTXOs(asoa.UTXOs[2:]...)
+	// add input(s) to pay for tx fees
+	err = tx.FromUTXOs(asoa.UTXOs[1:]...)
 	if err != nil {
 		return nil, fmt.Errorf(`failed to add inputs: %w`, err)
 	}
 
-	// add dummy output to passthrough dummy inputs
+	// add dummy output
 	tx.AddOutput(&bt.Output{
 		LockingScript: asoa.DummyOutputScript,
-		Satoshis:      asoa.UTXOs[0].Satoshis + asoa.UTXOs[1].Satoshis,
+		Satoshis:      asoa.UTXOs[0].Satoshis - sellerOutput.Satoshis,
 	})
+
+	tx.AddOutput(sellerOutput)
 
 	// add ordinal receive output
 	tx.AddOutput(&bt.Output{
@@ -135,17 +156,16 @@ func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, aso
 		Satoshis:      1,
 	})
 
-	tx.AddOutput(sellerOutput)
-
 	err = tx.Change(asoa.ChangeScript, asoa.FQ)
 	if err != nil {
 		return nil, err
 	}
 
+	//nolint:dupl // TODO: are 2 dummies useful or to be removed?
 	for i, u := range asoa.UTXOs {
-		// skip 3rd input (ordinals input)
+		// skip 2nd input (ordinals input)
 		j := i
-		if i >= 2 {
+		if i >= 1 {
 			j++
 		}
 
