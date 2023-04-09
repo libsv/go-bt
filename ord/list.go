@@ -117,7 +117,7 @@ func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, aso
 	for i, u := range asoa.UTXOs {
 		if u.Satoshis > sellerOutput.Satoshis {
 			// Move the UTXO at index i to the beginning
-			asoa.UTXOs = append([]*bt.UTXO{asoa.UTXOs[i]}, append(asoa.UTXOs[:i], asoa.UTXOs[i+1:]...)...)
+			asoa.UTXOs = append([]*bt.UTXO{u}, append(asoa.UTXOs[:i], asoa.UTXOs[i+1:]...)...)
 			validUTXOFound = true
 			break
 		}
@@ -161,7 +161,7 @@ func AcceptOrdinalSaleListing(ctx context.Context, vla *ValidateListingArgs, aso
 		return nil, err
 	}
 
-	//nolint:dupl // false positive
+	//nolint:dupl // TODO: are 2 dummies useful or to be removed?
 	for i, u := range asoa.UTXOs {
 		// skip 2nd input (ordinals input)
 		j := i
