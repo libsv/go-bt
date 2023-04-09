@@ -71,7 +71,6 @@ var (
 	ErrInsufficientUTXOValue = errors.New("need at least 1 utxos which is > ordinal price")
 	ErrUTXOInputMismatch     = errors.New("utxo and input mismatch")
 	ErrInvalidSellOffer      = errors.New("invalid sell offer (partially signed tx)")
-	ErrOrdinalOutputNoExist  = errors.New("ordinal output expected in index 2 doesn't exist")
-	ErrOrdinalInputNoExist   = errors.New("ordinal input expected in index 2 doesn't exist")
 	ErrEmptyScripts          = errors.New("at least one of needed scripts is empty")
+	ErrInsufficientFees      = errors.New("fee paid not enough with new locking script")
 )

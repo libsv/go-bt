@@ -100,6 +100,7 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
+	// TODO: are 2 dummies useful or to be removed?
 	t.Run("no errors when accepting listing using 2 dummies", func(t *testing.T) {
 		us = append([]*bt.UTXO{
 			{
@@ -137,4 +138,5 @@ func TestOfferToSellPSBTNoErrors(t *testing.T) {
 			})
 		assert.NoError(t, err)
 	})
+	//
 }
