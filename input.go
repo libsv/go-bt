@@ -175,11 +175,27 @@ sequence:     %x
 }
 
 // Bytes encodes the Input into a hex byte array.
-func (i *Input) Bytes(clear bool) []byte {
-	h := make([]byte, 0)
+func (i *Input) Bytes(clear bool, intoBytes ...[]byte) []byte {
+	var h []byte
+	if len(intoBytes) > 0 {
+		h = intoBytes[0]
+	} else {
+		h = make([]byte, 0)
+	}
 
-	h = append(h, ReverseBytes(i.previousTxID)...)
-	h = append(h, LittleEndianBytes(i.PreviousTxOutIndex, 4)...)
+	// add the previous tx ID in reversed order
+	for j := len(i.previousTxID) - 1; j >= 0; j = j - 2 {
+		h = append(h, []byte{i.previousTxID[j], i.previousTxID[j-1]}...)
+	}
+
+	// this is optimized to avoid the memory allocation of LittleEndianBytes
+	h = append(h, []byte{
+		byte(i.PreviousTxOutIndex),
+		byte(i.PreviousTxOutIndex >> 8),
+		byte(i.PreviousTxOutIndex >> 16),
+		byte(i.PreviousTxOutIndex >> 24),
+	}...)
+
 	if clear {
 		h = append(h, 0x00)
 	} else {
@@ -191,5 +207,11 @@ func (i *Input) Bytes(clear bool) []byte {
 		}
 	}
 
-	return append(h, LittleEndianBytes(i.SequenceNumber, 4)...)
+	// this is optimized to avoid the memory allocation of LittleEndianBytes
+	return append(h, []byte{
+		byte(i.SequenceNumber),
+		byte(i.SequenceNumber >> 8),
+		byte(i.SequenceNumber >> 16),
+		byte(i.SequenceNumber >> 24),
+	}...)
 }

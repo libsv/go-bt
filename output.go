@@ -74,12 +74,27 @@ script:    %s
 }
 
 // Bytes encodes the Output into a byte array.
-func (o *Output) Bytes() []byte {
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, o.Satoshis)
+func (o *Output) Bytes(inBytes ...[]byte) []byte {
+	var h []byte
+	if len(inBytes) > 0 {
+		h = inBytes[0]
+		// append the satoshis without allocating a new slice
+		// this is much faster as we do not need to malloc
+		h = append(h, []byte{
+			byte(o.Satoshis),
+			byte(o.Satoshis >> 8),
+			byte(o.Satoshis >> 16),
+			byte(o.Satoshis >> 24),
+			byte(o.Satoshis >> 32),
+			byte(o.Satoshis >> 40),
+			byte(o.Satoshis >> 48),
+			byte(o.Satoshis >> 56),
+		}...)
+	} else {
+		h = make([]byte, 8)
+		binary.LittleEndian.PutUint64(h, o.Satoshis)
+	}
 
-	h := make([]byte, 0)
-	h = append(h, b...)
 	h = append(h, VarInt(uint64(len(*o.LockingScript))).Bytes()...)
 	h = append(h, *o.LockingScript...)
 
@@ -104,11 +119,13 @@ func (o *Output) BytesForSigHash() []byte {
 // NodeJSON returns a wrapped *bt.Output for marshalling/unmarshalling into a node output format.
 //
 // Marshalling usage example:
-//  bb, err := json.Marshal(output.NodeJSON())
+//
+//	bb, err := json.Marshal(output.NodeJSON())
 //
 // Unmarshalling usage example:
-//  output := &bt.Output{}
-//  if err := json.Unmarshal(bb, output.NodeJSON()); err != nil {}
+//
+//	output := &bt.Output{}
+//	if err := json.Unmarshal(bb, output.NodeJSON()); err != nil {}
 func (o *Output) NodeJSON() interface{} {
 	return &nodeOutputWrapper{Output: o}
 }

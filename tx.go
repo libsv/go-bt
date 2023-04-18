@@ -363,12 +363,10 @@ func (tx *Tx) Clone() *Tx {
 			SequenceNumber:     input.SequenceNumber,
 		}
 		if input.UnlockingScript != nil {
-			clone.Inputs[i].UnlockingScript = &bscript.Script{}
-			*clone.Inputs[i].UnlockingScript = *input.UnlockingScript
+			clone.Inputs[i].UnlockingScript = bscript.NewFromBytes(*input.UnlockingScript)
 		}
 		if input.PreviousTxScript != nil {
-			clone.Inputs[i].PreviousTxScript = &bscript.Script{}
-			*clone.Inputs[i].PreviousTxScript = *input.PreviousTxScript
+			clone.Inputs[i].PreviousTxScript = bscript.NewFromBytes(*input.PreviousTxScript)
 		}
 	}
 
@@ -377,8 +375,7 @@ func (tx *Tx) Clone() *Tx {
 			Satoshis: output.Satoshis,
 		}
 		if output.LockingScript != nil {
-			clone.Outputs[i].LockingScript = &bscript.Script{}
-			*clone.Outputs[i].LockingScript = *output.LockingScript
+			clone.Outputs[i].LockingScript = bscript.NewFromBytes(*output.LockingScript)
 		}
 	}
 
@@ -414,9 +411,14 @@ func (tt *Txs) NodeJSON() interface{} {
 }
 
 func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []byte {
-	h := make([]byte, 0)
-
-	h = append(h, LittleEndianBytes(tx.Version, 4)...)
+	h := make([]byte, 0, 1024)
+	// this is faster than using LittleEndianBytes, since we do not malloc a new byte slice
+	h = append(h, []byte{
+		byte(tx.Version),
+		byte(tx.Version >> 8),
+		byte(tx.Version >> 16),
+		byte(tx.Version >> 24),
+	}...)
 
 	if extended {
 		h = append(h, []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0xEF}...)
@@ -425,18 +427,24 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []by
 	h = append(h, VarInt(uint64(len(tx.Inputs))).Bytes()...)
 
 	for i, in := range tx.Inputs {
-		s := in.Bytes(lockingScript != nil)
 		if i == index && lockingScript != nil {
 			h = append(h, VarInt(uint64(len(lockingScript))).Bytes()...)
 			h = append(h, lockingScript...)
 		} else {
-			h = append(h, s...)
+			h = in.Bytes(lockingScript != nil, h)
 		}
 
 		if extended {
-			b := make([]byte, 8)
-			binary.LittleEndian.PutUint64(b, in.PreviousTxSatoshis)
-			h = append(h, b...)
+			h = append(h, []byte{
+				byte(in.PreviousTxSatoshis),
+				byte(in.PreviousTxSatoshis >> 8),
+				byte(in.PreviousTxSatoshis >> 16),
+				byte(in.PreviousTxSatoshis >> 24),
+				byte(in.PreviousTxSatoshis >> 32),
+				byte(in.PreviousTxSatoshis >> 40),
+				byte(in.PreviousTxSatoshis >> 48),
+				byte(in.PreviousTxSatoshis >> 56),
+			}...)
 
 			if in.PreviousTxScript != nil {
 				l := uint64(len(*in.PreviousTxScript))
@@ -450,13 +458,15 @@ func (tx *Tx) toBytesHelper(index int, lockingScript []byte, extended bool) []by
 
 	h = append(h, VarInt(uint64(len(tx.Outputs))).Bytes()...)
 	for _, out := range tx.Outputs {
-		h = append(h, out.Bytes()...)
+		h = out.Bytes(h)
 	}
 
-	lt := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lt, tx.LockTime)
-
-	return append(h, lt...)
+	return append(h, []byte{
+		byte(tx.LockTime),
+		byte(tx.LockTime >> 8),
+		byte(tx.LockTime >> 16),
+		byte(tx.LockTime >> 24),
+	}...)
 }
 
 // TxSize contains the size breakdown of a transaction
