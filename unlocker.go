@@ -13,6 +13,8 @@ type UnlockerParams struct {
 	InputIdx uint32
 	// SigHashFlags the be applied [DEFAULT ALL|FORKID]
 	SigHashFlags sighash.Flag
+	// TODO: add previous tx script and sats here instead of in
+	// input (and potentially remove from input) - see issue #143
 }
 
 // Unlocker interface to allow custom implementations of different unlocking mechanisms.

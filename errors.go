@@ -18,6 +18,10 @@ var (
 var (
 	ErrInputNoExist  = errors.New("specified input does not exist")
 	ErrInputTooShort = errors.New("input length too short")
+
+	// You should not be able to spend an input with 0 Satoshi value.
+	// Most likely the input Satoshi value is not provided.
+	ErrInputSatsZero = errors.New("input satoshi value is not provided")
 )
 
 // Sentinal errors reported by outputs.
@@ -46,11 +50,27 @@ var (
 	ErrUnknownFeeType   = errors.New("unknown fee type")
 )
 
-// Sentinel errors reported by Fund
+// Sentinel errors reported by Fund.
 var (
 	// ErrNoUTXO signals the UTXOGetterFunc has reached the end of its input.
 	ErrNoUTXO = errors.New("no remaining utxos")
 
 	// ErrInsufficientFunds insufficient funds provided for funding
 	ErrInsufficientFunds = errors.New("insufficient funds provided")
+)
+
+// Sentinal errors reported by ordinal inscriptions.
+var (
+	ErrOutputsNotEmpty = errors.New("transaction outputs must be empty to avoid messing with Ordinal ordering scheme")
+)
+
+// Sentinal errors reported by PSBTs.
+var (
+	ErrDummyInput            = errors.New("failed to add dummy input 0")
+	ErrInsufficientUTXOs     = errors.New("need at least 2 utxos")
+	ErrInsufficientUTXOValue = errors.New("need at least 1 utxos which is > ordinal price")
+	ErrUTXOInputMismatch     = errors.New("utxo and input mismatch")
+	ErrInvalidSellOffer      = errors.New("invalid sell offer (partially signed tx)")
+	ErrEmptyScripts          = errors.New("at least one of needed scripts is empty")
+	ErrInsufficientFees      = errors.New("fee paid not enough with new locking script")
 )

@@ -16,13 +16,14 @@ import (
 
 // ScriptKey types.
 const (
-	ScriptTypePubKey      = "pubkey"
-	ScriptTypePubKeyHash  = "pubkeyhash"
-	ScriptTypeNonStandard = "nonstandard"
-	ScriptTypeEmpty       = "empty"
-	ScriptTypeSecureHash  = "securehash"
-	ScriptTypeMultiSig    = "multisig"
-	ScriptTypeNullData    = "nulldata"
+	// TODO: change to p2pk/p2pkh
+	ScriptTypePubKey                = "pubkey"
+	ScriptTypePubKeyHash            = "pubkeyhash"
+	ScriptTypeNonStandard           = "nonstandard"
+	ScriptTypeEmpty                 = "empty"
+	ScriptTypeMultiSig              = "multisig"
+	ScriptTypeNullData              = "nulldata"
+	ScriptTypePubKeyHashInscription = "pubkeyhashinscription"
 )
 
 // Script type
@@ -321,6 +322,82 @@ func (s *Script) IsData() bool {
 		(len(b) > 1 && b[0] == OpFALSE && b[1] == OpRETURN)
 }
 
+// IsInscribed returns true if this script includes an
+// inscription with any prepended script (not just p2pkh).
+func (s *Script) IsInscribed() bool {
+	isncPattern, _ := hex.DecodeString("0063036f7264")
+	return bytes.Contains(*s, isncPattern)
+}
+
+// IsP2PKHInscription checks if it's a standard
+// inscription with a P2PKH prefix script.
+func (s *Script) IsP2PKHInscription() bool {
+	p, err := DecodeParts(*s)
+	if err != nil {
+		return false
+	}
+
+	return isP2PKHInscriptionHelper(p)
+}
+
+// isP2PKHInscriptionHelper helper so that we don't need to call
+// `DecodeParts()` multiple times, such as in `ParseInscription()`
+func isP2PKHInscriptionHelper(parts [][]byte) bool {
+	if len(parts) < 13 {
+		return false
+	}
+	valid := parts[0][0] == OpDUP &&
+		parts[1][0] == OpHASH160 &&
+		parts[3][0] == OpEQUALVERIFY &&
+		parts[4][0] == OpCHECKSIG &&
+		parts[5][0] == OpFALSE &&
+		parts[6][0] == OpIF &&
+		parts[7][0] == 0x6f && parts[7][1] == 0x72 && parts[7][2] == 0x64 && // op_push "ord"
+		parts[8][0] == OpTRUE &&
+		parts[10][0] == OpFALSE &&
+		parts[12][0] == OpENDIF
+
+	if len(parts) > 13 {
+		return parts[13][0] == OpRETURN && valid
+	}
+	return valid
+}
+
+// ParseInscription parses the script to
+// return the inscription found. Will return
+// an error if the script doesn't contain
+// any inscriptions.
+func (s *Script) ParseInscription() (*InscriptionArgs, error) {
+	p, err := DecodeParts(*s)
+	if err != nil {
+		return nil, err
+	}
+
+	if !isP2PKHInscriptionHelper(p) {
+		return nil, ErrP2PKHInscriptionNotFound
+	}
+
+	// FIXME: make it dynamic based on order.
+	// right now if the content type and the content change order
+	// then this will fail. My understanding is that the content
+	// always needs to be last and the previous fields can be
+	// reordered - this is based on the original ordinals
+	// indexer: https://github.com/casey/ord
+	return &InscriptionArgs{
+		LockingScriptPrefix: s.Slice(0, 25),
+		Data:                p[11],
+		ContentType:         string(p[9]),
+		// EnrichedArgs: , // TODO:
+	}, nil
+}
+
+// Slice a script to get back a subset of that script.
+func (s *Script) Slice(start, end uint64) *Script {
+	ss := *s
+	sss := ss[start:end]
+	return &sss
+}
+
 // IsMultiSigOut returns true if this is a multisig output script.
 func (s *Script) IsMultiSigOut() bool {
 	parts, err := DecodeParts(*s)
@@ -384,6 +461,9 @@ func (s *Script) ScriptType() string {
 	}
 	if s.IsData() {
 		return ScriptTypeNullData
+	}
+	if s.IsP2PKHInscription() {
+		return ScriptTypePubKeyHashInscription
 	}
 	return ScriptTypeNonStandard
 }

@@ -337,7 +337,7 @@ linters:
     - dupl
     - misspell
     - dogsled
-    - revive
+    # - revive
     - prealloc
     - exportloopref
     - exhaustive

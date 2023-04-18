@@ -58,6 +58,32 @@ func TestTx_ChangeToAddress(t *testing.T) {
 }
 
 func TestTx_Change(t *testing.T) {
+	std := &bt.Fee{
+		FeeType: bt.FeeTypeStandard,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	data := &bt.Fee{
+		FeeType: bt.FeeTypeData,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	fq := bt.NewFeeQuote().
+		AddQuote(bt.FeeTypeStandard, std).
+		AddQuote(bt.FeeTypeData, data)
+
 	t.Parallel()
 
 	t.Run("valid change tx (basic)", func(t *testing.T) {
@@ -75,7 +101,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -101,7 +127,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -143,7 +169,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.AddOpReturnPartsOutput([][]byte{[]byte("hi"), []byte("how"), []byte("are"), []byte("you")})
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", bt.NewFeeQuote())
+		err = tx.ChangeToAddress("1D7gaZJo3vPn2Ks3PH694W9P8UVYLNh2jY", fq)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -180,7 +206,7 @@ func TestTx_Change(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -213,7 +239,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -247,7 +273,7 @@ func TestTx_Change(t *testing.T) {
 		err = tx.PayToAddress("mxAoAyZFXX6LZBWhoam3vjm6xt9NxPQ15f", 3000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", fq)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -284,7 +310,7 @@ func TestTx_Change(t *testing.T) {
 			5689)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", bt.NewFeeQuote())
+		err = tx.ChangeToAddress("1BxGFoRPSFgYxoAStEncL6HuELqPkV3JVj", fq)
 		assert.NoError(t, err)
 
 		var wif *WIF
@@ -300,6 +326,32 @@ func TestTx_Change(t *testing.T) {
 }
 
 func TestTx_ChangeToOutput(t *testing.T) {
+	std := &bt.Fee{
+		FeeType: bt.FeeTypeStandard,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	data := &bt.Fee{
+		FeeType: bt.FeeTypeData,
+		MiningFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+		RelayFee: bt.FeeUnit{
+			Satoshis: 5,
+			Bytes:    10,
+		},
+	}
+	fq := bt.NewFeeQuote().
+		AddQuote(bt.FeeTypeStandard, std).
+		AddQuote(bt.FeeTypeData, data)
+
 	tests := map[string]struct {
 		tx              *bt.Tx
 		index           uint
@@ -320,7 +372,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           0,
-			fees:            bt.NewFeeQuote(),
+			fees:            fq,
 			expOutputTotal:  1000,
 			expChangeOutput: 1000,
 			err:             nil,
@@ -336,7 +388,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           0,
-			fees:            bt.NewFeeQuote(),
+			fees:            fq,
 			expOutputTotal:  904,
 			expChangeOutput: 904,
 			err:             nil,
@@ -355,7 +407,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index:           3,
-			fees:            bt.NewFeeQuote(),
+			fees:            fq,
 			expOutputTotal:  2353,
 			expChangeOutput: 853,
 			err:             nil,
@@ -371,7 +423,7 @@ func TestTx_ChangeToOutput(t *testing.T) {
 				return tx
 			}(),
 			index: 1,
-			fees:  bt.NewFeeQuote(),
+			fees:  fq,
 			err:   bt.ErrOutputNoExist,
 		},
 	}

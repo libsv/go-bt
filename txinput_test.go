@@ -178,9 +178,9 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}}
 			}(),
 			expTotalInputs: 2,
@@ -197,11 +197,11 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}}
 			}(),
 			expTotalInputs: 3,
@@ -223,11 +223,11 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}}
 			}(),
 			expTotalInputs: 2,
@@ -244,9 +244,9 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}}
 			}(),
 			expTotalInputs: 2,
@@ -263,21 +263,21 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 500, 0xffffff,
+					txid, 0, script, 500, 0xffffff, nil,
 				}, {
-					txid, 0, script, 670, 0xffffff,
+					txid, 0, script, 670, 0xffffff, nil,
 				}, {
-					txid, 0, script, 700, 0xffffff,
+					txid, 0, script, 700, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 650, 0xffffff,
+					txid, 0, script, 650, 0xffffff, nil,
 				}}
 			}(),
 			expTotalInputs: 8,
@@ -302,21 +302,21 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 500, 0xffffff,
+					txid, 0, script, 500, 0xffffff, nil,
 				}, {
-					txid, 0, script, 670, 0xffffff,
+					txid, 0, script, 670, 0xffffff, nil,
 				}, {
-					txid, 0, script, 700, 0xffffff,
+					txid, 0, script, 700, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 650, 0xffffff,
+					txid, 0, script, 650, 0xffffff, nil,
 				}}
 			}(),
 			expTotalInputs: 7,
@@ -342,21 +342,21 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 500, 0xffffff,
+					txid, 0, script, 500, 0xffffff, nil,
 				}, {
-					txid, 0, script, 670, 0xffffff,
+					txid, 0, script, 670, 0xffffff, nil,
 				}, {
-					txid, 0, script, 700, 0xffffff,
+					txid, 0, script, 700, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 650, 0xffffff,
+					txid, 0, script, 650, 0xffffff, nil,
 				}}
 			}(),
 			expErr: bt.ErrInsufficientFunds,
@@ -386,21 +386,21 @@ func TestTx_Fund(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 500, 0xffffff,
+					txid, 0, script, 500, 0xffffff, nil,
 				}, {
-					txid, 0, script, 670, 0xffffff,
+					txid, 0, script, 670, 0xffffff, nil,
 				}, {
-					txid, 0, script, 700, 0xffffff,
+					txid, 0, script, 700, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 1000, 0xffffff,
+					txid, 0, script, 1000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 650, 0xffffff,
+					txid, 0, script, 650, 0xffffff, nil,
 				}}
 			}(),
 			utxoGetterFuncOverrider: func(utxos []*bt.UTXO) bt.UTXOGetterFunc {
@@ -430,7 +430,7 @@ func TestTx_Fund(t *testing.T) {
 				iptFn = test.utxoGetterFuncOverrider(test.utxos)
 			}
 
-			err := test.tx.Fund(context.Background(), bt.NewFeeQuote(), iptFn)
+			err := test.tx.Fund(context.Background(), FQPoint5SatPerByte, iptFn)
 			if test.expErr != nil {
 				assert.Error(t, err)
 				assert.EqualError(t, err, test.expErr.Error())
@@ -464,11 +464,11 @@ func TestTx_Fund_Deficit(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}}
 			}(),
 			iteration:   1,
@@ -487,11 +487,11 @@ func TestTx_Fund_Deficit(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}}
 			}(),
 			iteration:   2,
@@ -514,27 +514,27 @@ func TestTx_Fund_Deficit(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 4000, 0xffffff,
+					txid, 0, script, 4000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 6000, 0xffffff,
+					txid, 0, script, 6000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 4000, 0xffffff,
+					txid, 0, script, 4000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 8000, 0xffffff,
+					txid, 0, script, 8000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 3000, 0xffffff,
+					txid, 0, script, 3000, 0xffffff, nil,
 				}}
 			}(),
 			iteration:   1,
@@ -557,27 +557,27 @@ func TestTx_Fund_Deficit(t *testing.T) {
 				script, err := bscript.NewFromHexString("76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac")
 				assert.NoError(t, err)
 				return []*bt.UTXO{{
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 4000, 0xffffff,
+					txid, 0, script, 4000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 6000, 0xffffff,
+					txid, 0, script, 6000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 4000, 0xffffff,
+					txid, 0, script, 4000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 2000, 0xffffff,
+					txid, 0, script, 2000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 8000, 0xffffff,
+					txid, 0, script, 8000, 0xffffff, nil,
 				}, {
-					txid, 0, script, 3000, 0xffffff,
+					txid, 0, script, 3000, 0xffffff, nil,
 				}}
 			}(),
 			iteration:   3,
@@ -588,7 +588,7 @@ func TestTx_Fund_Deficit(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			deficits := make([]uint64, 0)
-			test.tx.Fund(context.Background(), bt.NewFeeQuote(), func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
+			test.tx.Fund(context.Background(), FQPoint5SatPerByte, func(ctx context.Context, deficit uint64) ([]*bt.UTXO, error) {
 				if len(test.utxos) == 0 {
 					return nil, bt.ErrNoUTXO
 				}
@@ -655,7 +655,7 @@ func TestTx_FillInput(t *testing.T) {
 				"76a914af2590a45ae401651fdbdf59a76ad43d1862534088ac",
 				4000000,
 			))
-			assert.NoError(t, tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote()))
+			assert.NoError(t, tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", FQPoint5SatPerByte))
 
 			err := tx.FillInput(context.Background(), test.unlocker, bt.UnlockerParams{
 				InputIdx:     test.inputIdx,
@@ -686,7 +686,7 @@ func TestTx_FillAllInputs(t *testing.T) {
 			4000000)
 		assert.NoError(t, err)
 
-		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", bt.NewFeeQuote())
+		err = tx.ChangeToAddress("mwV3YgnowbJJB3LcyCuqiKpdivvNNFiK7M", FQPoint5SatPerByte)
 		assert.NoError(t, err)
 
 		var wif *WIF
