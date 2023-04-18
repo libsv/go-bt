@@ -188,7 +188,7 @@ func (i *Input) Bytes(clear bool, intoBytes ...[]byte) []byte {
 		h = append(h, []byte{i.previousTxID[j], i.previousTxID[j-1]}...)
 	}
 
-	// this is optimized to avoid the memory allocation of LittleEndianBytes
+	// this is optimised to avoid the memory allocation of LittleEndianBytes
 	h = append(h, []byte{
 		byte(i.PreviousTxOutIndex),
 		byte(i.PreviousTxOutIndex >> 8),
@@ -207,7 +207,7 @@ func (i *Input) Bytes(clear bool, intoBytes ...[]byte) []byte {
 		}
 	}
 
-	// this is optimized to avoid the memory allocation of LittleEndianBytes
+	// this is optimised to avoid the memory allocation of LittleEndianBytes
 	return append(h, []byte{
 		byte(i.SequenceNumber),
 		byte(i.SequenceNumber >> 8),
