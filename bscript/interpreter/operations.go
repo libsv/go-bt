@@ -24,6 +24,14 @@ const (
 	opCondSkip  = 2
 )
 
+var (
+	externalVerifySignatureFn func(payload, signature, publicKey []byte) bool = nil
+)
+
+func InjectExternalVerifySignatureFn(fn func(payload, signature, publicKey []byte) bool) {
+	externalVerifySignatureFn = fn
+}
+
 type opcode struct {
 	val    byte
 	name   string
@@ -1995,7 +2003,14 @@ func opcodeCheckSig(op *ParsedOpcode, t *thread) error {
 		return nil //nolint:nilerr // only need a false push in this case
 	}
 
-	ok := signature.Verify(hash, pubKey)
+	var ok bool
+
+	if externalVerifySignatureFn != nil {
+		ok = externalVerifySignatureFn(hash, signature.Serialise(), pubKey.SerialiseCompressed())
+	} else {
+		ok = signature.Verify(hash, pubKey)
+	}
+
 	if !ok && t.hasFlag(scriptflag.VerifyNullFail) && len(sigBytes) > 0 {
 		return errs.NewError(errs.ErrNullFail, "signature not empty on failed checksig")
 	}
