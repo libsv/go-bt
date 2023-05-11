@@ -11,6 +11,14 @@ import (
 	"github.com/libsv/go-bt/v2/sighash"
 )
 
+var (
+	externalSignerFn func(message []byte, privateKey []byte) ([]byte, error) = nil
+)
+
+func InjectExternalSignerFn(fn func(message []byte, privateKey []byte) ([]byte, error)) {
+	externalSignerFn = fn
+}
+
 // Getter implements the `bt.UnlockerGetter` interface. It unlocks a Tx locally,
 // using a bec PrivateKey.
 type Getter struct {
@@ -55,13 +63,27 @@ func (l *Simple) UnlockingScript(ctx context.Context, tx *bt.Tx, params bt.Unloc
 			return nil, err
 		}
 
-		sig, err := l.PrivateKey.Sign(sh)
-		if err != nil {
-			return nil, err
+		var signature []byte
+
+		if externalSignerFn != nil {
+			signature, err = externalSignerFn(sh, l.PrivateKey.Serialise())
+			if err != nil {
+				return nil, err
+			}
+
+		} else {
+
+			var sig *bec.Signature
+
+			sig, err = l.PrivateKey.Sign(sh)
+			if err != nil {
+				return nil, err
+			}
+
+			signature = sig.Serialise()
 		}
 
 		pubKey := l.PrivateKey.PubKey().SerialiseCompressed()
-		signature := sig.Serialise()
 
 		uscript, err := bscript.NewP2PKHUnlockingScript(pubKey, signature, params.SigHashFlags)
 		if err != nil {
