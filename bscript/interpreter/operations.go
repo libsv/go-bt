@@ -1986,28 +1986,41 @@ func opcodeCheckSig(op *ParsedOpcode, t *thread) error {
 		return err
 	}
 
-	pubKey, err := bec.ParsePubKey(pkBytes, bec.S256())
-	if err != nil {
-		t.dstack.PushBool(false)
-		return nil //nolint:nilerr // only need a false push in this case
-	}
-
-	var signature *bec.Signature
+	var sigBytesDer []byte
+	// if the signature is in DER format, we can set it here and just use it directly if an externalVerifySignatureFn is set
 	if t.hasAny(scriptflag.VerifyStrictEncoding, scriptflag.VerifyDERSignatures) {
-		signature, err = bec.ParseDERSignature(sigBytes, bec.S256())
-	} else {
-		signature, err = bec.ParseSignature(sigBytes, bec.S256())
-	}
-	if err != nil {
-		t.dstack.PushBool(false)
-		return nil //nolint:nilerr // only need a false push in this case
+		sigBytesDer = sigBytes
 	}
 
 	var ok bool
+	var signature *bec.Signature
 
 	if externalVerifySignatureFn != nil {
-		ok = externalVerifySignatureFn(hash, signature.Serialise(), pubKey.SerialiseCompressed())
+		if sigBytesDer == nil {
+			// signature is not in DER format, so we must parse it and set the bytes
+			signature, err = bec.ParseSignature(sigBytes, bec.S256())
+			sigBytesDer = signature.Serialise()
+			if err != nil {
+				t.dstack.PushBool(false)
+				return nil //nolint:nilerr // only need a false push in this case
+			}
+			sigBytesDer = signature.Serialise()
+		}
+		ok = externalVerifySignatureFn(hash, sigBytesDer, pkBytes)
 	} else {
+		var pubKey *bec.PublicKey
+		pubKey, err = bec.ParsePubKey(pkBytes, bec.S256())
+		if err != nil {
+			t.dstack.PushBool(false)
+			return nil //nolint:nilerr // only need a false push in this case
+		}
+
+		if t.hasAny(scriptflag.VerifyStrictEncoding, scriptflag.VerifyDERSignatures) {
+			signature, err = bec.ParseDERSignature(sigBytes, bec.S256())
+		} else {
+			signature, err = bec.ParseSignature(sigBytes, bec.S256())
+		}
+
 		ok = signature.Verify(hash, pubKey)
 	}
 
