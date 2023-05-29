@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	hashP2PKH        = 0x00
-	hashTestNetP2PKH = 0x6f
-	hashP2SH         = 0x05 // TODO: remove deprecated p2sh stuff
-	hashTestNetP2SH  = 0xc4
+	// check https://en.bitcoin.it/wiki/List_of_address_prefixes
+	prefixP2PKH        = 0x00
+	prefixTestNetP2PKH = 0x6f
+	prefixP2SH         = 0x05 // TODO: remove deprecated p2sh stuff
+	prefixTestNetP2SH  = 0xc4
 )
 
 // An Address struct contains the address string as well as the hash160 hex string of the public key.
@@ -46,15 +47,15 @@ func addressToPubKeyHashStr(address string) (string, error) {
 	}
 
 	switch decoded[0] {
-	case hashP2PKH: // Pubkey hash (P2PKH address)
+	case prefixP2PKH: // Pubkey hash (P2PKH address)
 		return hex.EncodeToString(decoded[1 : len(decoded)-4]), nil
 
-	case hashTestNetP2PKH: // Testnet pubkey hash (P2PKH address)
+	case prefixTestNetP2PKH: // Testnet pubkey hash (P2PKH address)
 		return hex.EncodeToString(decoded[1 : len(decoded)-4]), nil
 
-	case hashP2SH: // Script hash (P2SH address)
+	case prefixP2SH: // Script hash (P2SH address)
 		fallthrough
-	case hashTestNetP2SH: // Testnet script hash (P2SH address)
+	case prefixTestNetP2SH: // Testnet script hash (P2SH address)
 		fallthrough
 	default:
 		return "", fmt.Errorf("%w %s", ErrUnsupportedAddress, address)

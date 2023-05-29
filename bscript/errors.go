@@ -24,7 +24,7 @@ var (
 var (
 	ErrEncodingBadChar         = errors.New("bad char")
 	ErrEncodingTooLong         = errors.New("too long")
-	ErrEncodingInvalidVersion  = errors.New("not version 0 of 6f")
+	ErrEncodingInvalidVersion  = errors.New("not supported address version prefix")
 	ErrEncodingInvalidChecksum = errors.New("invalid checksum")
 	ErrEncodingChecksumFailed  = errors.New("checksum failed")
 	ErrTextNoBIP76             = errors.New("text did not match the bip276 format")

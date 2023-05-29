@@ -66,7 +66,8 @@ func validA58(a58 []byte) (bool, error) {
 	if err := a.set58(a58); err != nil {
 		return false, err
 	}
-	if a[0] != 0 && a[0] != 0x6f {
+	if a[0] != prefixP2PKH &&
+		a[0] != prefixTestNetP2PKH {
 		return false, ErrEncodingInvalidVersion
 	}
 
