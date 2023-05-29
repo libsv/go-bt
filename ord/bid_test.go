@@ -3,7 +3,6 @@ package ord_test
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"testing"
 
 	"github.com/libsv/go-bk/wif"
@@ -92,8 +91,6 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 		assert.True(t, vba.Validate(pstx))
 	})
 
-	fmt.Println(pstx.String())
-
 	t.Run("no errors when accepting bid", func(t *testing.T) {
 		ordWif, _ := wif.DecodeWIF("KwQq67d4Jds3wxs3kQHB8PPwaoaBQfNKkzAacZeMesb7zXojVYpj") // 1HebepswCi6huw1KJ7LvkrgemAV63TyVUs
 		ordPrefixAddr, _ := bscript.NewAddressFromPublicKeyString(hex.EncodeToString(ordWif.SerialisePubKey()), true)
@@ -101,7 +98,7 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 		ordUnlockerGetter := unlocker.Getter{PrivateKey: ordWif.PrivKey}
 		ordUnlocker, _ := ordUnlockerGetter.Unlocker(context.Background(), ordPrefixScript)
 
-		tx, err := ord.AcceptBidToBuy1SatOrdinal(context.Background(), &ord.ValidateBidArgs{
+		_, err := ord.AcceptBidToBuy1SatOrdinal(context.Background(), &ord.ValidateBidArgs{
 			BidAmount:   uint64(bidAmount),
 			ExpectedFQ:  bt.NewFeeQuote(),
 			OrdinalUTXO: ordUTXO,
@@ -116,6 +113,5 @@ func TestBidToBuyPSBTNoErrors(t *testing.T) {
 			})
 
 		assert.NoError(t, err)
-		fmt.Println(tx.String())
 	})
 }
