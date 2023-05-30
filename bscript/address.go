@@ -12,10 +12,11 @@ import (
 
 const (
 	// check https://en.bitcoin.it/wiki/List_of_address_prefixes
-	prefixP2PKH        = 0x00
-	prefixTestNetP2PKH = 0x6f
-	prefixP2SH         = 0x05 // TODO: remove deprecated p2sh stuff
-	prefixTestNetP2SH  = 0xc4
+	prefixP2PKH           = 0x00
+	prefixTestNetP2PKH    = 0x6f
+	prefixP2SH            = 0x05 // TODO: remove deprecated p2sh stuff
+	prefixTestNetP2SH     = 0xc4
+	prefixOrdinalsAddress = 0x12
 )
 
 // An Address struct contains the address string as well as the hash160 hex string of the public key.
@@ -47,10 +48,9 @@ func addressToPubKeyHashStr(address string) (string, error) {
 	}
 
 	switch decoded[0] {
-	case prefixP2PKH: // Pubkey hash (P2PKH address)
-		return hex.EncodeToString(decoded[1 : len(decoded)-4]), nil
-
-	case prefixTestNetP2PKH: // Testnet pubkey hash (P2PKH address)
+	case prefixP2PKH, // Pubkey hash (P2PKH address)
+		prefixTestNetP2PKH,    // Testnet pubkey hash (P2PKH address)
+		prefixOrdinalsAddress: // Ordinals address format
 		return hex.EncodeToString(decoded[1 : len(decoded)-4]), nil
 
 	case prefixP2SH: // Script hash (P2SH address)
@@ -78,12 +78,12 @@ func NewAddressFromPublicKeyString(pubKey string, mainnet bool) (*Address, error
 // Otherwise, (mainnet is false) it will return a testnet address (starting with an m or n).
 func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 
-	// regtest := 111
+	// regtest := prefixTestNetP2PKH
 	// mainnet: 0
 
 	bb := make([]byte, 1)
 	if !mainnet {
-		bb[0] = 111
+		bb[0] = prefixTestNetP2PKH
 	}
 	//nolint: makezero // we need to set up the array with 1
 	bb = append(bb, hash...)
@@ -100,12 +100,12 @@ func NewAddressFromPublicKeyHash(hash []byte, mainnet bool) (*Address, error) {
 func NewAddressFromPublicKey(pubKey *bec.PublicKey, mainnet bool) (*Address, error) {
 	hash := crypto.Hash160(pubKey.SerialiseCompressed())
 
-	// regtest := 111
+	// regtest := prefixTestNetP2PKH
 	// mainnet: 0
 
 	bb := make([]byte, 1)
 	if !mainnet {
-		bb[0] = 111
+		bb[0] = prefixTestNetP2PKH
 	}
 	//nolint: makezero // we need to set up the array with 1
 	bb = append(bb, hash...)
@@ -130,4 +130,56 @@ func checksum(input []byte) (ckSum [4]byte) {
 	h := crypto.Sha256d(input)
 	copy(ckSum[:], h[:4])
 	return
+}
+
+// NewOrdAddressFromPublicKeyHash takes a public key hash in bytes and returns an
+// Address struct pointer. It will use the Ordinals address format (starts with an
+// 8 instead of 1) to differentiate it from non-ordinals/cardinals addresses.
+func NewOrdAddressFromPublicKeyHash(hash []byte) (*Address, error) {
+	bb := make([]byte, 1)
+	bb[0] = prefixOrdinalsAddress
+
+	//nolint: makezero // we need to set up the array with 1
+	bb = append(bb, hash...)
+
+	return &Address{
+		AddressString: Base58EncodeMissingChecksum(bb),
+		PublicKeyHash: hex.EncodeToString(hash),
+	}, nil
+}
+
+// OrdAddressFromCardinal will give you an ordinals address
+// from a regular P2PKH address.
+func OrdAddressFromCardinal(addr string) (string, error) {
+	cardAddr, err := NewAddressFromString(addr)
+	if err != nil {
+		return "", err
+	}
+	pubkeyhash, err := hex.DecodeString(cardAddr.PublicKeyHash)
+	if err != nil {
+		return "", err
+	}
+	ordAddr, err := NewOrdAddressFromPublicKeyHash(pubkeyhash)
+	if err != nil {
+		return "", err
+	}
+	return ordAddr.AddressString, nil
+}
+
+// CardinalAddressFromOrdinal will give you an cardinal/regular
+//  P2PKH address from an ordinal address format.
+func CardinalAddressFromOrdinal(addr string, mainnet bool) (string, error) {
+	ordAddr, err := NewAddressFromString(addr)
+	if err != nil {
+		return "", err
+	}
+	pubkeyhash, err := hex.DecodeString(ordAddr.PublicKeyHash)
+	if err != nil {
+		return "", err
+	}
+	cardAddr, err := NewAddressFromPublicKeyHash(pubkeyhash, mainnet)
+	if err != nil {
+		return "", err
+	}
+	return cardAddr.AddressString, nil
 }

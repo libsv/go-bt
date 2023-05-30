@@ -2,6 +2,7 @@ package bscript_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 
 	"github.com/libsv/go-bk/bec"
@@ -79,6 +80,27 @@ func TestNewAddressFromPublicKeyString(t *testing.T) {
 
 		assert.Equal(t, testPublicKeyHash, addr.PublicKeyHash)
 		assert.Equal(t, "mfaWoDuTsFfiunLTqZx4fKpVsUctiDV9jk", addr.AddressString)
+	})
+
+	t.Run("cardinal to ordinal", func(t *testing.T) {
+		addressMain := "1E7ucTTWRTahCyViPhxSMor2pj4VGQdFMr"
+
+		ordAddr, err := bscript.OrdAddressFromCardinal(addressMain)
+		assert.NoError(t, err)
+		assert.NotNil(t, ordAddr)
+
+		assert.Equal(t, "8UCmLQphChvTvn1GqFxB64kC9ohU54fGog", ordAddr)
+	})
+
+	t.Run("ordinal to cardinal", func(t *testing.T) {
+		ordAddr := "8MaR6UNd9Kif3Ne2qoxg8r9oagghb3HWaT"
+
+		cardAddr, err := bscript.CardinalAddressFromOrdinal(ordAddr, true)
+		assert.NoError(t, err)
+		assert.NotNil(t, ordAddr)
+
+		fmt.Println(ordAddr)
+		assert.Equal(t, "17VZNX1SN5NtKa8UQFxwQbFeFc3iqRYhem", cardAddr)
 	})
 }
 

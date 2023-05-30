@@ -67,7 +67,8 @@ func validA58(a58 []byte) (bool, error) {
 		return false, err
 	}
 	if a[0] != prefixP2PKH &&
-		a[0] != prefixTestNetP2PKH {
+		a[0] != prefixTestNetP2PKH &&
+		a[0] != prefixOrdinalsAddress {
 		return false, ErrEncodingInvalidVersion
 	}
 
