@@ -89,11 +89,11 @@ func TestNewAddressFromPublicKeyString(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, ordAddr)
 
-		assert.Equal(t, "8UCmLQphChvTvn1GqFxB64kC9ohU54fGog", ordAddr)
+		assert.Equal(t, "SaQueJEf9pmtjHHAw8wWuhzbUWHv2Q9aoe", ordAddr)
 	})
 
 	t.Run("ordinal to cardinal", func(t *testing.T) {
-		ordAddr := "8MaR6UNd9Kif3Ne2qoxg8r9oagghb3HWaT"
+		ordAddr := "STnZQMnb6Sa5qsuvwgx1xVQCuPH9dnjTuE"
 
 		cardAddr, err := bscript.CardinalAddressFromOrdinal(ordAddr, true)
 		assert.NoError(t, err)

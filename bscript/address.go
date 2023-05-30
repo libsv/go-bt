@@ -16,7 +16,7 @@ const (
 	prefixTestNetP2PKH    = 0x6f
 	prefixP2SH            = 0x05 // TODO: remove deprecated p2sh stuff
 	prefixTestNetP2SH     = 0xc4
-	prefixOrdinalsAddress = 0x12
+	prefixOrdinalsAddress = 0x3f
 )
 
 // An Address struct contains the address string as well as the hash160 hex string of the public key.
