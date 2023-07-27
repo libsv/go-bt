@@ -11,6 +11,7 @@ import (
 	"github.com/libsv/go-bk/crypto"
 
 	"github.com/libsv/go-bt/v2/bscript"
+	"github.com/libsv/go-bt/v2/chainhash"
 )
 
 /*
@@ -282,6 +283,20 @@ func (tx *Tx) IsCoinbase() bool {
 	return false
 }
 
+func (tx *Tx) IsExtended() bool {
+	if tx == nil || tx.Inputs == nil {
+		return false
+	}
+
+	for _, input := range tx.Inputs {
+		if input.PreviousTxScript == nil || (input.PreviousTxSatoshis == 0 && !input.PreviousTxScript.IsData()) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // TxIDBytes returns the transaction ID of the transaction as bytes
 // (which is also the transaction hash).
 func (tx *Tx) TxIDBytes() []byte {
@@ -292,6 +307,10 @@ func (tx *Tx) TxIDBytes() []byte {
 // (which is also the transaction hash).
 func (tx *Tx) TxID() string {
 	return hex.EncodeToString(ReverseBytes(crypto.Sha256d(tx.Bytes())))
+}
+
+func (tx *Tx) TxIDChainHash() chainhash.Hash {
+	return chainhash.DoubleHashH(tx.Bytes())
 }
 
 // String encodes the transaction into a hex string.
