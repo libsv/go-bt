@@ -14,6 +14,7 @@ import (
 	"github.com/libsv/go-bt/v2/bscript/interpreter/scriptflag"
 	"github.com/libsv/go-bt/v2/sighash"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestBadPC sets the pc to a deliberately bad result then confirms that Step()
@@ -927,4 +928,32 @@ func TestEngine_WithState(t *testing.T) {
 			))
 		})
 	}
+}
+
+const (
+	txHex1 = `0100000001abdbd5873fbda1b08c19d899993301fd44c0aa735064ebb2248260b7adadf795000000006b483045022100e7813394c7a55941c1acf3c7032046c2aa5bf3a506b4ee09e4cb5761c1850f960220154769af29eef81d56d69eba1d7a5ab37eed15beb9eadcd2cb608ff2e09b3147c321035941a219bcd9688318028afeef55183634f010a933de9d8469ff6e702d96c238ffffffff010271000000000000220687623971234575ab76a914fbcf31b659334eeb086693fc3b4005ce29e1c21788ac00000000`
+
+	txHex2 = `01000000014cc6b457cc6a235b966cec69bc4e4ea1813b71bddb2adf800848e4430e622b3d000000006a47304402201c1b7c535ff8bbee0960e0dad34e0a07857eaae5abc5a556427f4cc95e36cea50220676e3fd4eb69e98d8f9659c3bfceb0cdb34a6926ff644a6d79666e2c8266cc78c321035941a219bcd9688318028afeef55183634f010a933de9d8469ff6e702d96c238ffffffff011671000000000000220687623971234575ab76a914fbcf31b659334eeb086693fc3b4005ce29e1c21788ac00000000`
+)
+
+func TestExecute(t *testing.T) {
+	t.Run("OP_CODESEPARATOR parsing", func(t *testing.T) {
+
+		tx, err := bt.NewTxFromString(txHex1)
+		require.NoError(t, err)
+
+		prevTx, err := bt.NewTxFromString(txHex2)
+		require.NoError(t, err)
+
+		inputIdx := 0
+		input := tx.InputIdx(inputIdx)
+		prevOutput := prevTx.OutputIdx(int(input.PreviousTxOutIndex))
+
+		err = NewEngine().Execute(
+			WithTx(tx, inputIdx, prevOutput),
+			WithForkID(),
+			WithAfterGenesis(),
+		)
+		require.NoError(t, err)
+	})
 }

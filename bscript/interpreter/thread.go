@@ -505,7 +505,11 @@ func (t *thread) SetStack(data [][]byte) {
 
 // subScript returns the script since the last OP_CODESEPARATOR.
 func (t *thread) subScript() ParsedScript {
-	return t.scripts[t.scriptIdx][t.lastCodeSep:]
+	skip := 0
+	if t.lastCodeSep > 0 {
+		skip = t.lastCodeSep + 1 // +1 to skip the opcode separator itself
+	}
+	return t.scripts[t.scriptIdx][skip:]
 }
 
 // checkHashTypeEncoding returns whether the passed hashtype adheres to
