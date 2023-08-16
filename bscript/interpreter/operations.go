@@ -1090,14 +1090,19 @@ func opcodeSize(op *ParsedOpcode, t *thread) error {
 //
 // Stack transformation: a -> ~a
 func opcodeInvert(op *ParsedOpcode, t *thread) error {
-	ba, err := t.dstack.PeekByteArray(0)
+	ba, err := t.dstack.PopByteArray()
 	if err != nil {
 		return err
 	}
 
+	// We need to invert without modifying the bytes in place.
+	// If we modify in place then these changes are reflected elsewhere in the stack.
+	baInverted := make([]byte, len(ba))
 	for i := range ba {
-		ba[i] = ba[i] ^ 0xFF
+		baInverted[i] = ba[i] ^ 0xFF
 	}
+
+	t.dstack.PushByteArray(baInverted)
 
 	return nil
 }
