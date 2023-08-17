@@ -139,7 +139,6 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 
 	for i := 0; i < len(script); {
 		instruction := script[i]
-		remainingScript := script[i:]
 
 		parsedOp := ParsedOpcode{op: opcodeArray[instruction]}
 		if p.ErrorOnCheckSig && parsedOp.RequiresTx() {
@@ -147,7 +146,7 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 		}
 		// once an OP_RETURN instruction is seen, everything after that is data
 		if instruction == bscript.OpRETURN {
-			parsedOp.Data = remainingScript
+			parsedOp.Data = script[i+1:]
 			parsedOps = append(parsedOps, parsedOp)
 			return parsedOps, nil
 		}
@@ -156,9 +155,9 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 		case parsedOp.op.length == 1:
 			i++
 		case parsedOp.op.length > 1:
-			if len(remainingScript) < parsedOp.op.length {
+			if len(script[i:]) < parsedOp.op.length {
 				return nil, errs.NewError(errs.ErrMalformedPush, "opcode %s required %d bytes, script has %d remaining",
-					parsedOp.Name(), parsedOp.op.length, len(remainingScript))
+					parsedOp.Name(), parsedOp.op.length, len(script[i:]))
 			}
 			parsedOp.Data = script[i+1 : i+parsedOp.op.length]
 			i += parsedOp.op.length

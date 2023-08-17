@@ -67,7 +67,7 @@ func TestParse(t *testing.T) {
 						length: 1,
 						exec:   opcodeReturn,
 					},
-					Data: []byte{bscript.OpRETURN, bscript.Op0, bscript.OpDATA36, bscript.OpUNKNOWN220},
+					Data: []byte{bscript.Op0, bscript.OpDATA36, bscript.OpUNKNOWN220},
 				},
 			},
 		},
