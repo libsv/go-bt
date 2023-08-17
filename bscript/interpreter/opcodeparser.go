@@ -139,19 +139,26 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 
 	for i := 0; i < len(script); {
 		instruction := script[i]
+		remainingScript := script[i:]
 
 		parsedOp := ParsedOpcode{op: opcodeArray[instruction]}
 		if p.ErrorOnCheckSig && parsedOp.RequiresTx() {
 			return nil, errs.NewError(errs.ErrInvalidParams, "tx and previous output must be supplied for checksig")
+		}
+		// once an OP_RETURN instruction is seen, everything after that is data
+		if instruction == bscript.OpRETURN {
+			parsedOp.Data = remainingScript
+			parsedOps = append(parsedOps, parsedOp)
+			return parsedOps, nil
 		}
 
 		switch {
 		case parsedOp.op.length == 1:
 			i++
 		case parsedOp.op.length > 1:
-			if len(script[i:]) < parsedOp.op.length {
+			if len(remainingScript) < parsedOp.op.length {
 				return nil, errs.NewError(errs.ErrMalformedPush, "opcode %s required %d bytes, script has %d remaining",
-					parsedOp.Name(), parsedOp.op.length, len(script[i:]))
+					parsedOp.Name(), parsedOp.op.length, len(remainingScript))
 			}
 			parsedOp.Data = script[i+1 : i+parsedOp.op.length]
 			i += parsedOp.op.length
