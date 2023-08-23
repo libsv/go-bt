@@ -136,6 +136,7 @@ func (o *ParsedOpcode) enforceMinimumDataPush() error {
 func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 	script := *s
 	parsedOps := make([]ParsedOpcode, 0, len(script))
+	conditionalBlock := 0
 
 	for i := 0; i < len(script); {
 		instruction := script[i]
@@ -143,6 +144,22 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 		parsedOp := ParsedOpcode{op: opcodeArray[instruction]}
 		if p.ErrorOnCheckSig && parsedOp.RequiresTx() {
 			return nil, errs.NewError(errs.ErrInvalidParams, "tx and previous output must be supplied for checksig")
+		}
+
+		switch parsedOp.op.val {
+		case bscript.OpIF, bscript.OpNOTIF, bscript.OpVERIF, bscript.OpVERNOTIF:
+			conditionalBlock++
+		case bscript.OpENDIF:
+			conditionalBlock--
+		case bscript.OpRETURN:
+			// If we are not in a conditional block, we end script evaluation.
+			// This must be the final evaluated opcode, everything after is ignored.
+			if conditionalBlock == 0 {
+				parsedOps = append(parsedOps, parsedOp)
+				return parsedOps, nil
+			}
+			// If we are in an conditional block, we continue parsing the other branches,
+			// therefore all data must adhere to push datat rules.
 		}
 
 		switch {
