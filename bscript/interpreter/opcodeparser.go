@@ -159,7 +159,7 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 				return parsedOps, nil
 			}
 			// If we are in an conditional block, we continue parsing the other branches,
-			// therefore all data must adhere to push datat rules.
+			// therefore all data must adhere to push data rules.
 		}
 
 		switch {
