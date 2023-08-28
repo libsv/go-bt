@@ -9,6 +9,7 @@ import (
 
 	"github.com/libsv/go-bt/v2/bscript"
 	"github.com/libsv/go-bt/v2/bscript/interpreter/errs"
+	"github.com/stretchr/testify/require"
 )
 
 // TestOpcodeDisabled tests the opcodeDisabled function manually because all
@@ -26,5 +27,67 @@ func TestOpcodeDisabled(t *testing.T) {
 				"want %v", err, errs.ErrDisabledOpcode)
 			continue
 		}
+	}
+}
+
+func TestParse(t *testing.T) {
+	tt := []struct {
+		name            string
+		scriptHexString string
+
+		expectedParsedScript ParsedScript
+	}{
+		{
+			name:            "1 op return",
+			scriptHexString: "0168776a0024dc",
+
+			expectedParsedScript: ParsedScript{
+				ParsedOpcode{
+					op: opcode{
+						val:    bscript.OpDATA1,
+						name:   "OP_DATA_1",
+						length: 2,
+						exec:   opcodePushData,
+					},
+					Data: []byte{bscript.OpENDIF},
+				},
+				ParsedOpcode{
+					op: opcode{
+						val:    bscript.OpNIP,
+						name:   "OP_NIP",
+						length: 1,
+						exec:   opcodeNip,
+					},
+					Data: nil,
+				},
+				ParsedOpcode{
+					op: opcode{
+						val:    bscript.OpRETURN,
+						name:   "OP_RETURN",
+						length: 1,
+						exec:   opcodeReturn,
+					},
+					Data: nil,
+				},
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := bscript.NewFromHexString(tc.scriptHexString)
+			require.NoError(t, err)
+
+			codeParser := DefaultOpcodeParser{}
+			p, err := codeParser.Parse(s)
+			require.NoError(t, err)
+
+			for i := range p {
+				require.Equal(t, tc.expectedParsedScript[i].Data, p[i].Data)
+				require.Equal(t, tc.expectedParsedScript[i].op.length, p[i].op.length)
+				require.Equal(t, tc.expectedParsedScript[i].op.name, p[i].op.name)
+				require.Equal(t, tc.expectedParsedScript[i].op.val, p[i].op.val)
+			}
+		})
 	}
 }
