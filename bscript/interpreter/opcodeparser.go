@@ -157,13 +157,13 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 			if conditionalBlock == 0 {
 				parsedOps = append(parsedOps, parsedOp)
 				// we add any remaining data as an unformatted blob so that subScript can be reconstructed
-				// but only if there is more length to this script. If it ends in OpReturn then stop there.
 				totalLen := len(script)
-				if (i + 1) > totalLen {
+				if (i + 2) > totalLen {
+					// but only if there is more length to this script. If it ends in OpReturn then stop there.
 					return parsedOps, nil
 				}
-				if (i + 2) > totalLen {
-					// we have a single byte of data
+				if (i + 3) > totalLen {
+					// we have a single byte of extra data
 					parsedOps = append(parsedOps, ParsedOpcode{op: opcode{
 						name:   "Unformatted Data",
 						val:    script[i+1],
@@ -171,6 +171,7 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 					}})
 					return parsedOps, nil
 				}
+				// we have multiple bytes of extra data
 				parsedOps = append(parsedOps, ParsedOpcode{op: opcode{
 					name:   "Unformatted Data",
 					val:    script[i+1],
