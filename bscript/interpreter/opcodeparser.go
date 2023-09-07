@@ -156,6 +156,12 @@ func (p *DefaultOpcodeParser) Parse(s *bscript.Script) (ParsedScript, error) {
 			// This must be the final evaluated opcode, everything after is ignored.
 			if conditionalBlock == 0 {
 				parsedOps = append(parsedOps, parsedOp)
+				// we add the last data as unformatted blob so that subScript can be reconstructed
+				parsedOps = append(parsedOps, ParsedOpcode{op: opcode{
+					name:   "Unformatteded Data",
+					val:    script[i+1],
+					length: len(script[i+1:]),
+				}, Data: script[i+2:]})
 				return parsedOps, nil
 			}
 			// If we are in an conditional block, we continue parsing the other branches,
