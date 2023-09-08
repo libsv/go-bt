@@ -69,6 +69,14 @@ func TestParse(t *testing.T) {
 					},
 					Data: nil,
 				},
+				ParsedOpcode{
+					op: opcode{
+						val:    0,
+						name:   "Unformatted Data",
+						length: 3,
+					},
+					Data: []byte{36, 220},
+				},
 			},
 		},
 	}
