@@ -298,7 +298,7 @@ func (s *Script) IsMultisigOut() bool {
 		return false
 	}
 
-	if len(parts) < 3 {
+	if len(parts) < 3 || len(parts[0]) < 1 {
 		return false
 	}
 
