@@ -4,7 +4,7 @@ interpreter
 [![ISC License](http://img.shields.io/badge/license-ISC-blue.svg)](http://copyfree.org)
 [![GoDoc](https://pkg.go.dev/badge/github.com/libsv/go-bt/bscript/interpreter?utm_source=godoc)](http://godoc.org/github.com/libsv/got-bt/bscript/interpreter)
 
-Package interpreter implements the an interpreter for the bitcoin transaction language.  There is
+Package interpreter implements an interpreter for the bitcoin transaction language.  There is
 a comprehensive test suite.
 
 This package has intentionally been designed so it can be used as a standalone
