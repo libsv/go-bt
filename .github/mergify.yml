@@ -144,13 +144,13 @@ pull_request_rules:
       - "head~=(?i)^(bug)?fix" # if the PR branch starts with (bug)?fix/
     actions:
       label:
-        add: [ "bug-P3" ]
+        add: ["bug-P3"]
   - name: Documentation label
     conditions:
       - "head~=(?i)^docs" # if the PR branch starts with docs/
     actions:
       label:
-        add: [ "documentation" ]
+        add: ["documentation"]
   - name: Feature label
     conditions:
       - "head~=(?i)^feat(ure)?" # if the PR branch starts with feat(ure)?/
@@ -195,8 +195,8 @@ pull_request_rules:
   - name: Close stale pull request
     conditions:
       - or:
-        - base=master
-        - base=v1
+          - base=master
+          - base=v1
       - -closed
       - updated-at<21 days ago
     actions:
@@ -204,16 +204,7 @@ pull_request_rules:
         message: |
           This pull request looks stale. Feel free to reopen it if you think it's a mistake.
       label:
-        add: [ "stale" ]
-  # ===============================================================================
-  # BRANCHES
-  # ===============================================================================
-
-  - name: Delete head branch after merge
-    conditions:
-      - merged
-    actions:
-      delete_head_branch:
+        add: ["stale"]
 
   #- name: automatic update for PR marked as “Ready-to-Go“
   #  conditions:
